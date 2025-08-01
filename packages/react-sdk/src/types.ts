@@ -34,6 +34,7 @@ export interface ThemeConfig {
 
 // Main SDK configuration
 export interface SolanaCommerceConfig {
+  readonly rpcUrl?: string;
   readonly mode: CommerceMode;
   readonly position?: Position;
   readonly merchant: MerchantConfig;

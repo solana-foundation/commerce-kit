@@ -613,6 +613,11 @@ export const TipModalContent = memo<TipModalContentProps>(({
             selectedCurrency={selectedCurrency}
             customAmount={customAmount}
             showCustomInput={showCustomInput}
+            onPaymentComplete={handlePaymentComplete}
+            onPaymentError={(error) => {
+              console.error('Payment error:', error);
+              // Could add additional error handling here
+            }}
           />
         ) : (
           <WalletPaymentContent 
