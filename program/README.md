@@ -47,6 +47,7 @@ graph LR
 
 For detailed program specifications, instruction references, and account structures, see:
 - [**Program Overview**](docs/PROGRAM_OVERVIEW.md) - Complete technical documentation
+- [**Operations Guide**](docs/OPERATIONS.md) - Deployment and operational considerations
 - [**Use Solana Commerce with a Paymaster**](kora/README.md) - Host a Kora node to your Operator can cover Solana gas and account rent
 <!-- - [**Integration Guide**](docs/guides/INTEGRATION.md) - Step-by-step TypeScript tutorial
 - [**Payment Flow Diagram**](docs/DIAGRAM.md) - Visual representation of payment states
