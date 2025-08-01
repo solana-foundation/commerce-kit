@@ -6,7 +6,7 @@
   "type": "module",
   "types": "dist/index.d.ts",
   "scripts": {
-    "install-deps": "pnpm install",
+    "install-deps": "bun install",
     "test:integration": "./test-kora-integration.sh",
     "test": "jest"
   },

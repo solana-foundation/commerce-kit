@@ -26,7 +26,7 @@ const typescriptClientsDir = path.join(
 );
 
 function preserveConfigFiles() {
-  const filesToPreserve = ['package.json', 'tsconfig.json', '.npmignore', 'pnpm-lock.yaml', 'Cargo.toml'];
+  const filesToPreserve = ['package.json', 'tsconfig.json', '.npmignore', 'bun.lockb', 'Cargo.toml'];
   const preservedFiles = new Map();
 
   filesToPreserve.forEach(filename => {
