@@ -5,7 +5,7 @@
   "workspaces": [
     "apps/*",
     "packages/*",
-    "program"
+    "program/clients/typescript"
   ],
   "scripts": {
     "build": "turbo build",
