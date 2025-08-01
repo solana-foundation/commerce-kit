@@ -6,7 +6,8 @@
   "type": "module",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "generate": "cd ../.. && bun run generate-clients",
+    "build": "bun run generate && tsc -p tsconfig.build.json",
     "test": "jest",
     "test:unit": "jest tests/unit",
     "test:unit:instructions": "jest tests/unit/instructions",

@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { SolanaCommerceSDK } from '@solana-commerce/react-sdk';
+import type { OrderItem } from '@solana-commerce/headless-sdk';
 
 // Create a client-only version to avoid SSR issues
 const ClientOnlyCommerceSDK = dynamic(
@@ -42,13 +43,13 @@ export function FloatingCommerceButton() {
           showMerchantInfo: true
         }}
         // variant="icon-only"
-        onPayment={(amount, currency, products) => {
+        onPayment={(amount: number, currency: string, products?: readonly OrderItem[]) => {
           console.log('Payment:', { amount, currency, products });
         }}
-        onPaymentSuccess={(signature) => {
+        onPaymentSuccess={(signature: string) => {
           console.log('Payment successful:', { signature });
         }}
-        onPaymentError={(error) => {
+        onPaymentError={(error: Error) => {
           console.error('Payment failed:', error);
         }}
         onCancel={() => {

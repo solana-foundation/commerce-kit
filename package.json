@@ -5,6 +5,7 @@
   "workspaces": [
     "apps/*",
     "packages/*",
+    "program",
     "program/clients/typescript"
   ],
   "scripts": {
