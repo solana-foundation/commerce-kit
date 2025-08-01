@@ -5,16 +5,16 @@ on:
   push:
     branches: [main]
     paths:
-      - 'clients/typescript/**'
+      - 'program/clients/typescript/**'
       - '.github/workflows/sdk-ts-unit.yml'
-      - 'idl/**'
+      - 'program/idl/**'
 
   pull_request:
     branches: [main]
     paths:
-      - 'clients/typescript/**'
+      - 'program/clients/typescript/**'
       - '.github/workflows/sdk-ts-unit.yml'
-      - 'idl/**'
+      - 'program/idl/**'
 jobs:
   typescript-sdk-unit:
     name: TypeScript SDK Unit Tests
@@ -48,21 +48,21 @@ jobs:
   
       - name: Install root dependencies
         shell: bash
-        run: pnpm install --frozen-lockfile
+        run: cd program && pnpm install --frozen-lockfile
 
       - name: Generate clients
-        run: pnpm generate-clients
+        run: cd program && pnpm generate-clients
 
       - name: Install test dependencies
-        working-directory: clients/typescript
+        working-directory: program/clients/typescript
         run: pnpm install --frozen-lockfile
 
       - name: Build TypeScript SDK
-        working-directory: clients/typescript
+        working-directory: program/clients/typescript
         run: pnpm build
 
       - name: Run TypeScript unit tests
-        working-directory: clients/typescript
+        working-directory: program/clients/typescript
         run: |
           echo "🧪 Running TypeScript SDK unit tests..."
           pnpm test:ci:unit

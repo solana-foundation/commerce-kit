@@ -4,23 +4,23 @@ on:
   push:
     branches: [main]
     paths:
-      - 'program/**'
-      - 'Cargo.*'
-      - 'Makefile'
-      - 'tests/integration/**'
+      - 'program/program/**'
+      - 'program/Cargo.*'
+      - 'program/Makefile'
+      - 'program/tests/integration/**'
       - '.github/workflows/program-integration.yml'
-      - 'clients/rust/**'
-      - 'scripts/generate-client.js'
+      - 'program/clients/rust/**'
+      - 'program/scripts/generate-client.js'
   pull_request:
     branches: [main]
     paths:
-      - 'program/**'
-      - 'Cargo.*'
-      - 'Makefile'
-      - 'tests/integration/**'
+      - 'program/program/**'
+      - 'program/Cargo.*'
+      - 'program/Makefile'
+      - 'program/tests/integration/**'
       - '.github/workflows/program-integration.yml'
-      - 'clients/rust/**'
-      - 'scripts/generate-client.js'
+      - 'program/clients/rust/**'
+      - 'program/scripts/generate-client.js'
 env:
   CARGO_TERM_COLOR: always
   RUST_LOG: info
@@ -48,8 +48,8 @@ jobs:
         with:
           cache-on-failure: true
           workspaces: |
-            .
-            tests/integration-tests
+            ./program
+            ./program/tests/integration-tests
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -77,7 +77,7 @@ jobs:
     
       - name: Install dependencies
         run: |
-          make install
+          cd program && make install
 
       - name: Setup Solana CLI
         uses: ./.github/actions/setup-solana
@@ -85,7 +85,7 @@ jobs:
       - name: Run integration tests
         run: |
           echo "Running integration tests..."
-          make test-integration
+          cd program && make test-integration
 
       - name: Show failure logs
         if: failure()

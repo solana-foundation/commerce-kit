@@ -4,23 +4,23 @@ on:
   push:
     branches: [main]
     paths:
-      - 'program/**'
-      - 'clients/typescript/**'
-      - 'idl/**'
-      - 'Cargo.*'
-      - 'Makefile'
+      - 'program/program/**'
+      - 'program/clients/typescript/**'
+      - 'program/idl/**'
+      - 'program/Cargo.*'
+      - 'program/Makefile'
       - '.github/workflows/sdk-ts-integration.yml'
-      - 'scripts/generate-client.js'
+      - 'program/scripts/generate-client.js'
   pull_request:
     branches: [main]
     paths:
-      - 'program/**'
-      - 'clients/typescript/**'
-      - 'idl/**'
-      - 'Cargo.*'
-      - 'Makefile'
+      - 'program/program/**'
+      - 'program/clients/typescript/**'
+      - 'program/idl/**'
+      - 'program/Cargo.*'
+      - 'program/Makefile'
       - '.github/workflows/sdk-ts-integration.yml'
-      - 'scripts/generate-client.js'
+      - 'program/scripts/generate-client.js'
 
 env:
   CARGO_TERM_COLOR: always
@@ -76,7 +76,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          make install
+          cd program && make install
 
       - name: Setup Solana CLI
         uses: ./.github/actions/setup-solana
@@ -84,26 +84,26 @@ jobs:
       - name: Build program and generate clients
         run: |
           echo "Building program and generating clients..."
-          make build
+          cd program && make build
 
       - name: Install TypeScript dependencies
-        working-directory: clients/typescript
+        working-directory: program/clients/typescript
         run: pnpm install --frozen-lockfile
 
       - name: Build TypeScript SDK
-        working-directory: clients/typescript
+        working-directory: program/clients/typescript
         run: pnpm build
 
       - name: Create mints directory
-        working-directory: clients/typescript
+        working-directory: program/clients/typescript
         run: mkdir -p tests/setup/mints
 
       - name: Fetch USDC and USDT mints
-        working-directory: clients/typescript
+        working-directory: program/clients/typescript
         run: pnpm fetch-mints
 
       - name: Run TypeScript integration tests
-        working-directory: clients/typescript
+        working-directory: program/clients/typescript
         run: |
           echo "🧪 Running TypeScript SDK integration tests..."
           pnpm test:ci:integration
