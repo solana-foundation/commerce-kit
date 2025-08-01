@@ -1,5 +1,5 @@
 import React, { memo, useEffect, useState, useRef } from 'react';
-import { getBorderRadius, sanitizeString } from '../../utils';
+import { getBorderRadius, getContainerBorderRadius, sanitizeString } from '../../utils';
 import { type ThemeConfig, type MerchantConfig, type Currency, CurrencyMap} from '../../types';
 import { useSolanaPay } from '../../hooks/use-solana-pay';
 import { SPLToken } from '@solana-commerce/solana-pay';
@@ -160,7 +160,7 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
         border: theme.backgroundColor === '#ffffff' 
           ? '2px dashed #e5e7eb' 
           : `2px dashed ${theme.primaryColor}40`,
-        borderRadius: getBorderRadius(theme.borderRadius),
+        borderRadius: getContainerBorderRadius(theme.borderRadius),
         padding: '2rem',
         display: 'flex',
         alignItems: 'center',
@@ -348,7 +348,7 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
             color: `${theme.textColor}60`,
             backgroundColor: theme.backgroundColor === '#ffffff' ? '#f3f4f6' : `${theme.backgroundColor}20`,
             padding: '1rem',
-            borderRadius: getBorderRadius(theme.borderRadius),
+            borderRadius: getContainerBorderRadius(theme.borderRadius),
             wordBreak: 'break-all',
             border: `1px solid ${theme.backgroundColor === '#ffffff' ? '#e5e7eb' : `${theme.textColor}10`}`,
             maxWidth: '400px',
@@ -365,7 +365,7 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
           marginTop: '1.5rem',
           padding: '0.75rem 1rem',
           backgroundColor: `${theme.primaryColor}10`,
-          borderRadius: getBorderRadius(theme.borderRadius),
+          borderRadius: getContainerBorderRadius(theme.borderRadius),
           border: `1px solid ${theme.primaryColor}30`,
           textAlign: 'center',
           maxWidth: '300px',
