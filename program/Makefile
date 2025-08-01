@@ -2,17 +2,17 @@
 
 # Install dependencies
 install:
-	pnpm install
+	bun install
 
 # Generate IDL from Shank annotations
 generate-idl:
 	@echo "Generating IDL..."
-	pnpm run generate-idl
+	bun run generate-idl
 
 # Generate clients from IDL using Codama
 generate-clients: generate-idl
 	@echo "Generating clients..."
-	pnpm run generate-clients
+	bun run generate-clients
 
 # Build the program
 build:

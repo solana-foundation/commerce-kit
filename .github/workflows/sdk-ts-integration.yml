@@ -4,23 +4,23 @@ on:
   push:
     branches: [main]
     paths:
-      - 'program/**'
-      - 'clients/typescript/**'
-      - 'idl/**'
-      - 'Cargo.*'
-      - 'Makefile'
+      - 'program/program/**'
+      - 'program/clients/typescript/**'
+      - 'program/idl/**'
+      - 'program/Cargo.*'
+      - 'program/Makefile'
       - '.github/workflows/sdk-ts-integration.yml'
-      - 'scripts/generate-client.js'
+      - 'program/scripts/generate-client.js'
   pull_request:
     branches: [main]
     paths:
-      - 'program/**'
-      - 'clients/typescript/**'
-      - 'idl/**'
-      - 'Cargo.*'
-      - 'Makefile'
+      - 'program/program/**'
+      - 'program/clients/typescript/**'
+      - 'program/idl/**'
+      - 'program/Cargo.*'
+      - 'program/Makefile'
       - '.github/workflows/sdk-ts-integration.yml'
-      - 'scripts/generate-client.js'
+      - 'program/scripts/generate-client.js'
 
 env:
   CARGO_TERM_COLOR: always
@@ -55,28 +55,22 @@ jobs:
           node-version: 'lts/*'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          version: 10.12.3
-          run_install: false
+          bun-version: 1.2.19
 
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-      - name: Setup pnpm cache
+      - name: Setup Bun cache
         uses: actions/cache@v4
         with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
           restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+            ${{ runner.os }}-bun-
 
       - name: Install dependencies
         run: |
-          make install
+          cd program && make install
 
       - name: Setup Solana CLI
         uses: ./.github/actions/setup-solana
@@ -84,29 +78,29 @@ jobs:
       - name: Build program and generate clients
         run: |
           echo "Building program and generating clients..."
-          make build
+          cd program && make build
 
       - name: Install TypeScript dependencies
-        working-directory: clients/typescript
-        run: pnpm install --frozen-lockfile
+        working-directory: program/clients/typescript
+        run: bun install --frozen-lockfile
 
       - name: Build TypeScript SDK
-        working-directory: clients/typescript
-        run: pnpm build
+        working-directory: program/clients/typescript
+        run: bun run build
 
       - name: Create mints directory
-        working-directory: clients/typescript
+        working-directory: program/clients/typescript
         run: mkdir -p tests/setup/mints
 
       - name: Fetch USDC and USDT mints
-        working-directory: clients/typescript
-        run: pnpm fetch-mints
+        working-directory: program/clients/typescript
+        run: bun run fetch-mints
 
       - name: Run TypeScript integration tests
-        working-directory: clients/typescript
+        working-directory: program/clients/typescript
         run: |
           echo "🧪 Running TypeScript SDK integration tests..."
-          pnpm test:ci:integration
+          bun run test:ci:integration
 
       - name: Show failure logs
         if: failure()

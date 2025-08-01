@@ -1,5 +1,5 @@
 {
-  "lockfileVersion": 0,
+  "lockfileVersion": 1,
   "workspaces": {
     "": {
       "devDependencies": {
@@ -36,9 +36,9 @@
         "@radix-ui/react-tabs": "^1.1.12",
         "@radix-ui/react-toast": "^1.2.14",
         "@radix-ui/react-tooltip": "^1.2.7",
-        "@solana-commerce/headless-sdk": "packages/headless-sdk",
-        "@solana-commerce/react-sdk": "packages/react-sdk",
-        "@solana-commerce/ui-primitives": "packages/ui-primitives",
+        "@solana-commerce/headless-sdk": "workspace:*",
+        "@solana-commerce/react-sdk": "workspace:*",
+        "@solana-commerce/ui-primitives": "workspace:*",
         "@tanstack/react-query": "^5.79.2",
         "@types/react-syntax-highlighter": "^15.5.13",
         "fumadocs-core": "15.6.6",
@@ -70,7 +70,8 @@
       "name": "@solana-commerce/headless-sdk",
       "version": "0.1.0",
       "dependencies": {
-        "@solana-commerce/solana-pay": "packages/solana-pay",
+        "@solana-commerce/program-client": "workspace:*",
+        "@solana-commerce/solana-pay": "workspace:*",
       },
       "devDependencies": {
         "tsup": "^8.0.0",
@@ -81,8 +82,8 @@
       "name": "@solana-commerce/react-sdk",
       "version": "0.1.0",
       "dependencies": {
-        "@solana-commerce/headless-sdk": "packages/headless-sdk",
-        "@solana-commerce/ui-primitives": "packages/ui-primitives",
+        "@solana-commerce/headless-sdk": "workspace:*",
+        "@solana-commerce/ui-primitives": "workspace:*",
       },
       "devDependencies": {
         "@types/react": "^19.1.9",
@@ -606,15 +607,15 @@
 
     "@sinonjs/fake-timers": ["@sinonjs/fake-timers@13.0.5", "", { "dependencies": { "@sinonjs/commons": "^3.0.1" } }, "sha512-36/hTbH2uaWuGVERyC6da9YwGWnzUZXuPro/F2LfsdOsLnCojz/iSH8MxUt/FD2S5XBSVPhmArFUXcpCQ2Hkiw=="],
 
-    "@solana-commerce/headless-sdk": ["@solana-commerce/headless-sdk@workspace:packages/headless-sdk", { "dependencies": { "@solana-commerce/solana-pay": "packages/solana-pay" }, "devDependencies": { "tsup": "^8.0.0", "typescript": "^5.0.0" } }],
+    "@solana-commerce/headless-sdk": ["@solana-commerce/headless-sdk@workspace:packages/headless-sdk"],
 
-    "@solana-commerce/program-client": ["@solana-commerce/program-client@workspace:program/clients/typescript", { "devDependencies": { "@jest/globals": "^30.0.5", "@types/jest": "^30.0.0", "@types/node": "^24.1.0", "gill": "^0.10.2", "jest": "^30.0.5", "prettier": "^3.6.2", "ts-jest": "^29.4.0", "ts-node": "^10.9.2", "typescript": "^5.8.3" } }],
+    "@solana-commerce/program-client": ["@solana-commerce/program-client@workspace:program/clients/typescript"],
 
-    "@solana-commerce/react-sdk": ["@solana-commerce/react-sdk@workspace:packages/react-sdk", { "dependencies": { "@solana-commerce/headless-sdk": "packages/headless-sdk", "@solana-commerce/ui-primitives": "packages/ui-primitives" }, "devDependencies": { "@types/react": "^19.1.9", "tsup": "^8.0.0", "typescript": "^5.0.0" }, "peerDependencies": { "react": ">=16.8.0" } }],
+    "@solana-commerce/react-sdk": ["@solana-commerce/react-sdk@workspace:packages/react-sdk"],
 
-    "@solana-commerce/solana-pay": ["@solana-commerce/solana-pay@workspace:packages/solana-pay", { "dependencies": { "bignumber.js": "4.0.4", "gill": "^latest", "qrcode": "^1.5.4" }, "devDependencies": { "@types/qrcode": "^1.5.5", "tsup": "^8.0.0", "typescript": "^5.0.0" } }],
+    "@solana-commerce/solana-pay": ["@solana-commerce/solana-pay@workspace:packages/solana-pay"],
 
-    "@solana-commerce/ui-primitives": ["@solana-commerce/ui-primitives@workspace:packages/ui-primitives", { "devDependencies": { "@types/react": "^19.1.9", "@types/react-dom": "^19.1.7", "tsup": "^8.0.0", "typescript": "^5.0.0" }, "peerDependencies": { "react": ">=16.8.0", "react-dom": ">=16.8.0" } }],
+    "@solana-commerce/ui-primitives": ["@solana-commerce/ui-primitives@workspace:packages/ui-primitives"],
 
     "@solana-program/address-lookup-table": ["@solana-program/address-lookup-table@0.7.0", "", { "peerDependencies": { "@solana/kit": "^2.1.0" } }, "sha512-dzCeIO5LtiK3bIg0AwO+TPeGURjSG2BKt0c4FRx7105AgLy7uzTktpUzUj6NXAK9SzbirI8HyvHUvw1uvL8O9A=="],
 
@@ -1058,7 +1059,7 @@
 
     "dijkstrajs": ["dijkstrajs@1.0.3", "", {}, "sha512-qiSlmBq9+BCdCA/L46dw8Uy93mloxsPSbwnm5yrKn2vMPiy8KyAskTF6zuV/j5BMsmOGZDPs7KjU+mjb670kfA=="],
 
-    "docs": ["docs@workspace:apps/docs", { "dependencies": { "@number-flow/react": "^0.5.10", "@radix-ui/react-accordion": "^1.2.11", "@radix-ui/react-alert-dialog": "^1.1.14", "@radix-ui/react-avatar": "^1.1.10", "@radix-ui/react-checkbox": "^1.3.2", "@radix-ui/react-collapsible": "^1.1.11", "@radix-ui/react-context-menu": "^2.2.15", "@radix-ui/react-dialog": "^1.1.14", "@radix-ui/react-dropdown-menu": "^2.1.15", "@radix-ui/react-hover-card": "^1.1.14", "@radix-ui/react-icons": "^1.3.2", "@radix-ui/react-label": "^2.1.7", "@radix-ui/react-navigation-menu": "^1.2.13", "@radix-ui/react-popover": "^1.1.14", "@radix-ui/react-progress": "^1.1.7", "@radix-ui/react-radio-group": "^1.3.7", "@radix-ui/react-scroll-area": "^1.2.9", "@radix-ui/react-select": "^2.2.5", "@radix-ui/react-separator": "^1.1.7", "@radix-ui/react-slider": "^1.3.5", "@radix-ui/react-slot": "^1.2.3", "@radix-ui/react-switch": "^1.2.5", "@radix-ui/react-tabs": "^1.1.12", "@radix-ui/react-toast": "^1.2.14", "@radix-ui/react-tooltip": "^1.2.7", "@solana-commerce/headless-sdk": "packages/headless-sdk", "@solana-commerce/react-sdk": "packages/react-sdk", "@solana-commerce/ui-primitives": "packages/ui-primitives", "@tanstack/react-query": "^5.79.2", "@types/react-syntax-highlighter": "^15.5.13", "fumadocs-core": "15.6.6", "fumadocs-mdx": "11.7.1", "fumadocs-ui": "15.6.6", "lucide-react": "^0.534.0", "motion": "^12.23.11", "next": "15.4.4", "react": "^19.1.0", "react-dom": "^19.1.0", "react-syntax-highlighter": "^15.6.1", "symbols-react": "^1.2.7", "vaul": "^1.1.2" }, "devDependencies": { "@tailwindcss/postcss": "^4.1.11", "@types/mdx": "^2.0.13", "@types/node": "24.1.0", "@types/react": "^19.1.9", "@types/react-dom": "^19.1.7", "eslint": "^8", "eslint-config-next": "15.4.4", "postcss": "^8.5.6", "tailwindcss": "^4.1.11", "typescript": "^5.8.3" } }],
+    "docs": ["docs@workspace:apps/docs"],
 
     "doctrine": ["doctrine@3.0.0", "", { "dependencies": { "esutils": "^2.0.2" } }, "sha512-yS+Q5i3hBf7GBkd4KG8a7eBNNWNGLTaEwwYWUijIYM7zrlYDM0BFXHjjPWlWZ1Rg7UaddZeIDmi9jF3HmqiQ2w=="],
 
