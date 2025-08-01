@@ -17,12 +17,13 @@ export function FloatingCommerceButton() {
     <div className="fixed bottom-6 right-6 z-50">
       <ClientOnlyCommerceSDK
         config={{
+          rpcUrl: process.env.NEXT_PUBLIC_RPC_URL,
           mode: 'tip',
           position: 'overlay',
           merchant: {
             name: 'Hackweek Store',
-            wallet: 'BQWWFhzBdw2vKKBUX17NHeFbCoFQHfRARpdztPE2tDJ',
-            description: 'Experience Solana Commerce SDK'
+            wallet: 'BizigGQZuLqg6iSgjEr3LwDL8c3eL7PdjKdSavx6P73V',
+            description: 'Experience the Solana Commerce SDK'
           },
           theme: {
             primaryColor: '#000',
@@ -40,6 +41,7 @@ export function FloatingCommerceButton() {
           showProductDetails: false,
           showMerchantInfo: true
         }}
+        // variant="icon-only"
         onPayment={(amount, currency, products) => {
           console.log('Payment:', { amount, currency, products });
         }}

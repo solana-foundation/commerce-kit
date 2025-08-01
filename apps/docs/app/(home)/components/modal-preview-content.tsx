@@ -15,12 +15,12 @@ type Currency = 'USDC' | 'SOL' | 'USDT';
 type PaymentMethod = 'qr' | 'wallet';
 
 export function ModalPreviewContent({ config, selectedMode, demoProducts }: ModalPreviewContentProps) {
-  const [selectedAmount, setSelectedAmount] = useState<number>(5);
+  const [selectedAmount, setSelectedAmount] = useState<number>(1);
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>(
     (config.allowedMints[0] as Currency) || 'USDC'
   );
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('qr');
-  const [customAmount, setCustomAmount] = useState<string>('');
+  const [customAmount, setCustomAmount] = useState<number>(0);
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState<'form' | 'payment'>('form');
