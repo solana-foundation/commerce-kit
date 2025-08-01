@@ -11,7 +11,8 @@
     "clean": "rm -rf .turbo dist node_modules"
   },
   "dependencies": {
-    "@solana-commerce/solana-pay": "workspace:*"
+    "@solana-commerce/solana-pay": "workspace:*",
+    "@solana-commerce/program-client": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.0.0",

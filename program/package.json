@@ -3,7 +3,7 @@
     "version": "0.0.1",
     "main": "index.js",
     "description": "Commerce Program",
-    "repository": "git@github.com:hw-commerce/commerce-program.git",
+    "repository": "git@github.com:solana-commerce/commerce-program.git",
     "license": "MIT",
     "scripts": {
         "generate-clients": "node ./scripts/generate-client.js",
