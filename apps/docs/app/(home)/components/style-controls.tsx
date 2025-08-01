@@ -31,7 +31,7 @@ export function StyleControls({
   config
 }: StyleControlsProps) {
   return (
-    <div className="space-y-4 px-4">
+    <div className="space-y-4 px-4 border-l border-gray-200 dark:border-gray-700">
       {/* Button Variant Selection - Only show for modal */}
       {checkoutStyle === 'modal' && (
         <>
@@ -63,14 +63,6 @@ export function StyleControls({
 
       <SectionSeparator />
 
-      {/* Supported Currencies */}
-      <SupportedCurrencies
-        supportedCurrencies={customizations.supportedCurrencies}
-        onChange={(currencies) => onCustomizationChange('supportedCurrencies', currencies)}
-      />
-
-      <SectionSeparator />
-
       {/* Configuration Inputs */}
       <ConfigurationInputs
         mode={selectedMode}
@@ -87,6 +79,15 @@ export function StyleControls({
         onProductDescriptionChange={(value) => onCustomizationChange('productDescription', value)}
         onProductPriceChange={(value) => onCustomizationChange('productPrice', value)}
       />
+
+      <SectionSeparator />
+
+      {/* Supported Currencies */}
+      <SupportedCurrencies
+        supportedCurrencies={customizations.supportedCurrencies}
+        onChange={(currencies) => onCustomizationChange('supportedCurrencies', currencies)}
+      />
+
     </div>
   );
 }
