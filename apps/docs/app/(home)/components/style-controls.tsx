@@ -33,17 +33,14 @@ export function StyleControls({
   return (
     <div className="space-y-4 px-4 border-l border-gray-200 dark:border-gray-700">
       {/* Button Variant Selection - Only show for modal */}
-      {checkoutStyle === 'modal' && (
-        <>
-          <ButtonVariantSelector
-            value={customizations.buttonVariant}
-            onChange={(value) => onCustomizationChange('buttonVariant', value)}
-            config={config}
-          />
-
-          <SectionSeparator />
-        </>
-      )}
+        
+      <ButtonVariantSelector
+        value={customizations.buttonVariant}
+        onChange={(value) => onCustomizationChange('buttonVariant', value)}
+        config={config}
+      />
+    
+      <SectionSeparator />
 
       {/* Design Controls - Colors & Border Radius */}
       <DesignControls
