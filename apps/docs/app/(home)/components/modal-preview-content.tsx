@@ -342,7 +342,7 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
                 <input
                   type="number"
                   value={customAmount}
-                  onChange={(e) => setCustomAmount(e.target.value)}
+                  onChange={(e) => setCustomAmount(Number(e.target.value))}
                   placeholder="Enter amount"
                   className="w-full h-11 px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-sm font-normal mt-3 outline-none transition-all duration-200 shadow-sm focus:ring-2 focus:ring-gray-300 hover:border-gray-300"
                   style={{ color: theme.textColor }}
