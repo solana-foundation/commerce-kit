@@ -5,16 +5,16 @@ on:
   push:
     branches: [main]
     paths:
-      - 'program/clients/typescript/**'
-      - '.github/workflows/sdk-ts-unit.yml'
-      - 'program/idl/**'
+      - "program/clients/typescript/**"
+      - ".github/workflows/sdk-ts-unit.yml"
+      - "program/idl/**"
 
   pull_request:
     branches: [main]
     paths:
-      - 'program/clients/typescript/**'
-      - '.github/workflows/sdk-ts-unit.yml'
-      - 'program/idl/**'
+      - "program/clients/typescript/**"
+      - ".github/workflows/sdk-ts-unit.yml"
+      - "program/idl/**"
 jobs:
   typescript-sdk-unit:
     name: TypeScript SDK Unit Tests
@@ -26,13 +26,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 'lts/*'
-  
+          node-version: "lts/*"
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
-  
+          bun-version: 1.2.19
+
       # Cache only bun cache - NOT Rust build artifacts that could contain generated IDL
       - name: Setup Bun cache
         uses: actions/cache@v4
@@ -40,7 +40,7 @@ jobs:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
           restore-keys: ${{ runner.os }}-bun-
-  
+
       - name: Install root dependencies
         shell: bash
         run: cd program && bun install --frozen-lockfile
