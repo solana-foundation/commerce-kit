@@ -15,6 +15,10 @@ pub enum CommerceProgramError {
     RefundAmountExceedsPolicyLimit,
     // 5 Refund window expired
     RefundWindowExpired,
+    // 6 Invalid event authority
+    InvalidEventAuthority,
+    // 7 Invalid ATA
+    InvalidAta,
 }
 
 impl From<CommerceProgramError> for ProgramError {

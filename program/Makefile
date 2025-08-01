@@ -1,4 +1,4 @@
-.PHONY: setup-deps test test-all test-integration build clean generate-idl generate-clients fmt
+.PHONY: setup-deps test test-all test-integration build clean generate-idl generate-clients fmt deploy-devnet
 
 # Install dependencies
 install:
@@ -17,6 +17,12 @@ generate-clients: generate-idl
 # Build the program
 build:
 	cargo-build-sbf
+	make generate-idl
+	make generate-clients
+
+# Build the program with devnet feature
+build-devnet:
+	cargo-build-sbf --features devnet
 	make generate-idl
 	make generate-clients
 
@@ -48,6 +54,18 @@ fmt:
 	cargo fmt --all
 	@cd program && cargo clippy --fix --allow-dirty --all-targets -- -D warnings
 	@cd tests/integration-tests && cargo clippy --fix --allow-dirty --all-targets -- -D warnings
+
+# Deploy to devnet
+deploy-devnet: build-devnet
+	@echo "Deploying to devnet..."
+	@if [ -z "$(DEPLOYER_KEY)" ]; then \
+		echo "Error: DEPLOYER_KEY parameter is required. Usage: make deploy-devnet DEPLOYER_KEY=/path/to/deployer-keypair.json"; \
+		exit 1; \
+	fi
+	solana program deploy target/deploy/commerce_program.so \
+		--program-id target/deploy/commerce_program-keypair.json \
+		--keypair $(DEPLOYER_KEY) \
+		--url devnet
 
 # Clean build artifacts
 clean:

@@ -10,6 +10,10 @@ const COMMERCE_PROGRAM_ID = 'commkU28d52cwo2Ma3Marxz4Qr9REtfJtuUfqnDnbhT';
 const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 const USDT_MINT = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB';
 
+
+// Event Authority PDA (computed from seeds: ["event_authority"] and program ID)
+const EVENT_AUTHORITY_PDA = '3VSJP7faqLk6MbCaNtMYc2Y8S8hMXRsZ5cBcwh1fjMH1';
+
 const projectRoot = path.join(__dirname, "..");
 const idlDir = path.join(projectRoot, "idl");
 const commerceIdl = require(path.join(idlDir, "commerce_program.json"));
@@ -37,7 +41,7 @@ function preserveConfigFiles() {
 
   const rustCargoPath = path.join(rustClientsDir, 'Cargo.toml');
   const rustCargoTempPath = path.join(rustClientsDir, 'Cargo.toml.temp');
-  
+
   if (fs.existsSync(rustCargoPath)) {
     fs.copyFileSync(rustCargoPath, rustCargoTempPath);
     preservedFiles.set('rust_cargo', rustCargoTempPath);
@@ -112,8 +116,60 @@ commerceCodama.update(
     {
       account: 'usdtMint',
       defaultValue: codama.publicKeyValueNode(USDT_MINT)
+    },
+    {
+      account: 'eventAuthority',
+      defaultValue: codama.publicKeyValueNode(EVENT_AUTHORITY_PDA)
     }
   ]),
+);
+
+const { constantPdaSeedNode, variablePdaSeedNode, publicKeyTypeNode, stringTypeNode, stringValueNode, numberTypeNode } = codama;
+// Add PDA derivers
+commerceCodama.update(
+  codama.addPdasVisitor({
+    commerceProgram: [
+      {
+        name: 'merchant',
+        seeds: [
+          constantPdaSeedNode(stringTypeNode('utf8'), stringValueNode('merchant')),
+          variablePdaSeedNode('owner', publicKeyTypeNode()),
+        ],
+      },
+      {
+        name: 'operator',
+        seeds: [
+          constantPdaSeedNode(stringTypeNode('utf8'), stringValueNode('operator')),
+          variablePdaSeedNode('owner', publicKeyTypeNode()),
+        ],
+      },
+      {
+        name: 'merchantOperatorConfig',
+        seeds: [
+          constantPdaSeedNode(stringTypeNode('utf8'), stringValueNode('merchant_operator_config')),
+          variablePdaSeedNode('merchant', publicKeyTypeNode()),
+          variablePdaSeedNode('operator', publicKeyTypeNode()),
+          variablePdaSeedNode('version', numberTypeNode('u32')),
+        ],
+      },
+      {
+        name: 'payment',
+        seeds: [
+          constantPdaSeedNode(stringTypeNode('utf8'), stringValueNode('payment')),
+          variablePdaSeedNode('merchantOperatorConfig', publicKeyTypeNode()),
+          variablePdaSeedNode('buyer', publicKeyTypeNode()),
+          variablePdaSeedNode('mint', publicKeyTypeNode()),
+          variablePdaSeedNode('orderId', numberTypeNode('u32')),
+        ],
+      },
+      {
+        name: 'eventAuthority',
+        seeds: [
+          constantPdaSeedNode(stringTypeNode('utf8'), stringValueNode('event_authority')),
+        ],
+      },
+    ],
+  }),
 );
 
 const configPreserver = preserveConfigFiles();

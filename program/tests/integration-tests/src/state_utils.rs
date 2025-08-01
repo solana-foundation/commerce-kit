@@ -1,17 +1,19 @@
 use crate::{
     assertions::{
         assert_account_not_exists, assert_merchant_account,
-        assert_merchant_operator_config_account, assert_operator_account, assert_payment_account,
-        assert_token_account, assert_token_balance_changes, assert_multiple_token_balance_changes, BalanceChange,
+        assert_merchant_operator_config_account, assert_multiple_token_balance_changes,
+        assert_operator_account, assert_payment_account, assert_token_account,
+        assert_token_balance_changes, BalanceChange,
     },
     utils::{
-        find_merchant_operator_config_pda, find_merchant_pda, find_operator_pda, find_payment_pda,
-        get_token_balance, set_token_balance, TestContext, USDC_MINT, USDT_MINT, MAX_BPS,
+        assert_event_present, find_merchant_operator_config_pda, find_merchant_pda,
+        find_operator_pda, find_payment_pda, get_token_balance, set_token_balance, TestContext,
+        MAX_BPS, USDC_MINT, USDT_MINT,
     },
 };
 use commerce_program_client::{
     instructions::{
-        ClearPaymentBuilder, CreateOperatorBuilder, InitializeMerchantBuilder,
+        ClearPaymentBuilder, ClosePaymentBuilder, CreateOperatorBuilder, InitializeMerchantBuilder,
         InitializeMerchantOperatorConfigBuilder, MakePaymentBuilder, RefundPaymentBuilder,
         UpdateMerchantAuthorityBuilder, UpdateMerchantSettlementWalletBuilder,
         UpdateOperatorAuthorityBuilder,
@@ -260,8 +262,11 @@ pub fn assert_make_payment(
         .instruction();
 
     // Send transaction with required signers (payer, operator_authority, buyer)
-    context
-        .send_transaction_with_signers(instruction, &[operator_authority, buyer])
+    let transaction_metadata = context
+        .send_transaction_with_signers_with_transaction_result(
+            instruction,
+            &[operator_authority, buyer],
+        )
         .expect("Make payment should succeed");
 
     let expected_payment_status = if is_auto_settle {
@@ -291,6 +296,18 @@ pub fn assert_make_payment(
         &buyer_ata,
         &expected_receiver,
         amount,
+    );
+
+    // Assert PaymentCreated event was emitted
+    assert_event_present(
+        &transaction_metadata,
+        0, // PaymentCreated discriminator
+        &buyer.pubkey(),
+        &merchant_pda,
+        operator_pda,
+        amount,
+        order_id,
+        None,
     );
 
     Ok((payment_pda, bump))
@@ -331,6 +348,8 @@ pub fn assert_chargeback_payment(
     // // Calculate ATAs
     // let buyer_ata = get_associated_token_address(&buyer.pubkey(), &mint);
     // let merchant_escrow_ata = get_associated_token_address(&merchant_pda, &mint);
+
+    // // Get event authority PDA
 
     // // Create chargeback payment instruction
     // let instruction = ChargebackPaymentBuilder::new()
@@ -422,8 +441,8 @@ pub fn assert_refund_payment(
         .instruction();
 
     // Send transaction with required signers (payer, operator_authority)
-    context
-        .send_transaction_with_signers(instruction, &[operator_authority])
+    let transaction_metadata = context
+        .send_transaction_with_signers_with_transaction_result(instruction, &[operator_authority])
         .expect("Refund payment should succeed");
 
     assert_payment_account(
@@ -441,6 +460,18 @@ pub fn assert_refund_payment(
         &merchant_escrow_ata,
         &buyer_ata,
         payment.amount,
+    );
+
+    // Assert PaymentRefunded event was emitted
+    assert_event_present(
+        &transaction_metadata,
+        2, // PaymentRefunded discriminator
+        &buyer.pubkey(),
+        &merchant_pda,
+        &operator_pda,
+        payment.amount,
+        payment.order_id,
+        None,
     );
 
     Ok(())
@@ -502,9 +533,18 @@ pub fn assert_clear_payment(
 
     // Get pre-balances for all ATAs
     let pre_balances = vec![
-        (merchant_escrow_ata, get_token_balance(context, &merchant_escrow_ata)),
-        (merchant_settlement_ata, get_token_balance(context, &merchant_settlement_ata)),
-        (operator_settlement_ata, get_token_balance(context, &operator_settlement_ata)),
+        (
+            merchant_escrow_ata,
+            get_token_balance(context, &merchant_escrow_ata),
+        ),
+        (
+            merchant_settlement_ata,
+            get_token_balance(context, &merchant_settlement_ata),
+        ),
+        (
+            operator_settlement_ata,
+            get_token_balance(context, &operator_settlement_ata),
+        ),
     ];
 
     // Create clear payment instruction
@@ -525,8 +565,8 @@ pub fn assert_clear_payment(
         .instruction();
 
     // Send transaction with required signers (payer, operator_authority)
-    context
-        .send_transaction_with_signers(instruction, &[operator_authority])
+    let transaction_metadata = context
+        .send_transaction_with_signers_with_transaction_result(instruction, &[operator_authority])
         .expect("Clear payment should succeed");
 
     assert_payment_account(
@@ -560,7 +600,8 @@ pub fn assert_clear_payment(
         BalanceChange {
             ata: merchant_settlement_ata,
             expected_change: expected_merchant_amount as i64,
-            description: "Merchant balance should increase by payment amount minus operator fee".to_string(),
+            description: "Merchant balance should increase by payment amount minus operator fee"
+                .to_string(),
         },
         BalanceChange {
             ata: operator_settlement_ata,
@@ -570,6 +611,18 @@ pub fn assert_clear_payment(
     ];
 
     assert_multiple_token_balance_changes(context, &pre_balances, &balance_changes);
+
+    // Assert PaymentCleared event was emitted
+    assert_event_present(
+        &transaction_metadata,
+        1, // PaymentCleared discriminator
+        &buyer.pubkey(),
+        &merchant_pda,
+        &operator_pda,
+        payment.amount,
+        payment.order_id,
+        Some(expected_operator_fee),
+    );
 
     Ok(())
 }
@@ -663,6 +716,64 @@ pub fn assert_update_operator_authority(
         .expect("Update operator authority should succeed");
 
     assert_operator_account(context, &operator_pda, &new_authority.pubkey(), bump);
+
+    Ok(())
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn assert_close_payment(
+    context: &mut TestContext,
+    payer: &Keypair,
+    payment_pda: &Pubkey,
+    buyer: &Pubkey,
+    merchant_pda: &Pubkey,
+    operator_pda: &Pubkey,
+    merchant_operator_config_pda: &Pubkey,
+    mint: &Pubkey,
+    operator_authority: &Keypair,
+) -> Result<(), Box<dyn std::error::Error>> {
+    context.airdrop_if_required(&payer.pubkey(), 1_000_000_000)?;
+
+    // Get initial balance of fee payer to verify lamport transfer
+    let initial_payer_balance = context
+        .get_account(&payer.pubkey())
+        .map(|a| a.lamports)
+        .unwrap_or(0);
+
+    // Create close payment instruction
+    let instruction = ClosePaymentBuilder::new()
+        .payer(payer.pubkey())
+        .payment(*payment_pda)
+        .operator_authority(operator_authority.pubkey())
+        .operator(*operator_pda)
+        .merchant(*merchant_pda)
+        .buyer(*buyer)
+        .merchant_operator_config(*merchant_operator_config_pda)
+        .mint(*mint)
+        .system_program(SYSTEM_PROGRAM_ID)
+        .instruction();
+
+    // Send transaction with required signers
+    context
+        .send_transaction_with_signers(instruction, &[payer, operator_authority])
+        .expect("Close payment should succeed");
+
+    // Verify payment account is closed (balance should be 0)
+    let final_payment_balance = context
+        .get_account(payment_pda)
+        .map(|a| a.lamports)
+        .unwrap_or(0);
+    assert_eq!(final_payment_balance, 0, "Payment account should be closed");
+
+    // Verify lamports were transferred to fee payer
+    let final_payer_balance = context
+        .get_account(&payer.pubkey())
+        .map(|a| a.lamports)
+        .unwrap_or(0);
+    assert!(
+        final_payer_balance > initial_payer_balance,
+        "Fee payer should receive lamports from closed account"
+    );
 
     Ok(())
 }

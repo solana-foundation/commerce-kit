@@ -1,5 +1,5 @@
 use commerce_program_client::COMMERCE_PROGRAM_ID as PROGRAM_ID;
-use litesvm::LiteSVM;
+use litesvm::{types::TransactionMetadata, LiteSVM};
 use solana_program::pubkey;
 use solana_program_pack::Pack;
 use solana_sdk::{
@@ -62,7 +62,6 @@ const USDT_MINT_DATA: &[u8] = &[
     8, 0, 6, 1, 1, 0, 0, 0, 5, 234, 156, 241, 108, 228, 17, 152, 241, 164, 153, 55, 200, 140, 55,
     10, 148, 212, 175, 255, 137, 181, 186, 203, 142, 244, 94, 99, 36, 187, 120, 247,
 ];
-
 
 pub struct TestContext {
     pub svm: LiteSVM,
@@ -188,6 +187,15 @@ impl TestContext {
         instruction: Instruction,
         signers: &[&Keypair],
     ) -> Result<(), Box<dyn std::error::Error>> {
+        self.send_transaction_with_signers_with_transaction_result(instruction, signers)
+            .map(|_| ())
+    }
+
+    pub fn send_transaction_with_signers_with_transaction_result(
+        &mut self,
+        instruction: Instruction,
+        signers: &[&Keypair],
+    ) -> Result<TransactionMetadata, Box<dyn std::error::Error>> {
         let mut all_signers = vec![&self.payer];
         all_signers.extend(signers);
 
@@ -200,7 +208,7 @@ impl TestContext {
 
         let result = self.svm.send_transaction(transaction);
         match result {
-            Ok(_) => Ok(()),
+            Ok(logs) => Ok(logs),
             Err(e) => Err(format!("Transaction failed: {:?}", e).into()),
         }
     }
@@ -271,6 +279,10 @@ pub fn find_payment_pda(
         ],
         &PROGRAM_ID,
     )
+}
+
+pub fn find_event_authority_pda() -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[b"event_authority"], &PROGRAM_ID)
 }
 
 pub fn get_token_balance(context: &mut TestContext, ata: &Pubkey) -> u64 {
@@ -422,4 +434,54 @@ pub fn assert_program_error(
             expected_error_code
         ),
     }
+}
+
+pub fn assert_event_present(
+    transaction_metadata: &TransactionMetadata,
+    discriminator: u8,
+    buyer: &Pubkey,
+    merchant: &Pubkey,
+    operator: &Pubkey,
+    amount: u64,
+    order_id: u32,
+    operator_fee: Option<u64>,
+) {
+    // Build expected event data using same format as events.rs
+    // EVENT_IX_TAG_LE = 0x1d9acb512ea545e4.to_le_bytes() = [228, 69, 165, 46, 81, 203, 154, 29]
+    let mut expected_data = Vec::new();
+    expected_data.extend_from_slice(&[228, 69, 165, 46, 81, 203, 154, 29]); // EVENT_IX_TAG_LE
+    expected_data.push(discriminator);
+    expected_data.extend_from_slice(buyer.as_ref());
+    expected_data.extend_from_slice(merchant.as_ref());
+    expected_data.extend_from_slice(operator.as_ref());
+    expected_data.extend_from_slice(&amount.to_le_bytes());
+
+    // For PaymentCleared events (discriminator 1), include operator_fee
+    if discriminator == 1 {
+        let fee = operator_fee.unwrap_or(0);
+        expected_data.extend_from_slice(&fee.to_le_bytes());
+    }
+
+    expected_data.extend_from_slice(&order_id.to_le_bytes());
+
+    let mut event_found = false;
+
+    for inner_instruction_set in &transaction_metadata.inner_instructions {
+        for inner_instruction in inner_instruction_set {
+            // Check if this is a program instruction that matches our expected event data
+            if inner_instruction.instruction.data == expected_data {
+                event_found = true;
+                break;
+            }
+        }
+        if event_found {
+            break;
+        }
+    }
+
+    assert!(
+        event_found,
+        "Expected event with discriminator {} not found in transaction. Expected data: {:?}",
+        discriminator, expected_data
+    );
 }

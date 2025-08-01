@@ -662,7 +662,7 @@ async fn test_refund_payment_not_enough_account_keys_fails() {
     let merchant_escrow_ata = get_associated_token_address(&merchant_pda, &USDC_MINT);
     let buyer_ata = get_associated_token_address(&buyer.pubkey(), &USDC_MINT);
 
-    // Create instruction with insufficient accounts (missing system_program)
+    // Create instruction with insufficient accounts (missing event_authority)
     let accounts = vec![
         AccountMeta::new(context.payer.pubkey(), true),
         AccountMeta::new(payment_pda, false),
@@ -675,7 +675,8 @@ async fn test_refund_payment_not_enough_account_keys_fails() {
         AccountMeta::new(merchant_escrow_ata, false),
         AccountMeta::new(buyer_ata, false),
         AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),
-        // Missing system_program account
+        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
+        // Missing event_authority account
     ];
 
     let instruction = Instruction {

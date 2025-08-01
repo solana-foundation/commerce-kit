@@ -1,6 +1,12 @@
 extern crate alloc;
 
-use crate::{constants::MAX_BPS, processor::{get_or_create_ata, verify_ata_program}, ID as COMMERCE_PROGRAM_ID};
+use crate::processor::emit_event;
+use crate::{
+    constants::MAX_BPS,
+    events::{EventDiscriminators, PaymentClearedEvent},
+    processor::{get_or_create_ata, verify_ata_program},
+    ID as COMMERCE_PROGRAM_ID,
+};
 use pinocchio::{
     account_info::AccountInfo,
     instruction::{Seed, Signer},
@@ -30,7 +36,7 @@ pub fn process_clear_payment(
     accounts: &[AccountInfo],
     _instruction_data: &[u8],
 ) -> ProgramResult {
-    let [fee_payer_info, payment_info, operator_authority_info, buyer_info, merchant_info, operator_info, merchant_operator_config_info, mint_info, merchant_escrow_ata_info, merchant_settlement_ata_info, operator_settlement_ata_info, token_program_info, associated_token_program_info, system_program_info] =
+    let [fee_payer_info, payment_info, operator_authority_info, buyer_info, merchant_info, operator_info, merchant_operator_config_info, mint_info, merchant_escrow_ata_info, merchant_settlement_ata_info, operator_settlement_ata_info, token_program_info, associated_token_program_info, system_program_info, event_authority_info] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -148,7 +154,7 @@ pub fn process_clear_payment(
 
         get_or_create_ata(
             operator_settlement_ata_info,
-            &operator_authority_info,
+            operator_authority_info,
             mint_info,
             fee_payer_info,
             system_program_info,
@@ -178,6 +184,19 @@ pub fn process_clear_payment(
 
     // Save updated payment data
     payment_data.copy_from_slice(&payment.to_bytes());
+
+    // Emit payment cleared event
+    let event = PaymentClearedEvent {
+        discriminator: EventDiscriminators::PaymentCleared as u8,
+        buyer: *buyer_info.key(),
+        merchant: *merchant_info.key(),
+        operator: *operator_info.key(),
+        amount: payment.amount,
+        operator_fee: operator_fee_amount,
+        order_id: payment.order_id,
+    };
+
+    emit_event(_program_id, event_authority_info, &event.to_bytes())?;
 
     Ok(())
 }

@@ -26,6 +26,8 @@ pub enum CommerceInstructionDiscriminators {
     UpdateMerchantSettlementWallet = 7,
     UpdateMerchantAuthority = 8,
     UpdateOperatorAuthority = 9,
+    ClosePayment = 10,
+    EmitEvent = 228,
 }
 
 impl TryFrom<u8> for CommerceInstructionDiscriminators {
@@ -43,6 +45,8 @@ impl TryFrom<u8> for CommerceInstructionDiscriminators {
             7 => Ok(CommerceInstructionDiscriminators::UpdateMerchantSettlementWallet),
             8 => Ok(CommerceInstructionDiscriminators::UpdateMerchantAuthority),
             9 => Ok(CommerceInstructionDiscriminators::UpdateOperatorAuthority),
+            10 => Ok(CommerceInstructionDiscriminators::ClosePayment),
+            228 => Ok(CommerceInstructionDiscriminators::EmitEvent),
             _ => Err(()),
         }
     }

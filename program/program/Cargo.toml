@@ -9,6 +9,7 @@ crate-type = ["cdylib", "lib"]
 [features]
 no-entrypoint = []
 idl = []
+devnet = []
 
 [dependencies]
 const-crypto = { workspace = true }

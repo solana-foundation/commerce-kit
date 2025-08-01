@@ -10,7 +10,14 @@ pnpm install
 
 # Run tests
 
+## Unit Tests
+```bash
+pnpm test:unit
 ```
+
+## Integration Tests
+
+```bash
 pnpm test:integration
 ```
 Note: this will start a local validator using surfpool and run the tests.

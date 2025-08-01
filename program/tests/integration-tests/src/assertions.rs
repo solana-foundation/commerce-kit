@@ -196,13 +196,9 @@ pub fn assert_multiple_token_balance_changes(
         };
 
         assert_eq!(
-            expected_post_balance,
-            post_balance,
+            expected_post_balance, post_balance,
             "{} (expected change: {}, pre: {}, post: {})",
-            change.description,
-            change.expected_change,
-            pre_balance,
-            post_balance
+            change.description, change.expected_change, pre_balance, post_balance
         );
     }
 }

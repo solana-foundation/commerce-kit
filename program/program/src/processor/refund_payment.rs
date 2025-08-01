@@ -10,7 +10,6 @@ use pinocchio::{
 };
 use pinocchio_token::instructions::Transfer;
 
-use crate::ID as COMMERCE_PROGRAM_ID;
 use crate::{
     constants::MERCHANT_SEED,
     error::CommerceProgramError,
@@ -23,14 +22,19 @@ use crate::{
         PolicyData, PolicyType, Status,
     },
 };
+use crate::{
+    events::{EventDiscriminators, PaymentRefundedEvent},
+    processor::emit_event,
+    ID as COMMERCE_PROGRAM_ID,
+};
 
 #[inline(always)]
 pub fn process_refund_payment(
-    _program_id: &Pubkey,
+    program_id: &Pubkey,
     accounts: &[AccountInfo],
     _instruction_data: &[u8],
 ) -> ProgramResult {
-    let [fee_payer_info, payment_info, operator_authority_info, buyer_info, merchant_info, operator_info, merchant_operator_config_info, mint_info, merchant_escrow_ata_info, buyer_ata_info, token_program_info, system_program_info] =
+    let [fee_payer_info, payment_info, operator_authority_info, buyer_info, merchant_info, operator_info, merchant_operator_config_info, mint_info, merchant_escrow_ata_info, buyer_ata_info, token_program_info, system_program_info, event_authority_info] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -140,6 +144,18 @@ pub fn process_refund_payment(
     payment.status = Status::Refunded;
 
     payment_data.copy_from_slice(&payment.to_bytes());
+
+    // Emit payment refunded event
+    let event = PaymentRefundedEvent {
+        discriminator: EventDiscriminators::PaymentRefunded as u8,
+        buyer: *buyer_info.key(),
+        merchant: *merchant_info.key(),
+        operator: *operator_info.key(),
+        amount: payment.amount,
+        order_id: payment.order_id,
+    };
+
+    emit_event(program_id, event_authority_info, &event.to_bytes())?;
 
     Ok(())
 }

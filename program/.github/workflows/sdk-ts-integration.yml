@@ -1,0 +1,115 @@
+name: TypeScript SDK Integration Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'program/**'
+      - 'clients/typescript/**'
+      - 'idl/**'
+      - 'Cargo.*'
+      - 'Makefile'
+      - '.github/workflows/sdk-ts-integration.yml'
+      - 'scripts/generate-client.js'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'program/**'
+      - 'clients/typescript/**'
+      - 'idl/**'
+      - 'Cargo.*'
+      - 'Makefile'
+      - '.github/workflows/sdk-ts-integration.yml'
+      - 'scripts/generate-client.js'
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_LOG: info
+
+permissions:
+  contents: read
+
+jobs:
+  typescript-sdk-integration:
+    name: TypeScript SDK Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Shank
+        run: cargo install shank-cli
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.3
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: |
+          make install
+
+      - name: Setup Solana CLI
+        uses: ./.github/actions/setup-solana
+
+      - name: Build program and generate clients
+        run: |
+          echo "Building program and generating clients..."
+          make build
+
+      - name: Install TypeScript dependencies
+        working-directory: clients/typescript
+        run: pnpm install --frozen-lockfile
+
+      - name: Build TypeScript SDK
+        working-directory: clients/typescript
+        run: pnpm build
+
+      - name: Create mints directory
+        working-directory: clients/typescript
+        run: mkdir -p tests/setup/mints
+
+      - name: Fetch USDC and USDT mints
+        working-directory: clients/typescript
+        run: pnpm fetch-mints
+
+      - name: Run TypeScript integration tests
+        working-directory: clients/typescript
+        run: |
+          echo "🧪 Running TypeScript SDK integration tests..."
+          pnpm test:ci:integration
+
+      - name: Show failure logs
+        if: failure()
+        uses: ./.github/actions/show-failure-logs
+        with:
+          test-type: "TypeScript integration"

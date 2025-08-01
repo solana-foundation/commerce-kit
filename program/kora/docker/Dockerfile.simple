@@ -1,0 +1,56 @@
+# Simplified Dockerfile for Kora testing
+FROM rust:1.75-slim AS builder
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libssl-dev \
+    libudev-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy source
+COPY . .
+
+# Build only the RPC server
+RUN cargo build --release --bin kora-rpc --bin kora-cli
+
+# Runtime stage
+FROM debian:bookworm-slim AS runtime
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy binaries
+COPY --from=builder /app/target/release/kora-rpc /usr/local/bin/kora-rpc
+COPY --from=builder /app/target/release/kora-cli /usr/local/bin/kora-cli
+
+# Copy entrypoint script if it exists
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+WORKDIR /app
+
+# Volume for configuration
+VOLUME ["/app/config"]
+
+# Expose RPC port
+EXPOSE 8080
+
+# Environment variables
+ENV RUST_LOG=info \
+    RPC_URL=http://127.0.0.1:8899 \
+    KORA_CONFIG_PATH=/app/config/kora.toml \
+    PORT=8080
+
+# Health check using JSON-RPC liveness method
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -s -X POST http://localhost:8080 -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"liveness","id":1}' | grep -q '"result":null' || exit 1
+
+# Use entrypoint
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["server"]

@@ -19,6 +19,9 @@ pub mod refund_payment_tests;
 pub mod chargeback_payment_tests;
 
 #[cfg(test)]
+pub mod close_payment_tests;
+
+#[cfg(test)]
 pub mod merchant_operator_config_tests;
 
 pub mod utils;

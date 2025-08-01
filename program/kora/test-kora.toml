@@ -1,0 +1,47 @@
+[kora]
+rate_limit = 100
+
+# Enable/disable specific RPC methods
+[kora.enabled_methods]
+liveness = true
+estimate_transaction_fee = true
+get_supported_tokens = true
+sign_transaction = true
+sign_and_send_transaction = true
+transfer_transaction = true
+get_blockhash = true
+get_config = true
+sign_transaction_if_paid = true
+
+[validation]
+max_allowed_lamports = 10000000 # 0.01 SOL max for testing
+max_signatures = 10
+price_source = "Mock"
+
+allowed_programs = [
+    "11111111111111111111111111111111",             # System Program
+    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",  # Token Program
+    "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL", # Associated Token Program
+    "commkU28d52cwo2Ma3Marxz4Qr9REtfJtuUfqnDnbhT",  # Commerce Program
+    "ComputeBudget111111111111111111111111111111",   # Compute Budget Program
+]
+allowed_tokens = [
+    "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", # USDC
+    "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", # USDT
+    "3xBgvWJBV2SrgkPzfNNegkLm4Diom5kzTsZWfa1D8HRp", # Test mint for gasless transactions
+]
+allowed_spl_paid_tokens = [
+    "3xBgvWJBV2SrgkPzfNNegkLm4Diom5kzTsZWfa1D8HRp", # Test mint for gasless transactions
+]
+disallowed_accounts = []
+
+# Fee payer policy controls what actions the fee payer can perform
+[validation.fee_payer_policy]
+allow_sol_transfers = true
+allow_spl_transfers = true
+allow_token2022_transfers = true
+allow_assign = true
+
+[validation.price]
+type = "margin"
+margin = 0

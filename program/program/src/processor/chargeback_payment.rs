@@ -15,6 +15,7 @@ pub fn process_chargeback_payment(
     // 2. Validate chargeback policies and conditions
     // 3. Figure out a way to claw back funds from the merchant
     // 4. Update payment status to chargedback
+    // 5. Emit PaymentChargebackedEvent using emit_event utility
 
     Ok(())
 }

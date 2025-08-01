@@ -9,7 +9,7 @@
       "inlineSources": false,
       "isolatedModules": true,
       "module": "ESNext",
-      "moduleResolution": "node",
+      "moduleResolution": "bundler",
       "noFallthroughCasesInSwitch": true,
       "noUnusedLocals": true,
       "noUnusedParameters": true,
@@ -20,5 +20,5 @@
       "target": "ESNext"
     },
     "exclude": ["node_modules"],
-    "include": ["src", "test"]
+    "include": ["src", "tests"]
   }

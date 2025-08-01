@@ -1,0 +1,34 @@
+# Build artifacts
+target/
+dist/
+
+# Test data
+test-ledger/
+coverage/
+
+# Node modules
+node_modules/
+sdks/*/node_modules/
+sdks/*/dist/
+
+# Git
+.git/
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+docker-compose.yml
+
+# Temporary files
+*.tmp
+*.temp

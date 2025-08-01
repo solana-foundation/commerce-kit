@@ -1,12 +1,11 @@
+use crate::{error::CommerceProgramError, ID as COMMERCE_PROGRAM_ID};
 use pinocchio::{
     account_info::AccountInfo,
     program_error::ProgramError,
     pubkey::{find_program_address, Pubkey},
 };
 use pinocchio_associated_token_account::ID as ATA_PROGRAM_ID;
-use pinocchio_token::ID as TOKEN_PROGRAM_ID;
-
-use crate::ID as COMMERCE_PROGRAM_ID;
+use pinocchio_token::{state::Mint, ID as TOKEN_PROGRAM_ID};
 
 /// Verify account as a signer, returning an error if it is not or if it is not writable while
 /// expected to be.
@@ -211,6 +210,14 @@ pub fn verify_token_or_system_program(
     if expect_writable && !info.is_writable() {
         return Err(ProgramError::IncorrectProgramId);
     }
+
+    Ok(())
+}
+
+/// Verify account as a valid Mint account
+#[inline(always)]
+pub fn verify_mint_account(info: &AccountInfo) -> Result<(), ProgramError> {
+    Mint::from_account_info(info).map_err(|_| CommerceProgramError::InvalidMint)?;
 
     Ok(())
 }

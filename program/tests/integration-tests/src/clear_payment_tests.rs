@@ -583,13 +583,17 @@ async fn test_clear_payment_unsigned_operator_authority_fails() {
         .unwrap();
 
     // Get the correct settlement wallet from merchant account
-    let merchant_account = context.get_account(&merchant_pda).expect("Merchant should exist");
+    let merchant_account = context
+        .get_account(&merchant_pda)
+        .expect("Merchant should exist");
     let merchant_data = commerce_program_client::Merchant::from_bytes(&merchant_account.data)
         .expect("Should deserialize merchant");
     let settlement_wallet = merchant_data.settlement_wallet;
 
     // Get operator owner from operator account
-    let operator_account = context.get_account(&operator_pda).expect("Operator should exist");
+    let operator_account = context
+        .get_account(&operator_pda)
+        .expect("Operator should exist");
     let operator_data = commerce_program_client::Operator::from_bytes(&operator_account.data)
         .expect("Should deserialize operator");
     let operator_owner = operator_data.owner;
@@ -647,16 +651,22 @@ async fn test_clear_payment_invalid_payment_status_fails() {
     // Try to clear again - should fail because payment is already cleared
     // Use a different payer to avoid AlreadyProcessed error from identical transactions
     let different_payer = Keypair::new();
-    context.airdrop_if_required(&different_payer.pubkey(), 1_000_000_000).unwrap();
-    
+    context
+        .airdrop_if_required(&different_payer.pubkey(), 1_000_000_000)
+        .unwrap();
+
     // Get the correct settlement wallet from merchant account
-    let merchant_account = context.get_account(&merchant_pda).expect("Merchant should exist");
+    let merchant_account = context
+        .get_account(&merchant_pda)
+        .expect("Merchant should exist");
     let merchant_data = commerce_program_client::Merchant::from_bytes(&merchant_account.data)
         .expect("Should deserialize merchant");
     let settlement_wallet = merchant_data.settlement_wallet;
 
     // Get operator owner from operator account
-    let operator_account = context.get_account(&operator_pda).expect("Operator should exist");
+    let operator_account = context
+        .get_account(&operator_pda)
+        .expect("Operator should exist");
     let operator_data = commerce_program_client::Operator::from_bytes(&operator_account.data)
         .expect("Should deserialize operator");
     let operator_owner = operator_data.owner;
@@ -681,7 +691,8 @@ async fn test_clear_payment_invalid_payment_status_fails() {
         .system_program(SYSTEM_PROGRAM_ID)
         .instruction();
 
-    let result = context.send_transaction_with_signers(instruction, &[&different_payer, &operator_authority]);
+    let result = context
+        .send_transaction_with_signers(instruction, &[&different_payer, &operator_authority]);
     assert_program_error(result, INVALID_PAYMENT_STATUS_ERROR);
 }
 
@@ -702,7 +713,9 @@ async fn test_clear_payment_invalid_operator_fails() {
     let fake_operator = Keypair::new();
 
     // Get the correct settlement wallet from merchant account
-    let merchant_account = context.get_account(&merchant_pda).expect("Merchant should exist");
+    let merchant_account = context
+        .get_account(&merchant_pda)
+        .expect("Merchant should exist");
     let merchant_data = commerce_program_client::Merchant::from_bytes(&merchant_account.data)
         .expect("Should deserialize merchant");
     let settlement_wallet = merchant_data.settlement_wallet;
@@ -751,7 +764,9 @@ async fn test_clear_payment_invalid_merchant_fails() {
     let fake_merchant = Keypair::new();
 
     // Get operator owner from operator account
-    let operator_account = context.get_account(&operator_pda).expect("Operator should exist");
+    let operator_account = context
+        .get_account(&operator_pda)
+        .expect("Operator should exist");
     let operator_data = commerce_program_client::Operator::from_bytes(&operator_account.data)
         .expect("Should deserialize operator");
     let operator_owner = operator_data.owner;
@@ -797,13 +812,17 @@ async fn test_clear_payment_invalid_merchant_operator_config_fails() {
     let fake_config = Keypair::new();
 
     // Get the correct settlement wallet from merchant account
-    let merchant_account = context.get_account(&merchant_pda).expect("Merchant should exist");
+    let merchant_account = context
+        .get_account(&merchant_pda)
+        .expect("Merchant should exist");
     let merchant_data = commerce_program_client::Merchant::from_bytes(&merchant_account.data)
         .expect("Should deserialize merchant");
     let settlement_wallet = merchant_data.settlement_wallet;
 
     // Get operator owner from operator account
-    let operator_account = context.get_account(&operator_pda).expect("Operator should exist");
+    let operator_account = context
+        .get_account(&operator_pda)
+        .expect("Operator should exist");
     let operator_data = commerce_program_client::Operator::from_bytes(&operator_account.data)
         .expect("Should deserialize operator");
     let operator_owner = operator_data.owner;
@@ -851,13 +870,17 @@ async fn test_clear_payment_invalid_mint_not_in_allowed_list_fails() {
     set_mint(&mut context, &invalid_mint);
 
     // Get the correct settlement wallet from merchant account
-    let merchant_account = context.get_account(&merchant_pda).expect("Merchant should exist");
+    let merchant_account = context
+        .get_account(&merchant_pda)
+        .expect("Merchant should exist");
     let merchant_data = commerce_program_client::Merchant::from_bytes(&merchant_account.data)
         .expect("Should deserialize merchant");
     let settlement_wallet = merchant_data.settlement_wallet;
 
     // Get operator owner from operator account
-    let operator_account = context.get_account(&operator_pda).expect("Operator should exist");
+    let operator_account = context
+        .get_account(&operator_pda)
+        .expect("Operator should exist");
     let operator_data = commerce_program_client::Operator::from_bytes(&operator_account.data)
         .expect("Should deserialize operator");
     let operator_owner = operator_data.owner;
@@ -903,13 +926,17 @@ async fn test_clear_payment_invalid_payment_pda_fails() {
     let fake_payment = Keypair::new();
 
     // Get the correct settlement wallet from merchant account
-    let merchant_account = context.get_account(&merchant_pda).expect("Merchant should exist");
+    let merchant_account = context
+        .get_account(&merchant_pda)
+        .expect("Merchant should exist");
     let merchant_data = commerce_program_client::Merchant::from_bytes(&merchant_account.data)
         .expect("Should deserialize merchant");
     let settlement_wallet = merchant_data.settlement_wallet;
 
     // Get operator owner from operator account
-    let operator_account = context.get_account(&operator_pda).expect("Operator should exist");
+    let operator_account = context
+        .get_account(&operator_pda)
+        .expect("Operator should exist");
     let operator_data = commerce_program_client::Operator::from_bytes(&operator_account.data)
         .expect("Should deserialize operator");
     let operator_owner = operator_data.owner;
@@ -954,13 +981,17 @@ async fn test_clear_payment_invalid_merchant_escrow_ata_fails() {
 
     let different_merchant = Keypair::new();
     // Get the correct settlement wallet from merchant account
-    let merchant_account = context.get_account(&merchant_pda).expect("Merchant should exist");
+    let merchant_account = context
+        .get_account(&merchant_pda)
+        .expect("Merchant should exist");
     let merchant_data = commerce_program_client::Merchant::from_bytes(&merchant_account.data)
         .expect("Should deserialize merchant");
     let settlement_wallet = merchant_data.settlement_wallet;
 
     // Get operator owner from operator account
-    let operator_account = context.get_account(&operator_pda).expect("Operator should exist");
+    let operator_account = context
+        .get_account(&operator_pda)
+        .expect("Operator should exist");
     let operator_data = commerce_program_client::Operator::from_bytes(&operator_account.data)
         .expect("Should deserialize operator");
     let operator_owner = operator_data.owner;
@@ -1007,7 +1038,7 @@ async fn test_clear_payment_not_enough_account_keys_fails() {
     let merchant_escrow_ata = get_associated_token_address(&merchant_pda, &USDC_MINT);
     let merchant_settlement_ata = get_associated_token_address(&buyer.pubkey(), &USDC_MINT);
 
-    // Create instruction with insufficient accounts (missing system_program)
+    // Create instruction with insufficient accounts (missing event_authority)
     let accounts = vec![
         AccountMeta::new(context.payer.pubkey(), true),
         AccountMeta::new(payment_pda, false),
@@ -1020,7 +1051,8 @@ async fn test_clear_payment_not_enough_account_keys_fails() {
         AccountMeta::new(merchant_escrow_ata, false),
         AccountMeta::new(merchant_settlement_ata, false),
         AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),
-        // Missing system_program account
+        AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
+        // Missing event_authority account
     ];
 
     let instruction = Instruction {
@@ -1054,13 +1086,17 @@ async fn test_clear_payment_insufficient_settlement_amount_fails() {
         .unwrap();
 
     // Get the correct settlement wallet from merchant account
-    let merchant_account = context.get_account(&merchant_pda).expect("Merchant should exist");
+    let merchant_account = context
+        .get_account(&merchant_pda)
+        .expect("Merchant should exist");
     let merchant_data = commerce_program_client::Merchant::from_bytes(&merchant_account.data)
         .expect("Should deserialize merchant");
     let settlement_wallet = merchant_data.settlement_wallet;
 
     // Get operator owner from operator account
-    let operator_account = context.get_account(&operator_pda).expect("Operator should exist");
+    let operator_account = context
+        .get_account(&operator_pda)
+        .expect("Operator should exist");
     let operator_data = commerce_program_client::Operator::from_bytes(&operator_account.data)
         .expect("Should deserialize operator");
     let operator_owner = operator_data.owner;
@@ -1109,13 +1145,17 @@ async fn test_clear_payment_settlement_too_early_fails() {
     context.advance_clock(3600); // 1 hour
 
     // Get the correct settlement wallet from merchant account
-    let merchant_account = context.get_account(&merchant_pda).expect("Merchant should exist");
+    let merchant_account = context
+        .get_account(&merchant_pda)
+        .expect("Merchant should exist");
     let merchant_data = commerce_program_client::Merchant::from_bytes(&merchant_account.data)
         .expect("Should deserialize merchant");
     let settlement_wallet = merchant_data.settlement_wallet;
 
     // Get operator owner from operator account
-    let operator_account = context.get_account(&operator_pda).expect("Operator should exist");
+    let operator_account = context
+        .get_account(&operator_pda)
+        .expect("Operator should exist");
     let operator_data = commerce_program_client::Operator::from_bytes(&operator_account.data)
         .expect("Should deserialize operator");
     let operator_owner = operator_data.owner;
@@ -1164,13 +1204,17 @@ async fn test_clear_payment_both_settlement_policies_fails() {
     // Don't advance time, so it would also fail the time check
 
     // Get the correct settlement wallet from merchant account
-    let merchant_account = context.get_account(&merchant_pda).expect("Merchant should exist");
+    let merchant_account = context
+        .get_account(&merchant_pda)
+        .expect("Merchant should exist");
     let merchant_data = commerce_program_client::Merchant::from_bytes(&merchant_account.data)
         .expect("Should deserialize merchant");
     let settlement_wallet = merchant_data.settlement_wallet;
 
     // Get operator owner from operator account
-    let operator_account = context.get_account(&operator_pda).expect("Operator should exist");
+    let operator_account = context
+        .get_account(&operator_pda)
+        .expect("Operator should exist");
     let operator_data = commerce_program_client::Operator::from_bytes(&operator_account.data)
         .expect("Should deserialize operator");
     let operator_owner = operator_data.owner;

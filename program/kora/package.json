@@ -1,0 +1,25 @@
+{
+  "name": "kora-commerce-testing",
+  "version": "1.0.0",
+  "description": "Testing utilities for Kora gasless relayer integration with commerce program",
+  "main": "dist/index.js",
+  "type": "module",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "install-deps": "pnpm install",
+    "test:integration": "./test-kora-integration.sh",
+    "test": "jest"
+  },
+  "dependencies": {
+    "gill": "^0.10.2"
+  },
+  "devDependencies": {
+    "@jest/globals": "^30.0.5",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.1.0",
+    "jest": "^30.0.5",
+    "ts-jest": "^29.4.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}

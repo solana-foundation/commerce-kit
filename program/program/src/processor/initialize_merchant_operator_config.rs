@@ -25,6 +25,13 @@ pub fn process_initialize_merchant_operator_config(
     accounts: &[AccountInfo],
     instruction_data: &[u8],
 ) -> ProgramResult {
+    /*
+    For now accepted currencies are only sent as a Vec of Pubkeys, therefore we don't have the account infos, so we can't validate them.
+    For future work we should add them as remaining accounts or pass them however and validate the following:
+
+    1. Is a Mint account type
+    2. Is owned by the token program (spl or spl 2022)
+     */
     let args = process_instruction_data(instruction_data)?;
     let [payer_info, authority_info, merchant_info, operator_info, config_info, system_program_info] =
         accounts

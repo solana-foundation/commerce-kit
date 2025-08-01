@@ -70,6 +70,7 @@ pub enum CommerceProgramInstruction {
     #[account(10, writable, name = "merchant_settlement_ata")]
     #[account(11, name = "token_program")]
     #[account(12, name = "system_program")]
+    #[account(13, name = "event_authority", desc = "Event authority PDA")]
     MakePayment {
         order_id: u32,
         amount: u64,
@@ -106,6 +107,7 @@ pub enum CommerceProgramInstruction {
     #[account(11, name = "token_program")]
     #[account(12, name = "associated_token_program")]
     #[account(13, name = "system_program")]
+    #[account(14, name = "event_authority", desc = "Event authority PDA")]
     ClearPayment = 4,
 
     // Refund Payment
@@ -130,6 +132,7 @@ pub enum CommerceProgramInstruction {
     #[account(9, writable, name = "buyer_ata")]
     #[account(10, name = "token_program")]
     #[account(11, name = "system_program")]
+    #[account(12, name = "event_authority", desc = "Event authority PDA")]
     RefundPayment = 5,
 
     // Chargeback Payment
@@ -154,6 +157,7 @@ pub enum CommerceProgramInstruction {
     #[account(9, writable, name = "buyer_ata")]
     #[account(10, name = "token_program")]
     #[account(11, name = "system_program")]
+    #[account(12, name = "event_authority", desc = "Event authority PDA")]
     ChargebackPayment = 6,
 
     // Update Merchant Settlement Wallet
@@ -183,4 +187,24 @@ pub enum CommerceProgramInstruction {
     #[account(2, writable, name = "operator", desc = "Operator PDA")]
     #[account(3, name = "new_operator_authority")]
     UpdateOperatorAuthority = 9,
+
+    // Close Payment
+    #[account(0, writable, signer, name = "payer")]
+    #[account(1, writable, name = "payment", desc = "Payment PDA to close")]
+    #[account(2, signer, name = "operator_authority")]
+    #[account(3, name = "operator", desc = "Operator PDA")]
+    #[account(4, name = "merchant", desc = "Merchant PDA")]
+    #[account(5, name = "buyer", desc = "Buyer account")]
+    #[account(
+        6,
+        name = "merchant_operator_config",
+        desc = "Merchant Operator Config PDA"
+    )]
+    #[account(7, name = "mint", desc = "Token mint")]
+    #[account(8, name = "system_program")]
+    ClosePayment = 10,
+
+    /// Invoked via CPI from another program to log event via instruction data.
+    #[account(0, signer, name = "event_authority")]
+    EmitEvent {} = 228,
 }

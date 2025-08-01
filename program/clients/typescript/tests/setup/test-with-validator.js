@@ -3,8 +3,8 @@ import { setTimeout } from 'timers/promises';
 import { platform } from 'os';
 
 const config = {
-  validatorStartupTime: parseInt(process.env.SOLANA_VALIDATOR_STARTUP_TIME) || 3000,
-  validatorArgs: (process.env.SOLANA_VALIDATOR_ARGS || '-r --account EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v tests/setup/mints/usdc.json --account Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB tests/setup/mints/usdt.json').split(' '),
+  validatorStartupTime: parseInt(process.env.SOLANA_VALIDATOR_STARTUP_TIME) || 10_000,
+  validatorArgs: (process.env.SOLANA_VALIDATOR_ARGS || '-r --account EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v tests/setup/mints/usdc.json --account Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB tests/setup/mints/usdt.json --bpf-program commkU28d52cwo2Ma3Marxz4Qr9REtfJtuUfqnDnbhT ../../target/deploy/commerce_program.so').split(' '),
   maxHealthCheckRetries: 10
 };
 
@@ -28,7 +28,7 @@ async function checkSolanaCLI() {
 
 async function waitForValidator() {
   console.log('Waiting for validator to be ready...');
-  
+  await setTimeout(config.validatorStartupTime);
   for (let i = 0; i < config.maxHealthCheckRetries; i++) {
     try {
       const checkProcess = spawn('solana', ['cluster-version'], { stdio: 'pipe' });
@@ -69,7 +69,7 @@ async function runTestsWithValidator() {
     await waitForValidator();
 
     console.log('Running tests...');
-    const testProcess = spawn('jest', ['tests/integration.test.ts'], {
+    const testProcess = spawn('pnpm', ['test:integration'], {
       stdio: 'inherit',
       shell: platform() === 'win32' // Windows compatibility
     });

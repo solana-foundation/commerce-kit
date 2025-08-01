@@ -1,7 +1,7 @@
 use crate::{
     state_utils::*,
     utils::{
-        assert_program_error, find_merchant_pda, find_payment_pda,
+        assert_program_error, find_event_authority_pda, find_merchant_pda, find_payment_pda,
         get_or_create_associated_token_account, set_mint, TestContext, INVALID_ACCOUNT_DATA_ERROR,
         INVALID_ACCOUNT_OWNER_ERROR, INVALID_INSTRUCTION_DATA_ERROR, INVALID_MINT_ERROR,
         MISSING_REQUIRED_SIGNATURE_ERROR, TOKEN_INSUFFICIENT_FUNDS_ERROR, USDC_MINT, USDT_MINT,
@@ -344,6 +344,9 @@ async fn test_make_payment_unsigned_buyer_fails() {
     let buyer_ata = get_associated_token_address(&buyer.pubkey(), &USDC_MINT);
     let settlement_ata = get_associated_token_address(&buyer.pubkey(), &USDC_MINT);
 
+    // Get event authority PDA for manual instruction construction
+    let (event_authority, _) = find_event_authority_pda();
+
     let mut instruction_data = vec![3]; // Make payment discriminator
     instruction_data.extend_from_slice(&order_id.to_le_bytes());
     instruction_data.extend_from_slice(&amount.to_le_bytes());
@@ -363,6 +366,7 @@ async fn test_make_payment_unsigned_buyer_fails() {
         AccountMeta::new(settlement_ata, false),
         AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),
         AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
+        AccountMeta::new_readonly(event_authority, false),
     ];
 
     let instruction = Instruction {
@@ -745,6 +749,9 @@ async fn test_make_payment_invalid_instruction_data_length_fails() {
     let buyer_ata = get_associated_token_address(&buyer.pubkey(), &USDC_MINT);
     let settlement_ata = get_associated_token_address(&buyer.pubkey(), &USDC_MINT);
 
+    // Get event authority PDA for manual instruction construction
+    let (event_authority, _) = find_event_authority_pda();
+
     let accounts = vec![
         AccountMeta::new(context.payer.pubkey(), true),
         AccountMeta::new(payment_pda, false),
@@ -759,6 +766,7 @@ async fn test_make_payment_invalid_instruction_data_length_fails() {
         AccountMeta::new(settlement_ata, false),
         AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),
         AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
+        AccountMeta::new_readonly(event_authority, false),
     ];
 
     let instruction = Instruction {

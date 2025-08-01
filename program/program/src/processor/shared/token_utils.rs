@@ -6,6 +6,8 @@ use pinocchio::{
 };
 use pinocchio_associated_token_account::instructions::CreateIdempotent;
 
+use crate::error::CommerceProgramError;
+
 /// Validates an Associated Token Account address.
 ///
 /// # Arguments
@@ -74,7 +76,7 @@ pub fn get_or_create_ata(
     .0;
 
     if ata_info.key() != &expected_ata {
-        return Err(ProgramError::InvalidInstructionData);
+        return Err(CommerceProgramError::InvalidAta.into());
     }
 
     // Create ATA if it doesn't exist

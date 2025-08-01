@@ -2,6 +2,7 @@
 *keypair.json
 node_modules
 dist/
+.DS_Store
 
 # Solana program dependencies for integration tests
 /tests/integration-tests/deps

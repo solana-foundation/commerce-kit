@@ -41,6 +41,7 @@ pub struct Payment {
     pub amount: u64,
     pub created_at: i64,
     pub status: Status,
+    pub bump: u8,
 }
 
 impl Discriminator for Payment {
@@ -54,6 +55,7 @@ impl AccountSerialize for Payment {
         data.extend_from_slice(&self.amount.to_le_bytes());
         data.extend_from_slice(&self.created_at.to_le_bytes());
         data.push(self.status.clone() as u8);
+        data.push(self.bump);
         data
     }
 }
@@ -63,7 +65,8 @@ impl Payment {
         4 + // order_id
         8 + // amount
         8 + // created_at
-        1; // status
+        1 + // status
+        1; // bump
 
     pub fn validate_status(&self, status: Status) -> Result<(), ProgramError> {
         if self.status != status {
@@ -80,7 +83,7 @@ impl Payment {
         mint: &Pubkey,
     ) -> Result<(), ProgramError> {
         let order_id_seed = self.order_id.to_le_bytes();
-        let (pda, _bump) = find_program_address(
+        let (pda, bump) = find_program_address(
             &[
                 PAYMENT_SEED,
                 merchant_operator_config.as_ref(),
@@ -91,7 +94,7 @@ impl Payment {
             &COMMERCE_PROGRAM_ID,
         );
 
-        if pda.ne(account_info_key) {
+        if pda.ne(account_info_key) || bump != self.bump {
             return Err(ProgramError::InvalidAccountData);
         }
 
@@ -115,12 +118,16 @@ impl Payment {
         offset += 8;
 
         let status = Status::from_u8(data[offset])?;
+        offset += 1;
+
+        let bump = data[offset];
 
         Ok(Self {
             order_id,
             amount,
             created_at,
             status,
+            bump,
         })
     }
 }

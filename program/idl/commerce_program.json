@@ -272,6 +272,14 @@
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "eventAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Event authority PDA"
+          ]
         }
       ],
       "args": [
@@ -383,6 +391,14 @@
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "eventAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Event authority PDA"
+          ]
         }
       ],
       "args": [],
@@ -471,6 +487,14 @@
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "eventAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Event authority PDA"
+          ]
         }
       ],
       "args": [],
@@ -559,6 +583,14 @@
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "eventAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Event authority PDA"
+          ]
         }
       ],
       "args": [],
@@ -700,6 +732,94 @@
         "type": "u8",
         "value": 9
       }
+    },
+    {
+      "name": "ClosePayment",
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "payment",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Payment PDA to close"
+          ]
+        },
+        {
+          "name": "operatorAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "operator",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Operator PDA"
+          ]
+        },
+        {
+          "name": "merchant",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Merchant PDA"
+          ]
+        },
+        {
+          "name": "buyer",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Buyer account"
+          ]
+        },
+        {
+          "name": "merchantOperatorConfig",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Merchant Operator Config PDA"
+          ]
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Token mint"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 10
+      }
+    },
+    {
+      "name": "EmitEvent",
+      "accounts": [
+        {
+          "name": "eventAuthority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 228
+      }
     }
   ],
   "accounts": [
@@ -807,12 +927,148 @@
             "type": {
               "defined": "Status"
             }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }
     }
   ],
   "types": [
+    {
+      "name": "PaymentCreatedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "discriminator",
+            "type": "u8"
+          },
+          {
+            "name": "buyer",
+            "type": "publicKey"
+          },
+          {
+            "name": "merchant",
+            "type": "publicKey"
+          },
+          {
+            "name": "operator",
+            "type": "publicKey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "orderId",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PaymentClearedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "discriminator",
+            "type": "u8"
+          },
+          {
+            "name": "buyer",
+            "type": "publicKey"
+          },
+          {
+            "name": "merchant",
+            "type": "publicKey"
+          },
+          {
+            "name": "operator",
+            "type": "publicKey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "operatorFee",
+            "type": "u64"
+          },
+          {
+            "name": "orderId",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PaymentRefundedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "discriminator",
+            "type": "u8"
+          },
+          {
+            "name": "buyer",
+            "type": "publicKey"
+          },
+          {
+            "name": "merchant",
+            "type": "publicKey"
+          },
+          {
+            "name": "operator",
+            "type": "publicKey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "orderId",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PaymentChargebackedEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "discriminator",
+            "type": "u8"
+          },
+          {
+            "name": "buyer",
+            "type": "publicKey"
+          },
+          {
+            "name": "merchant",
+            "type": "publicKey"
+          },
+          {
+            "name": "operator",
+            "type": "publicKey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "orderId",
+            "type": "u32"
+          }
+        ]
+      }
+    },
     {
       "name": "RefundPolicy",
       "type": {

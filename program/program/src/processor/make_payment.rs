@@ -1,6 +1,10 @@
 extern crate alloc;
 
-use crate::{processor::verify_token_program, ID as COMMERCE_PROGRAM_ID};
+use crate::{
+    events::{EventDiscriminators, PaymentCreatedEvent},
+    processor::{emit_event, verify_mint_account, verify_token_program},
+    ID as COMMERCE_PROGRAM_ID,
+};
 use pinocchio::{
     account_info::AccountInfo,
     instruction::Seed,
@@ -32,7 +36,7 @@ pub fn process_make_payment(
     instruction_data: &[u8],
 ) -> ProgramResult {
     let args = process_instruction_data(instruction_data)?;
-    let [fee_payer_info, payment_info, operator_authority_info, buyer_info, operator_info, merchant_info, merchant_operator_config_info, mint_info, buyer_ata_info, merchant_escrow_ata_info, merchant_settlement_ata_info, token_program_info, system_program_info] =
+    let [fee_payer_info, payment_info, operator_authority_info, buyer_info, operator_info, merchant_info, merchant_operator_config_info, mint_info, buyer_ata_info, merchant_escrow_ata_info, merchant_settlement_ata_info, token_program_info, system_program_info, event_authority_info] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -64,6 +68,9 @@ pub fn process_make_payment(
 
     // Validate mint is owned by token program
     verify_token_program_account(mint_info)?;
+
+    // Validate mint is a valid mint
+    verify_mint_account(mint_info)?;
 
     // Validate token program
     verify_token_program(token_program_info)?;
@@ -192,6 +199,7 @@ pub fn process_make_payment(
         amount: args.amount,
         created_at: clock.unix_timestamp,
         status: payment_status,
+        bump: args.bump,
     };
 
     // Save payment data
@@ -206,6 +214,18 @@ pub fn process_make_payment(
 
     merchant_operator_config_data
         .copy_from_slice(&merchant_operator_config.to_bytes(&policies, &allowed_mints));
+
+    // Emit payment created event
+    let event = PaymentCreatedEvent {
+        discriminator: EventDiscriminators::PaymentCreated as u8,
+        buyer: *buyer_info.key(),
+        merchant: *merchant_info.key(),
+        operator: *operator_info.key(),
+        amount: args.amount,
+        order_id: args.order_id,
+    };
+
+    emit_event(program_id, event_authority_info, &event.to_bytes())?;
 
     Ok(())
 }

@@ -1,0 +1,191 @@
+import { describe, it, expect, beforeEach } from '@jest/globals';
+import {
+    createSolanaClient,
+    SolanaClient,
+    KeyPairSigner,
+    Address,
+    lamports,
+    generateExtractableKeyPairSigner,
+    ProgramDerivedAddressBump,
+} from 'gill';
+import {
+    FeeType,
+    findPaymentPda,
+    PolicyData,
+} from '../../src/generated';
+import { setupWallets } from './helpers/transactions';
+import {
+    assertGetOrCreateOperator,
+    assertGetOrCreateMerchant,
+    assertGetOrCreateMerchantOperatorConfig,
+    assertMakePayment,
+} from './helpers/state-utils';
+import { generateManyTokenAccounts, generateMint, mintToOwner } from './helpers/tokens';
+import { findAssociatedTokenPda, TOKEN_PROGRAM_ADDRESS } from 'gill/programs';
+
+describe.only('Make Payment', () => {
+    let client: SolanaClient;
+    let payer: KeyPairSigner;
+    let operatorAuthority: KeyPairSigner;
+    let merchantAuthority: KeyPairSigner;
+    let settlementWallet: KeyPairSigner;
+    let testTokenMint: KeyPairSigner;
+    let testTokenAuthority: KeyPairSigner;
+    let customer: KeyPairSigner;
+    let customerTokenAccount: Address;
+    let merchantEscrowAta: Address;
+    let merchantSettlementAta: Address;
+    let paymentPda: Address;
+    let paymentBump: number;
+
+    // PDAs and bumps
+    let merchantPda: Address;
+    let operatorPda: Address;
+    let merchantOperatorConfigPda: Address;
+    let merchantOperatorConfigBump: ProgramDerivedAddressBump;
+
+
+
+    let version = 1; // incremented after each test
+    const operatorFee = lamports(100000n); // 0.0001 SOL
+    const feeType = FeeType.Fixed;
+    let currentOrderId = 1;
+
+    beforeEach(async () => {
+        client = createSolanaClient({ urlOrMoniker: 'http://localhost:8899' });
+
+        payer = await generateExtractableKeyPairSigner();
+        operatorAuthority = await generateExtractableKeyPairSigner();
+        merchantAuthority = await generateExtractableKeyPairSigner();
+        settlementWallet = await generateExtractableKeyPairSigner();
+        testTokenAuthority = await generateExtractableKeyPairSigner();
+        testTokenMint = await generateExtractableKeyPairSigner();
+        customer = await generateExtractableKeyPairSigner();
+
+
+
+        await setupWallets(client, [payer, operatorAuthority, merchantAuthority, settlementWallet, testTokenAuthority, customer]);
+
+        await generateMint({
+            client,
+            payer,
+            authority: testTokenAuthority,
+            mint: testTokenMint,
+        });
+
+
+        customerTokenAccount = await mintToOwner({
+            client,
+            payer,
+            mint: testTokenMint.address,
+            owner: customer.address,
+            authority: testTokenAuthority,
+            amount: 1_000_000,
+        });
+
+        [operatorPda] = await assertGetOrCreateOperator({
+            client,
+            payer,
+            owner: operatorAuthority,
+            failIfExists: false
+        });
+
+        [merchantPda] = await assertGetOrCreateMerchant({
+            client,
+            payer,
+            authority: merchantAuthority,
+            settlementWallet,
+            failIfExists: false
+        });
+
+
+        const policies: PolicyData[] = [
+            {
+                __kind: 'Settlement',
+                fields: [{
+                    minSettlementAmount: 0n,
+                    settlementFrequencyHours: 0,
+                    autoSettle: false,
+                }]
+            },
+            {
+                __kind: 'Refund',
+                fields: [{
+                    maxAmount: 10000n,
+                    maxTimeAfterPurchase: 10000n,
+                }]
+            }
+        ];
+
+        const acceptedCurrencies: Address[] = [testTokenMint.address];
+
+        [merchantOperatorConfigPda, merchantOperatorConfigBump] = await assertGetOrCreateMerchantOperatorConfig({
+            client,
+            payer,
+            authority: merchantAuthority,
+            merchantPda,
+            operatorPda,
+            version,
+            operatorFee,
+            feeType,
+            currentOrderId: 0, // initialize with 0
+            policies,
+            acceptedCurrencies,
+            failIfExists: true
+        });
+        await generateManyTokenAccounts({
+            client,
+            payer,
+            mint: testTokenMint.address,
+            owners: [customer.address, merchantAuthority.address, operatorAuthority.address, settlementWallet.address, merchantPda],
+        });
+
+        [merchantEscrowAta] = await findAssociatedTokenPda({
+            mint: testTokenMint.address,
+            owner: merchantPda,
+            tokenProgram: TOKEN_PROGRAM_ADDRESS,
+        });
+        [merchantSettlementAta] = await findAssociatedTokenPda({
+            mint: testTokenMint.address,
+            owner: settlementWallet.address,
+            tokenProgram: TOKEN_PROGRAM_ADDRESS,
+        });
+        [paymentPda, paymentBump] = await findPaymentPda({
+            merchantOperatorConfig: merchantOperatorConfigPda,
+            buyer: customer.address,
+            mint: testTokenMint.address,
+            orderId: currentOrderId,
+        });
+    }, 20_000);
+
+    describe('Make Payment happy path', () => {
+        it('should have a token balance of 10,000', async () => {
+            const balance = await client.rpc.getTokenAccountBalance(customerTokenAccount).send();
+            expect(balance.value.amount).toBe(BigInt(1_000_000 * 10 ** 6).toString());
+        });
+        it('should make a payment', async () => {
+            const amount = 1_000_000;
+            await assertMakePayment({
+                client,
+                payer,
+                paymentPda,
+                operatorAuthority,
+                buyer: customer,
+                operatorPda,
+                merchantPda,
+                merchantOperatorConfigPda,
+                mint: testTokenMint.address,
+                buyerAta: customerTokenAccount,
+                merchantEscrowAta,
+                merchantSettlementAta,
+                orderId: currentOrderId,
+                amount,
+                bump: paymentBump,
+            });
+        }, 10_000);
+    });
+
+    afterEach(async () => {
+        version++;
+    });
+});
