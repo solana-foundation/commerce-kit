@@ -1,0 +1,15 @@
+[package]
+name = "tests-commerce-program"
+version = { workspace = true }
+edition = { workspace = true }
+
+[dependencies]
+litesvm = "=0.6.1"
+commerce-program-client = { workspace = true, features = ["fetch"] }
+tokio = { workspace = true, features = ["full"] }
+borsh = { workspace = true }
+solana-sdk = { workspace = true }
+solana-program = { workspace = true }
+spl-token = { workspace = true }
+spl-associated-token-account = { workspace = true }
+solana-program-pack = { workspace = true }

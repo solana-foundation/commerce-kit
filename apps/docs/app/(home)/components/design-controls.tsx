@@ -1,0 +1,38 @@
+'use client';
+
+import { ColorPickerPopover } from './color-picker-popover';
+import { BorderRadiusPicker } from './border-radius-picker';
+import type { Customizations } from './types';
+
+interface DesignControlsProps {
+  customizations: Customizations;
+  onCustomizationChange: <K extends keyof Customizations>(key: K, value: Customizations[K]) => void;
+  isSwapped: boolean;
+  onSwapChange: (isSwapped: boolean) => void;
+}
+
+export function DesignControls({ 
+  customizations, 
+  onCustomizationChange, 
+  isSwapped, 
+  onSwapChange 
+}: DesignControlsProps) {
+  return (
+    <div className="grid grid-cols-2 gap-4 overflow-hidden">
+      <div className="col-span-1 p-2">
+        <ColorPickerPopover
+          customizations={customizations}
+          onCustomizationChange={onCustomizationChange}
+          isSwapped={isSwapped}
+          onSwapChange={onSwapChange}
+        />
+      </div>
+      <div className="col-span-1 p-2 border-l border-gray-200 pl-4">
+        <BorderRadiusPicker
+          borderRadius={customizations.borderRadius}
+          onBorderRadiusChange={(value: string) => onCustomizationChange('borderRadius', value)}
+        />
+      </div>
+    </div>
+  );
+}

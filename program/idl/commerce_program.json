@@ -1,0 +1,956 @@
+{
+  "version": "0.0.1",
+  "name": "commerce_program",
+  "instructions": [
+    {
+      "name": "InitializeMerchant",
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "merchant",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "settlementWallet",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "settlementUsdcAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowUsdcAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "usdcMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "settlementUsdtAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowUsdtAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "usdtMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bump",
+          "type": "u8"
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 0
+      }
+    },
+    {
+      "name": "CreateOperator",
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "operator",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bump",
+          "type": "u8"
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 1
+      }
+    },
+    {
+      "name": "InitializeMerchantOperatorConfig",
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "Authority of the merchant"
+          ]
+        },
+        {
+          "name": "merchant",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Merchant PDA"
+          ]
+        },
+        {
+          "name": "operator",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Operator PDA"
+          ]
+        },
+        {
+          "name": "config",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "The MerchantOperatorConfig PDA being initialized"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "version",
+          "type": "u32"
+        },
+        {
+          "name": "bump",
+          "type": "u8"
+        },
+        {
+          "name": "operatorFee",
+          "type": "u64"
+        },
+        {
+          "name": "feeType",
+          "type": {
+            "defined": "FeeType"
+          }
+        },
+        {
+          "name": "policies",
+          "type": {
+            "vec": {
+              "defined": "PolicyData"
+            }
+          }
+        },
+        {
+          "name": "acceptedCurrencies",
+          "type": {
+            "vec": "publicKey"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 2
+      }
+    },
+    {
+      "name": "MakePayment",
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "payment",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "operatorAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "buyer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "operator",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merchant",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Merchant PDA"
+          ]
+        },
+        {
+          "name": "merchantOperatorConfig",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "buyerAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "merchantEscrowAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "merchantSettlementAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "orderId",
+          "type": "u32"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "bump",
+          "type": "u8"
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 3
+      }
+    },
+    {
+      "name": "ClearPayment",
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "payment",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "New Payment PDA being created"
+          ]
+        },
+        {
+          "name": "operatorAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "buyer",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merchant",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Merchant PDA"
+          ]
+        },
+        {
+          "name": "operator",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Operator PDA"
+          ]
+        },
+        {
+          "name": "merchantOperatorConfig",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merchantEscrowAta",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Merchant Escrow ATA (Merchant PDA is owner)"
+          ]
+        },
+        {
+          "name": "merchantSettlementAta",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Merchant Settlement ATA (Merchant settlement wallet is owner)"
+          ]
+        },
+        {
+          "name": "operatorSettlementAta",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Operator Settlement ATA (Operator owner is owner)"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 4
+      }
+    },
+    {
+      "name": "RefundPayment",
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "payment",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Payment PDA being updated"
+          ]
+        },
+        {
+          "name": "operatorAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "buyer",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Refund destination owner"
+          ]
+        },
+        {
+          "name": "merchant",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Merchant PDA"
+          ]
+        },
+        {
+          "name": "operator",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Operator PDA"
+          ]
+        },
+        {
+          "name": "merchantOperatorConfig",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Merchant Operator Config PDA"
+          ]
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merchantEscrowAta",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Merchant Escrow ATA (Merchant PDA is owner)"
+          ]
+        },
+        {
+          "name": "buyerAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 5
+      }
+    },
+    {
+      "name": "ChargebackPayment",
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "payment",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Payment PDA being updated"
+          ]
+        },
+        {
+          "name": "operatorAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "buyer",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Chargeback destination owner"
+          ]
+        },
+        {
+          "name": "merchant",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Merchant PDA"
+          ]
+        },
+        {
+          "name": "operator",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Operator PDA"
+          ]
+        },
+        {
+          "name": "merchantOperatorConfig",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Merchant Operator Config PDA"
+          ]
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merchantEscrowAta",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Merchant Escrow ATA (Merchant PDA is owner)"
+          ]
+        },
+        {
+          "name": "buyerAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 6
+      }
+    },
+    {
+      "name": "UpdateMerchantSettlementWallet",
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "merchant",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Merchant PDA"
+          ]
+        },
+        {
+          "name": "newSettlementWallet",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "settlementUsdcAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "usdcMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "settlementUsdtAta",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "usdtMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 7
+      }
+    },
+    {
+      "name": "UpdateMerchantAuthority",
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "merchant",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Merchant PDA"
+          ]
+        },
+        {
+          "name": "newAuthority",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 8
+      }
+    },
+    {
+      "name": "UpdateOperatorAuthority",
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "operator",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Operator PDA"
+          ]
+        },
+        {
+          "name": "newOperatorAuthority",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 9
+      }
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Merchant",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "settlementWallet",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MerchantOperatorConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "merchant",
+            "type": "publicKey"
+          },
+          {
+            "name": "operator",
+            "type": "publicKey"
+          },
+          {
+            "name": "operatorFee",
+            "type": "u64"
+          },
+          {
+            "name": "feeType",
+            "type": {
+              "defined": "FeeType"
+            }
+          },
+          {
+            "name": "currentOrderId",
+            "type": "u32"
+          },
+          {
+            "name": "numPolicies",
+            "type": "u32"
+          },
+          {
+            "name": "numAcceptedCurrencies",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Operator",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Payment",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "orderId",
+            "type": "u32"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": "Status"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "RefundPolicy",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "maxAmount",
+            "type": "u64"
+          },
+          {
+            "name": "maxTimeAfterPurchase",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ChargebackPolicy",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "maxAmount",
+            "type": "u64"
+          },
+          {
+            "name": "maxTimeAfterPurchase",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SettlementPolicy",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "minSettlementAmount",
+            "type": "u64"
+          },
+          {
+            "name": "settlementFrequencyHours",
+            "type": "u32"
+          },
+          {
+            "name": "autoSettle",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Status",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Paid"
+          },
+          {
+            "name": "Cleared"
+          },
+          {
+            "name": "Chargedback"
+          },
+          {
+            "name": "Refunded"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeeType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Bps"
+          },
+          {
+            "name": "Fixed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PolicyType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Refund"
+          },
+          {
+            "name": "Chargeback"
+          },
+          {
+            "name": "Settlement"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PolicyData",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Refund",
+            "fields": [
+              {
+                "defined": "RefundPolicy"
+              }
+            ]
+          },
+          {
+            "name": "Chargeback",
+            "fields": [
+              {
+                "defined": "ChargebackPolicy"
+              }
+            ]
+          },
+          {
+            "name": "Settlement",
+            "fields": [
+              {
+                "defined": "SettlementPolicy"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "origin": "shank",
+    "address": "commkU28d52cwo2Ma3Marxz4Qr9REtfJtuUfqnDnbhT"
+  }
+}

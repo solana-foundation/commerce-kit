@@ -1,0 +1,14 @@
+/target
+*keypair.json
+node_modules
+dist/
+
+# Solana program dependencies for integration tests
+/tests/integration-tests/deps
+
+# Codama generated clients
+/clients/rust/src/generated/*
+/clients/typescript/src/generated/*
+
+# Local test validator
+*test-ledger*

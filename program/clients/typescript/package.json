@@ -1,0 +1,30 @@
+{
+  "name": "@hw-commerce/ts-client",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "type": "module",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "test:integration": "pnpm run build && node --trace-warnings tests/setup/test-with-surfpool.js",
+    "type-check": "tsc --noEmit",
+    "fetch-mints": "solana account EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v -um --output-file tests/setup/mints/usdc.json --output json-compact && solana account Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB -um --output-file tests/setup/mints/usdt.json --output json-compact"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.3",
+  "devDependencies": {
+    "@jest/globals": "^30.0.5",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.1.0",
+    "gill": "^0.10.2",
+    "jest": "^30.0.5",
+    "prettier": "^3.6.2",
+    "ts-jest": "^29.4.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}

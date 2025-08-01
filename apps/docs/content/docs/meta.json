@@ -1,0 +1,11 @@
+{
+  "title": "Commerce SDK",
+  "pages": [
+    "index",
+    "installation", 
+    "quick-start",
+    "headless-sdk",
+    "react-sdk", 
+    "ui-primitives"
+  ]
+} 

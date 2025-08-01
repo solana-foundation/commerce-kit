@@ -1,0 +1,35 @@
+[workspace]
+
+members = ["program", "clients/rust", "tests/integration-tests"]
+
+resolver = "2"
+
+package.version = "0.0.1"
+package.edition = "2021"
+
+[workspace.dependencies]
+const-crypto = "=0.3.0"
+pinocchio = { git = "https://github.com/Nagaprasadvr/pinocchio", branch = "feat-add-token-extensions", package = "pinocchio" }
+pinocchio-log = { git = "https://github.com/Nagaprasadvr/pinocchio", branch = "feat-add-token-extensions", package = "pinocchio-log" }
+pinocchio-pubkey = { git = "https://github.com/Nagaprasadvr/pinocchio", branch = "feat-add-token-extensions", package = "pinocchio-pubkey" }
+pinocchio-system = { git = "https://github.com/Nagaprasadvr/pinocchio", branch = "feat-add-token-extensions", package = "pinocchio-system" }
+pinocchio-token = { git = "https://github.com/Nagaprasadvr/pinocchio", branch = "feat-add-token-extensions", package = "pinocchio-token" }
+pinocchio-associated-token-account = { git = "https://github.com/Nagaprasadvr/pinocchio", branch = "feat-add-token-extensions", package = "pinocchio-associated-token-account" }
+shank = "=0.4.3"
+commerce-program-client = { path = "clients/rust", features = ["fetch"] }
+tokio = "=1.47.0"
+borsh = "=1.5.7"
+solana-program = "=2.2.1"
+solana-sdk = "=2.2.1"
+solana-account-info = "=2.2.1"
+solana-pubkey = "=2.2.1"
+solana-program-entrypoint = "=2.2.1"
+solana-instruction = "=2.2.1"
+solana-cpi = "=2.2.1"
+num-derive = "=0.4"
+num-traits = "=0.2"
+spl-token = "8.0.0"
+spl-associated-token-account = "7.0.0"
+solana-client = "=2.2.1"
+solana-account = "=2.2.1"
+solana-program-pack = "2.2.1"

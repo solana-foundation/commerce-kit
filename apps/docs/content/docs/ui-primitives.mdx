@@ -1,0 +1,413 @@
+---
+title: UI Primitives
+description: Framework-agnostic UI components built with vanilla JavaScript and Web Components
+---
+
+# UI Primitives
+
+The `@solana-commerce/ui-primitives` package provides framework-agnostic UI components built with vanilla JavaScript and Web Components. These components work in any JavaScript environment and framework.
+
+## Features
+
+- **Framework Agnostic** - Works with React, Vue, Svelte, or vanilla JavaScript
+- **Web Components** - Built on web standards
+- **Accessible** - ARIA compliant and keyboard navigable
+- **Customizable** - Easy to style with CSS
+- **Lightweight** - Minimal bundle size impact
+
+## Installation
+
+```bash
+bun add @solana-commerce/ui-primitives
+```
+
+## Quick Start
+
+Import and use the components directly in any JavaScript environment:
+
+```javascript
+import '@solana-commerce/ui-primitives';
+
+// Components are now available as custom elements
+```
+
+Or import specific components:
+
+```javascript
+import '@solana-commerce/ui-primitives/dialog';
+```
+
+## Components
+
+### Dialog
+
+A modal dialog component built on the native HTML `<dialog>` element with enhanced functionality.
+
+#### Basic Usage
+
+```html
+<dialog-wrapper>
+  <dialog id="my-dialog">
+    <dialog-backdrop></dialog-backdrop>
+    <dialog-panel>
+      <h2>Payment Required</h2>
+      <p>Please complete your payment to continue.</p>
+      <button command="close" commandfor="my-dialog">Close</button>
+    </dialog-panel>
+  </dialog>
+</dialog-wrapper>
+
+<button command="show-modal" commandfor="my-dialog">Open Dialog</button>
+```
+
+#### With React
+
+The UI primitives work seamlessly with React:
+
+```tsx
+import '@solana-commerce/ui-primitives';
+
+function PaymentDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  return (
+    <dialog-wrapper open={open ? '' : undefined}>
+      <dialog id="payment-dialog">
+        <dialog-backdrop onClick={onClose} />
+        <dialog-panel style={{ padding: '2rem', maxWidth: '400px' }}>
+          <h2>Complete Payment</h2>
+          <p>Scan the QR code to complete your payment.</p>
+          <button onClick={onClose}>Close</button>
+        </dialog-panel>
+      </dialog>
+    </dialog-wrapper>
+  );
+}
+```
+
+#### API Reference
+
+**Custom Elements:**
+
+- `<dialog-wrapper>` - Main dialog container
+- `<dialog-backdrop>` - Dialog backdrop/overlay
+- `<dialog-panel>` - Dialog content panel
+
+**Attributes:**
+
+- `open` - Controls dialog visibility
+- `command` - Action to perform ("show-modal" | "close")
+- `commandfor` - Target dialog ID
+
+**Events:**
+
+- `open` - Fired when dialog opens
+- `close` - Fired when dialog closes
+
+#### Advanced Usage
+
+**Programmatic Control:**
+
+```javascript
+// Get the dialog wrapper element
+const dialogWrapper = document.querySelector('dialog-wrapper');
+
+// Show the dialog
+await dialogWrapper.show();
+
+// Hide the dialog
+await dialogWrapper.hide();
+
+// Listen to events
+dialogWrapper.addEventListener('open', () => {
+  console.log('Dialog opened');
+});
+
+dialogWrapper.addEventListener('close', () => {
+  console.log('Dialog closed');
+});
+```
+
+**Animation and Styling:**
+
+Use CSS to customize the appearance and animations:
+
+```css
+/* Dialog animations */
+dialog-wrapper[data-transition] dialog-backdrop,
+dialog-wrapper[data-transition] dialog-panel {
+  transition: all 0.2s ease;
+}
+
+/* Backdrop styles */
+dialog-backdrop {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+/* Panel styles */
+dialog-panel {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  border: none;
+}
+
+/* Entering state */
+dialog-wrapper[data-enter] dialog-backdrop {
+  opacity: 0;
+}
+
+dialog-wrapper[data-enter] dialog-panel {
+  opacity: 0;
+  transform: scale(0.95) translateY(-10px);
+}
+
+/* Leaving state */
+dialog-wrapper[data-leave] dialog-backdrop {
+  opacity: 0;
+}
+
+dialog-wrapper[data-leave] dialog-panel {
+  opacity: 0;
+  transform: scale(0.95) translateY(10px);
+}
+
+/* Closed state */
+dialog-wrapper[data-closed] {
+  display: none;
+}
+```
+
+## React Integration
+
+The UI primitives package includes React wrapper components for better TypeScript support:
+
+```tsx
+import { Dialog, DialogPanel, DialogBackdrop, DialogButton } from '@solana-commerce/ui-primitives/react';
+
+function PaymentModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  return (
+    <Dialog open={open} onClose={onClose}>
+      <dialog id="payment">
+        <DialogBackdrop />
+        <DialogPanel style={{ padding: '2rem', textAlign: 'center' }}>
+          <h2>Payment Required</h2>
+          <p>Please scan the QR code below to complete your payment.</p>
+          <div className="qr-code-placeholder">
+            [QR Code would appear here]
+          </div>
+          <DialogButton command="close" target="payment">
+            Close
+          </DialogButton>
+        </DialogPanel>
+      </dialog>
+    </Dialog>
+  );
+}
+```
+
+**React Component Props:**
+
+```typescript
+// Dialog wrapper component
+interface DialogProps {
+  open?: boolean;
+  onClose?: () => void;
+  children: React.ReactNode;
+}
+
+// Dialog button component  
+interface DialogButtonProps {
+  command: 'show-modal' | 'close';
+  target?: string;
+  children: React.ReactNode;
+  onClick?: () => void;
+  style?: React.CSSProperties;
+  className?: string;
+}
+```
+
+## Framework Integration Examples
+
+### Vue.js
+
+```vue
+<template>
+  <div>
+    <button @click="openDialog">Open Payment Dialog</button>
+    
+    <dialog-wrapper :open="isOpen">
+      <dialog id="vue-dialog">
+        <dialog-backdrop @click="closeDialog"></dialog-backdrop>
+        <dialog-panel class="dialog-content">
+          <h2>Payment Dialog</h2>
+          <p>Vue.js integration example</p>
+          <button @click="closeDialog">Close</button>
+        </dialog-panel>
+      </dialog>
+    </dialog-wrapper>
+  </div>
+</template>
+
+<script>
+import '@solana-commerce/ui-primitives';
+
+export default {
+  data() {
+    return {
+      isOpen: false
+    };
+  },
+  methods: {
+    openDialog() {
+      this.isOpen = true;
+    },
+    closeDialog() {
+      this.isOpen = false;
+    }
+  }
+};
+</script>
+```
+
+### Svelte
+
+```svelte
+<script>
+  import '@solana-commerce/ui-primitives';
+  
+  let isOpen = false;
+  
+  function openDialog() {
+    isOpen = true;
+  }
+  
+  function closeDialog() {
+    isOpen = false;
+  }
+</script>
+
+<button on:click={openDialog}>Open Dialog</button>
+
+<dialog-wrapper open={isOpen || undefined}>
+  <dialog id="svelte-dialog">
+    <dialog-backdrop on:click={closeDialog}></dialog-backdrop>
+    <dialog-panel class="p-6 max-w-md">
+      <h2>Payment Dialog</h2>
+      <p>Svelte integration example</p>
+      <button on:click={closeDialog}>Close</button>
+    </dialog-panel>
+  </dialog>
+</dialog-wrapper>
+```
+
+### Vanilla JavaScript
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="module">
+    import '@solana-commerce/ui-primitives';
+  </script>
+</head>
+<body>
+  <button id="open-btn">Open Dialog</button>
+  
+  <dialog-wrapper id="dialog-wrapper">
+    <dialog id="vanilla-dialog">
+      <dialog-backdrop></dialog-backdrop>
+      <dialog-panel style="padding: 2rem; max-width: 400px;">
+        <h2>Payment Dialog</h2>
+        <p>Vanilla JavaScript example</p>
+        <button id="close-btn">Close</button>
+      </dialog-panel>
+    </dialog>
+  </dialog-wrapper>
+
+  <script>
+    const dialogWrapper = document.getElementById('dialog-wrapper');
+    const openBtn = document.getElementById('open-btn');
+    const closeBtn = document.getElementById('close-btn');
+
+    openBtn.addEventListener('click', () => {
+      dialogWrapper.show();
+    });
+
+    closeBtn.addEventListener('click', () => {
+      dialogWrapper.hide();
+    });
+  </script>
+</body>
+</html>
+```
+
+## Accessibility Features
+
+The dialog component includes comprehensive accessibility features:
+
+- **Focus Management** - Traps focus within the dialog when open
+- **Keyboard Navigation** - Escape key closes the dialog
+- **ARIA Attributes** - Proper labeling for screen readers
+- **Backdrop Clicks** - Clicking outside the panel closes the dialog
+
+## Styling Guidelines
+
+### CSS Custom Properties
+
+Use CSS custom properties for consistent theming:
+
+```css
+:root {
+  --dialog-backdrop-color: rgba(0, 0, 0, 0.5);
+  --dialog-panel-bg: white;
+  --dialog-panel-radius: 8px;
+  --dialog-panel-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  --dialog-transition-duration: 0.2s;
+}
+
+dialog-backdrop {
+  background: var(--dialog-backdrop-color);
+}
+
+dialog-panel {
+  background: var(--dialog-panel-bg);
+  border-radius: var(--dialog-panel-radius);
+  box-shadow: var(--dialog-panel-shadow);
+}
+```
+
+### Responsive Design
+
+Make dialogs responsive across screen sizes:
+
+```css
+dialog-panel {
+  width: 90vw;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 640px) {
+  dialog-panel {
+    width: 95vw;
+    margin: 1rem;
+  }
+}
+```
+
+## Browser Support
+
+The UI primitives work in all modern browsers that support:
+
+- Web Components (Custom Elements v1)
+- HTML `<dialog>` element
+- ES2015+ JavaScript
+
+For older browsers, polyfills may be required.
+
+## Next Steps
+
+- [React SDK](/docs/react-sdk) - See how these components are used in React
+- [Examples](/docs/examples) - Complete integration examples
+- [API Reference](/docs/api/ui-primitives) - Full API documentation 

@@ -1,0 +1,863 @@
+---
+title: Subscription Billing
+description: Implement recurring payments and subscription management with Solana Pay
+---
+
+# Subscription Billing
+
+Build a complete subscription system with recurring payments, plan management, and billing automation. This example shows how to create different subscription tiers and handle payment cycles.
+
+## Overview
+
+We'll implement:
+- **Multiple subscription plans** with different features
+- **Payment cycle management** (monthly, yearly)
+- **Usage tracking** and billing
+- **Plan upgrades/downgrades**
+- **Payment failure handling**
+
+## Complete Example
+
+### 1. Subscription Types & Data
+
+```typescript
+// types/subscription.ts
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  description: string;
+  price: number;           // Price in SOL
+  interval: 'monthly' | 'yearly';
+  features: string[];
+  maxUsers?: number;
+  maxProjects?: number;
+  popular?: boolean;
+}
+
+export interface Subscription {
+  id: string;
+  userId: string;
+  planId: string;
+  status: 'active' | 'cancelled' | 'past_due' | 'paused';
+  currentPeriodStart: Date;
+  currentPeriodEnd: Date;
+  nextPaymentAmount: number;
+  paymentHistory: Payment[];
+  createdAt: Date;
+}
+
+export interface Payment {
+  id: string;
+  subscriptionId: string;
+  amount: number;
+  status: 'pending' | 'paid' | 'failed';
+  paidAt?: Date;
+  transactionSignature?: string;
+  failureReason?: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  wallet?: string;
+  subscription?: Subscription;
+}
+```
+
+### 2. Subscription Plans Component
+
+```tsx
+// components/SubscriptionPlans.tsx
+import { useState } from 'react';
+import { SolanaPayButton } from '@solana-commerce/react-sdk';
+import { SubscriptionPlan } from '../types/subscription';
+
+const PLANS: SubscriptionPlan[] = [
+  {
+    id: 'starter',
+    name: 'Starter',
+    description: 'Perfect for individuals getting started',
+    price: 0.01, // 0.01 SOL/month
+    interval: 'monthly',
+    features: [
+      'Up to 3 projects',
+      '1 team member',
+      'Basic support',
+      '5GB storage'
+    ],
+    maxUsers: 1,
+    maxProjects: 3
+  },
+  {
+    id: 'pro',
+    name: 'Professional',
+    description: 'For growing teams and businesses',
+    price: 0.05, // 0.05 SOL/month
+    interval: 'monthly',
+    features: [
+      'Unlimited projects',
+      'Up to 10 team members',
+      'Priority support',
+      '100GB storage',
+      'Advanced analytics'
+    ],
+    maxUsers: 10,
+    popular: true
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    description: 'For large organizations',
+    price: 0.2, // 0.2 SOL/month
+    interval: 'monthly',
+    features: [
+      'Everything in Pro',
+      'Unlimited team members',
+      'Custom integrations',
+      'Dedicated support',
+      '1TB storage',
+      'SSO & advanced security'
+    ]
+  }
+];
+
+const YEARLY_PLANS: SubscriptionPlan[] = PLANS.map(plan => ({
+  ...plan,
+  id: plan.id + '_yearly',
+  price: plan.price * 10, // 20% discount for yearly
+  interval: 'yearly' as const
+}));
+
+interface SubscriptionPlansProps {
+  currentPlan?: SubscriptionPlan;
+  onPlanSelect: (plan: SubscriptionPlan) => void;
+  walletAddress: string;
+}
+
+export function SubscriptionPlans({ 
+  currentPlan, 
+  onPlanSelect, 
+  walletAddress 
+}: SubscriptionPlansProps) {
+  const [isYearly, setIsYearly] = useState(false);
+  const plans = isYearly ? YEARLY_PLANS : PLANS;
+
+  return (
+    <div className="max-w-6xl mx-auto p-6">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">
+          Choose Your Plan
+        </h1>
+        <p className="text-gray-600 mb-6">
+          Select the perfect plan for your needs. Upgrade or downgrade anytime.
+        </p>
+        
+        {/* Billing Toggle */}
+        <div className="flex items-center justify-center space-x-4 mb-8">
+          <span className={!isYearly ? 'font-semibold' : 'text-gray-500'}>
+            Monthly
+          </span>
+          <button
+            onClick={() => setIsYearly(!isYearly)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              isYearly ? 'bg-purple-600' : 'bg-gray-200'
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                isYearly ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+          <span className={isYearly ? 'font-semibold' : 'text-gray-500'}>
+            Yearly
+          </span>
+          {isYearly && (
+            <span className="bg-green-100 text-green-600 px-2 py-1 rounded-full text-sm font-medium">
+              Save 20%
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-8">
+        {plans.map((plan) => (
+          <PlanCard
+            key={plan.id}
+            plan={plan}
+            currentPlan={currentPlan}
+            onSelect={onPlanSelect}
+            walletAddress={walletAddress}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PlanCard({ 
+  plan, 
+  currentPlan, 
+  onSelect, 
+  walletAddress 
+}: {
+  plan: SubscriptionPlan;
+  currentPlan?: SubscriptionPlan;
+  onSelect: (plan: SubscriptionPlan) => void;
+  walletAddress: string;
+}) {
+  const isCurrentPlan = currentPlan?.id === plan.id;
+  const lamports = Math.floor(plan.price * 1_000_000_000);
+
+  return (
+    <div className={`relative bg-white rounded-xl shadow-lg overflow-hidden ${
+      plan.popular ? 'ring-2 ring-purple-500' : 'border border-gray-200'
+    }`}>
+      {plan.popular && (
+        <div className="absolute top-0 left-0 right-0 bg-purple-500 text-white text-center py-2 text-sm font-medium">
+          Most Popular
+        </div>
+      )}
+      
+      <div className={`p-6 ${plan.popular ? 'pt-12' : ''}`}>
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          {plan.name}
+        </h3>
+        <p className="text-gray-600 text-sm mb-4">
+          {plan.description}
+        </p>
+        
+        <div className="mb-6">
+          <div className="flex items-baseline">
+            <span className="text-3xl font-bold text-gray-900">
+              {plan.price.toFixed(3)}
+            </span>
+            <span className="text-gray-500 ml-1">SOL</span>
+            <span className="text-gray-500 ml-1">
+              /{plan.interval === 'yearly' ? 'year' : 'month'}
+            </span>
+          </div>
+          {plan.interval === 'yearly' && (
+            <p className="text-sm text-green-600 mt-1">
+              {(plan.price / 10).toFixed(3)} SOL/month billed annually
+            </p>
+          )}
+        </div>
+
+        <ul className="space-y-3 mb-6">
+          {plan.features.map((feature, index) => (
+            <li key={index} className="flex items-start">
+              <svg className="w-5 h-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              <span className="text-sm text-gray-600">{feature}</span>
+            </li>
+          ))}
+        </ul>
+
+        {isCurrentPlan ? (
+          <button className="w-full bg-gray-100 text-gray-500 py-3 px-4 rounded-lg font-medium cursor-not-allowed">
+            Current Plan
+          </button>
+        ) : (
+          <SolanaPayButton
+            recipient={walletAddress}
+            amount={lamports}
+            memo={`Subscription: ${plan.name} (${plan.interval})`}
+            buttonText={`Subscribe for ${plan.price.toFixed(3)} SOL`}
+            onPaymentRequest={(url) => {
+              console.log('Subscription payment initiated:', {
+                plan: plan.id,
+                amount: plan.price,
+                interval: plan.interval,
+                paymentUrl: url
+              });
+            }}
+            onDialogClose={() => {
+              onSelect(plan);
+            }}
+            style={{
+              width: '100%',
+              backgroundColor: plan.popular ? '#9945FF' : '#6B7280',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '12px 16px',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+### 3. Subscription Management Dashboard
+
+```tsx
+// components/SubscriptionDashboard.tsx
+import { useState, useEffect } from 'react';
+import { Subscription, Payment, SubscriptionPlan } from '../types/subscription';
+
+interface SubscriptionDashboardProps {
+  subscription: Subscription;
+  plan: SubscriptionPlan;
+  onCancelSubscription: () => void;
+  onUpdatePaymentMethod: () => void;
+}
+
+export function SubscriptionDashboard({
+  subscription,
+  plan,
+  onCancelSubscription,
+  onUpdatePaymentMethod
+}: SubscriptionDashboardProps) {
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  
+  const daysUntilRenewal = Math.ceil(
+    (subscription.currentPeriodEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+  );
+
+  const getStatusBadge = (status: Subscription['status']) => {
+    const styles = {
+      active: 'bg-green-100 text-green-800',
+      cancelled: 'bg-red-100 text-red-800',
+      past_due: 'bg-yellow-100 text-yellow-800',
+      paused: 'bg-gray-100 text-gray-800'
+    };
+
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${styles[status]}`}>
+        {status.replace('_', ' ').toUpperCase()}
+      </span>
+    );
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto p-6 space-y-8">
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              Your Subscription
+            </h1>
+            <div className="flex items-center space-x-3">
+              <span className="text-lg font-semibold text-purple-600">
+                {plan.name} Plan
+              </span>
+              {getStatusBadge(subscription.status)}
+            </div>
+          </div>
+          
+          <div className="text-right">
+            <p className="text-2xl font-bold text-gray-900">
+              {plan.price.toFixed(3)} SOL
+            </p>
+            <p className="text-gray-500">
+              per {plan.interval}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          <div>
+            <h3 className="font-semibold text-gray-900 mb-3">Billing Information</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Current Period:</span>
+                <span>
+                  {subscription.currentPeriodStart.toLocaleDateString()} - {subscription.currentPeriodEnd.toLocaleDateString()}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Next Payment:</span>
+                <span>
+                  {daysUntilRenewal > 0 ? `In ${daysUntilRenewal} days` : 'Overdue'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Next Amount:</span>
+                <span className="font-semibold">
+                  {subscription.nextPaymentAmount.toFixed(3)} SOL
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="font-semibold text-gray-900 mb-3">Plan Features</h3>
+            <ul className="space-y-1 text-sm">
+              {plan.features.slice(0, 4).map((feature, index) => (
+                <li key={index} className="flex items-center">
+                  <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-gray-600">{feature}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="flex space-x-4 mt-6 pt-6 border-t">
+          <button
+            onClick={onUpdatePaymentMethod}
+            className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 font-medium"
+          >
+            Update Payment Method
+          </button>
+          <button
+            onClick={() => setShowCancelModal(true)}
+            className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 font-medium"
+          >
+            Cancel Subscription
+          </button>
+        </div>
+      </div>
+
+      {/* Usage & Analytics */}
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          Usage This Period
+        </h2>
+        
+        <div className="grid md:grid-cols-3 gap-6">
+          <UsageCard
+            title="Projects"
+            current={7}
+            limit={plan.maxProjects || 999}
+            icon="📁"
+          />
+          <UsageCard
+            title="Team Members"
+            current={5}
+            limit={plan.maxUsers || 999}
+            icon="👥"
+          />
+          <UsageCard
+            title="Storage Used"
+            current={45}
+            limit={100}
+            unit="GB"
+            icon="💾"
+          />
+        </div>
+      </div>
+
+      {/* Payment History */}
+      <PaymentHistory payments={subscription.paymentHistory} />
+
+      {/* Cancel Modal */}
+      {showCancelModal && (
+        <CancelSubscriptionModal
+          onCancel={() => setShowCancelModal(false)}
+          onConfirm={() => {
+            onCancelSubscription();
+            setShowCancelModal(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function UsageCard({ 
+  title, 
+  current, 
+  limit, 
+  unit = '', 
+  icon 
+}: {
+  title: string;
+  current: number;
+  limit: number;
+  unit?: string;
+  icon: string;
+}) {
+  const percentage = Math.min((current / limit) * 100, 100);
+  const isOverLimit = current > limit;
+
+  return (
+    <div className="border rounded-lg p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center">
+          <span className="text-lg mr-2">{icon}</span>
+          <span className="font-medium text-gray-900">{title}</span>
+        </div>
+        <span className={`text-sm font-semibold ${isOverLimit ? 'text-red-600' : 'text-gray-600'}`}>
+          {current}{unit} / {limit === 999 ? '∞' : `${limit}${unit}`}
+        </span>
+      </div>
+      
+      <div className="w-full bg-gray-200 rounded-full h-2">
+        <div 
+          className={`h-2 rounded-full transition-all ${
+            isOverLimit ? 'bg-red-500' : percentage > 80 ? 'bg-yellow-500' : 'bg-green-500'
+          }`}
+          style={{ width: `${Math.min(percentage, 100)}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function PaymentHistory({ payments }: { payments: Payment[] }) {
+  return (
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <h2 className="text-xl font-semibold text-gray-900 mb-4">
+        Payment History
+      </h2>
+      
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b text-left">
+              <th className="pb-3 font-medium text-gray-900">Date</th>
+              <th className="pb-3 font-medium text-gray-900">Amount</th>
+              <th className="pb-3 font-medium text-gray-900">Status</th>
+              <th className="pb-3 font-medium text-gray-900">Transaction</th>
+            </tr>
+          </thead>
+          <tbody>
+            {payments.map((payment) => (
+              <tr key={payment.id} className="border-b">
+                <td className="py-3 text-gray-600">
+                  {payment.paidAt?.toLocaleDateString() || 'Pending'}
+                </td>
+                <td className="py-3 font-medium">
+                  {payment.amount.toFixed(3)} SOL
+                </td>
+                <td className="py-3">
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    payment.status === 'paid' ? 'bg-green-100 text-green-800' :
+                    payment.status === 'failed' ? 'bg-red-100 text-red-800' :
+                    'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {payment.status}
+                  </span>
+                </td>
+                <td className="py-3">
+                  {payment.transactionSignature ? (
+                    <a 
+                      href={`https://explorer.solana.com/tx/${payment.transactionSignature}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-purple-600 hover:text-purple-800"
+                    >
+                      View Transaction
+                    </a>
+                  ) : (
+                    <span className="text-gray-400">—</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function CancelSubscriptionModal({ 
+  onCancel, 
+  onConfirm 
+}: { 
+  onCancel: () => void; 
+  onConfirm: () => void; 
+}) {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg max-w-md w-full p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Cancel Subscription
+        </h3>
+        <p className="text-gray-600 mb-6">
+          Are you sure you want to cancel your subscription? You'll continue to have access 
+          until the end of your current billing period.
+        </p>
+        <div className="flex space-x-4">
+          <button
+            onClick={onCancel}
+            className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200"
+          >
+            Keep Subscription
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700"
+          >
+            Cancel Subscription
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+### 4. Main Subscription App
+
+```tsx
+// components/SubscriptionApp.tsx
+import { useState, useEffect } from 'react';
+import { SubscriptionPlans } from './SubscriptionPlans';
+import { SubscriptionDashboard } from './SubscriptionDashboard';
+import { User, Subscription, SubscriptionPlan } from '../types/subscription';
+
+const MERCHANT_WALLET = 'BQWWFhzBdw2vKKBUX17NHeFbCoFQHfRARpdztPE2tDJ';
+
+export function SubscriptionApp() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading user data
+    setTimeout(() => {
+      const mockUser: User = {
+        id: 'user_123',
+        email: 'john@example.com',
+        wallet: 'user_wallet_address',
+        subscription: {
+          id: 'sub_123',
+          userId: 'user_123',
+          planId: 'pro',
+          status: 'active',
+          currentPeriodStart: new Date('2024-01-01'),
+          currentPeriodEnd: new Date('2024-02-01'),
+          nextPaymentAmount: 0.05,
+          paymentHistory: [
+            {
+              id: 'pay_1',
+              subscriptionId: 'sub_123',
+              amount: 0.05,
+              status: 'paid',
+              paidAt: new Date('2024-01-01'),
+              transactionSignature: 'sample_signature_123'
+            },
+            {
+              id: 'pay_2',
+              subscriptionId: 'sub_123',
+              amount: 0.05,
+              status: 'paid',
+              paidAt: new Date('2023-12-01'),
+              transactionSignature: 'sample_signature_456'
+            }
+          ],
+          createdAt: new Date('2023-12-01')
+        }
+      };
+      
+      setUser(mockUser);
+      setLoading(false);
+    }, 1000);
+  }, []);
+
+  const handlePlanSelect = (plan: SubscriptionPlan) => {
+    console.log('Plan selected:', plan);
+    
+    // In a real app, you'd:
+    // 1. Verify the payment on your backend
+    // 2. Create/update the subscription
+    // 3. Update the user's subscription data
+    
+    if (user) {
+      const newSubscription: Subscription = {
+        id: `sub_${Date.now()}`,
+        userId: user.id,
+        planId: plan.id,
+        status: 'active',
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: new Date(Date.now() + (plan.interval === 'yearly' ? 365 : 30) * 24 * 60 * 60 * 1000),
+        nextPaymentAmount: plan.price,
+        paymentHistory: [],
+        createdAt: new Date()
+      };
+      
+      setUser({
+        ...user,
+        subscription: newSubscription
+      });
+    }
+  };
+
+  const handleCancelSubscription = () => {
+    if (user?.subscription) {
+      setUser({
+        ...user,
+        subscription: {
+          ...user.subscription,
+          status: 'cancelled'
+        }
+      });
+    }
+  };
+
+  const handleUpdatePaymentMethod = () => {
+    // This would open a payment method update flow
+    console.log('Update payment method');
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const currentPlan = user?.subscription ? {
+    id: user.subscription.planId,
+    name: 'Professional',
+    description: 'For growing teams and businesses',
+    price: 0.05,
+    interval: 'monthly' as const,
+    features: [
+      'Unlimited projects',
+      'Up to 10 team members',
+      'Priority support',
+      '100GB storage',
+      'Advanced analytics'
+    ],
+    maxUsers: 10,
+    popular: true
+  } : undefined;
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-purple-600">
+              SaaS Platform
+            </h1>
+            <div className="flex items-center space-x-4">
+              <span className="text-gray-600">{user?.email}</span>
+              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                <span className="text-purple-600 font-semibold text-sm">
+                  {user?.email?.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="py-8">
+        {user?.subscription?.status === 'active' ? (
+          <SubscriptionDashboard
+            subscription={user.subscription}
+            plan={currentPlan!}
+            onCancelSubscription={handleCancelSubscription}
+            onUpdatePaymentMethod={handleUpdatePaymentMethod}
+          />
+        ) : (
+          <SubscriptionPlans
+            currentPlan={currentPlan}
+            onPlanSelect={handlePlanSelect}
+            walletAddress={MERCHANT_WALLET}
+          />
+        )}
+      </main>
+    </div>
+  );
+}
+```
+
+## Backend Integration
+
+For production, implement these backend endpoints:
+
+```typescript
+// api/subscriptions.ts
+import { createCommerceClient } from '@solana-commerce/headless-sdk';
+
+export async function createSubscription(userId: string, planId: string, transactionSignature: string) {
+  // 1. Verify the payment transaction
+  const client = createCommerceClient({ network: 'mainnet' });
+  const transaction = await client.rpc.getTransaction(transactionSignature).send();
+  
+  if (!transaction) {
+    throw new Error('Transaction not found');
+  }
+  
+  // 2. Create subscription record
+  const subscription = {
+    id: generateId(),
+    userId,
+    planId,
+    status: 'active',
+    currentPeriodStart: new Date(),
+    currentPeriodEnd: getNextBillingDate(planId),
+    transactionSignature,
+    createdAt: new Date()
+  };
+  
+  // 3. Save to database
+  await saveSubscription(subscription);
+  
+  // 4. Set up recurring billing
+  await scheduleNextPayment(subscription);
+  
+  return subscription;
+}
+
+export async function processRecurringPayment(subscriptionId: string) {
+  const subscription = await getSubscription(subscriptionId);
+  
+  if (!subscription || subscription.status !== 'active') {
+    return;
+  }
+  
+  try {
+    // Create payment request
+    const paymentRequest = createSolanaPayRequest({
+      recipient: process.env.MERCHANT_WALLET!,
+      amount: subscription.nextPaymentAmount * 1_000_000_000,
+      memo: `Subscription renewal: ${subscription.planId}`
+    });
+    
+    // Send payment notification to user
+    await sendPaymentNotification(subscription.userId, paymentRequest.url);
+    
+    // Update subscription period
+    await extendSubscriptionPeriod(subscriptionId);
+    
+  } catch (error) {
+    // Handle payment failure
+    await handlePaymentFailure(subscriptionId, error);
+  }
+}
+```
+
+## Key Features
+
+This subscription system includes:
+
+- **✅ Multiple plan tiers** with different features
+- **✅ Monthly/yearly billing** with discounts
+- **✅ Usage tracking** and limits
+- **✅ Payment history** and transaction links
+- **✅ Subscription management** (cancel, upgrade)
+- **✅ Automatic renewals** (with backend)
+
+## Next Steps
+
+Enhance your subscription system with:
+
+- **Webhook integrations** for payment events
+- **Proration** for plan upgrades/downgrades
+- **Trial periods** and freemium models
+- **Invoice generation** and tax calculations
+- **Dunning management** for failed payments
+- **Analytics dashboard** for subscription metrics
+
+This provides a complete foundation for SaaS subscription billing with Solana Pay! 

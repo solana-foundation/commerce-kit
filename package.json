@@ -1,0 +1,21 @@
+{
+  "name": "@commercekit",
+  "private": true,
+  "packageManager": "bun@1.2.19",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "program"
+  ],
+  "scripts": {
+    "build": "turbo build",
+    "build:docs": "turbo build --filter=docs",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "clean": "turbo clean"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "turbo": "latest"
+  }
+}

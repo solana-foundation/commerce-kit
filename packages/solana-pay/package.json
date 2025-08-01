@@ -1,0 +1,22 @@
+{
+  "name": "@solana-commerce/solana-pay",
+  "version": "0.1.0",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean --external gill --external ws --external node-fetch",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch --external gill --external ws --external node-fetch",
+    "clean": "rm -rf .turbo dist node_modules"
+  },
+  "dependencies": {
+    "bignumber.js": "4.0.4",
+    "gill": "^latest",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/qrcode": "^1.5.5",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  }
+}

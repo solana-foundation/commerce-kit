@@ -1,0 +1,13 @@
+{
+    "extends": "../tsconfig.json",
+    "compilerOptions": {
+      // Tell TypeScript to generate declaration files
+      "declaration": true,
+      "declarationMap": true,
+      // Tell TypeScript to only emit declarations, tsup will handle the JS
+      "emitDeclarationOnly": true,
+      // Define where the output files go
+      "outDir": "dist"
+    },
+    "exclude": ["node_modules", "dist"]
+  }

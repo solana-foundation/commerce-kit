@@ -1,0 +1,443 @@
+---
+title: Headless SDK API Reference
+description: Complete API reference for @solana-commerce/headless-sdk
+---
+
+# Headless SDK API Reference
+
+Complete API documentation for the `@solana-commerce/headless-sdk` package.
+
+## Installation
+
+```bash
+bun add @solana-commerce/headless-sdk
+```
+
+## Core Functions
+
+### `createSolanaPayRequest(params)`
+
+Creates a Solana Pay URL according to the official Solana Pay specification.
+
+**Parameters:**
+
+- `params: CreateSolanaPayRequestParams`
+
+```typescript
+interface CreateSolanaPayRequestParams {
+  recipient: string;    // Solana wallet address (base58 encoded)
+  amount: number;       // Amount in lamports (1 SOL = 1,000,000,000 lamports)
+  memo?: string;        // Optional memo text (max 80 characters)
+}
+```
+
+**Returns:** `SolanaPayRequest`
+
+```typescript
+interface SolanaPayRequest {
+  url: string;          // Complete Solana Pay URL
+  recipient: string;    // Recipient address
+  amount: number;       // Amount in lamports
+  memo?: string;        // Memo if provided
+}
+```
+
+**Example:**
+
+```typescript
+import { createSolanaPayRequest } from '@solana-commerce/headless-sdk';
+
+const request = createSolanaPayRequest({
+  recipient: 'BQWWFhzBdw2vKKBUX17NHeFbCoFQHfRARpdztPE2tDJ',
+  amount: 1000000, // 0.001 SOL
+  memo: 'Coffee payment'
+});
+
+console.log(request.url);
+// Output: solana:BQWWFhzBdw2vKKBUX17NHeFbCoFQHfRARpdztPE2tDJ?amount=1000000&memo=Coffee%20payment
+```
+
+**Throws:**
+- `Error` - If recipient address is invalid
+- `Error` - If amount is negative or zero
+- `Error` - If memo exceeds 80 characters
+
+---
+
+### `createCommerceClient(config)`
+
+Creates a blockchain client for interacting with Solana networks using the Gill library.
+
+**Parameters:**
+
+- `config: SolanaClientConfig`
+
+```typescript
+interface SolanaClientConfig {
+  network: "mainnet" | "devnet" | "localnet";
+  rpcUrl?: string;      // Optional custom RPC URL
+}
+```
+
+**Returns:** `CommerceClient`
+
+```typescript
+interface CommerceClient {
+  rpc: any;                    // Gill RPC client instance
+  sendAndConfirmTransaction: any; // Transaction sender function
+  network: string;             // Current network name
+}
+```
+
+**Example:**
+
+```typescript
+import { createCommerceClient } from '@solana-commerce/headless-sdk';
+
+// Using default RPC for devnet
+const client = createCommerceClient({
+  network: 'devnet'
+});
+
+// Using custom RPC URL
+const mainnetClient = createCommerceClient({
+  network: 'mainnet',
+  rpcUrl: 'https://my-custom-rpc.solana.com'
+});
+```
+
+**Throws:**
+- `Error` - If network configuration is invalid
+- `Error` - If RPC URL is unreachable
+
+---
+
+### `getBalance(client, address)`
+
+Retrieves the SOL balance for a given Solana address.
+
+**Parameters:**
+
+- `client: CommerceClient` - Commerce client instance
+- `address: string` - Solana wallet address
+
+**Returns:** `Promise<number>` - Balance in lamports
+
+**Example:**
+
+```typescript
+import { createCommerceClient, getBalance } from '@solana-commerce/headless-sdk';
+
+const client = createCommerceClient({ network: 'devnet' });
+const balance = await getBalance(client, 'BQWWFhzBdw2vKKBUX17NHeFbCoFQHfRARpdztPE2tDJ');
+
+console.log(`Balance: ${balance} lamports`);
+console.log(`Balance: ${balance / 1_000_000_000} SOL`);
+```
+
+**Throws:**
+- `Error` - If address is invalid
+- `Error` - If network request fails
+- `Error` - If account not found
+
+---
+
+## Blockchain Client Functions
+
+The following functions are exported from the blockchain client module:
+
+### `verifyTransaction(client, signature)`
+
+Verifies that a transaction has been confirmed on the blockchain.
+
+**Parameters:**
+
+- `client: CommerceClient` - Commerce client instance
+- `signature: string` - Transaction signature
+
+**Returns:** `Promise<boolean>` - True if transaction is confirmed
+
+**Example:**
+
+```typescript
+import { createCommerceClient, verifyTransaction } from '@solana-commerce/headless-sdk';
+
+const client = createCommerceClient({ network: 'mainnet' });
+const isConfirmed = await verifyTransaction(client, 'transaction_signature_here');
+
+if (isConfirmed) {
+  console.log('Payment confirmed!');
+}
+```
+
+### `buildTransaction(client, params)`
+
+Builds a transaction for sending SOL.
+
+**Parameters:**
+
+- `client: CommerceClient` - Commerce client instance
+- `params: TransactionParams`
+
+```typescript
+interface TransactionParams {
+  from: string;         // Sender's public key
+  to: string;           // Recipient's public key
+  amount: number;       // Amount in lamports
+  memo?: string;        // Optional memo
+}
+```
+
+**Returns:** `Promise<Transaction>` - Built transaction ready for signing
+
+**Example:**
+
+```typescript
+import { createCommerceClient, buildTransaction } from '@solana-commerce/headless-sdk';
+
+const client = createCommerceClient({ network: 'devnet' });
+const transaction = await buildTransaction(client, {
+  from: 'sender_public_key',
+  to: 'recipient_public_key',
+  amount: 1000000, // 0.001 SOL
+  memo: 'Payment for services'
+});
+```
+
+---
+
+## Type Definitions
+
+### `SolanaPayRequest`
+
+```typescript
+interface SolanaPayRequest {
+  url: string;          // The complete Solana Pay URL
+  recipient: string;    // Recipient wallet address
+  amount: number;       // Amount in lamports
+  memo?: string;        // Optional memo text
+}
+```
+
+### `SolanaClientConfig`
+
+```typescript
+interface SolanaClientConfig {
+  network: "mainnet" | "devnet" | "localnet";
+  rpcUrl?: string;      // Optional custom RPC endpoint
+}
+```
+
+### `CommerceClient`
+
+```typescript
+interface CommerceClient {
+  rpc: any;                    // Gill RPC client
+  sendAndConfirmTransaction: any; // Transaction sender
+  network: string;             // Current network
+}
+```
+
+### `CreateSolanaPayRequestParams`
+
+```typescript
+interface CreateSolanaPayRequestParams {
+  recipient: string;    // Solana wallet address
+  amount: number;       // Amount in lamports
+  memo?: string;        // Optional memo (max 80 chars)
+}
+```
+
+### `TransactionParams`
+
+```typescript
+interface TransactionParams {
+  from: string;         // Sender's public key
+  to: string;           // Recipient's public key  
+  amount: number;       // Amount in lamports
+  memo?: string;        // Optional transaction memo
+}
+```
+
+---
+
+## Constants
+
+### Network RPC URLs
+
+```typescript
+const NETWORK_URLS = {
+  mainnet: 'https://api.mainnet-beta.solana.com',
+  devnet: 'https://api.devnet.solana.com',
+  localnet: 'http://localhost:8899'
+};
+```
+
+### Conversion Helpers
+
+```typescript
+const LAMPORTS_PER_SOL = 1_000_000_000;
+
+// Convert SOL to lamports
+function solToLamports(sol: number): number {
+  return Math.floor(sol * LAMPORTS_PER_SOL);
+}
+
+// Convert lamports to SOL
+function lamportsToSol(lamports: number): number {
+  return lamports / LAMPORTS_PER_SOL;
+}
+```
+
+---
+
+## Error Handling
+
+All functions may throw the following error types:
+
+### `InvalidAddressError`
+
+Thrown when a Solana address is malformed or invalid.
+
+```typescript
+try {
+  const request = createSolanaPayRequest({
+    recipient: 'invalid-address',
+    amount: 1000000
+  });
+} catch (error) {
+  if (error instanceof InvalidAddressError) {
+    console.error('Invalid Solana address provided');
+  }
+}
+```
+
+### `NetworkError`
+
+Thrown when network requests fail or RPC is unavailable.
+
+```typescript
+try {
+  const client = createCommerceClient({ network: 'devnet' });
+  const balance = await getBalance(client, 'some-address');
+} catch (error) {
+  if (error instanceof NetworkError) {
+    console.error('Network request failed:', error.message);
+  }
+}
+```
+
+### `TransactionError`
+
+Thrown when transaction building or verification fails.
+
+```typescript
+try {
+  const isConfirmed = await verifyTransaction(client, 'bad-signature');
+} catch (error) {
+  if (error instanceof TransactionError) {
+    console.error('Transaction verification failed:', error.message);
+  }
+}
+```
+
+---
+
+## Usage Examples
+
+### Basic Payment Flow
+
+```typescript
+import { 
+  createSolanaPayRequest, 
+  createCommerceClient, 
+  verifyTransaction 
+} from '@solana-commerce/headless-sdk';
+
+// 1. Create payment request
+const paymentRequest = createSolanaPayRequest({
+  recipient: 'merchant_wallet_address',
+  amount: 5000000, // 0.005 SOL
+  memo: 'Order #12345'
+});
+
+// 2. Display payment URL to user (QR code, etc.)
+console.log('Pay here:', paymentRequest.url);
+
+// 3. Verify payment after user pays
+const client = createCommerceClient({ network: 'mainnet' });
+
+// In real app, you'd get this from the user or a webhook
+const transactionSignature = 'user_provided_transaction_signature';
+
+const isConfirmed = await verifyTransaction(client, transactionSignature);
+if (isConfirmed) {
+  console.log('Payment confirmed! Order can be fulfilled.');
+}
+```
+
+### Account Balance Checking
+
+```typescript
+import { createCommerceClient, getBalance } from '@solana-commerce/headless-sdk';
+
+async function checkMerchantBalance(merchantAddress: string) {
+  const client = createCommerceClient({ network: 'mainnet' });
+  
+  try {
+    const balance = await getBalance(client, merchantAddress);
+    const solBalance = balance / 1_000_000_000;
+    
+    console.log(`Merchant balance: ${solBalance} SOL`);
+    
+    if (solBalance < 0.01) {
+      console.warn('Low balance warning!');
+    }
+    
+    return solBalance;
+  } catch (error) {
+    console.error('Failed to check balance:', error);
+    return 0;
+  }
+}
+```
+
+---
+
+## Migration Guide
+
+### From v0.0.x to v0.1.x
+
+The API has been stabilized with these changes:
+
+1. **Function naming**: All functions now use consistent camelCase
+2. **Error handling**: Specific error types introduced
+3. **Type safety**: Improved TypeScript definitions
+
+**Before:**
+```typescript
+// Old API (v0.0.x)
+import { createPaymentURL } from '@solana-commerce/headless-sdk';
+
+const payment = createPaymentURL('address', 1000000, 'memo');
+```
+
+**After:**
+```typescript
+// New API (v0.1.x)
+import { createSolanaPayRequest } from '@solana-commerce/headless-sdk';
+
+const payment = createSolanaPayRequest({
+  recipient: 'address',
+  amount: 1000000,
+  memo: 'memo'
+});
+```
+
+---
+
+## Support
+
+- **GitHub Issues**: [Report bugs and request features](https://github.com/your-org/solana-commerce/issues)
+- **Documentation**: [Complete guides and examples](/docs)
+- **Community**: Join our Discord for support and discussions 

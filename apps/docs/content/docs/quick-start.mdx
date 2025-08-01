@@ -1,0 +1,505 @@
+---
+title: Quick Start
+description: Get started with Solana Commerce SDK in minutes
+---
+
+# Quick Start
+
+Get your Solana commerce application up and running in minutes. The Commerce SDK provides everything from simple tip buttons to full e-commerce solutions with cart management, theming, and stablecoin support.
+
+## What You'll Build
+
+By the end of this guide, you'll have:
+- A working Solana payment integration
+- Multiple payment modes (tip, buy now, cart)
+- Custom theming and branding
+- Support for SOL and stablecoins (USDC, USDT)
+
+## Installation
+
+Choose your preferred package manager:
+
+```bash
+# Using bun (recommended)
+bun add @solana-commerce/react-sdk
+
+# Using npm
+npm install @solana-commerce/react-sdk
+
+# Using yarn
+yarn add @solana-commerce/react-sdk
+
+# Using pnpm
+pnpm add @solana-commerce/react-sdk
+```
+
+## Step 1: Simple Tip Button
+
+Let's start with the simplest integration - a tip button:
+
+```tsx
+import { SolanaPayButton } from '@solana-commerce/react-sdk';
+
+function App() {
+  return (
+    <div>
+      <h1>Support My Work</h1>
+      <SolanaPayButton 
+        recipient="YOUR_SOLANA_WALLET_ADDRESS"
+      />
+    </div>
+  );
+}
+```
+
+That's it! You now have a working "Tip with Solana" button that opens a payment modal when clicked.
+
+## Step 2: E-commerce Integration
+
+Now let's create a full e-commerce experience with multiple products:
+
+```tsx
+import { SolanaCommerceSDK } from '@solana-commerce/react-sdk';
+
+function Store() {
+  return (
+    <SolanaCommerceSDK
+      config={{
+        mode: 'cart',
+        position: 'overlay',
+        merchant: {
+          name: 'My Digital Store',
+          wallet: 'YOUR_SOLANA_WALLET_ADDRESS',
+          description: 'Premium digital products and courses'
+        },
+        theme: {
+          primaryColor: '#9945FF',
+          borderRadius: 'lg'
+        },
+        products: [
+          {
+            id: 'course-1',
+            name: 'Blockchain Development Course',
+            description: 'Complete guide to building on Solana',
+            price: 100000000, // 0.1 SOL in lamports
+            currency: 'SOL'
+          },
+          {
+            id: 'nft-pack',
+            name: 'NFT Starter Pack',
+            description: 'Collection of 5 unique NFTs',
+            price: 500000000, // 0.5 SOL in lamports
+            currency: 'SOL'
+          }
+        ],
+        allowedMints: ['SOL', 'USDC'],
+        showQR: true,
+        showProductDetails: true,
+        showMerchantInfo: true
+      }}
+      onPayment={(amount, currency, products) => {
+        console.log('Payment initiated:', { amount, currency, products });
+        // Handle payment logic here
+      }}
+      onPaymentSuccess={(signature) => {
+        console.log('Payment successful!', signature);
+        // Handle successful payment
+        // Clear cart, send confirmation email, etc.
+      }}
+      onPaymentError={(error) => {
+        console.error('Payment failed:', error);
+        // Handle payment error
+        // Show error message, retry option, etc.
+      }}
+    />
+  );
+}
+```
+
+## Step 3: Payment Modes
+
+The SDK supports three distinct payment patterns:
+
+### Tip Mode
+
+Perfect for donations, tips, and simple payments:
+
+```tsx
+<SolanaCommerceSDK
+  config={{
+    mode: 'tip',
+    merchant: {
+      name: 'Content Creator',
+      wallet: 'YOUR_WALLET_ADDRESS'
+    },
+    theme: {
+      primaryColor: '#9945FF'
+    },
+    products: [{
+      id: 'tip-1',
+      name: 'Support Tip',
+      price: 10000000, // 0.01 SOL
+      currency: 'SOL'
+    }]
+  }}
+/>
+```
+
+### Buy Now Mode
+
+Single product purchases with detailed information:
+
+```tsx
+<SolanaCommerceSDK
+  config={{
+    mode: 'buyNow',
+    merchant: {
+      name: 'Digital Downloads',
+      wallet: 'YOUR_WALLET_ADDRESS'
+    },
+    products: [{
+      id: 'ebook-1',
+      name: 'Solana Developer Guide',
+      description: 'Comprehensive 200-page guide',
+      price: 50000000, // 0.05 SOL
+      currency: 'SOL'
+    }],
+    showProductDetails: true
+  }}
+/>
+```
+
+### Cart Mode
+
+Multiple products with full shopping experience:
+
+```tsx
+<SolanaCommerceSDK
+  config={{
+    mode: 'cart',
+    merchant: {
+      name: 'My Store',
+      wallet: 'YOUR_WALLET_ADDRESS'
+    },
+    products: [
+      {
+        id: 'item-1',
+        name: 'Digital Course',
+        price: 100000000,
+        currency: 'SOL'
+      },
+      {
+        id: 'item-2',
+        name: 'Bonus Materials',
+        price: 50000000,
+        currency: 'SOL'
+      }
+    ],
+    showProductDetails: true
+  }}
+/>
+```
+
+## Step 4: Theming and Customization
+
+Customize the appearance to match your brand:
+
+### Basic Theming
+
+```tsx
+<SolanaCommerceSDK
+  config={{
+    theme: {
+      primaryColor: '#FF6B6B',    // Your brand color
+      backgroundColor: '#ffffff', // Modal background
+      textColor: '#1f2937',      // Text color
+      borderRadius: 'xl',        // Border roundness
+      fontFamily: 'Inter, sans-serif'
+    }
+    // ... other config
+  }}
+/>
+```
+
+### Dark Theme
+
+```tsx
+<SolanaCommerceSDK
+  config={{
+    theme: {
+      primaryColor: '#60A5FA',
+      backgroundColor: '#1f2937',
+      textColor: '#f9fafb',
+      borderRadius: 'lg'
+    }
+    // ... other config
+  }}
+/>
+```
+
+### Position Control
+
+Choose between overlay modal or inline form:
+
+```tsx
+// Overlay modal (default)
+<SolanaCommerceSDK
+  config={{
+    position: 'overlay',
+    // ... other config
+  }}
+/>
+
+// Inline form
+<SolanaCommerceSDK
+  config={{
+    position: 'inline',
+    // ... other config
+  }}
+/>
+```
+
+## Step 5: Stablecoin Support
+
+Support USDC, USDT, and other SPL tokens:
+
+```tsx
+<SolanaCommerceSDK
+  config={{
+    products: [{
+      id: 'subscription',
+      name: 'Monthly Subscription',
+      price: 10000000, // 10 USDC (6 decimals)
+      currency: 'USDC'
+    }],
+    allowedMints: ['USDC', 'USDT'], // Only allow stablecoins
+    // ... other config
+  }}
+/>
+```
+
+## Step 6: Custom Triggers
+
+Use your own buttons or elements as triggers:
+
+```tsx
+<SolanaCommerceSDK
+  config={{ /* ... */ }}
+>
+  <button className="my-custom-button">
+    🛒 Shop Now
+  </button>
+</SolanaCommerceSDK>
+
+<SolanaCommerceSDK
+  config={{ /* ... */ }}
+>
+  <div className="product-card">
+    <img src="/product.jpg" alt="Product" />
+    <h3>Premium Course</h3>
+    <p>Click to purchase</p>
+  </div>
+</SolanaCommerceSDK>
+```
+
+## Step 7: Event Handling
+
+Handle the complete payment lifecycle:
+
+```tsx
+<SolanaCommerceSDK
+  config={{ /* ... */ }}
+  onPaymentStart={() => {
+    // Payment flow started
+    console.log('Payment initiated...');
+    // Show loading state, disable UI, etc.
+  }}
+  onPayment={(amount, currency, products) => {
+    // Payment URL generated and displayed
+    console.log('Payment request created:', { amount, currency, products });
+    
+    // Track analytics
+    analytics.track('Payment Started', {
+      amount: amount / 1000000000, // Convert to SOL
+      currency,
+      products: products?.map(p => p.id)
+    });
+  }}
+  onPaymentSuccess={(signature) => {
+    // Payment completed successfully
+    console.log('Payment successful!', signature);
+    
+    // Clear cart
+    // Redirect to success page
+    // Send confirmation email
+    // Update inventory
+    // Show success message
+    
+    window.location.href = '/success';
+  }}
+  onPaymentError={(error) => {
+    // Payment failed
+    console.error('Payment failed:', error);
+    
+    // Show error message
+    // Offer retry option
+    // Contact support
+    
+    alert('Payment failed. Please try again or contact support.');
+  }}
+  onCancel={() => {
+    // User cancelled payment
+    console.log('Payment cancelled');
+    
+    // Track cancellation
+    // Return to previous state
+  }}
+/>
+```
+
+## Step 8: Wallet Integration
+
+The SDK generates Solana Pay URLs that work with all major Solana wallets:
+
+- **Mobile Wallets**: Phantom, Solflare, Backpack
+- **Browser Extensions**: Phantom, Solflare, Torus
+- **Hardware Wallets**: Ledger, Trezor
+- **Other Apps**: Any app supporting Solana Pay
+
+Users can pay by:
+1. Scanning the QR code with their mobile wallet
+2. Clicking the payment URL on desktop
+3. Using browser extension wallets
+
+## Complete Example
+
+Here's a complete e-commerce integration:
+
+```tsx
+import { SolanaCommerceSDK, type Product } from '@solana-commerce/react-sdk';
+import { useState } from 'react';
+
+const products: Product[] = [
+  {
+    id: 'course-beginner',
+    name: 'Solana for Beginners',
+    description: 'Start your blockchain journey',
+    price: 50000000, // 0.05 SOL
+    currency: 'SOL'
+  },
+  {
+    id: 'course-advanced',
+    name: 'Advanced Solana Development',
+    description: 'Build complex dApps',
+    price: 200000000, // 0.2 SOL
+    currency: 'SOL'
+  },
+  {
+    id: 'consulting',
+    name: '1-hour Consultation',
+    description: 'Personal guidance session',
+    price: 15000000, // 15 USDC (6 decimals)
+    currency: 'USDC'
+  }
+];
+
+function SolanaStore() {
+  const [paymentStatus, setPaymentStatus] = useState<string>('');
+
+  return (
+    <div className="container mx-auto p-8">
+      <header className="text-center mb-8">
+        <h1 className="text-3xl font-bold">Solana Learning Hub</h1>
+        <p className="text-gray-600">Master blockchain development</p>
+      </header>
+
+      <div className="max-w-md mx-auto">
+        {paymentStatus && (
+          <div className={`p-4 rounded mb-4 ${
+            paymentStatus.includes('success') 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-red-100 text-red-800'
+          }`}>
+            {paymentStatus}
+          </div>
+        )}
+
+        <SolanaCommerceSDK
+          config={{
+            mode: 'cart',
+            position: 'overlay',
+            merchant: {
+              name: 'Solana Learning Hub',
+              wallet: 'YOUR_WALLET_ADDRESS',
+              description: 'Learn blockchain development',
+              logo: '/logo.png'
+            },
+            theme: {
+              primaryColor: '#9945FF',
+              secondaryColor: '#14F195',
+              borderRadius: 'lg',
+              fontFamily: 'system-ui, sans-serif'
+            },
+            products,
+            allowedMints: ['SOL', 'USDC'],
+            showQR: true,
+            showProductDetails: true,
+            showMerchantInfo: true,
+            network: 'mainnet-beta'
+          }}
+          onPaymentStart={() => {
+            setPaymentStatus('Processing payment...');
+          }}
+          onPayment={(amount, currency, products) => {
+            console.log('Payment initiated:', { amount, currency, products });
+            setPaymentStatus('Waiting for payment confirmation...');
+          }}
+          onPaymentSuccess={(signature) => {
+            console.log('Payment successful:', signature);
+            setPaymentStatus('Payment successful! Thank you for your purchase.');
+            
+            // Handle success (clear cart, redirect, etc.)
+            setTimeout(() => {
+              window.location.href = '/success';
+            }, 2000);
+          }}
+          onPaymentError={(error) => {
+            console.error('Payment failed:', error);
+            setPaymentStatus('Payment failed. Please try again.');
+          }}
+          onCancel={() => {
+            setPaymentStatus('');
+          }}
+        >
+          <button className="w-full bg-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+            🛒 Purchase Courses
+          </button>
+        </SolanaCommerceSDK>
+      </div>
+
+      <footer className="text-center mt-8 text-sm text-gray-500">
+        <p>Powered by Solana Commerce SDK</p>
+      </footer>
+    </div>
+  );
+}
+
+export default SolanaStore;
+```
+
+## Next Steps
+
+Now that you have a working integration:
+
+1. **[Explore Examples](/docs/examples)** - See complete use cases
+2. **[API Reference](/docs/api/react-sdk)** - Detailed component documentation
+3. **[Headless SDK](/docs/headless-sdk)** - Use with other frameworks
+4. **[UI Primitives](/docs/ui-primitives)** - Understand the underlying components
+
+## Need Help?
+
+- **GitHub**: [Commerce SDK Repository](https://github.com/solana-commerce/react-sdk)
+- **Discord**: Join our community
+- **Documentation**: Browse the complete guides
+
+You're now ready to accept Solana payments in your application! 🎉 

@@ -1,0 +1,110 @@
+---
+title: Installation
+description: Learn how to install and set up the Commerce SDK packages
+---
+
+# Installation
+
+The Commerce SDK is available as multiple packages to give you flexibility in how you integrate Solana Pay into your applications.
+
+## Package Overview
+
+Choose the packages that best fit your needs:
+
+| Package | Purpose | Dependencies |
+|---------|---------|--------------|
+| `@solana-commerce/headless-sdk` | Core functionality | None |
+| `@solana-commerce/react-sdk` | React components | headless-sdk, ui-primitives |
+| `@solana-commerce/ui-primitives` | UI components | None |
+
+## Installation Methods
+
+### Using Bun (Recommended)
+
+```bash
+# Install specific packages
+bun add @solana-commerce/headless-sdk
+bun add @solana-commerce/react-sdk
+bun add @solana-commerce/ui-primitives
+
+# Or install all packages
+bun add @solana-commerce/headless-sdk @solana-commerce/react-sdk @solana-commerce/ui-primitives
+```
+
+### Using npm
+
+```bash
+# Install specific packages
+npm install @solana-commerce/headless-sdk
+npm install @solana-commerce/react-sdk
+npm install @solana-commerce/ui-primitives
+
+# Or install all packages
+npm install @solana-commerce/headless-sdk @solana-commerce/react-sdk @solana-commerce/ui-primitives
+```
+
+### Using pnpm
+
+```bash
+# Install specific packages
+pnpm add @solana-commerce/headless-sdk
+pnpm add @solana-commerce/react-sdk
+pnpm add @solana-commerce/ui-primitives
+```
+
+## Quick Setup
+
+### For React Applications
+
+If you're building a React application, install the React SDK which includes everything you need:
+
+```bash
+bun add @solana-commerce/react-sdk
+```
+
+This automatically includes the headless SDK and UI primitives.
+
+### For Vanilla JavaScript
+
+For non-React applications, install the headless SDK and UI primitives:
+
+```bash
+bun add @solana-commerce/headless-sdk @solana-commerce/ui-primitives
+```
+
+### For Framework-Agnostic Usage
+
+If you only need the core functionality without any UI components:
+
+```bash
+bun add @solana-commerce/headless-sdk
+```
+
+## Peer Dependencies
+
+The React SDK requires React as a peer dependency:
+
+```json
+{
+  "peerDependencies": {
+    "react": ">=16.8.0"
+  }
+}
+```
+
+Make sure you have React installed:
+
+```bash
+bun add react react-dom
+```
+
+## TypeScript Support
+
+All packages include TypeScript definitions out of the box. No additional `@types` packages are needed.
+
+## Next Steps
+
+- [Quick Start Guide](/docs/quick-start) - Get up and running in 5 minutes
+- [Headless SDK](/docs/headless-sdk) - Learn about core functionality
+- [React SDK](/docs/react-sdk) - Explore React components
+- [UI Primitives](/docs/ui-primitives) - Understand framework-agnostic components 
