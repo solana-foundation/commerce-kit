@@ -5,10 +5,10 @@ This document covers critical operational considerations for using the Solana Co
 ## Table of Contents
 
 - [Settlement Wallet Management](#settlement-wallet-management)
-- [Refund Handling](#refund-handling)
-- [Error Recovery Strategies](#error-recovery-strategies)
-- [Monitoring and Alerts](#monitoring-and-alerts)
-- [Cost Optimization](#cost-optimization)
+- [Payment Indexing](#payment-indexing)
+- [Handling Clearance/Refunds](#handling-clearancerefunds)
+- [Transaction Fee Management](#transaction-fee-management)
+- [Common Error Scenarios](#common-error-scenarios)
 
 ## Settlement Wallet Management
 
