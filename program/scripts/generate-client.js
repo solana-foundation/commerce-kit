@@ -124,7 +124,7 @@ commerceCodama.update(
   ]),
 );
 
-const { constantPdaSeedNode, variablePdaSeedNode, publicKeyTypeNode, stringTypeNode, stringValueNode, numberTypeNode } = codama;
+const { constantPdaSeedNode, variablePdaSeedNode, publicKeyTypeNode, stringTypeNode, stringValueNode, numberTypeNode, publicKeyValueNode } = codama;
 // Add PDA derivers
 commerceCodama.update(
   codama.addPdasVisitor({
@@ -170,6 +170,106 @@ commerceCodama.update(
       },
     ],
   }),
+);
+
+// Import additional helpers for ATA derivation
+const { pdaValueNode, pdaSeedValueNode, accountValueNode, pdaNode } = codama;
+
+// Helper function to create ATA PDA value node
+const createAtaPdaValueNode = (ownerAccount, mintAccount) => {
+  return pdaValueNode(
+    pdaNode({
+      name: 'associatedTokenAccount',
+      seeds: [
+        variablePdaSeedNode('owner', publicKeyTypeNode()),
+        constantPdaSeedNode(publicKeyTypeNode(), publicKeyValueNode(TOKEN_PROGRAM_ID)),
+        variablePdaSeedNode('mint', publicKeyTypeNode()),
+      ],
+      programId: ATA_PROGRAM_ID,
+    }),
+    [
+      pdaSeedValueNode('owner', accountValueNode(ownerAccount)),
+      pdaSeedValueNode('mint', accountValueNode(mintAccount)),
+    ]
+  );
+};
+
+// Add a visitor to automatically derive ATAs in instructions
+commerceCodama.update(
+  codama.setInstructionAccountDefaultValuesVisitor([
+    // For initializeMerchant instruction
+    {
+      instruction: 'initializeMerchant',
+      account: 'settlementUsdcAta',
+      defaultValue: createAtaPdaValueNode('settlementWallet', 'usdcMint')
+    },
+    {
+      instruction: 'initializeMerchant',
+      account: 'settlementUsdtAta',
+      defaultValue: createAtaPdaValueNode('settlementWallet', 'usdtMint')
+    },
+    {
+      instruction: 'initializeMerchant',
+      account: 'escrowUsdcAta',
+      defaultValue: createAtaPdaValueNode('merchant', 'usdcMint')
+    },
+    {
+      instruction: 'initializeMerchant',
+      account: 'escrowUsdtAta',
+      defaultValue: createAtaPdaValueNode('merchant', 'usdtMint')
+    },
+    // For makePayment instruction - derive buyer and merchant ATAs
+    {
+      instruction: 'makePayment',
+      account: 'buyerAta',
+      defaultValue: createAtaPdaValueNode('buyer', 'mint')
+    },
+    {
+      instruction: 'makePayment',
+      account: 'merchantEscrowAta',
+      defaultValue: createAtaPdaValueNode('merchant', 'mint')
+    },
+    // note: we cannot derive merchantSettlementAta because the settlement wallet is not in the instruction accounts
+
+    // For refundPayment instruction
+    {
+      instruction: 'refundPayment',
+      account: 'buyerAta',
+      defaultValue: createAtaPdaValueNode('buyer', 'mint')
+    },
+    {
+      instruction: 'refundPayment',
+      account: 'merchantEscrowAta',
+      defaultValue: createAtaPdaValueNode('merchant', 'mint')
+    },
+
+    // For clearPayment instruction
+    {
+      instruction: 'clearPayment',
+      account: 'merchantEscrowAta',
+      defaultValue: createAtaPdaValueNode('merchant', 'mint')
+    },
+    {
+      instruction: 'clearPayment',
+      account: 'operatorSettlementAta',
+      defaultValue: createAtaPdaValueNode('operatorAuthority', 'mint')
+    },
+    
+    // note: we cannot derive merchantSettlementAta because the settlement wallet is not in the instruction accounts
+
+
+    // For chargebackPayment instruction
+    {
+      instruction: 'chargebackPayment',
+      account: 'buyerAta',
+      defaultValue: createAtaPdaValueNode('buyer', 'mint')
+    },
+    {
+      instruction: 'chargebackPayment',
+      account: 'merchantEscrowAta',
+      defaultValue: createAtaPdaValueNode('merchant', 'mint')
+    }
+  ])
 );
 
 const configPreserver = preserveConfigFiles();
