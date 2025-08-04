@@ -19,7 +19,6 @@ import {
     assertGetOrCreateMerchant,
     assertGetOrCreateMerchantOperatorConfig,
     assertMakePayment,
-    assertClearPayment,
     assertClosePayment,
     assertCompletePaymentWorkflow,
     PaymentWorkflow,

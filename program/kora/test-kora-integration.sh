@@ -30,7 +30,7 @@ KORA_DIR="$TEMP_KORA_DIR"
 echo "✅ Downloaded Kora to temporary directory: $KORA_DIR"
 
 # Configuration
-KORA_TEST_DIR="$COMMERCE_DIR/kora"
+KORA_TEST_DIR="$COMMERCE_DIR/program/kora"
 KORA_PORT=8080
 VALIDATOR_PORT=8899
 
@@ -58,18 +58,27 @@ docker build -f Dockerfile.simple -t kora-node:test .
 
 # Step 2: Build commerce program first
 echo "🏗️  Building commerce program..."
-cd "$COMMERCE_DIR"
-cargo build --release
+cd "$COMMERCE_DIR/program"
+
+# Clean and rebuild without devnet flag
+echo "  → Building program for mainnet..."
+make build
+
+echo "  → Generating IDL..."
+make idl
+
+echo "  → Generating clients..."
+make generate-clients
 
 # Step 3: Fetch mint accounts for USDC and USDT
 echo "📥 Fetching mint accounts..."
-mkdir -p tests/setup/mints
+mkdir -p "$COMMERCE_DIR/program/tests/setup/mints"
 solana account EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v -um \
-    --output-file tests/setup/mints/usdc.json --output json-compact || {
+    --output-file "$COMMERCE_DIR/program/tests/setup/mints/usdc.json" --output json-compact || {
     echo "⚠️  Could not fetch USDC mint account, continuing without it"
 }
 solana account Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB -um \
-    --output-file tests/setup/mints/usdt.json --output json-compact || {
+    --output-file "$COMMERCE_DIR/program/tests/setup/mints/usdt.json" --output json-compact || {
     echo "⚠️  Could not fetch USDT mint account, continuing without it"
 }
 
@@ -78,15 +87,15 @@ echo "⚡ Starting Solana test validator..."
 VALIDATOR_ARGS="-r --rpc-port $VALIDATOR_PORT"
 
 # Add mint accounts if they exist
-if [ -f "tests/setup/mints/usdc.json" ]; then
-    VALIDATOR_ARGS="$VALIDATOR_ARGS --account EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v tests/setup/mints/usdc.json"
+if [ -f "$COMMERCE_DIR/program/tests/setup/mints/usdc.json" ]; then
+    VALIDATOR_ARGS="$VALIDATOR_ARGS --account EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v $COMMERCE_DIR/program/tests/setup/mints/usdc.json"
 fi
-if [ -f "tests/setup/mints/usdt.json" ]; then
-    VALIDATOR_ARGS="$VALIDATOR_ARGS --account Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB tests/setup/mints/usdt.json"
+if [ -f "$COMMERCE_DIR/program/tests/setup/mints/usdt.json" ]; then
+    VALIDATOR_ARGS="$VALIDATOR_ARGS --account Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB $COMMERCE_DIR/program/tests/setup/mints/usdt.json"
 fi
 
 # Add commerce program
-VALIDATOR_ARGS="$VALIDATOR_ARGS --bpf-program commkU28d52cwo2Ma3Marxz4Qr9REtfJtuUfqnDnbhT target/deploy/commerce_program.so"
+VALIDATOR_ARGS="$VALIDATOR_ARGS --bpf-program commkU28d52cwo2Ma3Marxz4Qr9REtfJtuUfqnDnbhT $COMMERCE_DIR/program/target/deploy/commerce_program.so"
 
 solana-test-validator $VALIDATOR_ARGS --quiet &
 

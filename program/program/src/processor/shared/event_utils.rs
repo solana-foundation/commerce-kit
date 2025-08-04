@@ -25,6 +25,7 @@ use crate::{
 pub fn emit_event(
     program_id: &Pubkey,
     event_authority_info: &AccountInfo,
+    program_info: &AccountInfo,
     event_data: &[u8],
 ) -> ProgramResult {
     // Check that event authority PDA is valid.
@@ -46,7 +47,7 @@ pub fn emit_event(
             accounts: &[AccountMeta::new(event_authority_info.key(), false, true)],
             data: event_data,
         },
-        &[event_authority_info],
+        &[event_authority_info, program_info],
         &[signer],
     )?;
 

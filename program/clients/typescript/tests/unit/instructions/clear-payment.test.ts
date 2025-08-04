@@ -1,13 +1,17 @@
-import { expect } from '@jest/globals';
+import { expect } from "@jest/globals";
 import {
   getClearPaymentInstruction,
   CLEAR_PAYMENT_DISCRIMINATOR,
-} from '../../../src/generated';
-import { AccountRole } from 'gill';
-import { mockTransactionSigner, TEST_ADDRESSES, EXPECTED_PROGRAM_ADDRESS } from '../../../tests/setup/mocks';
+} from "../../../src/generated";
+import { AccountRole } from "gill";
+import {
+  mockTransactionSigner,
+  TEST_ADDRESSES,
+  EXPECTED_PROGRAM_ADDRESS,
+} from "../../../tests/setup/mocks";
 
-describe('clearPayment', () => {
-  it('should create a valid clear payment instruction', () => {
+describe("clearPayment", () => {
+  it("should create a valid clear payment instruction", () => {
     const payer = mockTransactionSigner(TEST_ADDRESSES.PAYER);
     const operatorAuthority = mockTransactionSigner(TEST_ADDRESSES.AUTHORITY);
 
@@ -29,7 +33,7 @@ describe('clearPayment', () => {
     expect(instruction.programAddress).toBe(EXPECTED_PROGRAM_ADDRESS);
 
     // Test accounts
-    expect(instruction.accounts).toHaveLength(15);
+    expect(instruction.accounts).toHaveLength(16);
     expect(instruction.accounts[0].role).toBe(AccountRole.WRITABLE_SIGNER); // payer
     expect(instruction.accounts[1].role).toBe(AccountRole.WRITABLE); // payment
     expect(instruction.accounts[2].role).toBe(AccountRole.READONLY_SIGNER); // operator_authority
@@ -45,6 +49,7 @@ describe('clearPayment', () => {
     expect(instruction.accounts[12].role).toBe(AccountRole.READONLY); // associated_token_program
     expect(instruction.accounts[13].role).toBe(AccountRole.READONLY); // system_program
     expect(instruction.accounts[14].role).toBe(AccountRole.READONLY); // event_authority
+    expect(instruction.accounts[15].role).toBe(AccountRole.READONLY); // commerce_program
 
     // Test data
     const expectedData = new Uint8Array([CLEAR_PAYMENT_DISCRIMINATOR]);
