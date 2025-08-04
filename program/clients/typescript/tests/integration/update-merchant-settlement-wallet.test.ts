@@ -4,21 +4,15 @@ import {
     SolanaClient,
     KeyPairSigner,
     Address,
-    lamports,
     generateExtractableKeyPairSigner,
     ProgramDerivedAddressBump,
 } from 'gill';
-import {
-    FeeType,
-    PolicyData,
-} from '../../src/generated';
 import { setupWallets } from './helpers/transactions';
 import {
     assertGetOrCreateOperator,
     assertGetOrCreateMerchant,
     assertUpdateMerchantSettlementWallet,
 } from './helpers/state-utils';
-import { generateMint } from './helpers/tokens';
 
 describe('Update Merchant Settlement Wallet', () => {
     let client: SolanaClient;
@@ -45,11 +39,11 @@ describe('Update Merchant Settlement Wallet', () => {
         newSettlementWallet = await generateExtractableKeyPairSigner();
 
         await setupWallets(client, [
-            payer, 
-            operatorAuthority, 
-            merchantAuthority, 
-            originalSettlementWallet, 
-            newSettlementWallet, 
+            payer,
+            operatorAuthority,
+            merchantAuthority,
+            originalSettlementWallet,
+            newSettlementWallet,
         ]);
 
         [operatorPda] = await assertGetOrCreateOperator({

@@ -1,252 +1,379 @@
 import {
-    Address,
-    SolanaClient,
-    KeyPairSigner,
-    ProgramDerivedAddressBump,
-    fetchEncodedAccount,
-    assertAccountExists
-} from 'gill';
+  Address,
+  SolanaClient,
+  KeyPairSigner,
+  ProgramDerivedAddressBump,
+  fetchEncodedAccount,
+  assertAccountExists,
+} from "gill";
 import {
-    ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
-    SYSTEM_PROGRAM_ADDRESS,
-    TOKEN_PROGRAM_ADDRESS,
-    findAssociatedTokenPda
-} from 'gill/programs';
+  ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
+  SYSTEM_PROGRAM_ADDRESS,
+  TOKEN_PROGRAM_ADDRESS,
+  findAssociatedTokenPda,
+} from "gill/programs";
 import {
-    findOperatorPda,
-    findMerchantPda,
-    findMerchantOperatorConfigPda,
-    getCreateOperatorInstruction,
-    getInitializeMerchantInstruction,
-    getInitializeMerchantOperatorConfigInstruction,
-    getMakePaymentInstruction,
-    getClearPaymentInstruction,
-    getRefundPaymentInstruction,
-    getClosePaymentInstruction,
-    getUpdateMerchantSettlementWalletInstruction,
-    getUpdateMerchantAuthorityInstruction,
-    getUpdateOperatorAuthorityInstruction,
-    FeeType,
-    PolicyData,
-    Status,
-} from '../../../src/generated';
-import { sendAndConfirmInstructions } from './transactions';
-import { assertMerchantAccount, assertOperatorAccount, assertTokenAccount, assertMerchantOperatorConfigAccount, assertPaymentAccount, getTokenBalance, assertMultipleTokenBalanceChanges, BalanceChange } from './assertions';
+  findOperatorPda,
+  findMerchantPda,
+  findMerchantOperatorConfigPda,
+  getCreateOperatorInstruction,
+  getInitializeMerchantInstruction,
+  getInitializeMerchantOperatorConfigInstruction,
+  getMakePaymentInstruction,
+  getClearPaymentInstruction,
+  getRefundPaymentInstruction,
+  getClosePaymentInstruction,
+  getUpdateMerchantSettlementWalletInstruction,
+  getUpdateMerchantAuthorityInstruction,
+  getUpdateOperatorAuthorityInstruction,
+  FeeType,
+  PolicyData,
+  Status,
+} from "../../../src/generated";
+import { sendAndConfirmInstructions } from "./transactions";
+import {
+  assertMerchantAccount,
+  assertOperatorAccount,
+  assertTokenAccount,
+  assertMerchantOperatorConfigAccount,
+  assertPaymentAccount,
+  getTokenBalance,
+  assertMultipleTokenBalanceChanges,
+  BalanceChange,
+} from "./assertions";
 
 // Test token mints (USDC and USDT on local validator)
-const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' as Address;
-const USDT_MINT = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB' as Address;
+const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" as Address;
+const USDT_MINT = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB" as Address;
+const DEVNET_USDC_MINT =
+  "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU" as Address;
+const DEVNET_USDT_MINT =
+  "usDtQUSH1bvDU8byfxp9jURLnjvno4NFoASbugdeHYC" as Address;
 
-async function accountExists({ client, address }: { client: SolanaClient, address: Address }): Promise<boolean> {
-    try {
-        const account = await fetchEncodedAccount(client.rpc, address);
-        assertAccountExists(account);
-        return account.exists;
-    } catch {
-        return false;
-    }
+async function accountExists({
+  client,
+  address,
+}: {
+  client: SolanaClient;
+  address: Address;
+}): Promise<boolean> {
+  try {
+    const account = await fetchEncodedAccount(client.rpc, address);
+    assertAccountExists(account);
+    return account.exists;
+  } catch {
+    return false;
+  }
 }
 
 export async function assertGetOrCreateOperator({
-    client,
-    payer,
-    owner,
-    failIfExists = false
+  client,
+  payer,
+  owner,
+  failIfExists = false,
+  skipIfExists = false,
 }: {
-    client: SolanaClient,
-    payer: KeyPairSigner,
-    owner: KeyPairSigner,
-    failIfExists: boolean
+  client: SolanaClient;
+  payer: KeyPairSigner;
+  owner: KeyPairSigner;
+  failIfExists?: boolean;
+  skipIfExists?: boolean;
 }): Promise<[Address, ProgramDerivedAddressBump]> {
-    const [operatorPda, bump] = await findOperatorPda({
-        owner: owner.address
-    });
+  const [operatorPda, bump] = await findOperatorPda({
+    owner: owner.address,
+  });
 
-    if (failIfExists) {
-        const exists = await accountExists({ client, address: operatorPda });
-        if (exists) {
-            throw new Error('Operator account already exists');
-        }
+  if (failIfExists || skipIfExists) {
+    const exists = await accountExists({ client, address: operatorPda });
+
+    if (failIfExists && exists) {
+      throw new Error("Operator account already exists");
     }
 
-    const createOperatorIx = getCreateOperatorInstruction({
-        bump,
-        payer: payer,
-        authority: owner,
-        operator: operatorPda,
-        systemProgram: SYSTEM_PROGRAM_ADDRESS
-    });
+    if (skipIfExists && exists) {
+      return [operatorPda, bump];
+    }
+  }
 
-    await sendAndConfirmInstructions({ client, payer, instructions: [createOperatorIx], description: 'Create operator' });
+  const createOperatorIx = getCreateOperatorInstruction({
+    bump,
+    payer: payer,
+    authority: owner,
+    operator: operatorPda,
+    systemProgram: SYSTEM_PROGRAM_ADDRESS,
+  });
 
-    await assertOperatorAccount({ client, operatorPda, expectedOwner: owner.address, expectedBump: bump });
+  await sendAndConfirmInstructions({
+    client,
+    payer,
+    instructions: [createOperatorIx],
+    description: "Create operator",
+  });
 
-    return [operatorPda, bump];
+  await assertOperatorAccount({
+    client,
+    operatorPda,
+    expectedOwner: owner.address,
+    expectedBump: bump,
+  });
+
+  return [operatorPda, bump];
 }
 
 export async function assertGetOrCreateMerchant({
-    client,
-    payer,
-    authority,
-    settlementWallet,
-    failIfExists = false
+  client,
+  payer,
+  authority,
+  settlementWallet,
+  failIfExists = false,
+  skipIfExists = false,
+  devnet = false,
 }: {
-    client: SolanaClient,
-    payer: KeyPairSigner,
-    authority: KeyPairSigner,
-    settlementWallet: KeyPairSigner,
-    failIfExists: boolean
+  client: SolanaClient;
+  payer: KeyPairSigner;
+  authority: KeyPairSigner;
+  settlementWallet: KeyPairSigner;
+  failIfExists?: boolean;
+  skipIfExists?: boolean;
+  devnet?: boolean;
 }): Promise<[Address, ProgramDerivedAddressBump]> {
-    const [merchantPda, bump] = await findMerchantPda({
-        owner: authority.address
-    });
+  const [merchantPda, bump] = await findMerchantPda({
+    owner: authority.address,
+  });
 
-    if (failIfExists) {
-        const exists = await accountExists({ client, address: merchantPda });
-        if (exists) {
-            throw new Error('Merchant account already exists');
-        }
+  const usdcMint = devnet ? DEVNET_USDC_MINT : USDC_MINT;
+  const usdtMint = devnet ? DEVNET_USDT_MINT : USDT_MINT;
+
+  if (failIfExists || skipIfExists) {
+    const exists = await accountExists({ client, address: merchantPda });
+    if (failIfExists && exists) {
+      throw new Error("Merchant account already exists");
     }
 
-    const [settlementUsdcAta] = await findAssociatedTokenPda({
-        tokenProgram: TOKEN_PROGRAM_ADDRESS,
-        mint: USDC_MINT,
-        owner: settlementWallet.address
-    });
-    const [settlementUsdtAta] = await findAssociatedTokenPda({
-        tokenProgram: TOKEN_PROGRAM_ADDRESS,
-        mint: USDT_MINT,
-        owner: settlementWallet.address
-    });
-    const [escrowUsdcAta] = await findAssociatedTokenPda({
-        tokenProgram: TOKEN_PROGRAM_ADDRESS,
-        mint: USDC_MINT,
-        owner: merchantPda
-    });
-    const [escrowUsdtAta] = await findAssociatedTokenPda({
-        tokenProgram: TOKEN_PROGRAM_ADDRESS,
-        mint: USDT_MINT,
-        owner: merchantPda
-    });
+    if (skipIfExists && exists) {
+      return [merchantPda, bump];
+    }
+  }
 
-    // Initialize merchant instruction
-    const initMerchantIx = getInitializeMerchantInstruction({
-        bump,
-        payer: payer,
-        authority: authority,
-        merchant: merchantPda,
-        settlementWallet: settlementWallet.address,
-        systemProgram: SYSTEM_PROGRAM_ADDRESS,
-        settlementUsdcAta,
-        escrowUsdcAta,
-        usdcMint: USDC_MINT,
-        settlementUsdtAta,
-        escrowUsdtAta,
-        usdtMint: USDT_MINT,
-        tokenProgram: TOKEN_PROGRAM_ADDRESS,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ADDRESS
-    });
+  const [settlementUsdcAta] = await findAssociatedTokenPda({
+    tokenProgram: TOKEN_PROGRAM_ADDRESS,
+    mint: usdcMint,
+    owner: settlementWallet.address,
+  });
+  const [settlementUsdtAta] = await findAssociatedTokenPda({
+    tokenProgram: TOKEN_PROGRAM_ADDRESS,
+    mint: usdtMint,
+    owner: settlementWallet.address,
+  });
+  const [escrowUsdcAta] = await findAssociatedTokenPda({
+    tokenProgram: TOKEN_PROGRAM_ADDRESS,
+    mint: usdcMint,
+    owner: merchantPda,
+  });
+  const [escrowUsdtAta] = await findAssociatedTokenPda({
+    tokenProgram: TOKEN_PROGRAM_ADDRESS,
+    mint: usdtMint,
+    owner: merchantPda,
+  });
 
-    await sendAndConfirmInstructions({ client, payer, instructions: [initMerchantIx], description: 'Initialize merchant' });
+  // Initialize merchant instruction
+  const initMerchantIx = getInitializeMerchantInstruction({
+    bump,
+    payer: payer,
+    authority: authority,
+    merchant: merchantPda,
+    settlementWallet: settlementWallet.address,
+    systemProgram: SYSTEM_PROGRAM_ADDRESS,
+    settlementUsdcAta,
+    escrowUsdcAta,
+    usdcMint,
+    settlementUsdtAta,
+    escrowUsdtAta,
+    usdtMint,
+    tokenProgram: TOKEN_PROGRAM_ADDRESS,
+    associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
+  });
 
-    await assertMerchantAccount({ client, merchantPda, expectedOwner: authority.address, expectedBump: bump, expectedSettlementWallet: settlementWallet.address });
+  await sendAndConfirmInstructions({
+    client,
+    payer,
+    instructions: [initMerchantIx],
+    description: "Initialize merchant",
+  });
 
-    // Assert token accounts were created
-    await assertTokenAccount({ client, tokenAccount: settlementUsdcAta, expectedMint: USDC_MINT, expectedOwner: settlementWallet.address });
-    await assertTokenAccount({ client, tokenAccount: settlementUsdtAta, expectedMint: USDT_MINT, expectedOwner: settlementWallet.address });
-    await assertTokenAccount({ client, tokenAccount: escrowUsdcAta, expectedMint: USDC_MINT, expectedOwner: merchantPda });
-    await assertTokenAccount({ client, tokenAccount: escrowUsdtAta, expectedMint: USDT_MINT, expectedOwner: merchantPda });
+  await assertMerchantAccount({
+    client,
+    merchantPda,
+    expectedOwner: authority.address,
+    expectedBump: bump,
+    expectedSettlementWallet: settlementWallet.address,
+  });
 
-    return [merchantPda, bump];
+  // Assert token accounts were created
+  await assertTokenAccount({
+    client,
+    tokenAccount: settlementUsdcAta,
+    expectedMint: usdcMint,
+    expectedOwner: settlementWallet.address,
+  });
+  await assertTokenAccount({
+    client,
+    tokenAccount: settlementUsdtAta,
+    expectedMint: usdtMint,
+    expectedOwner: settlementWallet.address,
+  });
+  await assertTokenAccount({
+    client,
+    tokenAccount: escrowUsdcAta,
+    expectedMint: usdcMint,
+    expectedOwner: merchantPda,
+  });
+  await assertTokenAccount({
+    client,
+    tokenAccount: escrowUsdtAta,
+    expectedMint: usdtMint,
+    expectedOwner: merchantPda,
+  });
+
+  return [merchantPda, bump];
 }
 
 export async function assertGetOrCreateMerchantOperatorConfig({
-    client,
-    payer,
-    authority,
-    merchantPda,
-    operatorPda,
-    version,
-    operatorFee,
-    feeType,
-    currentOrderId,
-    policies,
-    acceptedCurrencies,
-    failIfExists = false
+  client,
+  payer,
+  authority,
+  merchantPda,
+  operatorPda,
+  version,
+  operatorFee,
+  feeType,
+  currentOrderId,
+  policies,
+  acceptedCurrencies,
+  failIfExists = false,
+  skipIfExists = false,
 }: {
-    client: SolanaClient,
-    payer: KeyPairSigner,
-    authority: KeyPairSigner,
-    merchantPda: Address,
-    operatorPda: Address,
-    version: number,
-    operatorFee: bigint,
-    feeType: FeeType,
-    currentOrderId: number,
-    policies: PolicyData[],
-    acceptedCurrencies: Address[],
-    failIfExists?: boolean
+  client: SolanaClient;
+  payer: KeyPairSigner;
+  authority: KeyPairSigner;
+  merchantPda: Address;
+  operatorPda: Address;
+  version: number;
+  operatorFee: bigint;
+  feeType: FeeType;
+  currentOrderId: number;
+  policies: PolicyData[];
+  acceptedCurrencies: Address[];
+  failIfExists?: boolean;
+  skipIfExists?: boolean;
 }): Promise<[Address, ProgramDerivedAddressBump]> {
-    const [merchantOperatorConfigPda, merchantOperatorConfigBump] = await findMerchantOperatorConfigPda({
-        merchant: merchantPda,
-        operator: operatorPda,
-        version
+  const [merchantOperatorConfigPda, merchantOperatorConfigBump] =
+    await findMerchantOperatorConfigPda({
+      merchant: merchantPda,
+      operator: operatorPda,
+      version,
     });
 
-    if (failIfExists) {
-        const exists = await accountExists({ client, address: merchantOperatorConfigPda });
-        if (exists) {
-            throw new Error('MerchantOperatorConfig account already exists');
-        }
+  if (failIfExists || skipIfExists) {
+    const exists = await accountExists({
+      client,
+      address: merchantOperatorConfigPda,
+    });
+    if (failIfExists && exists) {
+      throw new Error("MerchantOperatorConfig account already exists");
     }
 
-    const instruction = getInitializeMerchantOperatorConfigInstruction({
-        payer: payer,
-        authority: authority,
-        merchant: merchantPda,
-        operator: operatorPda,
-        config: merchantOperatorConfigPda,
-        systemProgram: SYSTEM_PROGRAM_ADDRESS,
-        version,
-        bump: merchantOperatorConfigBump,
-        operatorFee,
-        feeType,
-        policies,
-        acceptedCurrencies
-    });
+    if (skipIfExists && exists) {
+      return [merchantOperatorConfigPda, merchantOperatorConfigBump];
+    }
+  }
 
-    await sendAndConfirmInstructions({
-        client,
-        payer,
-        instructions: [instruction],
-        description: 'Initialize merchant operator config'
-    });
+  const instruction = getInitializeMerchantOperatorConfigInstruction({
+    payer: payer,
+    authority: authority,
+    merchant: merchantPda,
+    operator: operatorPda,
+    config: merchantOperatorConfigPda,
+    systemProgram: SYSTEM_PROGRAM_ADDRESS,
+    version,
+    bump: merchantOperatorConfigBump,
+    operatorFee,
+    feeType,
+    policies,
+    acceptedCurrencies,
+  });
 
-    await assertMerchantOperatorConfigAccount({
-        client,
-        merchantOperatorConfigPda,
-        expectedBump: merchantOperatorConfigBump,
-        expectedVersion: version,
-        expectedMerchant: merchantPda,
-        expectedOperator: operatorPda,
-        expectedOperatorFee: operatorFee,
-        expectedCurrentOrderId: currentOrderId,
-        expectedNumPolicies: policies.length,
-        expectedNumAcceptedCurrencies: acceptedCurrencies.length
-    });
+  await sendAndConfirmInstructions({
+    client,
+    payer,
+    instructions: [instruction],
+    description: "Initialize merchant operator config",
+  });
 
-    return [merchantOperatorConfigPda, merchantOperatorConfigBump];
+  await assertMerchantOperatorConfigAccount({
+    client,
+    merchantOperatorConfigPda,
+    expectedBump: merchantOperatorConfigBump,
+    expectedVersion: version,
+    expectedMerchant: merchantPda,
+    expectedOperator: operatorPda,
+    expectedOperatorFee: operatorFee,
+    expectedCurrentOrderId: currentOrderId,
+    expectedNumPolicies: policies.length,
+    expectedNumAcceptedCurrencies: acceptedCurrencies.length,
+  });
+
+  return [merchantOperatorConfigPda, merchantOperatorConfigBump];
 }
 
 export async function assertMakePayment({
+  client,
+  payer,
+  paymentPda,
+  operatorAuthority,
+  buyer,
+  operatorPda,
+  merchantPda,
+  merchantOperatorConfigPda,
+  mint,
+  buyerAta,
+  merchantEscrowAta,
+  merchantSettlementAta,
+  orderId,
+  amount,
+  bump,
+}: {
+  client: SolanaClient;
+  payer: KeyPairSigner;
+  paymentPda: Address;
+  operatorAuthority: KeyPairSigner;
+  buyer: KeyPairSigner;
+  operatorPda: Address;
+  merchantPda: Address;
+  merchantOperatorConfigPda: Address;
+  mint: Address;
+  buyerAta: Address;
+  merchantEscrowAta: Address;
+  merchantSettlementAta: Address;
+  orderId: number;
+  amount: number;
+  bump: number;
+}): Promise<void> {
+  // Get pre-balances for token verification
+  const buyerPreBalance = await getTokenBalance(client, buyerAta);
+  const merchantEscrowPreBalance = await getTokenBalance(
     client,
+    merchantEscrowAta
+  );
+
+  const payment = getMakePaymentInstruction({
     payer,
-    paymentPda,
+    payment: paymentPda,
     operatorAuthority,
     buyer,
-    operatorPda,
-    merchantPda,
-    merchantOperatorConfigPda,
+    operator: operatorPda,
+    merchant: merchantPda,
+    merchantOperatorConfig: merchantOperatorConfigPda,
     mint,
     buyerAta,
     merchantEscrowAta,
@@ -254,557 +381,593 @@ export async function assertMakePayment({
     orderId,
     amount,
     bump,
-}: {
-    client: SolanaClient,
-    payer: KeyPairSigner,
-    paymentPda: Address,
-    operatorAuthority: KeyPairSigner,
-    buyer: KeyPairSigner,
-    operatorPda: Address,
-    merchantPda: Address,
-    merchantOperatorConfigPda: Address,
-    mint: Address,
-    buyerAta: Address,
-    merchantEscrowAta: Address,
-    merchantSettlementAta: Address,
-    orderId: number,
-    amount: number,
-    bump: number,
-}): Promise<void> {
-    // Get pre-balances for token verification
-    const buyerPreBalance = await getTokenBalance(client, buyerAta);
-    const merchantEscrowPreBalance = await getTokenBalance(client, merchantEscrowAta);
+  });
 
-    const payment = getMakePaymentInstruction({
-        payer,
-        payment: paymentPda,
-        operatorAuthority,
-        buyer,
-        operator: operatorPda,
-        merchant: merchantPda,
-        merchantOperatorConfig: merchantOperatorConfigPda,
-        mint,
-        buyerAta,
-        merchantEscrowAta,
-        merchantSettlementAta,
-        orderId,
-        amount,
-        bump,
-    });
+  await sendAndConfirmInstructions({
+    client,
+    payer,
+    instructions: [payment],
+    description: "Make Payment",
+  });
 
-    await sendAndConfirmInstructions({
-        client,
-        payer,
-        instructions: [payment],
-        description: "Make Payment"
-    });
+  // Verify payment account was created with correct status
+  await assertPaymentAccount({
+    client,
+    paymentPda,
+    expectedOrderId: orderId,
+    expectedAmount: BigInt(amount),
+    expectedStatus: Status.Paid,
+  });
 
-    // Verify payment account was created with correct status
-    await assertPaymentAccount({
-        client,
-        paymentPda,
-        expectedOrderId: orderId,
-        expectedAmount: BigInt(amount),
-        expectedStatus: Status.Paid,
-    });
-
-    await assertMultipleTokenBalanceChanges({
-        client,
-        preBalances: new Map<Address, bigint>([
-            [buyerAta, buyerPreBalance],
-            [merchantEscrowAta, merchantEscrowPreBalance],
-        ]),
-        balanceChanges: [
-            {
-                ata: buyerAta,
-                expectedChange: -BigInt(amount),
-                description: "Buyer should decrease by payment amount"
-            },
-            {
-                ata: merchantEscrowAta,
-                expectedChange: BigInt(amount),
-                description: "Merchant escrow should increase by payment amount"
-            }
-        ]
-    });
+  await assertMultipleTokenBalanceChanges({
+    client,
+    preBalances: new Map<Address, bigint>([
+      [buyerAta, buyerPreBalance],
+      [merchantEscrowAta, merchantEscrowPreBalance],
+    ]),
+    balanceChanges: [
+      {
+        ata: buyerAta,
+        expectedChange: -BigInt(amount),
+        description: "Buyer should decrease by payment amount",
+      },
+      {
+        ata: merchantEscrowAta,
+        expectedChange: BigInt(amount),
+        description: "Merchant escrow should increase by payment amount",
+      },
+    ],
+  });
 }
 
 export async function assertClearPayment({
+  client,
+  payer,
+  paymentPda,
+  operatorAuthority,
+  buyer,
+  operatorPda,
+  merchantPda,
+  merchantOperatorConfigPda,
+  mint,
+  merchantEscrowAta,
+  merchantSettlementAta,
+  operatorSettlementAta,
+  orderId,
+  amount,
+  operatorFee,
+  verifyBeforeStatus = true,
+}: {
+  client: SolanaClient;
+  payer: KeyPairSigner;
+  paymentPda: Address;
+  operatorAuthority: KeyPairSigner;
+  buyer: Address;
+  operatorPda: Address;
+  merchantPda: Address;
+  merchantOperatorConfigPda: Address;
+  mint: Address;
+  merchantEscrowAta: Address;
+  merchantSettlementAta: Address;
+  operatorSettlementAta: Address;
+  orderId: number;
+  amount: number | bigint;
+  operatorFee: number | bigint;
+  verifyBeforeStatus?: boolean;
+}): Promise<void> {
+  // Optionally verify payment is in Paid status before clearing
+  if (verifyBeforeStatus) {
+    await assertPaymentAccount({
+      client,
+      paymentPda,
+      expectedOrderId: orderId,
+      expectedAmount: BigInt(amount),
+      expectedStatus: Status.Paid,
+    });
+  }
+
+  // Get pre-balances for all affected token accounts
+  const merchantEscrowPreBalance = await getTokenBalance(
     client,
+    merchantEscrowAta
+  );
+  const merchantSettlementPreBalance = await getTokenBalance(
+    client,
+    merchantSettlementAta
+  );
+  const operatorSettlementPreBalance = await getTokenBalance(
+    client,
+    operatorSettlementAta
+  );
+
+  const preBalances = new Map<Address, bigint>([
+    [merchantEscrowAta, merchantEscrowPreBalance],
+    [merchantSettlementAta, merchantSettlementPreBalance],
+    [operatorSettlementAta, operatorSettlementPreBalance],
+  ]);
+
+  const clearPaymentIx = getClearPaymentInstruction({
     payer,
-    paymentPda,
+    payment: paymentPda,
     operatorAuthority,
     buyer,
-    operatorPda,
-    merchantPda,
-    merchantOperatorConfigPda,
+    merchant: merchantPda,
+    operator: operatorPda,
+    merchantOperatorConfig: merchantOperatorConfigPda,
     mint,
     merchantEscrowAta,
     merchantSettlementAta,
     operatorSettlementAta,
-    orderId,
-    amount,
-    operatorFee,
-    verifyBeforeStatus = true,
-}: {
-    client: SolanaClient,
-    payer: KeyPairSigner,
-    paymentPda: Address,
-    operatorAuthority: KeyPairSigner,
-    buyer: Address,
-    operatorPda: Address,
-    merchantPda: Address,
-    merchantOperatorConfigPda: Address,
-    mint: Address,
-    merchantEscrowAta: Address,
-    merchantSettlementAta: Address,
-    operatorSettlementAta: Address,
-    orderId: number,
-    amount: number | bigint,
-    operatorFee: number | bigint,
-    verifyBeforeStatus?: boolean,
-}): Promise<void> {
-    // Optionally verify payment is in Paid status before clearing
-    if (verifyBeforeStatus) {
-        await assertPaymentAccount({
-            client,
-            paymentPda,
-            expectedOrderId: orderId,
-            expectedAmount: BigInt(amount),
-            expectedStatus: Status.Paid,
-        });
-    }
+    tokenProgram: TOKEN_PROGRAM_ADDRESS,
+    associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
+    systemProgram: SYSTEM_PROGRAM_ADDRESS,
+  });
 
-    // Get pre-balances for all affected token accounts
-    const merchantEscrowPreBalance = await getTokenBalance(client, merchantEscrowAta);
-    const merchantSettlementPreBalance = await getTokenBalance(client, merchantSettlementAta);
-    const operatorSettlementPreBalance = await getTokenBalance(client, operatorSettlementAta);
+  await sendAndConfirmInstructions({
+    client,
+    payer,
+    instructions: [clearPaymentIx],
+    description: "Clear Payment",
+  });
 
-    const preBalances = new Map<Address, bigint>([
-        [merchantEscrowAta, merchantEscrowPreBalance],
-        [merchantSettlementAta, merchantSettlementPreBalance],
-        [operatorSettlementAta, operatorSettlementPreBalance],
-    ]);
+  // Verify payment status changed to Cleared
+  await assertPaymentAccount({
+    client,
+    paymentPda,
+    expectedOrderId: orderId,
+    expectedAmount: BigInt(amount),
+    expectedStatus: Status.Cleared,
+  });
 
-    const clearPaymentIx = getClearPaymentInstruction({
-        payer,
-        payment: paymentPda,
-        operatorAuthority,
-        buyer,
-        merchant: merchantPda,
-        operator: operatorPda,
-        merchantOperatorConfig: merchantOperatorConfigPda,
-        mint,
-        merchantEscrowAta,
-        merchantSettlementAta,
-        operatorSettlementAta,
-        tokenProgram: TOKEN_PROGRAM_ADDRESS,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
-        systemProgram: SYSTEM_PROGRAM_ADDRESS,
-    });
+  // Verify token balance changes for multi-party transfer
+  const amountBigInt = BigInt(amount);
+  const operatorFeeBigInt = BigInt(operatorFee);
+  const merchantReceiveAmount = amountBigInt - operatorFeeBigInt;
 
-    await sendAndConfirmInstructions({
-        client,
-        payer,
-        instructions: [clearPaymentIx],
-        description: "Clear Payment"
-    });
+  const balanceChanges: BalanceChange[] = [
+    {
+      ata: merchantEscrowAta,
+      expectedChange: -amountBigInt, // Escrow decreases by full payment amount
+      description: "Merchant escrow should decrease by payment amount",
+    },
+    {
+      ata: merchantSettlementAta,
+      expectedChange: merchantReceiveAmount, // Settlement increases by (payment - fee)
+      description:
+        "Merchant settlement should increase by payment amount minus operator fee",
+    },
+    {
+      ata: operatorSettlementAta,
+      expectedChange: operatorFeeBigInt, // Operator receives fee
+      description: "Operator settlement should increase by operator fee",
+    },
+  ];
 
-    // Verify payment status changed to Cleared
-    await assertPaymentAccount({
-        client,
-        paymentPda,
-        expectedOrderId: orderId,
-        expectedAmount: BigInt(amount),
-        expectedStatus: Status.Cleared,
-    });
-
-    // Verify token balance changes for multi-party transfer
-    const amountBigInt = BigInt(amount);
-    const operatorFeeBigInt = BigInt(operatorFee);
-    const merchantReceiveAmount = amountBigInt - operatorFeeBigInt;
-
-    const balanceChanges: BalanceChange[] = [
-        {
-            ata: merchantEscrowAta,
-            expectedChange: -amountBigInt, // Escrow decreases by full payment amount
-            description: "Merchant escrow should decrease by payment amount"
-        },
-        {
-            ata: merchantSettlementAta,
-            expectedChange: merchantReceiveAmount, // Settlement increases by (payment - fee)
-            description: "Merchant settlement should increase by payment amount minus operator fee"
-        },
-        {
-            ata: operatorSettlementAta,
-            expectedChange: operatorFeeBigInt, // Operator receives fee
-            description: "Operator settlement should increase by operator fee"
-        }
-    ];
-
-    await assertMultipleTokenBalanceChanges({
-        client,
-        preBalances,
-        balanceChanges,
-    });
+  await assertMultipleTokenBalanceChanges({
+    client,
+    preBalances,
+    balanceChanges,
+  });
 }
 
 export async function assertRefundPayment({
+  client,
+  payer,
+  paymentPda,
+  operatorAuthority,
+  buyer,
+  operatorPda,
+  merchantPda,
+  merchantOperatorConfigPda,
+  mint,
+  merchantEscrowAta,
+  buyerAta,
+  orderId,
+  amount,
+  verifyBeforeStatus = true,
+}: {
+  client: SolanaClient;
+  payer: KeyPairSigner;
+  paymentPda: Address;
+  operatorAuthority: KeyPairSigner;
+  buyer: Address;
+  operatorPda: Address;
+  merchantPda: Address;
+  merchantOperatorConfigPda: Address;
+  mint: Address;
+  merchantEscrowAta: Address;
+  buyerAta: Address;
+  orderId: number;
+  amount: number | bigint;
+  verifyBeforeStatus?: boolean;
+}): Promise<void> {
+  // Optionally verify payment is in Paid status before refunding
+  if (verifyBeforeStatus) {
+    await assertPaymentAccount({
+      client,
+      paymentPda,
+      expectedOrderId: orderId,
+      expectedAmount: BigInt(amount),
+      expectedStatus: Status.Paid,
+    });
+  }
+
+  // Get pre-balances for token verification
+  const merchantEscrowPreBalance = await getTokenBalance(
     client,
+    merchantEscrowAta
+  );
+  const buyerPreBalance = await getTokenBalance(client, buyerAta);
+
+  const preBalances = new Map<Address, bigint>([
+    [merchantEscrowAta, merchantEscrowPreBalance],
+    [buyerAta, buyerPreBalance],
+  ]);
+
+  const refundPaymentIx = getRefundPaymentInstruction({
     payer,
-    paymentPda,
+    payment: paymentPda,
     operatorAuthority,
     buyer,
-    operatorPda,
-    merchantPda,
-    merchantOperatorConfigPda,
+    merchant: merchantPda,
+    operator: operatorPda,
+    merchantOperatorConfig: merchantOperatorConfigPda,
     mint,
     merchantEscrowAta,
     buyerAta,
-    orderId,
-    amount,
-    verifyBeforeStatus = true,
-}: {
-    client: SolanaClient,
-    payer: KeyPairSigner,
-    paymentPda: Address,
-    operatorAuthority: KeyPairSigner,
-    buyer: Address,
-    operatorPda: Address,
-    merchantPda: Address,
-    merchantOperatorConfigPda: Address,
-    mint: Address,
-    merchantEscrowAta: Address,
-    buyerAta: Address,
-    orderId: number,
-    amount: number | bigint,
-    verifyBeforeStatus?: boolean,
-}): Promise<void> {
-    // Optionally verify payment is in Paid status before refunding
-    if (verifyBeforeStatus) {
-        await assertPaymentAccount({
-            client,
-            paymentPda,
-            expectedOrderId: orderId,
-            expectedAmount: BigInt(amount),
-            expectedStatus: Status.Paid,
-        });
-    }
+    tokenProgram: TOKEN_PROGRAM_ADDRESS,
+    systemProgram: SYSTEM_PROGRAM_ADDRESS,
+  });
 
-    // Get pre-balances for token verification
-    const merchantEscrowPreBalance = await getTokenBalance(client, merchantEscrowAta);
-    const buyerPreBalance = await getTokenBalance(client, buyerAta);
+  await sendAndConfirmInstructions({
+    client,
+    payer,
+    instructions: [refundPaymentIx],
+    description: "Refund Payment",
+  });
 
-    const preBalances = new Map<Address, bigint>([
-        [merchantEscrowAta, merchantEscrowPreBalance],
-        [buyerAta, buyerPreBalance],
-    ]);
+  // Verify payment status changed to Refunded
+  await assertPaymentAccount({
+    client,
+    paymentPda,
+    expectedOrderId: orderId,
+    expectedAmount: BigInt(amount),
+    expectedStatus: Status.Refunded,
+  });
 
-    const refundPaymentIx = getRefundPaymentInstruction({
-        payer,
-        payment: paymentPda,
-        operatorAuthority,
-        buyer,
-        merchant: merchantPda,
-        operator: operatorPda,
-        merchantOperatorConfig: merchantOperatorConfigPda,
-        mint,
-        merchantEscrowAta,
-        buyerAta,
-        tokenProgram: TOKEN_PROGRAM_ADDRESS,
-        systemProgram: SYSTEM_PROGRAM_ADDRESS,
-    });
+  // Verify token balance changes: merchant escrow decreases, buyer increases
+  const amountBigInt = BigInt(amount);
+  const balanceChanges: BalanceChange[] = [
+    {
+      ata: merchantEscrowAta,
+      expectedChange: -amountBigInt, // Escrow decreases by refund amount
+      description: "Merchant escrow should decrease by refund amount",
+    },
+    {
+      ata: buyerAta,
+      expectedChange: amountBigInt, // Buyer receives refund
+      description: "Buyer should receive refund amount",
+    },
+  ];
 
-    await sendAndConfirmInstructions({
-        client,
-        payer,
-        instructions: [refundPaymentIx],
-        description: "Refund Payment"
-    });
-
-    // Verify payment status changed to Refunded
-    await assertPaymentAccount({
-        client,
-        paymentPda,
-        expectedOrderId: orderId,
-        expectedAmount: BigInt(amount),
-        expectedStatus: Status.Refunded,
-    });
-
-    // Verify token balance changes: merchant escrow decreases, buyer increases
-    const amountBigInt = BigInt(amount);
-    const balanceChanges: BalanceChange[] = [
-        {
-            ata: merchantEscrowAta,
-            expectedChange: -amountBigInt, // Escrow decreases by refund amount
-            description: "Merchant escrow should decrease by refund amount"
-        },
-        {
-            ata: buyerAta,
-            expectedChange: amountBigInt, // Buyer receives refund
-            description: "Buyer should receive refund amount"
-        }
-    ];
-
-    await assertMultipleTokenBalanceChanges({
-        client,
-        preBalances,
-        balanceChanges,
-    });
+  await assertMultipleTokenBalanceChanges({
+    client,
+    preBalances,
+    balanceChanges,
+  });
 }
 
 export async function assertUpdateMerchantSettlementWallet({
+  client,
+  payer,
+  authority,
+  merchantPda,
+  merchantBump,
+  newSettlementWallet,
+  devnet = false,
+}: {
+  client: SolanaClient;
+  payer: KeyPairSigner;
+  authority: KeyPairSigner;
+  merchantPda: Address;
+  merchantBump: number;
+  newSettlementWallet: KeyPairSigner;
+  devnet?: boolean;
+}): Promise<void> {
+  const usdcMint = devnet ? DEVNET_USDC_MINT : USDC_MINT;
+  const usdtMint = devnet ? DEVNET_USDT_MINT : USDT_MINT;
+
+  // Find the new settlement wallet's token accounts that will be created
+  const [newSettlementUsdcAta] = await findAssociatedTokenPda({
+    tokenProgram: TOKEN_PROGRAM_ADDRESS,
+    mint: usdcMint,
+    owner: newSettlementWallet.address,
+  });
+  const [newSettlementUsdtAta] = await findAssociatedTokenPda({
+    tokenProgram: TOKEN_PROGRAM_ADDRESS,
+    mint: usdtMint,
+    owner: newSettlementWallet.address,
+  });
+
+  const updateMerchantSettlementWalletIx =
+    getUpdateMerchantSettlementWalletInstruction({
+      payer,
+      authority,
+      merchant: merchantPda,
+      newSettlementWallet: newSettlementWallet.address,
+      settlementUsdcAta: newSettlementUsdcAta,
+      usdcMint,
+      settlementUsdtAta: newSettlementUsdtAta,
+      usdtMint,
+      tokenProgram: TOKEN_PROGRAM_ADDRESS,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
+      systemProgram: SYSTEM_PROGRAM_ADDRESS,
+    });
+
+  await sendAndConfirmInstructions({
     client,
     payer,
-    authority,
+    instructions: [updateMerchantSettlementWalletIx],
+    description: "Update Merchant Settlement Wallet",
+  });
+
+  // Verify merchant account was updated with new settlement wallet
+  await assertMerchantAccount({
+    client,
     merchantPda,
-    merchantBump,
-    newSettlementWallet,
-}: {
-    client: SolanaClient,
-    payer: KeyPairSigner,
-    authority: KeyPairSigner,
-    merchantPda: Address,
-    merchantBump: number,
-    newSettlementWallet: KeyPairSigner,
-}): Promise<void> {
-    // Find the new settlement wallet's token accounts that will be created
-    const [newSettlementUsdcAta] = await findAssociatedTokenPda({
-        tokenProgram: TOKEN_PROGRAM_ADDRESS,
-        mint: USDC_MINT,
-        owner: newSettlementWallet.address
-    });
-    const [newSettlementUsdtAta] = await findAssociatedTokenPda({
-        tokenProgram: TOKEN_PROGRAM_ADDRESS,
-        mint: USDT_MINT,
-        owner: newSettlementWallet.address
-    });
+    expectedOwner: authority.address,
+    expectedBump: merchantBump,
+    expectedSettlementWallet: newSettlementWallet.address,
+  });
 
-    const updateMerchantSettlementWalletIx = getUpdateMerchantSettlementWalletInstruction({
-        payer,
-        authority,
-        merchant: merchantPda,
-        newSettlementWallet: newSettlementWallet.address,
-        settlementUsdcAta: newSettlementUsdcAta,
-        usdcMint: USDC_MINT,
-        settlementUsdtAta: newSettlementUsdtAta,
-        usdtMint: USDT_MINT,
-        tokenProgram: TOKEN_PROGRAM_ADDRESS,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
-        systemProgram: SYSTEM_PROGRAM_ADDRESS,
-    });
-
-    await sendAndConfirmInstructions({
-        client,
-        payer,
-        instructions: [updateMerchantSettlementWalletIx],
-        description: "Update Merchant Settlement Wallet"
-    });
-
-    // Verify merchant account was updated with new settlement wallet
-    await assertMerchantAccount({
-        client,
-        merchantPda,
-        expectedOwner: authority.address,
-        expectedBump: merchantBump,
-        expectedSettlementWallet: newSettlementWallet.address,
-    });
-
-    // Verify new settlement wallet token accounts were created
-    await assertTokenAccount({
-        client,
-        tokenAccount: newSettlementUsdcAta,
-        expectedMint: USDC_MINT,
-        expectedOwner: newSettlementWallet.address,
-    });
-    await assertTokenAccount({
-        client,
-        tokenAccount: newSettlementUsdtAta,
-        expectedMint: USDT_MINT,
-        expectedOwner: newSettlementWallet.address,
-    });
-
+  // Verify new settlement wallet token accounts were created
+  await assertTokenAccount({
+    client,
+    tokenAccount: newSettlementUsdcAta,
+    expectedMint: usdcMint,
+    expectedOwner: newSettlementWallet.address,
+  });
+  await assertTokenAccount({
+    client,
+    tokenAccount: newSettlementUsdtAta,
+    expectedMint: usdtMint,
+    expectedOwner: newSettlementWallet.address,
+  });
 }
 
 export async function assertUpdateMerchantAuthority({
+  client,
+  payer,
+  currentAuthority,
+  merchantPda,
+  merchantBump,
+  settlementWallet,
+  newAuthority,
+}: {
+  client: SolanaClient;
+  payer: KeyPairSigner;
+  currentAuthority: KeyPairSigner;
+  merchantPda: Address;
+  merchantBump: number;
+  settlementWallet: Address;
+  newAuthority: KeyPairSigner;
+}): Promise<void> {
+  const updateMerchantAuthorityIx = getUpdateMerchantAuthorityInstruction({
+    payer,
+    authority: currentAuthority,
+    merchant: merchantPda,
+    newAuthority: newAuthority.address,
+  });
+
+  await sendAndConfirmInstructions({
     client,
     payer,
-    currentAuthority,
+    instructions: [updateMerchantAuthorityIx],
+    description: "Update Merchant Authority",
+  });
+
+  // Verify merchant account was updated with new authority
+  await assertMerchantAccount({
+    client,
     merchantPda,
-    merchantBump,
-    settlementWallet,
-    newAuthority,
-}: {
-    client: SolanaClient,
-    payer: KeyPairSigner,
-    currentAuthority: KeyPairSigner,
-    merchantPda: Address,
-    merchantBump: number,
-    settlementWallet: Address,
-    newAuthority: KeyPairSigner,
-}): Promise<void> {
-    const updateMerchantAuthorityIx = getUpdateMerchantAuthorityInstruction({
-        payer,
-        authority: currentAuthority,
-        merchant: merchantPda,
-        newAuthority: newAuthority.address,
-    });
-
-    await sendAndConfirmInstructions({
-        client,
-        payer,
-        instructions: [updateMerchantAuthorityIx],
-        description: "Update Merchant Authority"
-    });
-
-    // Verify merchant account was updated with new authority
-    await assertMerchantAccount({
-        client,
-        merchantPda,
-        expectedOwner: newAuthority.address,
-        expectedBump: merchantBump,
-        expectedSettlementWallet: settlementWallet, // Settlement wallet should remain unchanged
-    });
+    expectedOwner: newAuthority.address,
+    expectedBump: merchantBump,
+    expectedSettlementWallet: settlementWallet, // Settlement wallet should remain unchanged
+  });
 }
 
 export async function assertUpdateOperatorAuthority({
+  client,
+  payer,
+  currentAuthority,
+  operatorPda,
+  operatorBump,
+  newAuthority,
+}: {
+  client: SolanaClient;
+  payer: KeyPairSigner;
+  currentAuthority: KeyPairSigner;
+  operatorPda: Address;
+  operatorBump: number;
+  newAuthority: KeyPairSigner;
+}): Promise<void> {
+  const updateOperatorAuthorityIx = getUpdateOperatorAuthorityInstruction({
+    payer,
+    authority: currentAuthority,
+    operator: operatorPda,
+    newOperatorAuthority: newAuthority.address,
+  });
+
+  await sendAndConfirmInstructions({
     client,
     payer,
-    currentAuthority,
+    instructions: [updateOperatorAuthorityIx],
+    description: "Update Operator Authority",
+  });
+
+  // Verify operator account was updated with new authority
+  await assertOperatorAccount({
+    client,
     operatorPda,
-    operatorBump,
-    newAuthority,
-}: {
-    client: SolanaClient,
-    payer: KeyPairSigner,
-    currentAuthority: KeyPairSigner,
-    operatorPda: Address,
-    operatorBump: number,
-    newAuthority: KeyPairSigner,
-}): Promise<void> {
-    const updateOperatorAuthorityIx = getUpdateOperatorAuthorityInstruction({
-        payer,
-        authority: currentAuthority,
-        operator: operatorPda,
-        newOperatorAuthority: newAuthority.address,
-    });
-
-    await sendAndConfirmInstructions({
-        client,
-        payer,
-        instructions: [updateOperatorAuthorityIx],
-        description: "Update Operator Authority"
-    });
-
-    // Verify operator account was updated with new authority
-    await assertOperatorAccount({
-        client,
-        operatorPda,
-        expectedOwner: newAuthority.address,
-        expectedBump: operatorBump,
-    });
+    expectedOwner: newAuthority.address,
+    expectedBump: operatorBump,
+  });
 }
 
 export async function assertClosePayment({
+  client,
+  payer,
+  paymentPda,
+  operatorAuthority,
+  buyer,
+  operatorPda,
+  merchantPda,
+  merchantOperatorConfigPda,
+  mint,
+  orderId,
+  amount,
+  verifyBeforeStatus = true,
+}: {
+  client: SolanaClient;
+  payer: KeyPairSigner;
+  paymentPda: Address;
+  operatorAuthority: KeyPairSigner;
+  buyer: Address;
+  operatorPda: Address;
+  merchantPda: Address;
+  merchantOperatorConfigPda: Address;
+  mint: Address;
+  orderId: number;
+  amount: number | bigint;
+  verifyBeforeStatus?: boolean;
+}): Promise<void> {
+  // Optionally verify payment is in Cleared status before closing
+  if (verifyBeforeStatus) {
+    await assertPaymentAccount({
+      client,
+      paymentPda,
+      expectedOrderId: orderId,
+      expectedAmount: BigInt(amount),
+      expectedStatus: Status.Cleared,
+    });
+  }
+
+  // Get pre-balances to verify fee payer receives account rent
+  const payerPreBalance = await client.rpc
+    .getBalance(payer.address, { commitment: "processed" })
+    .send();
+  // const paymentAccountInfo = await client.rpc
+  //   .getAccountInfo(paymentPda, { commitment: "processed" })
+  //   .send();
+  // const paymentRentBalance = paymentAccountInfo.value?.lamports ?? 0n;
+
+  const closePaymentIx = getClosePaymentInstruction({
+    payer,
+    payment: paymentPda,
+    operatorAuthority,
+    operator: operatorPda,
+    merchant: merchantPda,
+    buyer,
+    merchantOperatorConfig: merchantOperatorConfigPda,
+    mint,
+    systemProgram: SYSTEM_PROGRAM_ADDRESS,
+  });
+
+  await sendAndConfirmInstructions({
     client,
     payer,
-    paymentPda,
-    operatorAuthority,
-    buyer,
-    operatorPda,
-    merchantPda,
-    merchantOperatorConfigPda,
-    mint,
-    orderId,
-    amount,
-    verifyBeforeStatus = true,
-}: {
-    client: SolanaClient,
-    payer: KeyPairSigner,
-    paymentPda: Address,
-    operatorAuthority: KeyPairSigner,
-    buyer: Address,
-    operatorPda: Address,
-    merchantPda: Address,
-    merchantOperatorConfigPda: Address,
-    mint: Address,
-    orderId: number,
-    amount: number | bigint,
-    verifyBeforeStatus?: boolean,
-}): Promise<void> {
-    // Optionally verify payment is in Cleared status before closing
-    if (verifyBeforeStatus) {
-        await assertPaymentAccount({
-            client,
-            paymentPda,
-            expectedOrderId: orderId,
-            expectedAmount: BigInt(amount),
-            expectedStatus: Status.Cleared,
-        });
+    instructions: [closePaymentIx],
+    description: "Close Payment",
+  });
+
+  // Verify payment account was closed (should no longer exist)
+  try {
+    const closedAccountInfo = await client.rpc
+      .getAccountInfo(paymentPda, { commitment: "processed" })
+      .send();
+    if (closedAccountInfo.value !== null) {
+      throw new Error("Payment account should have been closed");
     }
+  } catch (error) {
+    // Expected - account should not exist after closing
+  }
 
-    // Get pre-balances to verify fee payer receives account rent
-    const payerPreBalance = await client.rpc.getBalance(payer.address, { commitment: 'processed' }).send();
-    const paymentAccountInfo = await client.rpc.getAccountInfo(paymentPda, { commitment: 'processed' }).send();
-    const paymentRentBalance = paymentAccountInfo.value?.lamports ?? 0n;
+  // Verify fee payer received the rent from the closed account
+  const payerPostBalance = await client.rpc
+    .getBalance(payer.address, { commitment: "processed" })
+    .send();
+  // const expectedBalance = payerPreBalance.value + paymentRentBalance;
 
-    const closePaymentIx = getClosePaymentInstruction({
-        payer,
-        payment: paymentPda,
-        operatorAuthority,
-        operator: operatorPda,
-        merchant: merchantPda,
-        buyer,
-        merchantOperatorConfig: merchantOperatorConfigPda,
-        mint,
-        systemProgram: SYSTEM_PROGRAM_ADDRESS,
-    });
-
-    await sendAndConfirmInstructions({
-        client,
-        payer,
-        instructions: [closePaymentIx],
-        description: "Close Payment"
-    });
-
-    // Verify payment account was closed (should no longer exist)
-    try {
-        const closedAccountInfo = await client.rpc.getAccountInfo(paymentPda, { commitment: 'processed' }).send();
-        if (closedAccountInfo.value !== null) {
-            throw new Error("Payment account should have been closed");
-        }
-    } catch (error) {
-        // Expected - account should not exist after closing
-    }
-
-    // Verify fee payer received the rent from the closed account
-    const payerPostBalance = await client.rpc.getBalance(payer.address, { commitment: 'processed' }).send();
-    const expectedBalance = payerPreBalance.value + paymentRentBalance;
-    
-    // Note: We check that the balance increased, but account for potential transaction fees
-    if (payerPostBalance.value <= payerPreBalance.value) {
-        throw new Error("Fee payer should have received rent from closed payment account");
-    }
+  // Note: We check that the balance increased, but account for potential transaction fees
+  if (payerPostBalance.value <= payerPreBalance.value) {
+    throw new Error(
+      "Fee payer should have received rent from closed payment account"
+    );
+  }
 }
 
 /**
  * Payment workflow outcomes
  */
 export enum PaymentWorkflow {
-    /** Make Payment → Clear Payment → Close Payment */
-    ClearAndClose = 'clear_and_close',
-    /** Make Payment → Clear Payment (no close) */
-    ClearOnly = 'clear_only',
-    /** Make Payment → Refund Payment (cannot close refunded payments) */
-    RefundOnly = 'refund_only',
-    /** Make Payment → Chargeback Payment → Close Payment (when chargeback is implemented) */
-    ChargebackAndClose = 'chargeback_and_close',
+  /** Make Payment → Clear Payment → Close Payment */
+  ClearAndClose = "clear_and_close",
+  /** Make Payment → Clear Payment (no close) */
+  ClearOnly = "clear_only",
+  /** Make Payment → Refund Payment (cannot close refunded payments) */
+  RefundOnly = "refund_only",
+  /** Make Payment → Chargeback Payment → Close Payment (when chargeback is implemented) */
+  ChargebackAndClose = "chargeback_and_close",
 }
 
 /**
  * Complete payment workflow that handles make payment followed by settlement/refund/chargeback and optional close
  */
 export async function assertCompletePaymentWorkflow({
+  client,
+  payer,
+  paymentPda,
+  operatorAuthority,
+  buyer,
+  operatorPda,
+  merchantPda,
+  merchantOperatorConfigPda,
+  mint,
+  buyerAta,
+  merchantEscrowAta,
+  merchantSettlementAta,
+  operatorSettlementAta,
+  orderId,
+  amount,
+  operatorFee,
+  bump,
+  workflow,
+}: {
+  client: SolanaClient;
+  payer: KeyPairSigner;
+  paymentPda: Address;
+  operatorAuthority: KeyPairSigner;
+  buyer: KeyPairSigner;
+  operatorPda: Address;
+  merchantPda: Address;
+  merchantOperatorConfigPda: Address;
+  mint: Address;
+  buyerAta: Address;
+  merchantEscrowAta: Address;
+  merchantSettlementAta: Address;
+  operatorSettlementAta: Address;
+  orderId: number;
+  amount: number;
+  operatorFee: number | bigint;
+  bump: number;
+  workflow: PaymentWorkflow;
+}): Promise<{
+  paymentStatus: Status;
+  accountClosed: boolean;
+  workflow: PaymentWorkflow;
+}> {
+  // Step 1: Always make the payment first
+  await assertMakePayment({
     client,
     payer,
     paymentPda,
@@ -817,161 +980,119 @@ export async function assertCompletePaymentWorkflow({
     buyerAta,
     merchantEscrowAta,
     merchantSettlementAta,
-    operatorSettlementAta,
     orderId,
     amount,
-    operatorFee,
     bump,
-    workflow,
-}: {
-    client: SolanaClient,
-    payer: KeyPairSigner,
-    paymentPda: Address,
-    operatorAuthority: KeyPairSigner,
-    buyer: KeyPairSigner,
-    operatorPda: Address,
-    merchantPda: Address,
-    merchantOperatorConfigPda: Address,
-    mint: Address,
-    buyerAta: Address,
-    merchantEscrowAta: Address,
-    merchantSettlementAta: Address,
-    operatorSettlementAta: Address,
-    orderId: number,
-    amount: number,
-    operatorFee: number | bigint,
-    bump: number,
-    workflow: PaymentWorkflow,
-}): Promise<{
-    paymentStatus: Status,
-    accountClosed: boolean,
-    workflow: PaymentWorkflow,
-}> {
-    // Step 1: Always make the payment first
-    await assertMakePayment({
+  });
+
+  let finalStatus: Status;
+  let accountClosed = false;
+
+  // Step 2: Execute the specified workflow
+  switch (workflow) {
+    case PaymentWorkflow.ClearAndClose:
+      // Clear the payment
+      await assertClearPayment({
         client,
         payer,
         paymentPda,
         operatorAuthority,
-        buyer,
+        buyer: buyer.address,
         operatorPda,
         merchantPda,
         merchantOperatorConfigPda,
         mint,
-        buyerAta,
         merchantEscrowAta,
         merchantSettlementAta,
+        operatorSettlementAta,
         orderId,
         amount,
-        bump,
-    });
+        operatorFee,
+        verifyBeforeStatus: true,
+      });
 
-    let finalStatus: Status;
-    let accountClosed = false;
+      // Close the payment
+      await assertClosePayment({
+        client,
+        payer,
+        paymentPda,
+        operatorAuthority,
+        buyer: buyer.address,
+        operatorPda,
+        merchantPda,
+        merchantOperatorConfigPda,
+        mint,
+        orderId,
+        amount,
+        verifyBeforeStatus: true,
+      });
 
-    // Step 2: Execute the specified workflow
-    switch (workflow) {
-        case PaymentWorkflow.ClearAndClose:
-            // Clear the payment
-            await assertClearPayment({
-                client,
-                payer,
-                paymentPda,
-                operatorAuthority,
-                buyer: buyer.address,
-                operatorPda,
-                merchantPda,
-                merchantOperatorConfigPda,
-                mint,
-                merchantEscrowAta,
-                merchantSettlementAta,
-                operatorSettlementAta,
-                orderId,
-                amount,
-                operatorFee,
-                verifyBeforeStatus: true,
-            });
+      finalStatus = Status.Cleared; // Payment was cleared before closing
+      accountClosed = true;
+      break;
 
-            // Close the payment
-            await assertClosePayment({
-                client,
-                payer,
-                paymentPda,
-                operatorAuthority,
-                buyer: buyer.address,
-                operatorPda,
-                merchantPda,
-                merchantOperatorConfigPda,
-                mint,
-                orderId,
-                amount,
-                verifyBeforeStatus: true,
-            });
+    case PaymentWorkflow.ClearOnly:
+      // Clear the payment but don't close
+      await assertClearPayment({
+        client,
+        payer,
+        paymentPda,
+        operatorAuthority,
+        buyer: buyer.address,
+        operatorPda,
+        merchantPda,
+        merchantOperatorConfigPda,
+        mint,
+        merchantEscrowAta,
+        merchantSettlementAta,
+        operatorSettlementAta,
+        orderId,
+        amount,
+        operatorFee,
+        verifyBeforeStatus: true,
+      });
 
-            finalStatus = Status.Cleared; // Payment was cleared before closing
-            accountClosed = true;
-            break;
+      finalStatus = Status.Cleared;
+      accountClosed = false;
+      break;
 
-        case PaymentWorkflow.ClearOnly:
-            // Clear the payment but don't close
-            await assertClearPayment({
-                client,
-                payer,
-                paymentPda,
-                operatorAuthority,
-                buyer: buyer.address,
-                operatorPda,
-                merchantPda,
-                merchantOperatorConfigPda,
-                mint,
-                merchantEscrowAta,
-                merchantSettlementAta,
-                operatorSettlementAta,
-                orderId,
-                amount,
-                operatorFee,
-                verifyBeforeStatus: true,
-            });
+    case PaymentWorkflow.RefundOnly:
+      // Refund the payment (cannot close refunded payments)
+      await assertRefundPayment({
+        client,
+        payer,
+        paymentPda,
+        operatorAuthority,
+        buyer: buyer.address,
+        operatorPda,
+        merchantPda,
+        merchantOperatorConfigPda,
+        mint,
+        merchantEscrowAta,
+        buyerAta,
+        orderId,
+        amount,
+        verifyBeforeStatus: true,
+      });
 
-            finalStatus = Status.Cleared;
-            accountClosed = false;
-            break;
+      finalStatus = Status.Refunded;
+      accountClosed = false;
+      break;
 
-        case PaymentWorkflow.RefundOnly:
-            // Refund the payment (cannot close refunded payments)
-            await assertRefundPayment({
-                client,
-                payer,
-                paymentPda,
-                operatorAuthority,
-                buyer: buyer.address,
-                operatorPda,
-                merchantPda,
-                merchantOperatorConfigPda,
-                mint,
-                merchantEscrowAta,
-                buyerAta,
-                orderId,
-                amount,
-                verifyBeforeStatus: true,
-            });
+    case PaymentWorkflow.ChargebackAndClose:
+      // Note: Chargeback is not yet implemented in the processor
+      // This is a placeholder for future implementation
+      throw new Error(
+        "Chargeback workflow is not yet implemented in the program"
+      );
 
-            finalStatus = Status.Refunded;
-            accountClosed = false;
-            break;
+    default:
+      throw new Error(`Unknown payment workflow: ${workflow}`);
+  }
 
-        case PaymentWorkflow.ChargebackAndClose:
-            // Note: Chargeback is not yet implemented in the processor
-            // This is a placeholder for future implementation
-            throw new Error("Chargeback workflow is not yet implemented in the program");
-
-        default:
-            throw new Error(`Unknown payment workflow: ${workflow}`);
-    }
-
-    return {
-        paymentStatus: finalStatus,
-        accountClosed,
-        workflow,
-    };
+  return {
+    paymentStatus: finalStatus,
+    accountClosed,
+    workflow,
+  };
 }

@@ -1,4 +1,4 @@
-import { createSolanaClient } from "gill";
+import { createSolanaClient, SolanaClient } from "gill";
 
 export interface SolanaClientConfig {
   network: "mainnet" | "devnet" | "localnet";
@@ -6,21 +6,21 @@ export interface SolanaClientConfig {
 }
 
 export interface CommerceClient {
-  rpc: any;
-  sendAndConfirmTransaction: any;
+  rpc: SolanaClient['rpc'];
+  sendAndConfirmTransaction: SolanaClient['sendAndConfirmTransaction'];
   network: string;
 }
 
 export function createCommerceClient(config: SolanaClientConfig): CommerceClient {
   const urlOrMoniker = config.rpcUrl || config.network;
   
-  const { rpc, rpcSubscriptions, sendAndConfirmTransaction } = createSolanaClient({
+  const client = createSolanaClient({
     urlOrMoniker,
   });
 
   return {
-    rpc,
-    sendAndConfirmTransaction,
+    rpc: client.rpc,
+    sendAndConfirmTransaction: client.sendAndConfirmTransaction,
     network: config.network,
   };
 }

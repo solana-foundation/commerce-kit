@@ -80,7 +80,7 @@ commerce-program/
 - [Solana CLI](https://docs.anza.xyz/cli/install) 2.2.1+
 - [Rust](https://www.rust-lang.org/tools/install) 1.87+
 - [Node.js](https://nodejs.org/) LTS
-- [pnpm](https://pnpm.io/)
+- [Bun](https://bun.sh/)
 - [Shank CLI](https://github.com/metaplex-foundation/shank) (for IDL generation)
 
 ### Installation

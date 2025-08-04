@@ -1,0 +1,68 @@
+name: TypeScript SDK Unit Tests
+
+on:
+  workflow_call:
+  push:
+    branches: [main]
+    paths:
+      - "program/clients/typescript/**"
+      - ".github/workflows/sdk-ts-unit.yml"
+      - "program/idl/**"
+
+  pull_request:
+    branches: [main]
+    paths:
+      - "program/clients/typescript/**"
+      - ".github/workflows/sdk-ts-unit.yml"
+      - "program/idl/**"
+jobs:
+  typescript-sdk-unit:
+    name: TypeScript SDK Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.19
+
+      # Cache only bun cache - NOT Rust build artifacts that could contain generated IDL
+      - name: Setup Bun cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - name: Install root dependencies
+        shell: bash
+        run: cd program && bun install --frozen-lockfile
+
+      - name: Generate clients
+        run: cd program && bun run generate-clients
+
+      - name: Install test dependencies
+        working-directory: program/clients/typescript
+        run: bun install --frozen-lockfile
+
+      - name: Build TypeScript SDK
+        working-directory: program/clients/typescript
+        run: bun run build
+
+      - name: Run TypeScript unit tests
+        working-directory: program/clients/typescript
+        run: |
+          echo "🧪 Running TypeScript SDK unit tests..."
+          bun run test:ci:unit
+
+      - name: Show failure logs
+        uses: ./.github/actions/show-failure-logs
+        with:
+          test-type: "TypeScript unit"

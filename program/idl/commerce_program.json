@@ -280,6 +280,14 @@
           "docs": [
             "Event authority PDA"
           ]
+        },
+        {
+          "name": "commerceProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Commerce Program ID"
+          ]
         }
       ],
       "args": [
@@ -399,6 +407,14 @@
           "docs": [
             "Event authority PDA"
           ]
+        },
+        {
+          "name": "commerceProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Commerce Program ID"
+          ]
         }
       ],
       "args": [],
@@ -495,6 +511,14 @@
           "docs": [
             "Event authority PDA"
           ]
+        },
+        {
+          "name": "commerceProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Commerce Program ID"
+          ]
         }
       ],
       "args": [],
@@ -590,6 +614,14 @@
           "isSigner": false,
           "docs": [
             "Event authority PDA"
+          ]
+        },
+        {
+          "name": "commerceProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Commerce Program ID"
           ]
         }
       ],

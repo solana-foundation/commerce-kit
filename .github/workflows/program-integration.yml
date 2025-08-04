@@ -4,23 +4,23 @@ on:
   push:
     branches: [main]
     paths:
-      - 'program/**'
-      - 'Cargo.*'
-      - 'Makefile'
-      - 'tests/integration/**'
+      - 'program/program/**'
+      - 'program/Cargo.*'
+      - 'program/Makefile'
+      - 'program/tests/integration/**'
       - '.github/workflows/program-integration.yml'
-      - 'clients/rust/**'
-      - 'scripts/generate-client.js'
+      - 'program/clients/rust/**'
+      - 'program/scripts/generate-client.js'
   pull_request:
     branches: [main]
     paths:
-      - 'program/**'
-      - 'Cargo.*'
-      - 'Makefile'
-      - 'tests/integration/**'
+      - 'program/program/**'
+      - 'program/Cargo.*'
+      - 'program/Makefile'
+      - 'program/tests/integration/**'
       - '.github/workflows/program-integration.yml'
-      - 'clients/rust/**'
-      - 'scripts/generate-client.js'
+      - 'program/clients/rust/**'
+      - 'program/scripts/generate-client.js'
 env:
   CARGO_TERM_COLOR: always
   RUST_LOG: info
@@ -48,8 +48,8 @@ jobs:
         with:
           cache-on-failure: true
           workspaces: |
-            .
-            tests/integration-tests
+            ./program
+            ./program/tests/integration-tests
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -57,27 +57,22 @@ jobs:
             node-version: 'lts/*'
             registry-url: 'https://registry.npmjs.org'
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-            version: 10.12.3
-            run_install: false
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-            echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-    
-      - name: Setup pnpm cache
+          bun-version: 1.2.19
+
+      - name: Setup Bun cache
         uses: actions/cache@v4
         with:
-            path: ${{ env.STORE_PATH }}
-            key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+            path: ~/.bun/install/cache
+            key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
             restore-keys: |
-              ${{ runner.os }}-pnpm-store-
+              ${{ runner.os }}-bun-
     
       - name: Install dependencies
         run: |
-          make install
+          cd program && make install
 
       - name: Setup Solana CLI
         uses: ./.github/actions/setup-solana
@@ -85,7 +80,7 @@ jobs:
       - name: Run integration tests
         run: |
           echo "Running integration tests..."
-          make test-integration
+          cd program && make test-integration
 
       - name: Show failure logs
         if: failure()
