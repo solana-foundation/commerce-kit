@@ -29,7 +29,6 @@ import {
   FeeType,
   PolicyData,
   Status,
-  COMMERCE_PROGRAM_PROGRAM_ADDRESS,
 } from "../../../src/generated";
 import { sendAndConfirmInstructions } from "./transactions";
 import {
@@ -673,7 +672,7 @@ export async function assertUpdateMerchantSettlementWallet({
   merchantPda: Address;
   merchantBump: number;
   newSettlementWallet: KeyPairSigner;
-  devnet: boolean;
+  devnet?: boolean;
 }): Promise<void> {
   const usdcMint = devnet ? DEVNET_USDC_MINT : USDC_MINT;
   const usdtMint = devnet ? DEVNET_USDT_MINT : USDT_MINT;

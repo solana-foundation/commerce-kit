@@ -2,7 +2,6 @@ import {
   findPaymentPda,
   FeeType,
   getMakePaymentInstruction,
-  COMMERCE_PROGRAM_PROGRAM_ADDRESS,
 } from "../../src/generated";
 import {
   findAssociatedTokenPda,
