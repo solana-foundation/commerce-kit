@@ -1,11 +1,16 @@
 import { expect } from '@jest/globals';
 import {
   getInitializeMerchantInstruction,
+  getInitializeMerchantInstructionAsync,
   INITIALIZE_MERCHANT_DISCRIMINATOR,
 } from '../../../src/generated';
-import { AccountRole } from 'gill';
+import { AccountRole, Address } from 'gill';
 import { mockTransactionSigner, TEST_ADDRESSES, EXPECTED_PROGRAM_ADDRESS } from '../../../tests/setup/mocks';
-import { SYSTEM_PROGRAM_ADDRESS } from 'gill/programs';
+import { 
+  SYSTEM_PROGRAM_ADDRESS,
+  TOKEN_PROGRAM_ADDRESS,
+  findAssociatedTokenPda 
+} from 'gill/programs';
 
 describe('initializeMerchant', () => {
   it('should create a valid initialize merchant instruction', () => {
@@ -48,5 +53,147 @@ describe('initializeMerchant', () => {
     // Test data
     const expectedData = new Uint8Array([INITIALIZE_MERCHANT_DISCRIMINATOR, bump]);
     expect(instruction.data).toEqual(expectedData);
+  });
+
+  describe('automatic ATA derivation', () => {
+    // Test mint addresses (USDC and USDT mainnet addresses)
+    const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' as Address;
+    const USDT_MINT = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB' as Address;
+
+    it('should automatically derive correct USDC ATAs when not provided', async () => {
+      const payer = mockTransactionSigner(TEST_ADDRESSES.PAYER);
+      const authority = mockTransactionSigner(TEST_ADDRESSES.AUTHORITY);
+      const bump = 255;
+
+      // Get expected ATA addresses using findAssociatedTokenPda
+      const [expectedSettlementUsdcAta] = await findAssociatedTokenPda({
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
+        mint: USDC_MINT,
+        owner: TEST_ADDRESSES.SETTLEMENT_WALLET,
+      });
+
+      const [expectedEscrowUsdcAta] = await findAssociatedTokenPda({
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
+        mint: USDC_MINT,
+        owner: TEST_ADDRESSES.MERCHANT,
+      });
+
+      // Generate instruction without providing ATAs - they should be auto-derived
+      const instruction = await getInitializeMerchantInstructionAsync({
+        payer,
+        authority,
+        merchant: TEST_ADDRESSES.MERCHANT,
+        settlementWallet: TEST_ADDRESSES.SETTLEMENT_WALLET,
+        bump,
+        // Not providing settlementUsdcAta or escrowUsdcAta - should be auto-derived
+      });
+
+      // Verify the automatically derived ATAs match expected addresses
+      expect(instruction.accounts[5].address).toBe(expectedSettlementUsdcAta); // settlementUsdcAta
+      expect(instruction.accounts[6].address).toBe(expectedEscrowUsdcAta); // escrowUsdcAta
+    });
+
+    it('should automatically derive correct USDT ATAs when not provided', async () => {
+      const payer = mockTransactionSigner(TEST_ADDRESSES.PAYER);
+      const authority = mockTransactionSigner(TEST_ADDRESSES.AUTHORITY);
+      const bump = 255;
+
+      // Get expected ATA addresses using findAssociatedTokenPda
+      const [expectedSettlementUsdtAta] = await findAssociatedTokenPda({
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
+        mint: USDT_MINT,
+        owner: TEST_ADDRESSES.SETTLEMENT_WALLET,
+      });
+
+      const [expectedEscrowUsdtAta] = await findAssociatedTokenPda({
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
+        mint: USDT_MINT,
+        owner: TEST_ADDRESSES.MERCHANT,
+      });
+
+      // Generate instruction without providing ATAs - they should be auto-derived
+      const instruction = await getInitializeMerchantInstructionAsync({
+        payer,
+        authority,
+        merchant: TEST_ADDRESSES.MERCHANT,
+        settlementWallet: TEST_ADDRESSES.SETTLEMENT_WALLET,
+        bump,
+        // Not providing settlementUsdtAta or escrowUsdtAta - should be auto-derived
+      });
+
+      // Verify the automatically derived ATAs match expected addresses
+      expect(instruction.accounts[8].address).toBe(expectedSettlementUsdtAta); // settlementUsdtAta
+      expect(instruction.accounts[9].address).toBe(expectedEscrowUsdtAta); // escrowUsdtAta
+    });
+
+    it('should use provided ATA addresses when supplied (override auto-derivation)', async () => {
+      const payer = mockTransactionSigner(TEST_ADDRESSES.PAYER);
+      const authority = mockTransactionSigner(TEST_ADDRESSES.AUTHORITY);
+      const bump = 255;
+
+      // Provide custom ATA addresses
+      const customUsdcAta = TEST_ADDRESSES.ATA_1;
+      const customEscrowAta = TEST_ADDRESSES.ATA_2;
+
+      const instruction = await getInitializeMerchantInstructionAsync({
+        payer,
+        authority,
+        merchant: TEST_ADDRESSES.MERCHANT,
+        settlementWallet: TEST_ADDRESSES.SETTLEMENT_WALLET,
+        settlementUsdcAta: customUsdcAta,
+        escrowUsdcAta: customEscrowAta,
+        bump,
+      });
+
+      // Verify the provided addresses are used instead of auto-derived ones
+      expect(instruction.accounts[5].address).toBe(customUsdcAta); // settlementUsdcAta
+      expect(instruction.accounts[6].address).toBe(customEscrowAta); // escrowUsdcAta
+    });
+
+    it('should auto-derive all four ATA accounts correctly', async () => {
+      const payer = mockTransactionSigner(TEST_ADDRESSES.PAYER);
+      const authority = mockTransactionSigner(TEST_ADDRESSES.AUTHORITY);
+      const bump = 255;
+
+      // Get all expected ATA addresses
+      const [expectedSettlementUsdcAta] = await findAssociatedTokenPda({
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
+        mint: USDC_MINT,
+        owner: TEST_ADDRESSES.SETTLEMENT_WALLET,
+      });
+
+      const [expectedEscrowUsdcAta] = await findAssociatedTokenPda({
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
+        mint: USDC_MINT,
+        owner: TEST_ADDRESSES.MERCHANT,
+      });
+
+      const [expectedSettlementUsdtAta] = await findAssociatedTokenPda({
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
+        mint: USDT_MINT,
+        owner: TEST_ADDRESSES.SETTLEMENT_WALLET,
+      });
+
+      const [expectedEscrowUsdtAta] = await findAssociatedTokenPda({
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
+        mint: USDT_MINT,
+        owner: TEST_ADDRESSES.MERCHANT,
+      });
+
+      // Generate instruction with no ATAs provided
+      const instruction = await getInitializeMerchantInstructionAsync({
+        payer,
+        authority,
+        merchant: TEST_ADDRESSES.MERCHANT,
+        settlementWallet: TEST_ADDRESSES.SETTLEMENT_WALLET,
+        bump,
+      });
+
+      // Verify all ATAs are correctly auto-derived
+      expect(instruction.accounts[5].address).toBe(expectedSettlementUsdcAta); // settlementUsdcAta
+      expect(instruction.accounts[6].address).toBe(expectedEscrowUsdcAta); // escrowUsdcAta
+      expect(instruction.accounts[8].address).toBe(expectedSettlementUsdtAta); // settlementUsdtAta
+      expect(instruction.accounts[9].address).toBe(expectedEscrowUsdtAta); // escrowUsdtAta
+    });
   });
 });

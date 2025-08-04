@@ -1,6 +1,7 @@
 import { expect } from "@jest/globals";
 import {
   getRefundPaymentInstruction,
+  getRefundPaymentInstructionAsync,
   REFUND_PAYMENT_DISCRIMINATOR,
 } from "../../../src/generated";
 import { AccountRole } from "gill";
@@ -9,6 +10,10 @@ import {
   TEST_ADDRESSES,
   EXPECTED_PROGRAM_ADDRESS,
 } from "../../../tests/setup/mocks";
+import { 
+  TOKEN_PROGRAM_ADDRESS,
+  findAssociatedTokenPda 
+} from 'gill/programs';
 
 describe("refundPayment", () => {
   it("should create a valid refund payment instruction", () => {
@@ -51,5 +56,124 @@ describe("refundPayment", () => {
     // Test data
     const expectedData = new Uint8Array([REFUND_PAYMENT_DISCRIMINATOR]);
     expect(instruction.data).toEqual(expectedData);
+  });
+
+  describe('automatic ATA derivation', () => {
+    it('should automatically derive merchantEscrowAta when not provided', async () => {
+      const payer = mockTransactionSigner(TEST_ADDRESSES.PAYER);
+      const operatorAuthority = mockTransactionSigner(TEST_ADDRESSES.AUTHORITY);
+
+      // Get expected ATA address using findAssociatedTokenPda
+      const [expectedMerchantEscrowAta] = await findAssociatedTokenPda({
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
+        mint: TEST_ADDRESSES.MINT,
+        owner: TEST_ADDRESSES.MERCHANT,
+      });
+
+      // Generate instruction without providing merchantEscrowAta - should be auto-derived
+      const instruction = await getRefundPaymentInstructionAsync({
+        payer,
+        payment: TEST_ADDRESSES.PAYMENT,
+        operatorAuthority,
+        buyer: TEST_ADDRESSES.BUYER,
+        merchant: TEST_ADDRESSES.MERCHANT,
+        operator: TEST_ADDRESSES.OPERATOR,
+        merchantOperatorConfig: TEST_ADDRESSES.CONFIG,
+        mint: TEST_ADDRESSES.MINT,
+        // Not providing merchantEscrowAta - should be auto-derived
+      });
+
+      // Verify the automatically derived merchantEscrowAta matches expected address
+      expect(instruction.accounts[8].address).toBe(expectedMerchantEscrowAta); // merchantEscrowAta
+    });
+
+    it('should automatically derive buyerAta when not provided', async () => {
+      const payer = mockTransactionSigner(TEST_ADDRESSES.PAYER);
+      const operatorAuthority = mockTransactionSigner(TEST_ADDRESSES.AUTHORITY);
+
+      // Get expected ATA address using findAssociatedTokenPda
+      const [expectedBuyerAta] = await findAssociatedTokenPda({
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
+        mint: TEST_ADDRESSES.MINT,
+        owner: TEST_ADDRESSES.BUYER,
+      });
+
+      // Generate instruction without providing buyerAta - should be auto-derived
+      const instruction = await getRefundPaymentInstructionAsync({
+        payer,
+        payment: TEST_ADDRESSES.PAYMENT,
+        operatorAuthority,
+        buyer: TEST_ADDRESSES.BUYER,
+        merchant: TEST_ADDRESSES.MERCHANT,
+        operator: TEST_ADDRESSES.OPERATOR,
+        merchantOperatorConfig: TEST_ADDRESSES.CONFIG,
+        mint: TEST_ADDRESSES.MINT,
+        // Not providing buyerAta - should be auto-derived
+      });
+
+      // Verify the automatically derived buyerAta matches expected address
+      expect(instruction.accounts[9].address).toBe(expectedBuyerAta); // buyerAta
+    });
+
+    it('should automatically derive both ATAs when not provided', async () => {
+      const payer = mockTransactionSigner(TEST_ADDRESSES.PAYER);
+      const operatorAuthority = mockTransactionSigner(TEST_ADDRESSES.AUTHORITY);
+
+      // Get expected ATA addresses using findAssociatedTokenPda
+      const [expectedMerchantEscrowAta] = await findAssociatedTokenPda({
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
+        mint: TEST_ADDRESSES.MINT,
+        owner: TEST_ADDRESSES.MERCHANT,
+      });
+
+      const [expectedBuyerAta] = await findAssociatedTokenPda({
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
+        mint: TEST_ADDRESSES.MINT,
+        owner: TEST_ADDRESSES.BUYER,
+      });
+
+      // Generate instruction without providing any ATAs - should be auto-derived
+      const instruction = await getRefundPaymentInstructionAsync({
+        payer,
+        payment: TEST_ADDRESSES.PAYMENT,
+        operatorAuthority,
+        buyer: TEST_ADDRESSES.BUYER,
+        merchant: TEST_ADDRESSES.MERCHANT,
+        operator: TEST_ADDRESSES.OPERATOR,
+        merchantOperatorConfig: TEST_ADDRESSES.CONFIG,
+        mint: TEST_ADDRESSES.MINT,
+        // Not providing merchantEscrowAta or buyerAta - should be auto-derived
+      });
+
+      // Verify both automatically derived ATAs match expected addresses
+      expect(instruction.accounts[8].address).toBe(expectedMerchantEscrowAta); // merchantEscrowAta
+      expect(instruction.accounts[9].address).toBe(expectedBuyerAta); // buyerAta
+    });
+
+    it('should use provided ATA addresses when supplied (override auto-derivation)', async () => {
+      const payer = mockTransactionSigner(TEST_ADDRESSES.PAYER);
+      const operatorAuthority = mockTransactionSigner(TEST_ADDRESSES.AUTHORITY);
+
+      // Provide custom ATA addresses
+      const customMerchantEscrowAta = TEST_ADDRESSES.ATA_1;
+      const customBuyerAta = TEST_ADDRESSES.ATA_2;
+
+      const instruction = await getRefundPaymentInstructionAsync({
+        payer,
+        payment: TEST_ADDRESSES.PAYMENT,
+        operatorAuthority,
+        buyer: TEST_ADDRESSES.BUYER,
+        merchant: TEST_ADDRESSES.MERCHANT,
+        operator: TEST_ADDRESSES.OPERATOR,
+        merchantOperatorConfig: TEST_ADDRESSES.CONFIG,
+        mint: TEST_ADDRESSES.MINT,
+        merchantEscrowAta: customMerchantEscrowAta,
+        buyerAta: customBuyerAta,
+      });
+
+      // Verify the provided addresses are used instead of auto-derived ones
+      expect(instruction.accounts[8].address).toBe(customMerchantEscrowAta); // merchantEscrowAta
+      expect(instruction.accounts[9].address).toBe(customBuyerAta); // buyerAta
+    });
   });
 });

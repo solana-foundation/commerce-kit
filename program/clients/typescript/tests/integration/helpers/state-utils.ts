@@ -17,11 +17,7 @@ import {
   findMerchantPda,
   findMerchantOperatorConfigPda,
   getCreateOperatorInstruction,
-  getInitializeMerchantInstruction,
   getInitializeMerchantOperatorConfigInstruction,
-  getMakePaymentInstruction,
-  getClearPaymentInstruction,
-  getRefundPaymentInstruction,
   getClosePaymentInstruction,
   getUpdateMerchantSettlementWalletInstruction,
   getUpdateMerchantAuthorityInstruction,
@@ -29,6 +25,10 @@ import {
   FeeType,
   PolicyData,
   Status,
+  getInitializeMerchantInstructionAsync,
+  getMakePaymentInstructionAsync,
+  getRefundPaymentInstructionAsync,
+  getClearPaymentInstructionAsync,
 } from "../../../src/generated";
 import { sendAndConfirmInstructions } from "./transactions";
 import {
@@ -177,21 +177,12 @@ export async function assertGetOrCreateMerchant({
   });
 
   // Initialize merchant instruction
-  const initMerchantIx = getInitializeMerchantInstruction({
+  const initMerchantIx = await getInitializeMerchantInstructionAsync({
     bump,
     payer: payer,
     authority: authority,
     merchant: merchantPda,
     settlementWallet: settlementWallet.address,
-    systemProgram: SYSTEM_PROGRAM_ADDRESS,
-    settlementUsdcAta,
-    escrowUsdcAta,
-    usdcMint,
-    settlementUsdtAta,
-    escrowUsdtAta,
-    usdtMint,
-    tokenProgram: TOKEN_PROGRAM_ADDRESS,
-    associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
   });
 
   await sendAndConfirmInstructions({
@@ -366,7 +357,7 @@ export async function assertMakePayment({
     merchantEscrowAta
   );
 
-  const payment = getMakePaymentInstruction({
+  const payment = await getMakePaymentInstructionAsync({
     payer,
     payment: paymentPda,
     operatorAuthority,
@@ -375,8 +366,6 @@ export async function assertMakePayment({
     merchant: merchantPda,
     merchantOperatorConfig: merchantOperatorConfigPda,
     mint,
-    buyerAta,
-    merchantEscrowAta,
     merchantSettlementAta,
     orderId,
     amount,
@@ -486,7 +475,7 @@ export async function assertClearPayment({
     [operatorSettlementAta, operatorSettlementPreBalance],
   ]);
 
-  const clearPaymentIx = getClearPaymentInstruction({
+  const clearPaymentIx = await getClearPaymentInstructionAsync({
     payer,
     payment: paymentPda,
     operatorAuthority,
@@ -495,12 +484,7 @@ export async function assertClearPayment({
     operator: operatorPda,
     merchantOperatorConfig: merchantOperatorConfigPda,
     mint,
-    merchantEscrowAta,
     merchantSettlementAta,
-    operatorSettlementAta,
-    tokenProgram: TOKEN_PROGRAM_ADDRESS,
-    associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
-    systemProgram: SYSTEM_PROGRAM_ADDRESS,
   });
 
   await sendAndConfirmInstructions({
@@ -604,7 +588,7 @@ export async function assertRefundPayment({
     [buyerAta, buyerPreBalance],
   ]);
 
-  const refundPaymentIx = getRefundPaymentInstruction({
+  const refundPaymentIx = await getRefundPaymentInstructionAsync({
     payer,
     payment: paymentPda,
     operatorAuthority,
@@ -613,10 +597,6 @@ export async function assertRefundPayment({
     operator: operatorPda,
     merchantOperatorConfig: merchantOperatorConfigPda,
     mint,
-    merchantEscrowAta,
-    buyerAta,
-    tokenProgram: TOKEN_PROGRAM_ADDRESS,
-    systemProgram: SYSTEM_PROGRAM_ADDRESS,
   });
 
   await sendAndConfirmInstructions({
