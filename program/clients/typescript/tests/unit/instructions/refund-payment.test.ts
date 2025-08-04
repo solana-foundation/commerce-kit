@@ -3,6 +3,7 @@ import {
   getRefundPaymentInstruction,
   getRefundPaymentInstructionAsync,
   REFUND_PAYMENT_DISCRIMINATOR,
+  findOperatorPda,
 } from "../../../src/generated";
 import { AccountRole } from "gill";
 import {
@@ -174,6 +175,95 @@ describe("refundPayment", () => {
       // Verify the provided addresses are used instead of auto-derived ones
       expect(instruction.accounts[8].address).toBe(customMerchantEscrowAta); // merchantEscrowAta
       expect(instruction.accounts[9].address).toBe(customBuyerAta); // buyerAta
+    });
+  });
+
+  describe('automatic operator PDA derivation', () => {
+    it('should automatically derive operator PDA when not provided', async () => {
+      const payer = mockTransactionSigner(TEST_ADDRESSES.PAYER);
+      const operatorAuthority = mockTransactionSigner(TEST_ADDRESSES.AUTHORITY);
+
+      // Get expected operator PDA using findOperatorPda
+      const [expectedOperatorPda] = await findOperatorPda({
+        owner: operatorAuthority.address,
+      });
+
+      // Generate instruction without providing operator - should be auto-derived from operatorAuthority
+      const instruction = await getRefundPaymentInstructionAsync({
+        payer,
+        payment: TEST_ADDRESSES.PAYMENT,
+        operatorAuthority,
+        // Not providing operator - should be auto-derived from operatorAuthority
+        buyer: TEST_ADDRESSES.BUYER,
+        merchant: TEST_ADDRESSES.MERCHANT,
+        merchantOperatorConfig: TEST_ADDRESSES.CONFIG,
+        mint: TEST_ADDRESSES.MINT,
+      });
+
+      // Verify the automatically derived operator PDA matches expected address
+      expect(instruction.accounts[5].address).toBe(expectedOperatorPda); // operator
+    });
+
+    it('should use provided operator address when supplied (override auto-derivation)', async () => {
+      const payer = mockTransactionSigner(TEST_ADDRESSES.PAYER);
+      const operatorAuthority = mockTransactionSigner(TEST_ADDRESSES.AUTHORITY);
+
+      // Provide custom operator address
+      const customOperator = TEST_ADDRESSES.OPERATOR;
+
+      const instruction = await getRefundPaymentInstructionAsync({
+        payer,
+        payment: TEST_ADDRESSES.PAYMENT,
+        operatorAuthority,
+        operator: customOperator,
+        buyer: TEST_ADDRESSES.BUYER,
+        merchant: TEST_ADDRESSES.MERCHANT,
+        merchantOperatorConfig: TEST_ADDRESSES.CONFIG,
+        mint: TEST_ADDRESSES.MINT,
+      });
+
+      // Verify the provided address is used instead of auto-derived one
+      expect(instruction.accounts[5].address).toBe(customOperator); // operator
+    });
+
+    it('should derive operator PDA and ATAs together when both are not provided', async () => {
+      const payer = mockTransactionSigner(TEST_ADDRESSES.PAYER);
+      const operatorAuthority = mockTransactionSigner(TEST_ADDRESSES.AUTHORITY);
+
+      // Get expected operator PDA
+      const [expectedOperatorPda] = await findOperatorPda({
+        owner: operatorAuthority.address,
+      });
+
+      // Get expected ATA addresses
+      const [expectedMerchantEscrowAta] = await findAssociatedTokenPda({
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
+        mint: TEST_ADDRESSES.MINT,
+        owner: TEST_ADDRESSES.MERCHANT,
+      });
+
+      const [expectedBuyerAta] = await findAssociatedTokenPda({
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
+        mint: TEST_ADDRESSES.MINT,
+        owner: TEST_ADDRESSES.BUYER,
+      });
+
+      // Generate instruction without providing operator or ATAs - all should be auto-derived
+      const instruction = await getRefundPaymentInstructionAsync({
+        payer,
+        payment: TEST_ADDRESSES.PAYMENT,
+        operatorAuthority,
+        // Not providing operator, merchantEscrowAta, or buyerAta - all should be auto-derived
+        buyer: TEST_ADDRESSES.BUYER,
+        merchant: TEST_ADDRESSES.MERCHANT,
+        merchantOperatorConfig: TEST_ADDRESSES.CONFIG,
+        mint: TEST_ADDRESSES.MINT,
+      });
+
+      // Verify both operator PDA and ATAs are correctly auto-derived
+      expect(instruction.accounts[5].address).toBe(expectedOperatorPda); // operator
+      expect(instruction.accounts[8].address).toBe(expectedMerchantEscrowAta); // merchantEscrowAta
+      expect(instruction.accounts[9].address).toBe(expectedBuyerAta); // buyerAta
     });
   });
 });

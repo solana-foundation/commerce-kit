@@ -30,13 +30,13 @@ cargo build --release
 
 ### Generating IDL
 ```bash
-npm run generate-idl
+bun run generate-idl
 # or directly: shank idl -r program -o idl
 ```
 
 ### Generating Clients
 ```bash
-npm run generate-clients
+bun run generate-clients
 # Uses ts-node to run scripts/generate-client.ts
 ```
 
@@ -46,6 +46,21 @@ cargo test
 # For integration tests specifically:
 cd tests/integration-tests && cargo test
 ```
+
+TypeScript client unit tests:
+
+```bash
+cd clients/typescript
+bun run test:ci:unit
+```
+
+TypeScript client integration tests:
+
+```bash
+cd clients/typescript
+bun run test:ci:integration
+```
+
 
 ## Program Architecture
 
