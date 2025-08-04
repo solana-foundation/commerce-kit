@@ -10,6 +10,7 @@ use crate::{
 use commerce_program_client::{
     instructions::MakePaymentBuilder,
     types::{FeeType, PolicyData, SettlementPolicy},
+    COMMERCE_PROGRAM_ID,
 };
 use solana_sdk::{
     instruction::{AccountMeta, Instruction},
@@ -367,6 +368,7 @@ async fn test_make_payment_unsigned_buyer_fails() {
         AccountMeta::new_readonly(TOKEN_PROGRAM_ID, false),
         AccountMeta::new_readonly(SYSTEM_PROGRAM_ID, false),
         AccountMeta::new_readonly(event_authority, false),
+        AccountMeta::new_readonly(COMMERCE_PROGRAM_ID, false),
     ];
 
     let instruction = Instruction {

@@ -255,7 +255,6 @@ async function main() {
       orderId,
       amount: BigInt(TEST_AMOUNT),
       bump,
-      program: COMMERCE_PROGRAM_PROGRAM_ADDRESS,
     });
 
     await sendAndConfirmInstructions({

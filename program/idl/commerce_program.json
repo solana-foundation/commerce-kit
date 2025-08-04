@@ -282,7 +282,7 @@
           ]
         },
         {
-          "name": "program",
+          "name": "commerceProgram",
           "isMut": false,
           "isSigner": false,
           "docs": [
@@ -409,7 +409,7 @@
           ]
         },
         {
-          "name": "program",
+          "name": "commerceProgram",
           "isMut": false,
           "isSigner": false,
           "docs": [
@@ -513,7 +513,7 @@
           ]
         },
         {
-          "name": "program",
+          "name": "commerceProgram",
           "isMut": false,
           "isSigner": false,
           "docs": [
@@ -617,7 +617,7 @@
           ]
         },
         {
-          "name": "program",
+          "name": "commerceProgram",
           "isMut": false,
           "isSigner": false,
           "docs": [

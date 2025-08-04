@@ -281,7 +281,7 @@ export async function assertGetOrCreateMerchantOperatorConfig({
       address: merchantOperatorConfigPda,
     });
     if (failIfExists && exists) {
-      throw new Error("Merchant operator config account already exists");
+      throw new Error("MerchantOperatorConfig account already exists");
     }
 
     if (skipIfExists && exists) {
@@ -382,7 +382,6 @@ export async function assertMakePayment({
     orderId,
     amount,
     bump,
-    program: COMMERCE_PROGRAM_PROGRAM_ADDRESS,
   });
 
   await sendAndConfirmInstructions({
@@ -503,7 +502,6 @@ export async function assertClearPayment({
     tokenProgram: TOKEN_PROGRAM_ADDRESS,
     associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
     systemProgram: SYSTEM_PROGRAM_ADDRESS,
-    program: COMMERCE_PROGRAM_PROGRAM_ADDRESS,
   });
 
   await sendAndConfirmInstructions({
@@ -620,7 +618,6 @@ export async function assertRefundPayment({
     buyerAta,
     tokenProgram: TOKEN_PROGRAM_ADDRESS,
     systemProgram: SYSTEM_PROGRAM_ADDRESS,
-    program: COMMERCE_PROGRAM_PROGRAM_ADDRESS,
   });
 
   await sendAndConfirmInstructions({
@@ -860,10 +857,10 @@ export async function assertClosePayment({
   const payerPreBalance = await client.rpc
     .getBalance(payer.address, { commitment: "processed" })
     .send();
-  const paymentAccountInfo = await client.rpc
-    .getAccountInfo(paymentPda, { commitment: "processed" })
-    .send();
-  const paymentRentBalance = paymentAccountInfo.value?.lamports ?? 0n;
+  // const paymentAccountInfo = await client.rpc
+  //   .getAccountInfo(paymentPda, { commitment: "processed" })
+  //   .send();
+  // const paymentRentBalance = paymentAccountInfo.value?.lamports ?? 0n;
 
   const closePaymentIx = getClosePaymentInstruction({
     payer,
@@ -900,7 +897,7 @@ export async function assertClosePayment({
   const payerPostBalance = await client.rpc
     .getBalance(payer.address, { commitment: "processed" })
     .send();
-  const expectedBalance = payerPreBalance.value + paymentRentBalance;
+  // const expectedBalance = payerPreBalance.value + paymentRentBalance;
 
   // Note: We check that the balance increased, but account for potential transaction fees
   if (payerPostBalance.value <= payerPreBalance.value) {
