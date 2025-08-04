@@ -71,6 +71,7 @@ pub enum CommerceProgramInstruction {
     #[account(11, name = "token_program")]
     #[account(12, name = "system_program")]
     #[account(13, name = "event_authority", desc = "Event authority PDA")]
+    #[account(14, name = "program", desc = "Commerce Program ID")]
     MakePayment {
         order_id: u32,
         amount: u64,
@@ -108,6 +109,7 @@ pub enum CommerceProgramInstruction {
     #[account(12, name = "associated_token_program")]
     #[account(13, name = "system_program")]
     #[account(14, name = "event_authority", desc = "Event authority PDA")]
+    #[account(15, name = "program", desc = "Commerce Program ID")]
     ClearPayment = 4,
 
     // Refund Payment
@@ -133,6 +135,7 @@ pub enum CommerceProgramInstruction {
     #[account(10, name = "token_program")]
     #[account(11, name = "system_program")]
     #[account(12, name = "event_authority", desc = "Event authority PDA")]
+    #[account(13, name = "program", desc = "Commerce Program ID")]
     RefundPayment = 5,
 
     // Chargeback Payment
@@ -158,6 +161,7 @@ pub enum CommerceProgramInstruction {
     #[account(10, name = "token_program")]
     #[account(11, name = "system_program")]
     #[account(12, name = "event_authority", desc = "Event authority PDA")]
+    #[account(13, name = "program", desc = "Commerce Program ID")]
     ChargebackPayment = 6,
 
     // Update Merchant Settlement Wallet

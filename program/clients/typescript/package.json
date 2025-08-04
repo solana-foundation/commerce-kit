@@ -14,6 +14,7 @@
     "test:unit:pdas": "jest tests/unit/pdas",
     "test:unit:types": "jest tests/unit/types",
     "test:integration": "jest tests/integration",
+    "test:devnet": "jest tests/devnet/",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "type-check": "tsc --noEmit",

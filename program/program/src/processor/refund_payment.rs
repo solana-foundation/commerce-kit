@@ -14,8 +14,8 @@ use crate::{
     constants::MERCHANT_SEED,
     error::CommerceProgramError,
     processor::{
-        get_ata, verify_owner_mutability, verify_signer, verify_system_program,
-        verify_token_program, verify_token_program_account,
+        get_ata, verify_current_program, verify_owner_mutability, verify_signer,
+        verify_system_program, verify_token_program, verify_token_program_account,
     },
     state::{
         discriminator::AccountSerialize, Merchant, MerchantOperatorConfig, Operator, Payment,
@@ -34,7 +34,7 @@ pub fn process_refund_payment(
     accounts: &[AccountInfo],
     _instruction_data: &[u8],
 ) -> ProgramResult {
-    let [fee_payer_info, payment_info, operator_authority_info, buyer_info, merchant_info, operator_info, merchant_operator_config_info, mint_info, merchant_escrow_ata_info, buyer_ata_info, token_program_info, system_program_info, event_authority_info] =
+    let [fee_payer_info, payment_info, operator_authority_info, buyer_info, merchant_info, operator_info, merchant_operator_config_info, mint_info, merchant_escrow_ata_info, buyer_ata_info, token_program_info, system_program_info, event_authority_info, commerce_program_info] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -66,6 +66,9 @@ pub fn process_refund_payment(
 
     // Verify system program
     verify_system_program(system_program_info)?;
+
+    // Verify own program
+    verify_current_program(commerce_program_info)?;
 
     // Load and validate operator and merchant
     let operator_data = operator_info.try_borrow_data()?;
@@ -155,7 +158,12 @@ pub fn process_refund_payment(
         order_id: payment.order_id,
     };
 
-    emit_event(program_id, event_authority_info, &event.to_bytes())?;
+    emit_event(
+        program_id,
+        event_authority_info,
+        commerce_program_info,
+        &event.to_bytes(),
+    )?;
 
     Ok(())
 }
