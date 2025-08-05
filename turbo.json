@@ -1,19 +1,24 @@
 {
-    "$schema": "https://turbo.build/schema.json",
-            "tasks": {
-      "build": {
-        "dependsOn": ["^build"],
-        "outputs": ["dist/**"]
-      },
-      "lint": {
-        "outputs": []
-      },
-      "dev": {
-        "cache": false,
-        "persistent": true
-      },
-      "clean": {
-        "cache": false
-      }
+  "$schema": "https://turbo.build/schema.json",
+  "globalEnv": ["RPC_URL"],
+  "tasks": {
+    "generate": {
+      "cache": false,
+      "outputs": ["program/clients/typescript/src/**", "program/clients/rust/src/generated/**"]
+    },
+    "build": {
+      "dependsOn": ["^build", "generate"],
+      "outputs": ["dist/**"]
+    },
+    "lint": {
+      "outputs": []
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "clean": {
+      "cache": false
     }
   }
+}

@@ -3,24 +3,32 @@
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import type { OrderItem } from '@solana-commerce/headless-sdk';
-import type { Mode, CheckoutStyle, Customizations, DemoConfig } from './types';
+import type { Mode, CheckoutStyle, Customizations } from './types';
 import { CopyButton } from '../../../components/ui/copy-button';
+
+interface CartItem extends OrderItem {
+  quantity: number;
+}
 
 interface CodeExampleProps {
   selectedMode: Mode;
   checkoutStyle: CheckoutStyle;
   customizations: Customizations;
-  config: DemoConfig;
-  demoProducts: OrderItem[];
 }
 
-export function CodeExample({ selectedMode, checkoutStyle, customizations, config, demoProducts }: CodeExampleProps) {
+export function CodeExample({ selectedMode, checkoutStyle, customizations }: CodeExampleProps) {
   
-  const getCartItems = (): OrderItem[] => {
-    return demoProducts.map(product => ({
-      ...product,
-      quantity: 1
-    }));
+  const getCartItems = (): CartItem[] => {
+    // Use customizations for cart items
+    return [{
+      id: 'product-1',
+      name: customizations.productName,
+      description: customizations.productDescription,
+      price: Number(customizations.productPrice),
+      currency: 'USDC',
+      quantity: 1,
+      ...(customizations.imageUrl && { image: customizations.imageUrl })
+    }];
   };
 
   const getCodeExample = () => {
@@ -32,26 +40,26 @@ function App() {
   return (
     <SingleItemCart
       products={[{
-        id: '${config.products[0].id}',
-        name: '${config.products[0].name}',
-        description: '${config.products[0].description}',
-        price: ${config.products[0].price},
-        currency: '${config.products[0].currency}'${config.products[0].image ? `,\n        image: '${config.products[0].image}'` : ''}
+        id: 'product-1',
+        name: '${customizations.productName}',
+        description: '${customizations.productDescription}',
+        price: ${customizations.productPrice},
+        currency: 'USDC'${customizations.imageUrl ? `,\n        image: '${customizations.imageUrl}'` : ''}
       }]}
       merchant={{
-        name: '${config.merchant.name}',
-        wallet: '${config.merchant.wallet}'${config.merchant.description ? `,\n        description: '${config.merchant.description}'` : ''}
+        name: '${customizations.merchantName}',
+        wallet: '${customizations.walletAddress}'${customizations.merchantDescription ? `,\n        description: '${customizations.merchantDescription}'` : ''}
       }}
       theme={{
-        primaryColor: '${config.theme.primaryColor}',
-        secondaryColor: '${config.theme.secondaryColor}',
-        backgroundColor: '${config.theme.backgroundColor}',
-        textColor: '${config.theme.textColor}',
-        borderRadius: '${config.theme.borderRadius}',
-        fontFamily: '${config.theme.fontFamily || 'system-ui, -apple-system, sans-serif'}'
+        primaryColor: '${customizations.primaryColor}',
+        secondaryColor: '${customizations.secondaryColor}',
+        backgroundColor: '${customizations.backgroundColor}',
+        textColor: '${customizations.textColor}',
+        borderRadius: '${customizations.borderRadius}',
+        fontFamily: 'system-ui, -apple-system, sans-serif'
       }}
-      allowedMints={${JSON.stringify(config.allowedMints)}}
-      defaultCurrency="${config.allowedMints[0]}"
+      allowedMints={${JSON.stringify(customizations.supportedCurrencies)}}
+      defaultCurrency="${customizations.supportedCurrencies[0]}"
       showTransactionFee={true}
       onPayment={(amount, currency, paymentMethod, formData) => {
         console.log('Payment:', { amount, currency, paymentMethod, formData });
@@ -75,19 +83,19 @@ function App() {
     <MultiItemCart
       initialItems={cartItems}
       merchant={{
-        name: '${config.merchant.name}',
-        wallet: '${config.merchant.wallet}'${config.merchant.description ? `,\n        description: '${config.merchant.description}'` : ''}
+        name: '${customizations.merchantName}',
+        wallet: '${customizations.walletAddress}'${customizations.merchantDescription ? `,\n        description: '${customizations.merchantDescription}'` : ''}
       }}
       theme={{
-        primaryColor: '${config.theme.primaryColor}',
-        secondaryColor: '${config.theme.secondaryColor}',
-        backgroundColor: '${config.theme.backgroundColor}',
-        textColor: '${config.theme.textColor}',
-        borderRadius: '${config.theme.borderRadius}',
-        fontFamily: '${config.theme.fontFamily || 'system-ui, -apple-system, sans-serif'}'
+        primaryColor: '${customizations.primaryColor}',
+        secondaryColor: '${customizations.secondaryColor}',
+        backgroundColor: '${customizations.backgroundColor}',
+        textColor: '${customizations.textColor}',
+        borderRadius: '${customizations.borderRadius}',
+        fontFamily: 'system-ui, -apple-system, sans-serif'
       }}
-      allowedMints={${JSON.stringify(config.allowedMints)}}
-      defaultCurrency="${config.allowedMints[0]}"
+      allowedMints={${JSON.stringify(customizations.supportedCurrencies)}}
+      defaultCurrency="${customizations.supportedCurrencies[0]}"
       showTransactionFee={true}
       enableItemEditing={true}
       maxQuantityPerItem={10}
@@ -117,33 +125,44 @@ function App() {
     }
     
     // Modal code example (existing)
+    const products = selectedMode === 'tip' ? [] : [{
+      id: 'product-1',
+      name: customizations.productName,
+      description: customizations.productDescription,
+      price: Number(customizations.productPrice),
+      currency: 'USDC',
+      ...(customizations.imageUrl && { image: customizations.imageUrl })
+    }];
+
     return `import { SolanaCommerceSDK } from '@solana-commerce/react-sdk';
 
 function App() {
   return (
     <SolanaCommerceSDK
       config={{
-        mode: '${config.mode}',
+        mode: '${selectedMode}',
         position: '${customizations.position}',
+        buttonVariant: '${customizations.buttonVariant}',
         merchant: {
-          name: '${config.merchant.name}',
-          wallet: '${config.merchant.wallet}'${config.merchant.description ? `,\n          description: '${config.merchant.description}'` : ''}
+          name: '${customizations.merchantName}',
+          wallet: '${customizations.walletAddress}'${customizations.merchantDescription ? `,\n          description: '${customizations.merchantDescription}'` : ''}
         },
         theme: {
-          primaryColor: '${config.theme.primaryColor}',
-          secondaryColor: '${config.theme.secondaryColor}',
-          backgroundColor: '${config.theme.backgroundColor}',
-          textColor: '${config.theme.textColor}',
-          borderRadius: '${config.theme.borderRadius}',
-          fontFamily: '${config.theme.fontFamily || 'system-ui, -apple-system, sans-serif'}'
+          primaryColor: '${customizations.primaryColor}',
+          secondaryColor: '${customizations.secondaryColor}',
+          backgroundColor: '${customizations.backgroundColor}',
+          textColor: '${customizations.textColor}',
+          borderRadius: '${customizations.borderRadius}',
+          fontFamily: 'system-ui, -apple-system, sans-serif'
         },
-        products: ${JSON.stringify(config.products, null, 8).replace(/\n/g, '\n        ')},
-        allowedMints: ${JSON.stringify(config.allowedMints)},
+        products: ${JSON.stringify(products, null, 8).replace(/\n/g, '\n        ')},
+        allowedMints: ${JSON.stringify(customizations.supportedCurrencies)},
         network: 'mainnet-beta',
-        showQR: ${config.showQR},
+        showQR: ${customizations.showQR},
         enableWalletConnect: true,
-        showProductDetails: ${config.showProductDetails},
-        showMerchantInfo: ${config.showMerchantInfo}
+        showProductDetails: ${customizations.showProductDetails},
+        showMerchantInfo: ${customizations.showMerchantInfo},
+        allowCustomAmount: ${customizations.allowCustomAmount}
       }}
       onPayment={(amount, currency, products, paymentMethod) => {
         console.log('Payment:', { amount, currency, products, paymentMethod });

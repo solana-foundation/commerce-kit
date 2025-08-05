@@ -55,7 +55,7 @@ export function CheckoutStyleSelector({ value, onChange }: CheckoutStyleSelector
               
               {/* Modal overlay */}
               <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px] rounded-b-[3px] rounded-t-none flex items-center justify-center h-[96px] mt-[12px]">
-                <div className="bg-white rounded-lg shadow-lg p-2 w-16 h-16 border border-gray-200">
+                <div className="bg-white rounded-lg shadow-lg p-2 w-16 h-16 ">
                   {/* Modal header */}
                   <div className="w-full h-1 bg-blue-500 rounded mb-1"></div>
                   {/* Modal content */}

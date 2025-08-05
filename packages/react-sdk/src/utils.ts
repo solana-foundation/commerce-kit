@@ -22,6 +22,11 @@ export const MODAL_BORDER_RADIUS_MAP = {
   full: '1rem' // Cap modal radius for UX
 } as const;
 
+export const CONTAINER_BORDER_RADIUS_MAP = {
+  ...BORDER_RADIUS_MAP,
+  full: '0.75rem' // Cap container radius for UX - containers shouldn't be fully rounded
+} as const;
+
 export const DEFAULT_THEME: Required<ThemeConfig> = {
   primaryColor: '#9945FF',
   secondaryColor: '#14F195', 
@@ -37,6 +42,9 @@ export const getBorderRadius = (radius?: BorderRadius): string =>
 
 export const getModalBorderRadius = (radius?: BorderRadius): string => 
   MODAL_BORDER_RADIUS_MAP[radius ?? 'md'];
+
+export const getContainerBorderRadius = (radius?: BorderRadius): string => 
+  CONTAINER_BORDER_RADIUS_MAP[radius ?? 'md'];
 
 // Security & validation
 export const validateWalletAddress = (address: string): boolean => {

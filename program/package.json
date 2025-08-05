@@ -6,7 +6,8 @@
     "repository": "git@github.com:solana-commerce/commerce-program.git",
     "license": "MIT",
     "scripts": {
-        "generate-clients": "npx tsx ./scripts/generate-client.ts",
+        "generate": "bun run generate-clients",
+        "generate-clients": "npx tsx ./scripts/generate-client.js",
         "generate-idl": "shank idl -r program -o idl",
         "start-surfpool": "surfpool start"
     },

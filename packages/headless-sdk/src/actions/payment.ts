@@ -1,29 +1,33 @@
 import type { CommerceClient } from "../client";
 import { OrderRequest, PaymentVerificationResult } from "../types";
 import { STABLECOINS } from "../types/stablecoin";
+import { signature, type Signature } from "gill";
 
 export async function verifyPayment(
   client: CommerceClient, 
-  signature: string,
+  signatureString: string,
   expectedAmount?: number,
   expectedRecipient?: string
 ): Promise<PaymentVerificationResult> {
   try {
+    // Convert string to Signature type
+    const txSignature: Signature = signature(signatureString);
+    
     // Get transaction details
-    const transaction = await client.rpc.getTransaction(signature, {
+    const transaction = await client.rpc.getTransaction(txSignature, {
       encoding: "jsonParsed",
       maxSupportedTransactionVersion: 0
     }).send();
 
-    if (!transaction.value) {
+    if (!transaction) {
       return {
         verified: false,
-        signature,
+        signature: signatureString,
         error: "Transaction not found"
       };
     }
 
-    const txData = transaction.value;
+    const txData = transaction;
 
     // Basic verification - transaction exists and is confirmed
     let verified = !!txData.blockTime;
@@ -37,7 +41,7 @@ export async function verifyPayment(
 
     return {
       verified,
-      signature,
+      signature: signatureString,
       // These would be parsed from transaction in production
       amount: expectedAmount,
       recipient: expectedRecipient,
@@ -47,7 +51,7 @@ export async function verifyPayment(
     console.error("Error verifying payment:", error);
     return {
       verified: false,
-      signature,
+      signature: signatureString,
       error: error instanceof Error ? error.message : "Unknown error"
     };
   }

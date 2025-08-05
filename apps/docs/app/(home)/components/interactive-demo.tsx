@@ -188,8 +188,6 @@ export function InteractiveDemo() {
                   selectedMode={selectedMode}
                   checkoutStyle={checkoutStyle}
                   customizations={customizations}
-                  config={getConfigForMode()}
-                  demoProducts={demoProducts}
                 />
               </TabsPanel>
             </TabsRoot>
