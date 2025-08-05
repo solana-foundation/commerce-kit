@@ -1,6 +1,6 @@
 extern crate alloc;
 
-use crate::processor::emit_event;
+use crate::processor::{emit_event, verify_current_program};
 use crate::{
     constants::MAX_BPS,
     events::{EventDiscriminators, PaymentClearedEvent},
@@ -36,7 +36,7 @@ pub fn process_clear_payment(
     accounts: &[AccountInfo],
     _instruction_data: &[u8],
 ) -> ProgramResult {
-    let [fee_payer_info, payment_info, operator_authority_info, buyer_info, merchant_info, operator_info, merchant_operator_config_info, mint_info, merchant_escrow_ata_info, merchant_settlement_ata_info, operator_settlement_ata_info, token_program_info, associated_token_program_info, system_program_info, event_authority_info] =
+    let [fee_payer_info, payment_info, operator_authority_info, buyer_info, merchant_info, operator_info, merchant_operator_config_info, mint_info, merchant_escrow_ata_info, merchant_settlement_ata_info, operator_settlement_ata_info, token_program_info, associated_token_program_info, system_program_info, event_authority_info, commerce_program_info] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -71,6 +71,9 @@ pub fn process_clear_payment(
 
     // Validate associated token program
     verify_ata_program(associated_token_program_info)?;
+
+    // Verify own program
+    verify_current_program(commerce_program_info)?;
 
     // Load and validate operator and merchant
     let operator_data = operator_info.try_borrow_data()?;
@@ -196,7 +199,12 @@ pub fn process_clear_payment(
         order_id: payment.order_id,
     };
 
-    emit_event(_program_id, event_authority_info, &event.to_bytes())?;
+    emit_event(
+        _program_id,
+        event_authority_info,
+        commerce_program_info,
+        &event.to_bytes(),
+    )?;
 
     Ok(())
 }

@@ -10,7 +10,7 @@ on:
       - 'program/Cargo.*'
       - 'program/Makefile'
       - '.github/workflows/sdk-ts-integration.yml'
-      - 'program/scripts/generate-client.js'
+      - 'program/scripts/**'
   pull_request:
     branches: [main]
     paths:
@@ -20,7 +20,7 @@ on:
       - 'program/Cargo.*'
       - 'program/Makefile'
       - '.github/workflows/sdk-ts-integration.yml'
-      - 'program/scripts/generate-client.js'
+      - 'program/scripts/**'
 
 env:
   CARGO_TERM_COLOR: always

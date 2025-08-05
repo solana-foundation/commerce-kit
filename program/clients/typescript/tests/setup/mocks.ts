@@ -31,19 +31,21 @@ export const mockTransactionSigner = (address: Address): TransactionSigner => ({
  * Common test addresses for consistent testing
  */
 export const TEST_ADDRESSES = {
-  PAYER: '11111111111111111111111111111111' as Address,
-  AUTHORITY: '22222222222222222222222222222222' as Address,
-  MERCHANT: '33333333333333333333333333333333' as Address,
-  OPERATOR: '44444444444444444444444444444444' as Address,
-  BUYER: '55555555555555555555555555555555' as Address,
-  PAYMENT: '66666666666666666666666666666666' as Address,
-  CONFIG: '77777777777777777777777777777777' as Address,
-  MINT: '88888888888888888888888888888888' as Address,
-  ATA_1: '99999999999999999999999999999999' as Address,
-  ATA_2: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' as Address,
-  ATA_3: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' as Address,
-  SETTLEMENT_WALLET: 'cccccccccccccccccccccccccccccccc' as Address,
-  NEW_AUTHORITY: 'dddddddddddddddddddddddddddddddd' as Address,
+  USDC_MINT: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' as Address,
+  USDT_MINT: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB' as Address,
+  PAYER: '11111111111111111111111111111112' as Address,
+  AUTHORITY: '4aMgkHVGzK3FAhWvJRpCpG2kTkA4dxUQSGfPbhpZsDbF' as Address,
+  MERCHANT: '5JYdXKJLwfCWQdR7aBe6L1zjwvBJHXEemMVgXQM97C8V' as Address,
+  OPERATOR: '6cPFGPZbUE7DQPrw24GgTYNkvr2FLnHfgqgjCxEn73K5' as Address,
+  BUYER: '7BgH7Hq2P3CsQQ2DgJtfHPNNdJtKJsKJGJhRPNkkvuY3' as Address,
+  PAYMENT: '8MKrYq1F8xKhXp4FJWfYSgYZNgPqvP3DQa2Jv7rXfQN8' as Address,
+  CONFIG: '9LqZxwCF5N4FdpTJGcZpYPvT2GcLXMdNzQf5EyN5DhYx' as Address,
+  MINT: 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL' as Address,
+  ATA_1: 'BT8z9sLZJdwHuZNwgXK4VdCkRGCkF7FZqN2vKNmM4xP1' as Address,
+  ATA_2: 'CAnQK3i5FBdWr2GZjmX3VqrP8F3n7qWfNBhRndfzKu42' as Address,
+  ATA_3: 'DPmwVvvvV7WfQqKNWdxnKjVnCJHBDvhQFd7Pb2FQFQFQ' as Address,
+  SETTLEMENT_WALLET: 'EqSF9rK3aVvLpPXgVg6KzVBwX8FqQn2xN5nCvPtPGxMZ' as Address,
+  NEW_AUTHORITY: 'F1tJFQPgGK2cNgvBZ2L7rXdRpVvMgKqWzFnrNZ9K6X2P' as Address,
 } as const;
 
 /**

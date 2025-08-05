@@ -10,7 +10,7 @@ on:
       - 'program/tests/integration/**'
       - '.github/workflows/program-integration.yml'
       - 'program/clients/rust/**'
-      - 'program/scripts/generate-client.js'
+      - 'program/scripts/**'
   pull_request:
     branches: [main]
     paths:
@@ -20,7 +20,7 @@ on:
       - 'program/tests/integration/**'
       - '.github/workflows/program-integration.yml'
       - 'program/clients/rust/**'
-      - 'program/scripts/generate-client.js'
+      - 'program/scripts/**'
 env:
   CARGO_TERM_COLOR: always
   RUST_LOG: info

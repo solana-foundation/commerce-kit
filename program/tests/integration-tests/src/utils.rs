@@ -436,6 +436,7 @@ pub fn assert_program_error(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn assert_event_present(
     transaction_metadata: &TransactionMetadata,
     discriminator: u8,

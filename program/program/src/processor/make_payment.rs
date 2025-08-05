@@ -2,7 +2,7 @@ extern crate alloc;
 
 use crate::{
     events::{EventDiscriminators, PaymentCreatedEvent},
-    processor::{emit_event, verify_mint_account, verify_token_program},
+    processor::{emit_event, verify_current_program, verify_mint_account, verify_token_program},
     ID as COMMERCE_PROGRAM_ID,
 };
 use pinocchio::{
@@ -36,7 +36,7 @@ pub fn process_make_payment(
     instruction_data: &[u8],
 ) -> ProgramResult {
     let args = process_instruction_data(instruction_data)?;
-    let [fee_payer_info, payment_info, operator_authority_info, buyer_info, operator_info, merchant_info, merchant_operator_config_info, mint_info, buyer_ata_info, merchant_escrow_ata_info, merchant_settlement_ata_info, token_program_info, system_program_info, event_authority_info] =
+    let [fee_payer_info, payment_info, operator_authority_info, buyer_info, operator_info, merchant_info, merchant_operator_config_info, mint_info, buyer_ata_info, merchant_escrow_ata_info, merchant_settlement_ata_info, token_program_info, system_program_info, event_authority_info, commerce_program_info] =
         accounts
     else {
         return Err(ProgramError::NotEnoughAccountKeys);
@@ -74,6 +74,9 @@ pub fn process_make_payment(
 
     // Validate token program
     verify_token_program(token_program_info)?;
+
+    // Verify own program
+    verify_current_program(commerce_program_info)?;
 
     // Load and validate operator
     let operator_data = operator_info.try_borrow_data()?;
@@ -225,7 +228,12 @@ pub fn process_make_payment(
         order_id: args.order_id,
     };
 
-    emit_event(program_id, event_authority_info, &event.to_bytes())?;
+    emit_event(
+        program_id,
+        event_authority_info,
+        commerce_program_info,
+        &event.to_bytes(),
+    )?;
 
     Ok(())
 }

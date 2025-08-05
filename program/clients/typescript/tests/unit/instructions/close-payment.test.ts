@@ -1,7 +1,9 @@
 import { expect } from '@jest/globals';
 import {
   getClosePaymentInstruction,
+  getClosePaymentInstructionAsync,
   CLOSE_PAYMENT_DISCRIMINATOR,
+  findOperatorPda,
 } from '../../../src/generated';
 import { AccountRole } from 'gill';
 import { mockTransactionSigner, TEST_ADDRESSES, EXPECTED_PROGRAM_ADDRESS } from '../../../tests/setup/mocks';
@@ -87,5 +89,54 @@ describe('closePayment', () => {
     // Close payment should only need discriminator, no additional data
     expect(instruction.data).toHaveLength(1);
     expect(instruction.data[0]).toBe(CLOSE_PAYMENT_DISCRIMINATOR);
+  });
+
+  describe('automatic operator PDA derivation', () => {
+    it('should automatically derive operator PDA when not provided', async () => {
+      const payer = mockTransactionSigner(TEST_ADDRESSES.PAYER);
+      const operatorAuthority = mockTransactionSigner(TEST_ADDRESSES.AUTHORITY);
+
+      // Get expected operator PDA using findOperatorPda
+      const [expectedOperatorPda] = await findOperatorPda({
+        owner: operatorAuthority.address,
+      });
+
+      // Generate instruction without providing operator - should be auto-derived from operatorAuthority
+      const instruction = await getClosePaymentInstructionAsync({
+        payer,
+        payment: TEST_ADDRESSES.PAYMENT,
+        operatorAuthority,
+        // Not providing operator - should be auto-derived from operatorAuthority
+        merchant: TEST_ADDRESSES.MERCHANT,
+        buyer: TEST_ADDRESSES.BUYER,
+        merchantOperatorConfig: TEST_ADDRESSES.CONFIG,
+        mint: TEST_ADDRESSES.MINT,
+      });
+
+      // Verify the automatically derived operator PDA matches expected address
+      expect(instruction.accounts[3].address).toBe(expectedOperatorPda); // operator
+    });
+
+    it('should use provided operator address when supplied (override auto-derivation)', async () => {
+      const payer = mockTransactionSigner(TEST_ADDRESSES.PAYER);
+      const operatorAuthority = mockTransactionSigner(TEST_ADDRESSES.AUTHORITY);
+
+      // Provide custom operator address
+      const customOperator = TEST_ADDRESSES.OPERATOR;
+
+      const instruction = await getClosePaymentInstructionAsync({
+        payer,
+        payment: TEST_ADDRESSES.PAYMENT,
+        operatorAuthority,
+        operator: customOperator,
+        merchant: TEST_ADDRESSES.MERCHANT,
+        buyer: TEST_ADDRESSES.BUYER,
+        merchantOperatorConfig: TEST_ADDRESSES.CONFIG,
+        mint: TEST_ADDRESSES.MINT,
+      });
+
+      // Verify the provided address is used instead of auto-derived one
+      expect(instruction.accounts[3].address).toBe(customOperator); // operator
+    });
   });
 });
