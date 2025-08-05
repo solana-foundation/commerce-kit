@@ -31,6 +31,8 @@ export const mockTransactionSigner = (address: Address): TransactionSigner => ({
  * Common test addresses for consistent testing
  */
 export const TEST_ADDRESSES = {
+  USDC_MINT: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' as Address,
+  USDT_MINT: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB' as Address,
   PAYER: '11111111111111111111111111111112' as Address,
   AUTHORITY: '4aMgkHVGzK3FAhWvJRpCpG2kTkA4dxUQSGfPbhpZsDbF' as Address,
   MERCHANT: '5JYdXKJLwfCWQdR7aBe6L1zjwvBJHXEemMVgXQM97C8V' as Address,

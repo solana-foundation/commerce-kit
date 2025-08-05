@@ -29,6 +29,11 @@ import {
   getMakePaymentInstructionAsync,
   getRefundPaymentInstructionAsync,
   getClearPaymentInstructionAsync,
+  getCreateOperatorInstructionAsync,
+  getUpdateOperatorAuthorityInstructionAsync,
+  getInitializeMerchantOperatorConfigInstructionAsync,
+  getUpdateMerchantAuthorityInstructionAsync,
+  getUpdateMerchantSettlementWalletInstructionAsync,
 } from "../../../src/generated";
 import { sendAndConfirmInstructions } from "./transactions";
 import {
@@ -95,12 +100,10 @@ export async function assertGetOrCreateOperator({
     }
   }
 
-  const createOperatorIx = getCreateOperatorInstruction({
+  const createOperatorIx = await getCreateOperatorInstructionAsync({
     bump,
     payer: payer,
     authority: owner,
-    operator: operatorPda,
-    systemProgram: SYSTEM_PROGRAM_ADDRESS,
   });
 
   await sendAndConfirmInstructions({
@@ -181,7 +184,6 @@ export async function assertGetOrCreateMerchant({
     bump,
     payer: payer,
     authority: authority,
-    merchant: merchantPda,
     settlementWallet: settlementWallet.address,
   });
 
@@ -279,13 +281,11 @@ export async function assertGetOrCreateMerchantOperatorConfig({
     }
   }
 
-  const instruction = getInitializeMerchantOperatorConfigInstruction({
+  const instruction = await getInitializeMerchantOperatorConfigInstructionAsync({
     payer: payer,
     authority: authority,
     merchant: merchantPda,
     operator: operatorPda,
-    config: merchantOperatorConfigPda,
-    systemProgram: SYSTEM_PROGRAM_ADDRESS,
     version,
     bump: merchantOperatorConfigBump,
     operatorFee,
@@ -359,10 +359,8 @@ export async function assertMakePayment({
 
   const payment = await getMakePaymentInstructionAsync({
     payer,
-    payment: paymentPda,
     operatorAuthority,
     buyer,
-    operator: operatorPda,
     merchant: merchantPda,
     merchantOperatorConfig: merchantOperatorConfigPda,
     mint,
@@ -481,7 +479,6 @@ export async function assertClearPayment({
     operatorAuthority,
     buyer,
     merchant: merchantPda,
-    operator: operatorPda,
     merchantOperatorConfig: merchantOperatorConfigPda,
     mint,
     merchantSettlementAta,
@@ -594,7 +591,6 @@ export async function assertRefundPayment({
     operatorAuthority,
     buyer,
     merchant: merchantPda,
-    operator: operatorPda,
     merchantOperatorConfig: merchantOperatorConfigPda,
     mint,
   });
@@ -670,18 +666,10 @@ export async function assertUpdateMerchantSettlementWallet({
   });
 
   const updateMerchantSettlementWalletIx =
-    getUpdateMerchantSettlementWalletInstruction({
+   await getUpdateMerchantSettlementWalletInstructionAsync({
       payer,
       authority,
-      merchant: merchantPda,
       newSettlementWallet: newSettlementWallet.address,
-      settlementUsdcAta: newSettlementUsdcAta,
-      usdcMint,
-      settlementUsdtAta: newSettlementUsdtAta,
-      usdtMint,
-      tokenProgram: TOKEN_PROGRAM_ADDRESS,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
-      systemProgram: SYSTEM_PROGRAM_ADDRESS,
     });
 
   await sendAndConfirmInstructions({
@@ -732,10 +720,9 @@ export async function assertUpdateMerchantAuthority({
   settlementWallet: Address;
   newAuthority: KeyPairSigner;
 }): Promise<void> {
-  const updateMerchantAuthorityIx = getUpdateMerchantAuthorityInstruction({
+  const updateMerchantAuthorityIx = await getUpdateMerchantAuthorityInstructionAsync({
     payer,
     authority: currentAuthority,
-    merchant: merchantPda,
     newAuthority: newAuthority.address,
   });
 
@@ -771,10 +758,9 @@ export async function assertUpdateOperatorAuthority({
   operatorBump: number;
   newAuthority: KeyPairSigner;
 }): Promise<void> {
-  const updateOperatorAuthorityIx = getUpdateOperatorAuthorityInstruction({
+  const updateOperatorAuthorityIx = await getUpdateOperatorAuthorityInstructionAsync({
     payer,
     authority: currentAuthority,
-    operator: operatorPda,
     newOperatorAuthority: newAuthority.address,
   });
 

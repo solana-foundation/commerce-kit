@@ -3,6 +3,8 @@ import {
   getMakePaymentInstruction,
   getMakePaymentInstructionAsync,
   MAKE_PAYMENT_DISCRIMINATOR,
+  findPaymentPda,
+  findOperatorPda,
 } from "../../../src/generated";
 import { AccountRole } from "gill";
 import {
@@ -200,6 +202,250 @@ describe("makePayment", () => {
       // Verify the provided addresses are used instead of auto-derived ones
       expect(instruction.accounts[8].address).toBe(customBuyerAta); // buyerAta
       expect(instruction.accounts[9].address).toBe(customMerchantEscrowAta); // merchantEscrowAta
+    });
+  });
+
+  describe('automatic payment PDA derivation', () => {
+    it('should automatically derive payment PDA when not provided', async () => {
+      const payer = mockTransactionSigner(TEST_ADDRESSES.PAYER);
+      const operatorAuthority = mockTransactionSigner(TEST_ADDRESSES.AUTHORITY);
+      const buyer = mockTransactionSigner(TEST_ADDRESSES.BUYER);
+      const orderId = 1;
+
+      // Get expected payment PDA using findPaymentPda
+      const [expectedPaymentPda] = await findPaymentPda({
+        merchantOperatorConfig: TEST_ADDRESSES.CONFIG,
+        buyer: buyer.address,
+        mint: TEST_ADDRESSES.MINT,
+        orderId: orderId,
+      });
+
+      // Generate instruction without providing payment - should be auto-derived
+      const instruction = await getMakePaymentInstructionAsync({
+        payer,
+        // Not providing payment - should be auto-derived from merchantOperatorConfig, buyer, mint, and orderId
+        operatorAuthority,
+        buyer,
+        operator: TEST_ADDRESSES.OPERATOR,
+        merchant: TEST_ADDRESSES.MERCHANT,
+        merchantOperatorConfig: TEST_ADDRESSES.CONFIG,
+        mint: TEST_ADDRESSES.MINT,
+        merchantSettlementAta: TEST_ADDRESSES.ATA_3,
+        orderId: orderId,
+        amount: 100,
+        bump: 255,
+      });
+
+      // Verify the automatically derived payment PDA matches expected address
+      expect(instruction.accounts[1].address).toBe(expectedPaymentPda); // payment
+    });
+
+    it('should use provided payment address when supplied (override auto-derivation)', async () => {
+      const payer = mockTransactionSigner(TEST_ADDRESSES.PAYER);
+      const operatorAuthority = mockTransactionSigner(TEST_ADDRESSES.AUTHORITY);
+      const buyer = mockTransactionSigner(TEST_ADDRESSES.BUYER);
+      const orderId = 1;
+
+      // Provide custom payment address
+      const customPayment = TEST_ADDRESSES.PAYMENT;
+
+      const instruction = await getMakePaymentInstructionAsync({
+        payer,
+        payment: customPayment,
+        operatorAuthority,
+        buyer,
+        operator: TEST_ADDRESSES.OPERATOR,
+        merchant: TEST_ADDRESSES.MERCHANT,
+        merchantOperatorConfig: TEST_ADDRESSES.CONFIG,
+        mint: TEST_ADDRESSES.MINT,
+        merchantSettlementAta: TEST_ADDRESSES.ATA_3,
+        orderId: orderId,
+        amount: 100,
+        bump: 255,
+      });
+
+      // Verify the provided address is used instead of auto-derived one
+      expect(instruction.accounts[1].address).toBe(customPayment); // payment
+    });
+
+    it('should derive different payment PDAs for different orderIds', async () => {
+      const payer = mockTransactionSigner(TEST_ADDRESSES.PAYER);
+      const operatorAuthority = mockTransactionSigner(TEST_ADDRESSES.AUTHORITY);
+      const buyer = mockTransactionSigner(TEST_ADDRESSES.BUYER);
+      const orderId1 = 1;
+      const orderId2 = 2;
+
+      // Get expected payment PDAs for different orderIds
+      const [expectedPaymentPda1] = await findPaymentPda({
+        merchantOperatorConfig: TEST_ADDRESSES.CONFIG,
+        buyer: buyer.address,
+        mint: TEST_ADDRESSES.MINT,
+        orderId: orderId1,
+      });
+
+      const [expectedPaymentPda2] = await findPaymentPda({
+        merchantOperatorConfig: TEST_ADDRESSES.CONFIG,
+        buyer: buyer.address,
+        mint: TEST_ADDRESSES.MINT,
+        orderId: orderId2,
+      });
+
+      // Generate instructions with different orderIds
+      const instruction1 = await getMakePaymentInstructionAsync({
+        payer,
+        operatorAuthority,
+        buyer,
+        operator: TEST_ADDRESSES.OPERATOR,
+        merchant: TEST_ADDRESSES.MERCHANT,
+        merchantOperatorConfig: TEST_ADDRESSES.CONFIG,
+        mint: TEST_ADDRESSES.MINT,
+        merchantSettlementAta: TEST_ADDRESSES.ATA_3,
+        orderId: orderId1,
+        amount: 100,
+        bump: 255,
+      });
+
+      const instruction2 = await getMakePaymentInstructionAsync({
+        payer,
+        operatorAuthority,
+        buyer,
+        operator: TEST_ADDRESSES.OPERATOR,
+        merchant: TEST_ADDRESSES.MERCHANT,
+        merchantOperatorConfig: TEST_ADDRESSES.CONFIG,
+        mint: TEST_ADDRESSES.MINT,
+        merchantSettlementAta: TEST_ADDRESSES.ATA_3,
+        orderId: orderId2,
+        amount: 100,
+        bump: 255,
+      });
+
+      // Verify each payment PDA is correctly derived from its respective orderId
+      expect(instruction1.accounts[1].address).toBe(expectedPaymentPda1); // payment for orderId1
+      expect(instruction2.accounts[1].address).toBe(expectedPaymentPda2); // payment for orderId2
+      
+      // Verify they are different addresses
+      expect(expectedPaymentPda1).not.toBe(expectedPaymentPda2);
+    });
+
+    it('should derive different payment PDAs for different buyers', async () => {
+      const payer = mockTransactionSigner(TEST_ADDRESSES.PAYER);
+      const operatorAuthority = mockTransactionSigner(TEST_ADDRESSES.AUTHORITY);
+      const buyer1 = mockTransactionSigner(TEST_ADDRESSES.BUYER);
+      const buyer2 = mockTransactionSigner(TEST_ADDRESSES.AUTHORITY); // Using different address as buyer2
+      const orderId = 1;
+
+      // Get expected payment PDAs for different buyers
+      const [expectedPaymentPda1] = await findPaymentPda({
+        merchantOperatorConfig: TEST_ADDRESSES.CONFIG,
+        buyer: buyer1.address,
+        mint: TEST_ADDRESSES.MINT,
+        orderId: orderId,
+      });
+
+      const [expectedPaymentPda2] = await findPaymentPda({
+        merchantOperatorConfig: TEST_ADDRESSES.CONFIG,
+        buyer: buyer2.address,
+        mint: TEST_ADDRESSES.MINT,
+        orderId: orderId,
+      });
+
+      // Generate instructions with different buyers
+      const instruction1 = await getMakePaymentInstructionAsync({
+        payer,
+        operatorAuthority,
+        buyer: buyer1,
+        operator: TEST_ADDRESSES.OPERATOR,
+        merchant: TEST_ADDRESSES.MERCHANT,
+        merchantOperatorConfig: TEST_ADDRESSES.CONFIG,
+        mint: TEST_ADDRESSES.MINT,
+        merchantSettlementAta: TEST_ADDRESSES.ATA_3,
+        orderId: orderId,
+        amount: 100,
+        bump: 255,
+      });
+
+      const instruction2 = await getMakePaymentInstructionAsync({
+        payer,
+        operatorAuthority,
+        buyer: buyer2,
+        operator: TEST_ADDRESSES.OPERATOR,
+        merchant: TEST_ADDRESSES.MERCHANT,
+        merchantOperatorConfig: TEST_ADDRESSES.CONFIG,
+        mint: TEST_ADDRESSES.MINT,
+        merchantSettlementAta: TEST_ADDRESSES.ATA_3,
+        orderId: orderId,
+        amount: 100,
+        bump: 255,
+      });
+
+      // Verify each payment PDA is correctly derived from its respective buyer
+      expect(instruction1.accounts[1].address).toBe(expectedPaymentPda1); // payment for buyer1
+      expect(instruction2.accounts[1].address).toBe(expectedPaymentPda2); // payment for buyer2
+      
+      // Verify they are different addresses
+      expect(expectedPaymentPda1).not.toBe(expectedPaymentPda2);
+    });
+
+    it('should derive payment PDA with all parameters correctly', async () => {
+      const payer = mockTransactionSigner(TEST_ADDRESSES.PAYER);
+      const operatorAuthority = mockTransactionSigner(TEST_ADDRESSES.AUTHORITY);
+      const buyer = mockTransactionSigner(TEST_ADDRESSES.BUYER);
+      const orderId = 42;
+
+      // Get expected payment PDA
+      const [expectedPaymentPda] = await findPaymentPda({
+        merchantOperatorConfig: TEST_ADDRESSES.CONFIG,
+        buyer: buyer.address,
+        mint: TEST_ADDRESSES.MINT,
+        orderId: orderId,
+      });
+
+      // Generate instruction without providing payment PDA
+      const instruction = await getMakePaymentInstructionAsync({
+        payer,
+        operatorAuthority,
+        buyer,
+        operator: TEST_ADDRESSES.OPERATOR,
+        merchant: TEST_ADDRESSES.MERCHANT,
+        merchantOperatorConfig: TEST_ADDRESSES.CONFIG,
+        mint: TEST_ADDRESSES.MINT,
+        merchantSettlementAta: TEST_ADDRESSES.ATA_3,
+        orderId: orderId,
+        amount: 1000,
+        bump: 255,
+      });
+
+      // Verify the payment PDA is correctly derived using all the seed parameters
+      expect(instruction.accounts[1].address).toBe(expectedPaymentPda); // payment
+    });
+    it('should automatically derive operator PDA when not provided', async () => {
+      const payer = mockTransactionSigner(TEST_ADDRESSES.PAYER);
+      const operatorAuthority = mockTransactionSigner(TEST_ADDRESSES.AUTHORITY);
+      const buyer = mockTransactionSigner(TEST_ADDRESSES.BUYER);
+      const orderId = 1;
+
+      // Get expected operator PDA using findOperatorPda
+      const [expectedOperatorPda] = await findOperatorPda({
+        owner: operatorAuthority.address,
+      });
+
+      // Generate instruction without providing operator - should be auto-derived from operatorAuthority
+      const instruction = await getMakePaymentInstructionAsync({
+        payer,
+        operatorAuthority,
+        buyer,
+        //operator: TEST_ADDRESSES.OPERATOR,
+        merchant: TEST_ADDRESSES.MERCHANT,
+        merchantOperatorConfig: TEST_ADDRESSES.CONFIG,
+        mint: TEST_ADDRESSES.MINT,
+        merchantSettlementAta: TEST_ADDRESSES.ATA_3,
+        orderId: orderId,
+        amount: 100,
+        bump: 255,
+      });
+
+      // Verify the automatically derived operator PDA matches expected address
+      expect(instruction.accounts[4].address).toBe(expectedOperatorPda); // operator
     });
   });
 });
