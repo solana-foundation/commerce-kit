@@ -3,7 +3,12 @@ import { Recipient, Reference, References, SPLToken } from "@solana-commerce/sol
 import BigNumber from "bignumber.js";
 import { useState, useEffect } from "react";
 
-export function useSolanaPay(recipient: string, amount: number, token: SPLToken) {
+export function useSolanaPay(
+  recipient: string,
+  amount: number,
+  token: SPLToken,
+  opts?: { size?: number; background?: string; color?: string; label?: string; message?: string }
+) {
     const [paymentRequest, setPaymentRequest] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
@@ -18,11 +23,12 @@ export function useSolanaPay(recipient: string, amount: number, token: SPLToken)
                     amount: new BigNumber(amount),
                     splToken: token,
                     memo: reference,
-                    label: 'commerceKit',
+                    label: opts?.label ?? 'commerceKit',
+                    message: opts?.message,
                 }, {
-                    size: 256,
-                    background: 'white',
-                    color: 'black',
+                    size: opts?.size ?? 256,
+                    background: opts?.background ?? 'white',
+                    color: opts?.color ?? 'black',
                 });
                 
                 // Add memo to the returned request

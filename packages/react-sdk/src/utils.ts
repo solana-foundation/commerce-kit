@@ -5,7 +5,7 @@
 
 import { useMemo } from 'react';
 import type { ThemeConfig, BorderRadius, CommerceMode, MerchantConfig } from './types';
-import { OrderItem } from '@solana-commerce/headless-sdk';
+import { OrderItem, validateWalletAddress as coreValidateWalletAddress } from '@solana-commerce/headless-sdk';
 
 // Constants
 export const BORDER_RADIUS_MAP = {
@@ -47,10 +47,7 @@ export const getContainerBorderRadius = (radius?: BorderRadius): string =>
   CONTAINER_BORDER_RADIUS_MAP[radius ?? 'md'];
 
 // Security & validation
-export const validateWalletAddress = (address: string): boolean => {
-  // Solana address validation (32-44 chars, base58)
-  return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address);
-};
+export const validateWalletAddress = (address: string): boolean => coreValidateWalletAddress(address);
 
 export const sanitizeString = (str: string): string => {
   // XSS prevention for user inputs

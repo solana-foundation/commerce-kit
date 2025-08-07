@@ -87,14 +87,15 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
         const merchantAddress = address(config.merchant.wallet);
         let addressToCheck = merchantAddress;
         
-        // For SPL tokens, we need to check the Associated Token Account
+        // For SPL tokens, we need to check the Associated Token Account (Token or Token-2022)
         const selectedToken = CurrencyMap[selectedCurrency];
         const isSOL = selectedToken === address("So11111111111111111111111111111111111111112");
-        
+
         if (!isSOL) {
-          // Get the ATA address for the SPL token
           const tokenMintAddress = address(selectedToken);
-          addressToCheck = await getAssociatedTokenAccountAddress(tokenMintAddress, merchantAddress, TOKEN_PROGRAM_ADDRESS);
+          const ataV1 = await getAssociatedTokenAccountAddress(tokenMintAddress, merchantAddress, TOKEN_PROGRAM_ADDRESS).catch(() => null as any);
+          const ataV2 = await getAssociatedTokenAccountAddress(tokenMintAddress, merchantAddress, TOKEN_2022_PROGRAM_ADDRESS).catch(() => null as any);
+          addressToCheck = ataV1 ?? ataV2 ?? merchantAddress;
         }
 
         const signatures = await client.rpc.getSignaturesForAddress(addressToCheck, {
@@ -133,8 +134,7 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
     onPaymentComplete?.();
   };
 
-  console.log(config, selectedAmount, selectedCurrency, customAmount, showCustomInput);
-  console.log('Payment request:', paymentRequest);
+  // dev only logs could be added behind NODE_ENV checks if necessary
   
   return (
     <>
