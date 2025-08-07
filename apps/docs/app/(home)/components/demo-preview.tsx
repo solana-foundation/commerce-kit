@@ -4,9 +4,9 @@ import React from 'react';
 import type { OrderItem } from '@solana-commerce/headless-sdk';
 import { SolanaCommerceClient } from './solana-commerce-client';
 import { SingleItemCart, MultiItemCart, type CartItem } from '@solana-commerce/react-sdk';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../../components/ui/tabs';
+
 import type { Mode, CheckoutStyle, Customizations, DemoConfig } from './types';
-import { IconEye } from 'symbols-react';
+import { IconCursorarrowClick, IconCursorarrowRays, IconEye } from 'symbols-react';
 
 // Modal preview components
 import { ModalPreviewContent } from './modal-preview-content';
@@ -32,7 +32,17 @@ function ModalPreview({ config, selectedMode, demoProducts }: {
   demoProducts: OrderItem[];
 }) {
   return (
-    <div className="relative h-full w-full bg-black/20 backdrop-blur-sm flex items-center justify-center p-4">
+    <div 
+    style={{
+      backgroundImage: `repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(46, 77, 97, 0.08) 10px,
+        rgba(46, 77, 97, 0.08) 11px
+      )`
+    }}
+    className="relative h-full w-full flex items-center justify-center p-4">
       <ModalPreviewContent 
         config={config}
         selectedMode={selectedMode}
@@ -61,52 +71,58 @@ export function DemoPreview({
   return (
     <div className="flex flex-col h-full">
       {checkoutStyle === 'modal' ? (
-        // Modal Demo with Tabs
-        <Tabs defaultValue={selectedMode === 'tip' ? "modal" : "button"} className="h-full relative">
-          {/* Tabs in top right corner */}
-          <div className="absolute top-4 right-4 z-20">
-            <TabsList className="grid w-auto grid-cols-2">
-              <TabsTrigger value="button">Button</TabsTrigger>
-              <TabsTrigger value="modal">Modal</TabsTrigger>
-            </TabsList>
+        // Modal Demo - Button and Modal Preview stacked
+        <div className="h-full flex flex-col gap-4">
+          {/* Button Section */}
+          <div className="flex-shrink-0 relative">
+            {/* Button Preview Badge */}
+            <div className="absolute top-2 left-2 z-10 px-2 py-1 bg-white/90 backdrop-blur-sm rounded text-xs text-gray-600 font-medium shadow-sm flex items-center gap-1">
+              <IconEye className="w-3 h-3 fill-gray-600" />
+              <span className="text-xs">Button Preview</span>
+            </div>
+            <div 
+            style={{
+              backgroundImage: `repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(46, 77, 97, 0.08) 10px,
+                rgba(46, 77, 97, 0.08) 11px
+              )`
+            }}
+            className="flex flex-col items-center justify-center border border-gray-200 dark:border-gray-700 rounded-lg bg-zinc-100 p-6 py-24 text-center">
+              <SolanaCommerceClient
+                config={config}
+                variant={customizations.buttonVariant}
+                onPayment={(amount: number, currency: string, products?: readonly OrderItem[]) => {
+                  console.log('Demo payment:', { amount, currency, products });
+                  alert(`Payment initiated: ${amount / 1000000000} ${currency}`);
+                }}
+                onPaymentStart={() => {
+                  console.log('Payment started...');
+                }}
+                onPaymentSuccess={(signature: string) => {
+                  console.log('Payment successful:', signature);
+                  alert('Payment successful!');
+                }}
+                onPaymentError={(error: Error) => {
+                  console.error('Payment failed:', error);
+                  alert('Payment failed. Check console for details.');
+                }}
+              />
+              <p className="text-xs font-mono text-gray-500 dark:text-gray-400 mt-3 flex items-center gap-2 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 bg-zinc-100">
+                <IconCursorarrowRays className="w-3 h-3 fill-gray-400" /> Click to experience the customized {selectedMode} modal
+              </p>
+            </div>
           </div>
           
-          {/* Tab Content */}
-          <TabsContent value="button" className="h-full m-0">
-            <div className="flex flex-col items-center justify-center h-full">
-              <div className="flex flex-col items-center justify-center border border-gray-200 dark:border-gray-700 rounded-lg bg-zinc-100 p-8 w-full h-full text-center">
-                <SolanaCommerceClient
-                  config={config}
-                  variant={customizations.buttonVariant}
-                  onPayment={(amount: number, currency: string, products?: readonly OrderItem[]) => {
-                    console.log('Demo payment:', { amount, currency, products });
-                    alert(`Payment initiated: ${amount / 1000000000} ${currency}`);
-                  }}
-                  onPaymentStart={() => {
-                    console.log('Payment started...');
-                  }}
-                  onPaymentSuccess={(signature: string) => {
-                    console.log('Payment successful:', signature);
-                    alert('Payment successful!');
-                  }}
-                  onPaymentError={(error: Error) => {
-                    console.error('Payment failed:', error);
-                    alert('Payment failed. Check console for details.');
-                  }}
-                />
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-                  Click to experience the customized {selectedMode} modal
-                </p>
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="modal" className="h-full m-0">
-            <div className="h-full overflow-hidden relative bg-gray-50 rounded-lg border border-gray-200 dark:border-gray-700">
-              {/* Preview indicator */}
+          {/* Modal Preview Section */}
+          <div className="flex-1 min-h-0">
+            <div className="h-full overflow-hidden relative rounded-lg border border-gray-200 dark:border-gray-700">
+              {/* Modal Preview Badge */}
               <div className="absolute top-2 left-2 z-30 px-2 py-1 bg-white/90 backdrop-blur-sm rounded text-xs text-gray-600 font-medium shadow-sm flex items-center gap-1">
-                <IconEye className="w-4 h-4 fill-gray-600" />
-                <span>Preview</span>
+                <IconEye className="w-3 h-3 fill-gray-600" />
+                <span className="text-xs">Modal Preview</span>
               </div>
               <ModalPreview 
                 config={config} 
@@ -114,8 +130,8 @@ export function DemoPreview({
                 demoProducts={demoProducts}
               />
             </div>
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
       ) : (
         // Page Demo
         <div className="h-full overflow-auto">

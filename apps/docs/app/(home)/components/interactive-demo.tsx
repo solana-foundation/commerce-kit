@@ -145,33 +145,24 @@ export function InteractiveDemo() {
           {/* Right Column - Demo and Code Tabs */}
           <div 
           className="space-y-4 col-span-7"
-          style={{
-            backgroundImage: `repeating-linear-gradient(
-              45deg,
-              transparent,
-              transparent 10px,
-              rgba(46, 77, 97, 0.08) 10px,
-              rgba(46, 77, 97, 0.08) 11px
-            )`
-          }}
           >
             <TabsRoot defaultValue="demo">
-              <TabsList className="flex border-b bg-zinc-100 border-gray-200 dark:border-gray-700">
+              <TabsList className="flex border-b bg-zinc-100 border-gray-200 dark:border-gray-700 sticky top-[58px]">
                 <TabsTab 
                   value="demo"
-                  className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600 data-[state=active]:border-zinc-900 data-[state=active]:text-zinc-900 text-zinc-400 transition-colors"
+                  className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600 data-[state=active]:border-zinc-900 data-[state=active]:text-zinc-900 text-zinc-400 transition-colors cursor-pointer"
                 >
                   {checkoutStyle === 'modal' ? 'Modal' : 'Page'}
                 </TabsTab>
                 <TabsTab 
                   value="code"
-                  className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600 data-[state=active]:border-zinc-900 data-[state=active]:text-zinc-900 text-zinc-400 transition-colors"
+                  className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600 data-[state=active]:border-zinc-900 data-[state=active]:text-zinc-900 text-zinc-400 transition-colors cursor-pointer"
                 >
                   Code
                 </TabsTab>
               </TabsList>
 
-              <TabsPanel value="demo" className=" px-4 h-[calc(100vh-200px)]">
+              <TabsPanel value="demo" className=" px-4 h-[calc(100vh-200px)] sticky top-[115px]">
                 <DemoPreview
                   selectedMode={selectedMode}
                   checkoutStyle={checkoutStyle}
@@ -183,7 +174,7 @@ export function InteractiveDemo() {
                 />
               </TabsPanel>
               
-              <TabsPanel value="code" className="px-4">
+              <TabsPanel value="code" className="px-4 sticky top-[115px]">
                 <CodeExample
                   selectedMode={selectedMode}
                   checkoutStyle={checkoutStyle}
