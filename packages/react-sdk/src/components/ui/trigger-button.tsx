@@ -18,11 +18,16 @@ export const TriggerButton = memo<TriggerButtonProps>(({ theme, mode, className,
     </svg>
   );
 
-  const buttonStyles: React.CSSProperties = useMemo(() => ({
+  const buttonStyles: React.CSSProperties = useMemo(() => {
+    const borderStyle = (() => {
+      const b = getButtonBorder(theme);
+      return b === 'none' ? '1.5px solid transparent' : b;
+    })();
+    return ({
     padding: isIconOnly ? '0.75rem' : '0.75rem 1.5rem',
     backgroundColor: isHovered ? theme.secondaryColor : theme.primaryColor,
     color: getAccessibleTextColor(isHovered ? theme.secondaryColor : theme.primaryColor),
-    border: getButtonBorder(theme),
+      border: borderStyle,
     borderRadius: getBorderRadius(theme.borderRadius),
     fontSize: '1rem',
     fontWeight: '600',
@@ -37,7 +42,8 @@ export const TriggerButton = memo<TriggerButtonProps>(({ theme, mode, className,
     transform: isPressed ? 'scale(0.97)' : isHovered ? 'scale(1)' : 'scale(1)',
     outlineOffset: 2,
     ...style
-  }), [theme, isHovered, isPressed, style, isIconOnly]);
+    });
+  }, [theme, isHovered, isPressed, style, isIconOnly]);
 
   return (
     <button

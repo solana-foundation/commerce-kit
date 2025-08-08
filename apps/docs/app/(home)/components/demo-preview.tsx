@@ -6,7 +6,8 @@ import { SolanaCommerceClient } from './solana-commerce-client';
 import { SingleItemCart, MultiItemCart, type CartItem } from '@solana-commerce/react-sdk';
 
 import type { Mode, CheckoutStyle, Customizations, DemoConfig } from './types';
-import { IconCursorarrowRays, IconHandPointUpLeftFill, IconInsetFilledCenterRectangle } from 'symbols-react';
+import { IconCursorarrowRays, IconHandPointUpLeftFill, IconInsetFilledCenterRectangle, IconApp, IconShadow } from 'symbols-react';
+import { Switch } from '../../../components/ui/switch';
 // selectors are inlined as mini selects below for compactness
 
 // Modal preview components
@@ -80,7 +81,7 @@ export function DemoPreview({
           <div className="flex-shrink-0 relative">
             {/* Button Preview Badge */}
             <div className="absolute top-2 left-2 z-10 px-2 py-1 bg-zinc-100 rounded text-xs text-gray-600 font-medium border border-gray-200 dark:border-gray-700 flex items-center gap-1.5">
-              <IconHandPointUpLeftFill className="w-3 h-3 fill-gray-400" />
+              <IconCursorarrowRays className="w-3 h-3 fill-gray-500" />
               <span className="text-xs font-mono">Button Preview</span>
             </div>
             <div 
@@ -113,45 +114,52 @@ export function DemoPreview({
                   alert('Payment failed. Check console for details.');
                 }}
               />
-              <p className="text-xs font-mono text-gray-500 dark:text-gray-400 mt-3 flex items-center gap-2 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 bg-zinc-100">
-                <IconCursorarrowRays className="w-3 h-3 fill-gray-500" /> Click to launch {selectedMode} experience
+              <p className="text-xs font-mono text-gray-500 dark:text-gray-400 mt-3 flex items-center gap-2 border border-gray-300 border-dashed dark:border-gray-700 rounded-lg px-2 py-1 bg-zinc-100">
+                <IconHandPointUpLeftFill className="w-3 h-3 fill-gray-500" /> Click to launch {selectedMode} experience
               </p>
 
-              {/* Compact inline controls (clickable) */}
+              {/* Compact shadow selector using little squares */}
               <div
                 className="absolute bottom-2 left-2 z-40"
                 onClick={(e) => e.stopPropagation()}
                 onMouseDown={(e) => e.stopPropagation()}
               >
-                <label className="sr-only" htmlFor="shadow-mini">Button shadow</label>
-                <select
-                  id="shadow-mini"
-                  value={customizations.buttonShadow ?? 'md'}
-                  onChange={(e) => onCustomizationChange('buttonShadow', e.target.value as 'none' | 'sm' | 'md' | 'lg' | 'xl')}
-                  className="h-7 text-[10px] px-1 rounded-md border border-gray-300 bg-white/95 backdrop-blur-sm shadow-sm"
-                  aria-label="Select button shadow"
-                >
-                  {['none','sm','md','lg','xl'].map(opt => (
-                    <option key={opt} value={opt}>{opt.toUpperCase()}</option>
-                  ))}
-                </select>
+                <div className="flex items-center gap-2 h-7 px-2 rounded-md border border-gray-200 bg-zinc-100">
+                  <IconShadow className="w-3.5 h-3.5 opacity-60" />
+                  <div className="flex items-center gap-1">
+                    {(['none','sm','md','lg','xl'] as const).map(level => {
+                      const active = (customizations.buttonShadow ?? 'md') === level;
+                      const label = level === 'xl' ? 'XL' : level === 'none' ? 'N' : level.toUpperCase();
+                      return (
+                        <button
+                          key={level}
+                          type="button"
+                          aria-pressed={active}
+                          title={`Shadow ${label}`}
+                          onClick={() => onCustomizationChange('buttonShadow', level)}
+                          className={`w-4 h-4 rounded-[4px] bg-white border flex items-center justify-center ${active ? 'ring-2 ring-zinc-300 border-zinc-300' : 'border-zinc-300 hover:border-zinc-200'}`}
+                        >
+                          <span className="text-[7px] font-mono leading-none text-gray-700">{label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
               <div
                 className="absolute bottom-2 right-2 z-40"
                 onClick={(e) => e.stopPropagation()}
                 onMouseDown={(e) => e.stopPropagation()}
               >
-                <label className="sr-only" htmlFor="border-mini">Button border</label>
-                <select
-                  id="border-mini"
-                  value={customizations.buttonBorder ?? 'black-10'}
-                  onChange={(e) => onCustomizationChange('buttonBorder', e.target.value as 'none' | 'black-10' | 'white-10')}
-                  className="h-7 text-[10px] px-1 rounded-md border border-gray-300 bg-white/95 backdrop-blur-sm shadow-sm"
-                  aria-label="Select button border"
-                >
-                  <option value="none">None</option>
-                  <option value="black-10">Black (10%)</option>
-                </select>
+                <div className="flex items-center gap-2 h-7 px-2 rounded-md border border-gray-200 bg-zinc-100">
+                  <IconApp className={(customizations.buttonBorder ?? 'black-10') === 'none' ? 'w-3.5 h-3.5 opacity-40' : 'w-3.5 h-3.5 opacity-100'} />
+                  <Switch
+                    checked={(customizations.buttonBorder ?? 'black-10') !== 'none'}
+                    onCheckedChange={(val) => onCustomizationChange('buttonBorder', (val ? 'black-10' : 'none') as 'none' | 'black-10')}
+                    className="scale-90"
+                    aria-label="Toggle button border"
+                  />
+                </div>
               </div>
             </div>
           </div>

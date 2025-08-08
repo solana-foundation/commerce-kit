@@ -1,10 +1,13 @@
-import React, { useState, useCallback, memo } from 'react';
+import React, { useState, useCallback, memo, useMemo } from 'react';
 import { DialogClose } from '../../../../ui-primitives/src/react';
 import { 
   getBorderRadius,
   getModalBorderRadius, 
   sanitizeString,
-  DEFAULT_PROFILE_SVG 
+  DEFAULT_PROFILE_SVG,
+  getButtonShadow,
+  getButtonBorder,
+  getAccessibleTextColor
 } from '../../utils';
 import { QRPaymentContent } from './qr-payment-content';
 import { WalletPaymentContent } from './wallet-payment-content';
@@ -14,7 +17,33 @@ import {
   type Currency,
   CurrencyMap
 } from '../../types';
-import { SPLToken } from '@solana-commerce/solana-pay';
+// No direct SPLToken usage in this file; keep dependencies minimal
+
+// Static icons and constants hoisted to avoid re-creating on each render
+const WALLET_ICON = (
+  <svg width="21" height="16" viewBox="0 0 21 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M13.5 9.55556H13.5078M3 2.55556V13.4444C3 14.3036 3.69645 15 4.55556 15H15.4444C16.3036 15 17 14.3036 17 13.4444V5.66667C17 4.80756 16.3036 4.11111 15.4444 4.11111L4.55556 4.11111C3.69645 4.11111 3 3.41466 3 2.55556ZM3 2.55556C3 1.69645 3.69645 1 4.55556 1H13.8889M13.8889 9.55556C13.8889 9.77033 13.7148 9.94444 13.5 9.94444C13.2852 9.94444 13.1111 9.77033 13.1111 9.55556C13.1111 9.34078 13.2852 9.16667 13.5 9.16667C13.7148 9.16667 13.8889 9.34078 13.8889 9.55556Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const SOLANA_PAY_ICON = (
+  <svg width="21" height="16" viewBox="0 0 21 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3.98967 11.7879C4.10222 11.6755 4.25481 11.6123 4.41392 11.6123H19.0941C19.3615 11.6123 19.4954 11.9357 19.3062 12.1247L16.4054 15.0232C16.2929 15.1356 16.1403 15.1988 15.9812 15.1988H1.30102C1.03359 15.1988 0.899716 14.8754 1.08889 14.6864L3.98967 11.7879Z" fill="currentColor"/>
+    <path d="M3.98937 0.959506C4.10191 0.847047 4.25451 0.783875 4.41361 0.783875H19.0938C19.3612 0.783875 19.4951 1.10726 19.3059 1.29628L16.4051 4.19475C16.2926 4.30721 16.14 4.37038 15.9809 4.37038H1.30071C1.03329 4.37038 0.899411 4.047 1.08859 3.85797L3.98937 0.959506Z" fill="currentColor"/>
+    <path d="M16.4054 6.33924C16.2929 6.22675 16.1403 6.16362 15.9812 6.16362H1.30102C1.03359 6.16362 0.899717 6.48697 1.08889 6.676L3.98967 9.57445C4.10222 9.68694 4.25481 9.75012 4.41392 9.75012H19.0941C19.3615 9.75012 19.4954 9.42673 19.3062 9.23769L16.4054 6.33924Z" fill="currentColor"/>
+  </svg>
+);
+
+const PRESET_AMOUNTS = [1, 5, 15, 25] as const;
+
+const ALL_CURRENCIES = [
+  { value: 'USDC', label: 'USD Coin', symbol: 'USDC' },
+  { value: 'SOL', label: 'Solana', symbol: 'SOL' },
+  { value: 'USDT', label: 'Tether USD', symbol: 'USDT' },
+  { value: 'USDC_DEVNET', label: 'USD Coin Devnet', symbol: 'USDC_DEVNET' },
+  { value: 'SOL_DEVNET', label: 'Solana Devnet', symbol: 'SOL_DEVNET' },
+  { value: 'USDT_DEVNET', label: 'Tether USD Devnet', symbol: 'USDT_DEVNET' }
+] as const;
 
 export const TipModalContent = memo<TipModalContentProps>(({ 
   config, 
@@ -22,6 +51,14 @@ export const TipModalContent = memo<TipModalContentProps>(({
   onPayment, 
   onCancel 
 }) => {
+  // Inject a local slide-up animation for the inner modal container to ensure visible motion
+  if (typeof document !== 'undefined' && !document.getElementById('sc-tip-modal-anim')) {
+    const styleEl = document.createElement('style');
+    styleEl.id = 'sc-tip-modal-anim';
+    styleEl.textContent = `
+@keyframes sc-tip-modal-slide-up {\n  0% { transform: translateY(16px); opacity: 0; }\n  100% { transform: translateY(0); opacity: 1; }\n}\n\n@media (prefers-reduced-motion: reduce) {\n  .sc-tip-modal-anim { animation: none !important; }\n}`;
+    document.head.appendChild(styleEl);
+  }
   const [selectedAmount, setSelectedAmount] = useState<number>(5);
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>(
     (config.allowedMints?.[0] as Currency) || 'USDC'
@@ -31,8 +68,11 @@ export const TipModalContent = memo<TipModalContentProps>(({
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState<'form' | 'payment'>('form');
+  const [isActionButtonHovered, setIsActionButtonHovered] = useState(false);
+  const [isActionButtonPressed, setIsActionButtonPressed] = useState(false);
 
-  const presetAmounts = [1, 5, 15, 25];
+  // Derived memoized data
+  const currencies = useMemo(() => ALL_CURRENCIES.filter(c => config.allowedMints?.includes(c.value as any)), [config.allowedMints]);
 
   const handleSubmit = useCallback(async () => {
     try {
@@ -76,55 +116,75 @@ export const TipModalContent = memo<TipModalContentProps>(({
     });
   }, []);
 
-  const allCurrencies = [
-    { value: 'USDC' as Currency, label: 'USD Coin', symbol: 'USDC' },
-    { value: 'SOL' as Currency, label: 'Solana', symbol: 'SOL' },
-    { value: 'USDT' as Currency, label: 'Tether USD', symbol: 'USDT' },
-    { value: 'USDC_DEVNET' as Currency, label: 'USD Coin Devnet', symbol: 'USDC_DEVNET' },
-    { value: 'SOL_DEVNET' as Currency, label: 'Solana Devnet', symbol: 'SOL_DEVNET' },
-    { value: 'USDT_DEVNET' as Currency, label: 'Tether USD Devnet', symbol: 'USDT_DEVNET' }
-  ];
   
-  const currencies = allCurrencies.filter(currency => 
-    config.allowedMints?.includes(currency.value)
-  );
-
-  const walletIcon = (
-    <svg width="21" height="16" viewBox="0 0 21 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M13.5 9.55556H13.5078M3 2.55556V13.4444C3 14.3036 3.69645 15 4.55556 15H15.4444C16.3036 15 17 14.3036 17 13.4444V5.66667C17 4.80756 16.3036 4.11111 15.4444 4.11111L4.55556 4.11111C3.69645 4.11111 3 3.41466 3 2.55556ZM3 2.55556C3 1.69645 3.69645 1 4.55556 1H13.8889M13.8889 9.55556C13.8889 9.77033 13.7148 9.94444 13.5 9.94444C13.2852 9.94444 13.1111 9.77033 13.1111 9.55556C13.1111 9.34078 13.2852 9.16667 13.5 9.16667C13.7148 9.16667 13.8889 9.34078 13.8889 9.55556Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  );
-
-  const solanaPayIcon = (
-    <svg width="21" height="16" viewBox="0 0 21 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M3.98967 11.7879C4.10222 11.6755 4.25481 11.6123 4.41392 11.6123H19.0941C19.3615 11.6123 19.4954 11.9357 19.3062 12.1247L16.4054 15.0232C16.2929 15.1356 16.1403 15.1988 15.9812 15.1988H1.30102C1.03359 15.1988 0.899716 14.8754 1.08889 14.6864L3.98967 11.7879Z" fill="currentColor"/>
-      <path d="M3.98937 0.959506C4.10191 0.847047 4.25451 0.783875 4.41361 0.783875H19.0938C19.3612 0.783875 19.4951 1.10726 19.3059 1.29628L16.4051 4.19475C16.2926 4.30721 16.14 4.37038 15.9809 4.37038H1.30071C1.03329 4.37038 0.899411 4.047 1.08859 3.85797L3.98937 0.959506Z" fill="currentColor"/>
-      <path d="M16.4054 6.33924C16.2929 6.22675 16.1403 6.16362 15.9812 6.16362H1.30102C1.03359 6.16362 0.899717 6.48697 1.08889 6.676L3.98967 9.57445C4.10222 9.68694 4.25481 9.75012 4.41392 9.75012H19.0941C19.3615 9.75012 19.4954 9.42673 19.3062 9.23769L16.4054 6.33924Z" fill="currentColor"/>
-    </svg>
-  );
 
   const paymentMethods: Array<{ value: PaymentMethod; label: string; description: string; icon: React.ReactNode }> = [
-    { value: 'qr', label: 'Pay', description: 'QR code', icon: solanaPayIcon },
-    { value: 'wallet', label: 'Wallet', description: 'Browser wallet', icon: walletIcon }
+    { value: 'qr', label: 'Pay', description: 'QR code', icon: SOLANA_PAY_ICON },
+    { value: 'wallet', label: 'Wallet', description: 'Browser wallet', icon: WALLET_ICON }
   ];
 
+  // Action button styles - matching trigger button pattern
+  const actionButtonStyles: React.CSSProperties = useMemo(() => {
+    const isDisabled = isProcessing || (showCustomInput && !customAmount);
+    const borderStyle = (() => {
+      const b = getButtonBorder(theme);
+      return b === 'none' ? '1.5px solid transparent' : b;
+    })();
+    
+    return {
+      width: '100%',
+      padding: '1rem',
+      backgroundColor: isDisabled 
+        ? '#9ca3af' 
+        : isActionButtonHovered 
+          ? theme.secondaryColor 
+          : theme.primaryColor,
+      color: isDisabled 
+        ? 'white' 
+        : getAccessibleTextColor(isActionButtonHovered ? theme.secondaryColor : theme.primaryColor),
+      border: isDisabled ? '1.5px solid transparent' : borderStyle,
+      borderRadius: getBorderRadius(theme.borderRadius),
+      fontSize: '1rem',
+      fontWeight: '600',
+      cursor: isDisabled ? 'not-allowed' : 'pointer',
+      transition: 'background-color 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease',
+      fontFamily: theme.fontFamily,
+      boxShadow: isDisabled 
+        ? 'none'
+        : isActionButtonHovered
+          ? `${getButtonShadow(theme.buttonShadow)}, 0 0 0 4px rgba(202, 202, 202, 0.45)`
+          : getButtonShadow(theme.buttonShadow),
+      transform: isDisabled 
+        ? 'scale(1)' 
+        : isActionButtonPressed 
+          ? 'scale(0.97)' 
+          : isActionButtonHovered 
+            ? 'scale(1)' 
+            : 'scale(1)',
+      outlineOffset: 2,
+    };
+  }, [theme, isActionButtonHovered, isActionButtonPressed, isProcessing, showCustomInput, customAmount]);
+
   return (
-    <div style={{
+    <div className="sc-tip-modal-anim" style={{
       fontFamily: theme.fontFamily,
       backgroundColor: theme.backgroundColor,
       padding: '0',
-      minWidth: '500px',
+      height: 'auto',
+      maxWidth: '420px',
       width: '100%',
+      border: '1px solid #00000060',
       borderRadius: getModalBorderRadius(theme.borderRadius),
       boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      animation: 'sc-tip-modal-slide-up 125ms ease-in'
     }}>
       {/* Header */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '1.5rem 1.5rem 1rem 1.5rem',
+        padding: '1rem',
         borderBottom: `1px solid ${theme.backgroundColor === '#ffffff' ? '#f3f4f6' : `${theme.textColor}10`}`,
         position: 'relative'
       }}>
@@ -196,7 +256,7 @@ export const TipModalContent = memo<TipModalContentProps>(({
         {/* Center - Title */}
         <h2 style={{
           margin: 0,
-          fontSize: '1.25rem',
+          fontSize: '1.1rem',
           fontWeight: '600',
           color: theme.textColor,
           position: 'absolute',
@@ -391,7 +451,7 @@ export const TipModalContent = memo<TipModalContentProps>(({
               flexWrap: 'wrap',
               justifyContent: 'center'
             }}>
-              {presetAmounts.map(amount => (
+              {PRESET_AMOUNTS.map(amount => (
                 <button
                   key={amount}
                   type="button"
@@ -400,8 +460,8 @@ export const TipModalContent = memo<TipModalContentProps>(({
                     setShowCustomInput(false);
                   }}
                   style={{
-                    width: '80px',
-                    height: '64px',
+                    width: '60px',
+                    height: '44px',
                     border: selectedAmount === amount && !showCustomInput ? `3px solid #ffffff` : '1px solid #e5e7eb',
                     borderRadius: '12px',
                     backgroundColor: selectedAmount === amount && !showCustomInput ? '#F5F5F5' : '#ffffff',
@@ -438,8 +498,8 @@ export const TipModalContent = memo<TipModalContentProps>(({
                 type="button"
                 onClick={() => setShowCustomInput(true)}
                 style={{
-                  width: '80px',
-                  height: '64px',
+                  width: '60px',
+                  height: '44px',
                   border: showCustomInput ? `3px solid #ffffff` : '1px solid #e5e7eb',
                   borderRadius: '12px',
                   backgroundColor: showCustomInput ? '#F5F5F5' : '#ffffff',
@@ -472,43 +532,54 @@ export const TipModalContent = memo<TipModalContentProps>(({
                 Custom
               </button>
             </div>
-            {showCustomInput && (
-              <input
-                type="number"
-                value={customAmount}
-                onChange={(e) => setCustomAmount(e.target.value)}
-                placeholder="Enter amount"
-                style={{
-                  width: '100%',
-                  height: '2.75rem',
-                  padding: '0.75rem 1rem',
-                  border: '1px solid #EBEBEB',
-                  borderRadius: '12px',
-                  backgroundColor: '#F5F5F5',
-                  color: theme.textColor,
-                  fontSize: '0.875rem',
-                  fontWeight: '400',
-                  marginTop: '0.75rem',
-                  outline: 'none',
-                  transition: 'all 200ms ease-in-out',
-                  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#D8D8D8';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = '#EBEBEB';
-                }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = '#585858';
-                  e.currentTarget.style.boxShadow = '0 1px 2px 0 rgba(0, 0, 0, 0.05), 0 0 0 3px #DBDADA';
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = '#EBEBEB';
-                  e.currentTarget.style.boxShadow = '0 1px 2px 0 rgba(0, 0, 0, 0.05)';
-                }}
-              />
-            )}
+            <div
+              className={showCustomInput ? 'sc-collapsible-expanded' : 'sc-collapsible-collapsed'}
+              style={{
+                display: 'grid',
+                gridTemplateRows: showCustomInput ? '1fr' : '0fr',
+                transition: 'grid-template-rows 200ms ease-in',
+                marginTop: '0.75rem'
+              }}
+              aria-hidden={!showCustomInput}
+            >
+              <div style={{ overflow: 'hidden' }}>
+                <input
+                  type="number"
+                  value={customAmount}
+                  onChange={(e) => setCustomAmount(e.target.value)}
+                  placeholder="Enter amount"
+                  style={{
+                    width: '100%',
+                    height: '2.75rem',
+                    padding: '0.75rem 1rem',
+                    border: '1px solid #EBEBEB',
+                    borderRadius: '12px',
+                    backgroundColor: '#F5F5F5',
+                    color: theme.textColor,
+                    fontSize: '0.875rem',
+                    fontWeight: '400',
+                    outline: 'none',
+                    transition: 'border-color 200ms ease-in, box-shadow 200ms ease-in',
+                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                  }}
+                  disabled={!showCustomInput}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = '#D8D8D8';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = '#EBEBEB';
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = '#585858';
+                    e.currentTarget.style.boxShadow = '0 1px 2px 0 rgba(0, 0, 0, 0.05), 0 0 0 3px #DBDADA';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = '#EBEBEB';
+                    e.currentTarget.style.boxShadow = '0 1px 2px 0 rgba(0, 0, 0, 0.05)';
+                  }}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Payment Method */}
@@ -576,27 +647,33 @@ export const TipModalContent = memo<TipModalContentProps>(({
           <button
             onClick={handleSubmit}
             disabled={isProcessing || (showCustomInput && !customAmount)}
-            style={{
-              width: '100%',
-              padding: '1rem',
-              backgroundColor: isProcessing || (showCustomInput && !customAmount) ? '#9ca3af' : theme.primaryColor,
-              color: 'white',
-              border: 'none',
-              borderRadius: getBorderRadius(theme.borderRadius),
-              fontSize: '1rem',
-              fontWeight: '600',
-              cursor: isProcessing || (showCustomInput && !customAmount) ? 'not-allowed' : 'pointer',
-              transition: 'all 0.2s'
-            }}
+            style={actionButtonStyles}
             type="button"
-            onMouseEnter={(e) => {
+            onMouseEnter={() => {
               if (!isProcessing && !(showCustomInput && !customAmount)) {
-                e.currentTarget.style.backgroundColor = theme.secondaryColor;
+                setIsActionButtonHovered(true);
               }
             }}
-            onMouseLeave={(e) => {
+            onMouseLeave={() => {
+              setIsActionButtonHovered(false);
+              setIsActionButtonPressed(false);
+            }}
+            onMouseDown={() => {
               if (!isProcessing && !(showCustomInput && !customAmount)) {
-                e.currentTarget.style.backgroundColor = theme.primaryColor;
+                setIsActionButtonPressed(true);
+              }
+            }}
+            onMouseUp={() => setIsActionButtonPressed(false)}
+            onFocus={(e) => {
+              if (!isProcessing && !(showCustomInput && !customAmount)) {
+                setIsActionButtonHovered(true);
+                e.currentTarget.style.boxShadow = `${getButtonShadow(theme.buttonShadow)}, 0 0 0 4px rgba(202, 202, 202, 0.45)`;
+              }
+            }}
+            onBlur={(e) => {
+              setIsActionButtonHovered(false);
+              if (!isProcessing && !(showCustomInput && !customAmount)) {
+                e.currentTarget.style.boxShadow = getButtonShadow(theme.buttonShadow);
               }
             }}
           >
@@ -628,7 +705,7 @@ export const TipModalContent = memo<TipModalContentProps>(({
             customAmount={customAmount}
             showCustomInput={showCustomInput}
             onPaymentComplete={handlePaymentComplete}
-            walletIcon={walletIcon}
+            walletIcon={WALLET_ICON}
           />
         )
       )}

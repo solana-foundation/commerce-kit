@@ -10,21 +10,21 @@ import { OrderItem, validateWalletAddress as coreValidateWalletAddress } from '@
 // Constants
 export const BORDER_RADIUS_MAP = {
   none: '0',
-  sm: '0.25rem',
-  md: '0.5rem', 
-  lg: '0.75rem',
-  xl: '1rem',
+  sm: '0.5rem',
+  md: '0.75rem', 
+  lg: '1rem',
+  xl: '1.2rem',
   full: '9999px'
 } as const;
 
 export const MODAL_BORDER_RADIUS_MAP = {
   ...BORDER_RADIUS_MAP,
-  full: '1rem' // Cap modal radius for UX
+  full: '2.2rem' // Cap modal radius for UX
 } as const;
 
 export const CONTAINER_BORDER_RADIUS_MAP = {
   ...BORDER_RADIUS_MAP,
-  full: '0.75rem' // Cap container radius for UX - containers shouldn't be fully rounded
+  full: '2.2rem' // Cap container radius for UX - containers shouldn't be fully rounded
 } as const;
 
 export const DEFAULT_THEME: Required<ThemeConfig> = {
@@ -64,7 +64,7 @@ export function getButtonShadow(shadow?: ThemeConfig['buttonShadow']): string {
 export function getButtonBorder(theme: Required<ThemeConfig>): string {
   switch (theme.buttonBorder) {
     case 'black-10':
-      return '1px solid rgba(0,0,0,0.2)';
+      return '1.5px solid rgba(0,0,0,0.1)';
     case 'none':
     default:
       return 'none';

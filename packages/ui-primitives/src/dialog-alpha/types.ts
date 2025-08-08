@@ -29,6 +29,9 @@ export interface DialogContentProps {
   children: ReactNode;
   className?: string;
   style?: React.CSSProperties;
+  labelledById?: string;
+  describedById?: string;
+  autoFocus?: boolean;
 }
 
 export interface DialogBackdropProps {
