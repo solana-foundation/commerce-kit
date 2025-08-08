@@ -30,6 +30,12 @@ const BorderRadiusPickerComponent = function BorderRadiusPicker({
       onBorderRadiusChange(newOption.value);
     }
   }, [onBorderRadiusChange]);
+
+  const handleCycleSelect = useCallback(() => {
+    const nextIndex = (currentIndex + 1) % borderRadiusOptions.length;
+    const nextOption = borderRadiusOptions[nextIndex];
+    onBorderRadiusChange(nextOption.value);
+  }, [currentIndex, onBorderRadiusChange]);
   
   return (
     <div className="space-y-4">
@@ -40,7 +46,11 @@ const BorderRadiusPickerComponent = function BorderRadiusPicker({
             <div className="text-left sr-only">
               <div className="text-xs font-mono text-gray-500">{currentOption.name}</div>
             </div>
-            <div className="w-full h-full p-1 bg-white rounded-[7px] border border-black/20 shadow-sm shadow-black/10">
+            <button 
+              onClick={handleCycleSelect}
+              className="w-full h-full p-1 bg-white rounded-[7px] border border-black/20 shadow-sm shadow-black/10 hover:bg-gray-50 hover:shadow-md transition-all duration-200 cursor-pointer active:scale-95 hover:scale-105"
+              title="Click to cycle through border radius options"
+            >
                 <svg
                 width={16}
                 height={16}
@@ -73,7 +83,7 @@ const BorderRadiusPickerComponent = function BorderRadiusPicker({
                     fill="none"
                 />
                 </svg>                
-            </div>
+            </button>
 
           </div>
         </div>

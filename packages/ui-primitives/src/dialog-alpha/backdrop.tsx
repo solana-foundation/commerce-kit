@@ -5,7 +5,9 @@ import type { DialogBackdropProps } from './types';
 export function DialogBackdrop({ className, style, onClick }: DialogBackdropProps) {
   const context = useDialog();
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Prevent accidental interactions with content through backdrop
+    e.stopPropagation();
     if (onClick) {
       onClick();
     } else if (context && context.close) {
@@ -19,13 +21,14 @@ export function DialogBackdrop({ className, style, onClick }: DialogBackdropProp
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(0, 0, 0, 0.25)',
         backdropFilter: 'blur(3px)',
         zIndex: 40,
         cursor: 'pointer',
         ...style,
       }}
       onClick={handleClick}
+      aria-hidden="true"
     />
   );
 } 

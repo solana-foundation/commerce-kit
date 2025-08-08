@@ -3,6 +3,7 @@
  */
 
 import { STABLECOINS } from "./types";
+import { address as parseAddress } from "gill";
 
 export function validateCustomerInfo(email?: string, name?: string, mode?: string) {
   const errors: Record<string, string> = {};
@@ -48,8 +49,14 @@ export function createPaymentReference() {
   return `commerce-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
-export function validateWalletAddress(address: string): boolean {
-  return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address);
+export function validateWalletAddress(addressStr: string): boolean {
+  try {
+    // Use gill's address parser for robust base58 validation
+    parseAddress(addressStr);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function createPaymentUrl(
@@ -61,7 +68,6 @@ export function createPaymentUrl(
   if (!validateWalletAddress(recipient) || amount <= 0) return '';
   
   const params = new URLSearchParams({
-    recipient,
     amount: amount.toString(),
     reference: createPaymentReference(),
     label: merchantName,
@@ -70,6 +76,7 @@ export function createPaymentUrl(
       : `Purchase from ${merchantName}`
   });
   
+  // Per Solana Pay spec, recipient must be in the path, not a query param
   return `solana:${recipient}?${params.toString()}`;
 }
 
@@ -103,14 +110,8 @@ export function parseSolAmount(solAmount: string): number {
  * Validate Solana address
  */
 export function isValidSolanaAddress(address: string): boolean {
-  try {
-    // Basic validation - should be 32-44 base58 characters
-    const decoded = Buffer.from(address, 'base64');
-    return decoded.length === 32;
-  } catch {
-    // More lenient check for base58
-    return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address);
-  }
+  // Backward compatibility helper; delegate to validateWalletAddress
+  return validateWalletAddress(address);
 }
 
 /**

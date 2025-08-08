@@ -1,13 +1,15 @@
 import type { CommerceClient } from "../client";
 import { OrderRequest, PaymentVerificationResult } from "../types";
 import { STABLECOINS } from "../types/stablecoin";
-import { signature, type Signature } from "gill";
+import { signature, type Signature, address } from "gill";
+import { getAssociatedTokenAccountAddress, TOKEN_PROGRAM_ADDRESS, TOKEN_2022_PROGRAM_ADDRESS } from "gill/programs/token";
 
 export async function verifyPayment(
-  client: CommerceClient, 
+  client: CommerceClient,
   signatureString: string,
   expectedAmount?: number,
-  expectedRecipient?: string
+  expectedRecipient?: string,
+  expectedMint?: string
 ): Promise<PaymentVerificationResult> {
   try {
     // Convert string to Signature type
@@ -33,10 +35,34 @@ export async function verifyPayment(
     let verified = !!txData.blockTime;
 
     // Additional verification if expected values provided
-    if (verified && expectedAmount && expectedRecipient) {
-      // This is a simplified check - in production you'd parse the transaction
-      // instructions to verify the actual transfer amount and recipient
-      verified = true; // Placeholder - implement actual parsing
+    if (verified && expectedRecipient && expectedAmount != null) {
+      const recipientAddr = address(expectedRecipient);
+
+      // If SOL transfer (no mint), check lamports delta at recipient index
+      const acctIndex = txData.transaction.message.accountKeys.findIndex(k => k.pubkey.toString() === recipientAddr.toString());
+      if (acctIndex >= 0 && txData.meta?.preBalances && txData.meta?.postBalances && !expectedMint) {
+        const post = Number(txData.meta.postBalances[acctIndex] ?? 0);
+        const pre = Number(txData.meta.preBalances[acctIndex] ?? 0);
+        const delta = post - pre;
+        verified = delta >= expectedAmount;
+      }
+
+      // If SPL transfer, check postTokenBalances for recipient ATA across Token and Token-2022
+      if (!verified && expectedMint) {
+        try {
+          const mintAddr = address(expectedMint);
+          const ataV1 = await getAssociatedTokenAccountAddress(mintAddr, recipientAddr, TOKEN_PROGRAM_ADDRESS).catch(() => null as any);
+          const ataV2 = await getAssociatedTokenAccountAddress(mintAddr, recipientAddr, TOKEN_2022_PROGRAM_ADDRESS).catch(() => null as any);
+          const isMatch = (acc: any) => acc && txData.meta?.postTokenBalances?.some(tb => {
+            const key = txData.transaction.message.accountKeys[tb.accountIndex]?.pubkey?.toString();
+            const amount = Number(tb.uiTokenAmount?.amount ?? '0');
+            return key === acc.toString() && tb.mint === mintAddr.toString() && amount >= expectedAmount;
+          });
+          verified = isMatch(ataV1) || isMatch(ataV2) || false;
+        } catch {
+          verified = false;
+        }
+      }
     }
 
     return {
@@ -48,7 +74,6 @@ export async function verifyPayment(
     };
 
   } catch (error) {
-    console.error("Error verifying payment:", error);
     return {
       verified: false,
       signature: signatureString,
@@ -59,24 +84,28 @@ export async function verifyPayment(
 
 export async function waitForConfirmation(
   client: CommerceClient,
-  signature: string,
+  signatureStr: string,
   timeoutMs: number = 30000
 ): Promise<boolean> {
   const startTime = Date.now();
-  
+
   while (Date.now() - startTime < timeoutMs) {
     try {
-      const result = await verifyPayment(client, signature);
-      if (result.verified) {
+      const sig = signature(signatureStr);
+      const statuses = await client.rpc.getSignatureStatuses([sig], {
+        searchTransactionHistory: true,
+      }).send();
+      const status = statuses.value?.[0];
+      if (status?.confirmationStatus === 'confirmed' || status?.confirmationStatus === 'finalized') {
         return true;
       }
-      // Wait 1 second before checking again
-      await new Promise(resolve => setTimeout(resolve, 1000));
     } catch {
-      // Continue polling on errors
+      // continue
     }
+    // Wait 1 second before checking again
+    await new Promise(resolve => setTimeout(resolve, 1000));
   }
-  
+
   return false;
 } 
 
@@ -98,7 +127,6 @@ export function createCommercePaymentRequest(request: OrderRequest) {
     const baseUrl = 'solana:';
     const params = new URLSearchParams();
     
-    params.append('recipient', recipient);
     params.append('amount', totalAmount.toString());
     
     if (currency && currency !== 'SOL') {

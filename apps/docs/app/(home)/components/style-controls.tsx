@@ -50,12 +50,15 @@ export function StyleControls({
         onSwapChange={onSwapChange}
       />
 
+      {/* Button Style: Shadow & Border */}
+
       <SectionSeparator />
 
       {/* Checkout Style Selection */}
       <CheckoutStyleSelector
         value={checkoutStyle}
         onChange={onCheckoutStyleChange}
+        mode={selectedMode}
       />
 
       <SectionSeparator />

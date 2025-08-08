@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { PaymentState, PaymentOptions, OrderRequest, createCommerceClient, SolanaClientConfig, createCommercePaymentRequest, OrderItem, verifyPayment, waitForConfirmation } from '@solana-commerce/headless-sdk';
 
-export function usePayment(options: PaymentOptions = {}) {
+export function usePayment(options: PaymentOptions = {}, clientConfig?: SolanaClientConfig) {
   const [paymentState, setPaymentState] = useState<PaymentState>({
     isProcessing: false,
     isVerifying: false,
@@ -21,12 +21,12 @@ export function usePayment(options: PaymentOptions = {}) {
 
   // Create commerce client
   const createClient = useCallback(() => {
-    const config: SolanaClientConfig = {
+    const config: SolanaClientConfig = clientConfig ?? {
       network: 'devnet',
       rpcUrl: 'https://api.devnet.solana.com'
     };
     return createCommerceClient(config);
-  }, []);
+  }, [clientConfig]);
 
   // Create payment request
   const initiatePayment = useCallback(async (request: OrderRequest) => {

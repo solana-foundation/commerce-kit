@@ -20,6 +20,8 @@ export interface Customizations {
   productName: string;
   productDescription: string;
   productPrice: string;
+  buttonShadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  buttonBorder?: 'none' | 'black-10' | 'white-10';
 }
 
 export type Mode = 'tip' | 'buyNow' | 'cart';
@@ -49,6 +51,8 @@ export interface DemoConfig {
     textColor: string;
     borderRadius: 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
     fontFamily?: string;
+    buttonShadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+    buttonBorder?: 'none' | 'black-10';
   };
   showQR: boolean;
   showProductDetails: boolean;

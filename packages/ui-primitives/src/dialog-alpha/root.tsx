@@ -15,14 +15,19 @@ export function DialogRoot({ children, open, onOpenChange }: DialogRootProps) {
     };
 
     // Prevent body scroll
-    const originalOverflow = document.body.style.overflow;
+    const { overflow, paddingRight } = document.body.style as any;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
     document.body.style.overflow = 'hidden';
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
 
     document.addEventListener('keydown', handleEscape);
 
     return () => {
       document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = originalOverflow;
+      document.body.style.overflow = overflow;
+      document.body.style.paddingRight = paddingRight;
     };
   }, [open, onOpenChange]);
 

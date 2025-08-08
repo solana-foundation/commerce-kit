@@ -36,6 +36,8 @@ export function InteractiveDemo() {
     productName: 'Demo Product',
     productDescription: 'Amazing digital product',
     productPrice: '0.1',
+    buttonShadow: 'md',
+    buttonBorder: 'black-10',
   });
 
   // Demo products
@@ -74,7 +76,9 @@ export function InteractiveDemo() {
         secondaryColor: effectiveSecondaryColor,
         backgroundColor: customizations.backgroundColor,
         textColor: customizations.textColor,
-        borderRadius: customizations.borderRadius as 'none' | 'sm' | 'md' | 'lg' | 'xl'
+        borderRadius: customizations.borderRadius as 'none' | 'sm' | 'md' | 'lg' | 'xl',
+        buttonShadow: (customizations.buttonShadow ?? 'md') as 'none' | 'sm' | 'md' | 'lg' | 'xl',
+        buttonBorder: (customizations.buttonBorder ?? 'black-10') as 'none' | 'black-10',
       },
       showQR: customizations.showQR,
       showProductDetails: customizations.showProductDetails,
@@ -117,6 +121,13 @@ export function InteractiveDemo() {
     }));
   };
 
+  // Ensure layout switches based on mode selection
+  const handleModeChange = (mode: Mode) => {
+    setSelectedMode(mode);
+    if (mode === 'tip') setCheckoutStyle('modal');
+    else setCheckoutStyle('page');
+  };
+
   return (
     <section className="h-[calc(100vh-100px)]">
       <div className="max-w-7xl h-full mx-auto border-r border-l border-gray-200 dark:border-gray-800">
@@ -128,7 +139,7 @@ export function InteractiveDemo() {
             {/* Mode Selector Tabs */}
             <ModeSelector 
               selectedMode={selectedMode}
-              onModeChange={setSelectedMode}
+              onModeChange={handleModeChange}
             />
 
             <CustomizationPanel
@@ -145,33 +156,24 @@ export function InteractiveDemo() {
           {/* Right Column - Demo and Code Tabs */}
           <div 
           className="space-y-4 col-span-7"
-          style={{
-            backgroundImage: `repeating-linear-gradient(
-              45deg,
-              transparent,
-              transparent 10px,
-              rgba(46, 77, 97, 0.08) 10px,
-              rgba(46, 77, 97, 0.08) 11px
-            )`
-          }}
           >
             <TabsRoot defaultValue="demo">
-              <TabsList className="flex border-b bg-zinc-100 border-gray-200 dark:border-gray-700">
+              <TabsList className="flex bg-zinc-100/50 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-[57px]">
                 <TabsTab 
                   value="demo"
-                  className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600 data-[state=active]:border-zinc-900 data-[state=active]:text-zinc-900 text-zinc-400 transition-colors"
+                  className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600 data-[state=active]:border-zinc-900 data-[state=active]:text-zinc-900 text-zinc-400 transition-colors cursor-pointer"
                 >
                   {checkoutStyle === 'modal' ? 'Modal' : 'Page'}
                 </TabsTab>
                 <TabsTab 
                   value="code"
-                  className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600 data-[state=active]:border-zinc-900 data-[state=active]:text-zinc-900 text-zinc-400 transition-colors"
+                  className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600 data-[state=active]:border-zinc-900 data-[state=active]:text-zinc-900 text-zinc-400 transition-colors cursor-pointer"
                 >
                   Code
                 </TabsTab>
               </TabsList>
 
-              <TabsPanel value="demo" className=" px-4 h-[calc(100vh-200px)]">
+              <TabsPanel value="demo" className=" px-4 h-auto sticky top-[115px]">
                 <DemoPreview
                   selectedMode={selectedMode}
                   checkoutStyle={checkoutStyle}
@@ -180,10 +182,11 @@ export function InteractiveDemo() {
                   merchantConfig={merchantConfig}
                   config={getConfigForMode()}
                   onCheckoutStyleChange={setCheckoutStyle}
+                  onCustomizationChange={updateCustomization}
                 />
               </TabsPanel>
               
-              <TabsPanel value="code" className="px-4">
+              <TabsPanel value="code" className="px-4 sticky top-[115px]">
                 <CodeExample
                   selectedMode={selectedMode}
                   checkoutStyle={checkoutStyle}

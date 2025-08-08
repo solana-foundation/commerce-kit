@@ -6,23 +6,20 @@ export async function createSolanaPayRequest(request: TransferRequestURLFields, 
     background?: string;
     color?: string;
 }) {
-    console.log('Creating Solana Pay request:', request);
-    
     const url = encodeURL(request);
-    console.log('Generated URL:', url.toString());
 
     const qr = await createStyledQRCode(url.toString(), {
-        width: options.size,
+        width: options.size ?? 256,
         color: {
-            dark: options.color,
-            light: options.background,
+            dark: options.color ?? 'black',
+            light: options.background ?? 'white',
         },
     });
 
     return {
         url,
         qr
-    }
+    };
 }
 
 // Helper function to create a payment request from string inputs
