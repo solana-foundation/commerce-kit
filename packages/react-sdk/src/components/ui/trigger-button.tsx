@@ -1,9 +1,10 @@
 import React, { useState, useMemo, memo } from 'react';
-import { getBorderRadius, getButtonText } from '../../utils';
+import { getBorderRadius, getButtonText, getButtonShadow, getButtonBorder, getAccessibleTextColor } from '../../utils';
 import type { TriggerButtonProps } from '../../types';
 
 export const TriggerButton = memo<TriggerButtonProps>(({ theme, mode, className, style, onClick, variant = 'default' }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
   
   const buttonText = useMemo(() => getButtonText(mode), [mode]);
   const isIconOnly = variant === 'icon-only';
@@ -17,21 +18,32 @@ export const TriggerButton = memo<TriggerButtonProps>(({ theme, mode, className,
     </svg>
   );
 
-  const buttonStyles: React.CSSProperties = useMemo(() => ({
+  const buttonStyles: React.CSSProperties = useMemo(() => {
+    const borderStyle = (() => {
+      const b = getButtonBorder(theme);
+      return b === 'none' ? '1.5px solid transparent' : b;
+    })();
+    return ({
     padding: isIconOnly ? '0.75rem' : '0.75rem 1.5rem',
     backgroundColor: isHovered ? theme.secondaryColor : theme.primaryColor,
-    color: 'white',
-    border: 'none',
+    color: getAccessibleTextColor(isHovered ? theme.secondaryColor : theme.primaryColor),
+      border: borderStyle,
     borderRadius: getBorderRadius(theme.borderRadius),
     fontSize: '1rem',
     fontWeight: '600',
     cursor: 'pointer',
-    transition: 'background-color 0.2s ease',
+    transition: 'background-color 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease',
     fontFamily: theme.fontFamily,
     minWidth: isIconOnly ? '44px' : 'auto',
     aspectRatio: isIconOnly ? '1' : 'auto',
+    boxShadow: isHovered 
+      ? `${getButtonShadow(theme.buttonShadow)}, 0 0 0 4px rgba(202, 202, 202, 0.45)` 
+      : getButtonShadow(theme.buttonShadow),
+    transform: isPressed ? 'scale(0.97)' : isHovered ? 'scale(1)' : 'scale(1)',
+    outlineOffset: 2,
     ...style
-  }), [theme, isHovered, style, isIconOnly]);
+    });
+  }, [theme, isHovered, isPressed, style, isIconOnly]);
 
   return (
     <button
@@ -39,8 +51,22 @@ export const TriggerButton = memo<TriggerButtonProps>(({ theme, mode, className,
       style={buttonStyles}
       onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseLeave={() => {
+        setIsHovered(false);
+        setIsPressed(false);
+      }}
+      onMouseDown={() => setIsPressed(true)}
+      onMouseUp={() => setIsPressed(false)}
+      onFocus={(e) => { 
+        setIsHovered(true);
+        e.currentTarget.style.boxShadow = `${getButtonShadow(theme.buttonShadow)}, 0 0 0 4px rgba(202, 202, 202, 0.45)`; 
+      }}
+      onBlur={(e) => { 
+        setIsHovered(false);
+        e.currentTarget.style.boxShadow = getButtonShadow(theme.buttonShadow); 
+      }}
       type="button"
+      aria-label={isIconOnly ? buttonText : undefined}
     >
       <div style={{ 
         display: 'flex', 

@@ -4,9 +4,11 @@ import React from 'react';
 import type { OrderItem } from '@solana-commerce/headless-sdk';
 import { SolanaCommerceClient } from './solana-commerce-client';
 import { SingleItemCart, MultiItemCart, type CartItem } from '@solana-commerce/react-sdk';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../../components/ui/tabs';
+
 import type { Mode, CheckoutStyle, Customizations, DemoConfig } from './types';
-import { IconEye } from 'symbols-react';
+import { IconCursorarrowRays, IconHandPointUpLeftFill, IconInsetFilledCenterRectangle, IconApp, IconShadow } from 'symbols-react';
+import { Switch } from '../../../components/ui/switch';
+// selectors are inlined as mini selects below for compactness
 
 // Modal preview components
 import { ModalPreviewContent } from './modal-preview-content';
@@ -23,6 +25,7 @@ interface DemoPreviewProps {
   };
   config: DemoConfig;
   onCheckoutStyleChange: (style: CheckoutStyle) => void;
+  onCustomizationChange: <K extends keyof Customizations>(key: K, value: Customizations[K]) => void;
 }
 
 // Modal Preview Component - wrapper that positions the modal content properly
@@ -32,7 +35,17 @@ function ModalPreview({ config, selectedMode, demoProducts }: {
   demoProducts: OrderItem[];
 }) {
   return (
-    <div className="relative h-full w-full bg-black/20 backdrop-blur-sm flex items-center justify-center p-4">
+    <div 
+    style={{
+      backgroundImage: `repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(46, 77, 97, 0.08) 10px,
+        rgba(46, 77, 97, 0.08) 11px
+      )`
+    }}
+    className="relative h-full w-full flex items-center justify-center p-4">
       <ModalPreviewContent 
         config={config}
         selectedMode={selectedMode}
@@ -49,7 +62,8 @@ export function DemoPreview({
   demoProducts, 
   merchantConfig, 
   config,
-  onCheckoutStyleChange 
+  onCheckoutStyleChange,
+  onCustomizationChange
 }: DemoPreviewProps) {
   const getCartItems = (): CartItem[] => {
     return demoProducts.map(product => ({
@@ -61,52 +75,102 @@ export function DemoPreview({
   return (
     <div className="flex flex-col h-full">
       {checkoutStyle === 'modal' ? (
-        // Modal Demo with Tabs
-        <Tabs defaultValue={selectedMode === 'tip' ? "modal" : "button"} className="h-full relative">
-          {/* Tabs in top right corner */}
-          <div className="absolute top-4 right-4 z-20">
-            <TabsList className="grid w-auto grid-cols-2">
-              <TabsTrigger value="button">Button</TabsTrigger>
-              <TabsTrigger value="modal">Modal</TabsTrigger>
-            </TabsList>
-          </div>
-          
-          {/* Tab Content */}
-          <TabsContent value="button" className="h-full m-0">
-            <div className="flex flex-col items-center justify-center h-full">
-              <div className="flex flex-col items-center justify-center border border-gray-200 dark:border-gray-700 rounded-lg bg-zinc-100 p-8 w-full h-full text-center">
-                <SolanaCommerceClient
-                  config={config}
-                  variant={customizations.buttonVariant}
-                  onPayment={(amount: number, currency: string, products?: readonly OrderItem[]) => {
-                    console.log('Demo payment:', { amount, currency, products });
-                    alert(`Payment initiated: ${amount / 1000000000} ${currency}`);
-                  }}
-                  onPaymentStart={() => {
-                    console.log('Payment started...');
-                  }}
-                  onPaymentSuccess={(signature: string) => {
-                    console.log('Payment successful:', signature);
-                    alert('Payment successful!');
-                  }}
-                  onPaymentError={(error: Error) => {
-                    console.error('Payment failed:', error);
-                    alert('Payment failed. Check console for details.');
-                  }}
-                />
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-                  Click to experience the customized {selectedMode} modal
-                </p>
+        // Modal Demo - Button and Modal Preview stacked
+        <div className="h-full flex flex-col gap-4">
+          {/* Button Section */}
+          <div className="flex-shrink-0 relative">
+            {/* Button Preview Badge */}
+            <div className="absolute top-2 left-2 z-10 px-2 py-1 bg-zinc-100 rounded text-xs text-gray-600 font-medium border border-gray-200 dark:border-gray-700 flex items-center gap-1.5">
+              <IconCursorarrowRays className="w-3 h-3 fill-gray-500" />
+              <span className="text-xs font-mono">Button Preview</span>
+            </div>
+            <div 
+            style={{
+              backgroundImage: `repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(46, 77, 97, 0.08) 10px,
+                rgba(46, 77, 97, 0.08) 11px
+              )`
+            }}
+            className="flex flex-col items-center justify-center border border-gray-200 dark:border-gray-700 rounded-lg bg-zinc-100 p-6 py-12 text-center relative">
+              <SolanaCommerceClient
+                config={config}
+                variant={customizations.buttonVariant}
+                onPayment={(amount: number, currency: string, products?: readonly OrderItem[]) => {
+                  console.log('Demo payment:', { amount, currency, products });
+                  alert(`Payment initiated: ${amount / 1000000000} ${currency}`);
+                }}
+                onPaymentStart={() => {
+                  console.log('Payment started...');
+                }}
+                onPaymentSuccess={(signature: string) => {
+                  console.log('Payment successful:', signature);
+                  alert('Payment successful!');
+                }}
+                onPaymentError={(error: Error) => {
+                  console.error('Payment failed:', error);
+                  alert('Payment failed. Check console for details.');
+                }}
+              />
+              <p className="text-xs font-mono text-gray-500 dark:text-gray-400 mt-3 flex items-center gap-2 border border-gray-300 border-dashed dark:border-gray-700 rounded-lg px-2 py-1 bg-zinc-100">
+                <IconHandPointUpLeftFill className="w-3 h-3 fill-gray-500" /> Click to launch {selectedMode} experience
+              </p>
+
+              {/* Compact shadow selector using little squares */}
+              <div
+                className="absolute bottom-2 left-2 z-40"
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center gap-2 h-7 px-2 rounded-md border border-gray-200 bg-zinc-100">
+                  <IconShadow className="w-3.5 h-3.5 opacity-60" />
+                  <div className="flex items-center gap-1">
+                    {(['none','sm','md','lg','xl'] as const).map(level => {
+                      const active = (customizations.buttonShadow ?? 'md') === level;
+                      const label = level === 'xl' ? 'XL' : level === 'none' ? 'N' : level.toUpperCase();
+                      return (
+                        <button
+                          key={level}
+                          type="button"
+                          aria-pressed={active}
+                          title={`Shadow ${label}`}
+                          onClick={() => onCustomizationChange('buttonShadow', level)}
+                          className={`w-4 h-4 rounded-[4px] bg-white border flex items-center justify-center ${active ? 'ring-2 ring-zinc-300 border-zinc-300' : 'border-zinc-300 hover:border-zinc-200'}`}
+                        >
+                          <span className="text-[7px] font-mono leading-none text-gray-700">{label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+              <div
+                className="absolute bottom-2 right-2 z-40"
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center gap-2 h-7 px-2 rounded-md border border-gray-200 bg-zinc-100">
+                  <IconApp className={(customizations.buttonBorder ?? 'black-10') === 'none' ? 'w-3.5 h-3.5 opacity-40' : 'w-3.5 h-3.5 opacity-100'} />
+                  <Switch
+                    checked={(customizations.buttonBorder ?? 'black-10') !== 'none'}
+                    onCheckedChange={(val) => onCustomizationChange('buttonBorder', (val ? 'black-10' : 'none') as 'none' | 'black-10')}
+                    className="scale-90"
+                    aria-label="Toggle button border"
+                  />
+                </div>
               </div>
             </div>
-          </TabsContent>
+          </div>
           
-          <TabsContent value="modal" className="h-full m-0">
-            <div className="h-full overflow-hidden relative bg-gray-50 rounded-lg border border-gray-200 dark:border-gray-700">
-              {/* Preview indicator */}
-              <div className="absolute top-2 left-2 z-30 px-2 py-1 bg-white/90 backdrop-blur-sm rounded text-xs text-gray-600 font-medium shadow-sm flex items-center gap-1">
-                <IconEye className="w-4 h-4 fill-gray-600" />
-                <span>Preview</span>
+          {/* Modal Preview Section */}
+          <div className="h-full">
+            <div className="h-[750px] overflow-hidden relative rounded-lg border border-gray-200 dark:border-gray-700">
+              {/* Modal Preview Badge */}
+              <div className="absolute top-2 left-2 z-30 px-2 py-1 bg-zinc-100 rounded text-xs text-gray-600 font-medium border border-gray-200 dark:border-gray-700 flex items-center gap-1.5">
+                <IconInsetFilledCenterRectangle className="w-3 h-3 fill-gray-400" />
+                <span className="text-xs font-mono">Modal Preview</span>
               </div>
               <ModalPreview 
                 config={config} 
@@ -114,8 +178,8 @@ export function DemoPreview({
                 demoProducts={demoProducts}
               />
             </div>
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
       ) : (
         // Page Demo
         <div className="h-full overflow-auto">

@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "build": "turbo build",
+    "generate-clients": "cd program && bun run generate-clients",
     "build:docs": "turbo build --filter=docs",
     "dev": "turbo dev",
     "lint": "turbo lint",

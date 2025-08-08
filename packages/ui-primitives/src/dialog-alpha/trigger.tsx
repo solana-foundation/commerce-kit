@@ -6,7 +6,8 @@ export function DialogTrigger({ children, asChild = false }: DialogTriggerProps)
   const context = useDialog();
   
   // Safely handle the open action
-  const handleOpen = () => {
+  const handleOpen = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (context && context.open) {
       context.open();
     }
