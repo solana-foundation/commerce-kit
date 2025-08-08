@@ -508,7 +508,7 @@ export const TipModalContent = memo<TipModalContentProps>(({
                   fontWeight: '600',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
-                  transform: showCustomInput ? 'scale(1.05)' : 'scale(1)',
+                  transform: showCustomInput ? 'scale(1)' : 'scale(1)',
                   boxShadow: showCustomInput 
                     ? '0 0 0 2px rgba(143, 143, 143, 1)' 
                     : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
