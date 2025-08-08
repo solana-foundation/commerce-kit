@@ -7,7 +7,7 @@
     "license": "MIT",
     "scripts": {
         "generate": "bun run generate-clients",
-        "generate-clients": "npx tsx ./scripts/generate-client.js",
+        "generate-clients": "bun ./scripts/generate-client.ts",
         "generate-idl": "shank idl -r program -o idl",
         "start-surfpool": "surfpool start"
     },

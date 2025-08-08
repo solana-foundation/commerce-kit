@@ -82,7 +82,9 @@ export const MultiItemCart = memo<MultiItemCartProps>(({
     backgroundColor: themeConfig?.backgroundColor || '#ffffff',
     textColor: themeConfig?.textColor || '#111827',
     borderRadius: themeConfig?.borderRadius || 'lg',
-    fontFamily: themeConfig?.fontFamily || 'system-ui, -apple-system, sans-serif'
+    fontFamily: themeConfig?.fontFamily || 'system-ui, -apple-system, sans-serif',
+    buttonShadow: themeConfig?.buttonShadow || 'none',
+    buttonBorder: themeConfig?.buttonBorder || 'none'
   };
 
   // Icons from tip modal

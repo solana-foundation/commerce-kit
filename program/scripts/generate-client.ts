@@ -23,7 +23,7 @@ const configPreserver = preserveConfigFiles(typescriptClientsDir, rustClientsDir
 // Generate Rust client
 commerceCodama.accept(
   renderers.renderRustVisitor(path.join(rustClientsDir, "src", "generated"), {
-    formatCode: true,
+    formatCode: false,
     crateFolder: rustClientsDir,
     deleteFolderBeforeRendering: false,
   }),
@@ -34,7 +34,7 @@ commerceCodama.accept(
   renderers.renderJavaScriptVisitor(
     path.join(typescriptClientsDir, "src", "generated"),
     {
-      formatCode: true,
+      formatCode: false,
       deleteFolderBeforeRendering: false,
     },
   ),
