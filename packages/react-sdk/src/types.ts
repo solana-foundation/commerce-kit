@@ -30,6 +30,8 @@ export interface ThemeConfig {
   readonly textColor?: string;
   readonly borderRadius?: BorderRadius;
   readonly fontFamily?: string;
+  readonly buttonShadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  readonly buttonBorder?: 'none' | 'black-10';
 }
 
 // Main SDK configuration

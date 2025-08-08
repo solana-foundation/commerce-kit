@@ -10,6 +10,43 @@ interface ButtonVariantSelectorProps {
 }
 
 export function ButtonVariantSelector({ value, onChange, config }: ButtonVariantSelectorProps) {
+  // Local helper to match SDK button contrast behavior
+  function getAccessibleTextColor(backgroundColor: string): string {
+    const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
+      const s = hex.replace('#', '').trim();
+      if (s.length === 3) {
+        const r = parseInt((s[0] ?? '') + (s[0] ?? ''), 16);
+        const g = parseInt((s[1] ?? '') + (s[1] ?? ''), 16);
+        const b = parseInt((s[2] ?? '') + (s[2] ?? ''), 16);
+        return { r, g, b };
+      }
+      if (s.length === 6) {
+        const r = parseInt(s.slice(0, 2), 16);
+        const g = parseInt(s.slice(2, 4), 16);
+        const b = parseInt(s.slice(4, 6), 16);
+        return { r, g, b };
+      }
+      return null;
+    };
+    const parseRgb = (rgb: string): { r: number; g: number; b: number } | null => {
+      const m = rgb.match(/rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+      if (!m) return null;
+      return { r: Number(m[1]), g: Number(m[2]), b: Number(m[3]) };
+    };
+    const toRgb = (c: string): { r: number; g: number; b: number } | null => {
+      if (!c) return null;
+      if (c.startsWith('#')) return hexToRgb(c);
+      if (c.startsWith('rgb')) return parseRgb(c);
+      return null;
+    };
+    const bg = toRgb(backgroundColor);
+    if (!bg) return '#ffffff';
+    const yiq = (bg.r * 299 + bg.g * 587 + bg.b * 114) / 1000;
+    // Use semi-transparent black to let background show through
+    return yiq >= 186 ? 'rgba(0,0,0,0.7)' : '#ffffff';
+  }
+
+  const previewTextColor = getAccessibleTextColor(config.theme.primaryColor);
   return (
     <div className="space-y-4 p-2">
       <div>
@@ -41,8 +78,8 @@ export function ButtonVariantSelector({ value, onChange, config }: ButtonVariant
           >
             {/* Button mockup with icon and text */}
             <div 
-              className="text-white px-4 py-2 rounded-lg flex items-center gap-2 text-xs font-medium"
-              style={{ backgroundColor: config.theme.primaryColor }}
+              className="px-4 py-2 rounded-lg flex items-center gap-2 text-xs font-medium"
+              style={{ backgroundColor: config.theme.primaryColor, color: previewTextColor }}
             >
               {/* Solana icon */}
               <svg width="14" height="10" viewBox="0 0 21 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -83,8 +120,8 @@ export function ButtonVariantSelector({ value, onChange, config }: ButtonVariant
           >
             {/* Button mockup icon only */}
             <div 
-              className="text-white p-3 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: config.theme.primaryColor }}
+              className="p-3 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: config.theme.primaryColor, color: previewTextColor }}
             >
               {/* Solana icon */}
               <svg width="16" height="12" viewBox="0 0 21 16" fill="none" xmlns="http://www.w3.org/2000/svg">

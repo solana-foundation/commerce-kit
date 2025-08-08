@@ -1,14 +1,17 @@
 'use client';
 
 import { cn } from '../../../lib/utils';
-import type { CheckoutStyle } from './types';
+import type { CheckoutStyle, Mode } from './types';
 
 interface CheckoutStyleSelectorProps {
   value: CheckoutStyle;
   onChange: (style: CheckoutStyle) => void;
+  mode?: Mode;
 }
 
-export function CheckoutStyleSelector({ value, onChange }: CheckoutStyleSelectorProps) {
+export function CheckoutStyleSelector({ value, onChange, mode }: CheckoutStyleSelectorProps) {
+  const isPageDisabled = mode === 'tip';
+  const isModalDisabled = mode === 'buyNow' || mode === 'cart';
   return (
     <div className="space-y-4 p-2">
       <div>
@@ -22,12 +25,14 @@ export function CheckoutStyleSelector({ value, onChange }: CheckoutStyleSelector
         <div className="space-y-3">
           <div 
             className={cn(
-              "relative cursor-pointer rounded-xl p-3 h-32 transition-all duration-200 group overflow-hidden border",
+              "relative rounded-xl p-3 h-32 transition-all duration-200 group overflow-hidden border",
               value === 'modal' 
                           ? 'border-zinc-400/50 ring-4 ring-inset-4 ring-zinc-300' 
-                          : 'border-zinc-300 hover:border-zinc-200'
+                          : 'border-zinc-300 hover:border-zinc-200',
+              isModalDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
             )}
-            onClick={() => onChange('modal')}
+            aria-disabled={isModalDisabled}
+            onClick={() => { if (!isModalDisabled) onChange('modal'); }}
             style={{
               backgroundImage: `repeating-linear-gradient(
                 45deg,
@@ -80,12 +85,14 @@ export function CheckoutStyleSelector({ value, onChange }: CheckoutStyleSelector
         <div className="space-y-3">
           <div 
             className={cn(
-              "relative cursor-pointer rounded-xl p-3 h-32 transition-all duration-200 group overflow-hidden bg-slate-50 border",
+              "relative rounded-xl p-3 h-32 transition-all duration-200 group overflow-hidden bg-slate-50 border",
               value === 'page' 
                           ? 'border-zinc-400/50 ring-4 ring-inset-4 ring-zinc-300' 
-                          : 'border-zinc-300 hover:border-zinc-200'
+                          : 'border-zinc-300 hover:border-zinc-200',
+              isPageDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
             )}
-            onClick={() => onChange('page')}
+            aria-disabled={isPageDisabled}
+            onClick={() => { if (!isPageDisabled) onChange('page'); }}
             style={{
               backgroundImage: `repeating-linear-gradient(
                 45deg,

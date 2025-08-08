@@ -6,7 +6,8 @@ import { SolanaCommerceClient } from './solana-commerce-client';
 import { SingleItemCart, MultiItemCart, type CartItem } from '@solana-commerce/react-sdk';
 
 import type { Mode, CheckoutStyle, Customizations, DemoConfig } from './types';
-import { IconCursorarrowClick, IconCursorarrowRays, IconEye } from 'symbols-react';
+import { IconCursorarrowRays, IconHandPointUpLeftFill, IconInsetFilledCenterRectangle } from 'symbols-react';
+// selectors are inlined as mini selects below for compactness
 
 // Modal preview components
 import { ModalPreviewContent } from './modal-preview-content';
@@ -23,6 +24,7 @@ interface DemoPreviewProps {
   };
   config: DemoConfig;
   onCheckoutStyleChange: (style: CheckoutStyle) => void;
+  onCustomizationChange: <K extends keyof Customizations>(key: K, value: Customizations[K]) => void;
 }
 
 // Modal Preview Component - wrapper that positions the modal content properly
@@ -59,7 +61,8 @@ export function DemoPreview({
   demoProducts, 
   merchantConfig, 
   config,
-  onCheckoutStyleChange 
+  onCheckoutStyleChange,
+  onCustomizationChange
 }: DemoPreviewProps) {
   const getCartItems = (): CartItem[] => {
     return demoProducts.map(product => ({
@@ -76,9 +79,9 @@ export function DemoPreview({
           {/* Button Section */}
           <div className="flex-shrink-0 relative">
             {/* Button Preview Badge */}
-            <div className="absolute top-2 left-2 z-10 px-2 py-1 bg-white/90 backdrop-blur-sm rounded text-xs text-gray-600 font-medium shadow-sm flex items-center gap-1">
-              <IconEye className="w-3 h-3 fill-gray-600" />
-              <span className="text-xs">Button Preview</span>
+            <div className="absolute top-2 left-2 z-10 px-2 py-1 bg-zinc-100 rounded text-xs text-gray-600 font-medium border border-gray-200 dark:border-gray-700 flex items-center gap-1.5">
+              <IconHandPointUpLeftFill className="w-3 h-3 fill-gray-400" />
+              <span className="text-xs font-mono">Button Preview</span>
             </div>
             <div 
             style={{
@@ -90,7 +93,7 @@ export function DemoPreview({
                 rgba(46, 77, 97, 0.08) 11px
               )`
             }}
-            className="flex flex-col items-center justify-center border border-gray-200 dark:border-gray-700 rounded-lg bg-zinc-100 p-6 py-24 text-center">
+            className="flex flex-col items-center justify-center border border-gray-200 dark:border-gray-700 rounded-lg bg-zinc-100 p-6 py-12 text-center relative">
               <SolanaCommerceClient
                 config={config}
                 variant={customizations.buttonVariant}
@@ -111,18 +114,55 @@ export function DemoPreview({
                 }}
               />
               <p className="text-xs font-mono text-gray-500 dark:text-gray-400 mt-3 flex items-center gap-2 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 bg-zinc-100">
-                <IconCursorarrowRays className="w-3 h-3 fill-gray-400" /> Click to experience the customized {selectedMode} modal
+                <IconCursorarrowRays className="w-3 h-3 fill-gray-500" /> Click to launch {selectedMode} experience
               </p>
+
+              {/* Compact inline controls (clickable) */}
+              <div
+                className="absolute bottom-2 left-2 z-40"
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                <label className="sr-only" htmlFor="shadow-mini">Button shadow</label>
+                <select
+                  id="shadow-mini"
+                  value={customizations.buttonShadow ?? 'md'}
+                  onChange={(e) => onCustomizationChange('buttonShadow', e.target.value as 'none' | 'sm' | 'md' | 'lg' | 'xl')}
+                  className="h-7 text-[10px] px-1 rounded-md border border-gray-300 bg-white/95 backdrop-blur-sm shadow-sm"
+                  aria-label="Select button shadow"
+                >
+                  {['none','sm','md','lg','xl'].map(opt => (
+                    <option key={opt} value={opt}>{opt.toUpperCase()}</option>
+                  ))}
+                </select>
+              </div>
+              <div
+                className="absolute bottom-2 right-2 z-40"
+                onClick={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                <label className="sr-only" htmlFor="border-mini">Button border</label>
+                <select
+                  id="border-mini"
+                  value={customizations.buttonBorder ?? 'black-10'}
+                  onChange={(e) => onCustomizationChange('buttonBorder', e.target.value as 'none' | 'black-10' | 'white-10')}
+                  className="h-7 text-[10px] px-1 rounded-md border border-gray-300 bg-white/95 backdrop-blur-sm shadow-sm"
+                  aria-label="Select button border"
+                >
+                  <option value="none">None</option>
+                  <option value="black-10">Black (10%)</option>
+                </select>
+              </div>
             </div>
           </div>
           
           {/* Modal Preview Section */}
-          <div className="flex-1 min-h-0">
-            <div className="h-full overflow-hidden relative rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="h-full">
+            <div className="h-[750px] overflow-hidden relative rounded-lg border border-gray-200 dark:border-gray-700">
               {/* Modal Preview Badge */}
-              <div className="absolute top-2 left-2 z-30 px-2 py-1 bg-white/90 backdrop-blur-sm rounded text-xs text-gray-600 font-medium shadow-sm flex items-center gap-1">
-                <IconEye className="w-3 h-3 fill-gray-600" />
-                <span className="text-xs">Modal Preview</span>
+              <div className="absolute top-2 left-2 z-30 px-2 py-1 bg-zinc-100 rounded text-xs text-gray-600 font-medium border border-gray-200 dark:border-gray-700 flex items-center gap-1.5">
+                <IconInsetFilledCenterRectangle className="w-3 h-3 fill-gray-400" />
+                <span className="text-xs font-mono">Modal Preview</span>
               </div>
               <ModalPreview 
                 config={config} 

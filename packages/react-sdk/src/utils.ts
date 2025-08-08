@@ -33,7 +33,9 @@ export const DEFAULT_THEME: Required<ThemeConfig> = {
   backgroundColor: '#ffffff',
   textColor: '#111827',
   borderRadius: 'md',
-  fontFamily: 'system-ui, -apple-system, sans-serif'
+  fontFamily: 'system-ui, -apple-system, sans-serif',
+  buttonShadow: 'md',
+  buttonBorder: 'black-10'
 } as const;
 
 // Utility functions
@@ -45,6 +47,86 @@ export const getModalBorderRadius = (radius?: BorderRadius): string =>
 
 export const getContainerBorderRadius = (radius?: BorderRadius): string => 
   CONTAINER_BORDER_RADIUS_MAP[radius ?? 'md'];
+
+// Shadow map for buttons
+const BUTTON_SHADOW_MAP: Record<NonNullable<ThemeConfig['buttonShadow']>, string> = {
+  none: 'none',
+  sm: '0 1px 2px rgba(0,0,0,0.06)',
+  md: '0 4px 6px rgba(0,0,0,0.1)',
+  lg: '0 10px 15px rgba(0,0,0,0.15)',
+  xl: '0 20px 25px rgba(0,0,0,0.2)'
+};
+
+export function getButtonShadow(shadow?: ThemeConfig['buttonShadow']): string {
+  return BUTTON_SHADOW_MAP[shadow ?? 'md'];
+}
+
+export function getButtonBorder(theme: Required<ThemeConfig>): string {
+  switch (theme.buttonBorder) {
+    case 'black-10':
+      return '1px solid rgba(0,0,0,0.2)';
+    case 'none':
+    default:
+      return 'none';
+  }
+}
+
+// Color utilities for accessibility
+function parseHexColor(hex: string): { r: number; g: number; b: number } | null {
+  const sanitized = hex.replace('#', '').trim();
+  if (sanitized.length === 3) {
+    const r = parseInt((sanitized[0] ?? '') + (sanitized[0] ?? ''), 16);
+    const g = parseInt((sanitized[1] ?? '') + (sanitized[1] ?? ''), 16);
+    const b = parseInt((sanitized[2] ?? '') + (sanitized[2] ?? ''), 16);
+    return { r, g, b };
+  }
+  if (sanitized.length === 6) {
+    const r = parseInt(sanitized.slice(0, 2), 16);
+    const g = parseInt(sanitized.slice(2, 4), 16);
+    const b = parseInt(sanitized.slice(4, 6), 16);
+    return { r, g, b };
+  }
+  return null;
+}
+
+function parseRgbColor(rgb: string): { r: number; g: number; b: number } | null {
+  const match = rgb.match(/rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+  if (!match) return null;
+  const r = Number(match[1]);
+  const g = Number(match[2]);
+  const b = Number(match[3]);
+  return { r, g, b };
+}
+
+function toRgb(color: string): { r: number; g: number; b: number } | null {
+  if (!color) return null;
+  if (color.startsWith('#')) return parseHexColor(color);
+  if (color.startsWith('rgb')) return parseRgbColor(color);
+  return null;
+}
+
+export function getAccessibleTextColor(
+  backgroundColor: string,
+  light: string = '#ffffff',
+  dark: string = '#000000',
+  darkAlpha: number = 0.7
+): string {
+  const bg = toRgb(backgroundColor);
+  if (!bg) return light; // fallback to light text if parsing fails
+
+  // YIQ contrast approximation to decide light vs dark text
+  const yiq = (bg.r * 299 + bg.g * 587 + bg.b * 114) / 1000;
+  const useDark = yiq >= 186;
+
+  if (useDark) {
+    // Render dark text with configurable opacity so the background subtly shows through
+    const darkRgb = toRgb(dark) ?? { r: 0, g: 0, b: 0 };
+    const clampedAlpha = Math.max(0, Math.min(1, darkAlpha));
+    return `rgba(${darkRgb.r}, ${darkRgb.g}, ${darkRgb.b}, ${clampedAlpha})`;
+  }
+
+  return light;
+}
 
 // Security & validation
 export const validateWalletAddress = (address: string): boolean => coreValidateWalletAddress(address);
