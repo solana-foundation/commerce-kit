@@ -48,6 +48,12 @@ export interface SolanaCommerceConfig {
   readonly enableWalletConnect?: boolean;
   readonly showMerchantInfo?: boolean;
   readonly showProductDetails?: boolean;
+  /**
+   * Rendering isolation for overlay modal.
+   * - 'none': render in parent DOM (default)
+   * - 'iframe': render modal content in a sandboxed iframe for full CSS/JS isolation
+   */
+  readonly isolation?: 'none' | 'iframe';
 }
 
 // Payment callbacks

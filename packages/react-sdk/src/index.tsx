@@ -24,7 +24,8 @@ export type {
 } from './types';
 
 import React, { useState, useCallback, useMemo, memo } from 'react';
-import { Dialog, DialogContent, DialogBackdrop, DialogTrigger, DialogPortal } from '../../ui-primitives/src/react';
+import { DialogTrigger } from '../../ui-primitives/src/react';
+import { ModalShell } from './components/ui/modal-shell';
 import {
   useTheme,
   useTotalAmount,
@@ -137,43 +138,43 @@ export const SolanaCommerceSDK = memo<SolanaCommerceSDKProps>(function SolanaCom
 
   // Overlay mode (modal)
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogTrigger asChild>
-        {children || (
-          <TriggerButton
+    <>
+      <ModalShell
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        isolation={config.isolation}
+        trigger={
+          (children as React.ReactNode) || (
+            <TriggerButton
+              theme={theme}
+              mode={config.mode}
+              className={className}
+              style={style}
+              variant={variant}
+              onClick={handleTriggerClick}
+            />
+          )
+        }
+      >
+        {config.mode === 'tip' ? (
+          <TipModalContent
+            config={config}
             theme={theme}
-            mode={config.mode}
-            className={className}
-            style={style}
-            variant={variant}
-            onClick={handleTriggerClick}
+            onPayment={handleTipPayment}
+            onCancel={handleCancel}
+          />
+        ) : (
+          <PaymentModalContent
+            config={config}
+            theme={theme}
+            totalAmount={totalAmount}
+            paymentUrl={paymentUrl}
+            onPayment={handlePayment}
+            onCancel={handleCancel}
           />
         )}
-      </DialogTrigger>
-      
-      <DialogPortal>
-        <DialogBackdrop onClick={handleCancel} />
-        <DialogContent>
-          {config.mode === 'tip' ? (
-            <TipModalContent
-              config={config}
-              theme={theme}
-              onPayment={handleTipPayment}
-              onCancel={handleCancel}
-            />
-          ) : (
-            <PaymentModalContent
-              config={config}
-              theme={theme}
-              totalAmount={totalAmount}
-              paymentUrl={paymentUrl}
-              onPayment={handlePayment}
-              onCancel={handleCancel}
-            />
-          )}
-        </DialogContent>
-      </DialogPortal>
-    </Dialog>
+      </ModalShell>
+    </>
   );
 });
 

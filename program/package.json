@@ -1,5 +1,5 @@
 {
-    "name": "commerce-program",
+    "name": "@solana-commerce/commerce-program",
     "version": "0.0.1",
     "main": "index.js",
     "description": "Commerce Program",

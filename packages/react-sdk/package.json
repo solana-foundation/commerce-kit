@@ -32,7 +32,8 @@
     "@solana-commerce/ui-primitives": "workspace:*"
   },
   "peerDependencies": {
-    "react": ">=16.8.0"
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
   },
   "devDependencies": {
     "@types/react": "^19.1.9",

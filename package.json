@@ -1,5 +1,5 @@
 {
-  "name": "@commercekit",
+  "name": "commerce-kit",
   "private": true,
   "packageManager": "bun@1.2.19",
   "workspaces": [
