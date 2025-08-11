@@ -23,7 +23,10 @@
     }
   },
   "scripts": {
-    "build": "tsup src/index.tsx --format cjs,esm --dts --splitting --clean --external react --external react-dom",
+    "build": "bun run build:iframe && bun run generate:iframe-bundle && bun run build:sdk",
+    "build:sdk": "tsup src/index.tsx --format cjs,esm --dts --splitting --clean --external react --external react-dom",
+    "build:iframe": "tsup --config tsup.iframe.config.ts",
+    "generate:iframe-bundle": "bun scripts/generate-iframe-bundle.ts",
     "dev": "tsup src/index.tsx --format cjs,esm --dts --splitting --watch --external react --external react-dom",
     "type-check": "tsc --noEmit"
   },

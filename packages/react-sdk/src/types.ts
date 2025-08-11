@@ -51,9 +51,10 @@ export interface SolanaCommerceConfig {
   /**
    * Rendering isolation for overlay modal.
    * - 'none': render in parent DOM (default)
-   * - 'iframe': render modal content in a sandboxed iframe for full CSS/JS isolation
+   * - 'iframe': sandboxed iframe with React portal (CSS isolation)
+   * - 'secure': srcdoc iframe + postMessage (no allow-same-origin)
    */
-  readonly isolation?: 'none' | 'iframe';
+  readonly isolation?: 'none' | 'iframe' | 'secure';
 }
 
 // Payment callbacks

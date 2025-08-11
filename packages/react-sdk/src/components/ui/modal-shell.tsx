@@ -7,7 +7,7 @@ import { IframeDialogContent } from './iframe-dialog-content';
 interface ModalShellProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  isolation?: 'none' | 'iframe';
+  isolation?: 'none' | 'iframe' | 'secure';
   trigger?: React.ReactNode;
   children: React.ReactNode;
 }
@@ -26,6 +26,11 @@ export function ModalShell({ open, onOpenChange, isolation = 'none', trigger, ch
           <IframeDialogContent onRequestClose={() => onOpenChange(false)}>
             {children}
           </IframeDialogContent>
+        ) : isolation === 'secure' ? (
+          // For secure mode, the children should already be the SecureIframeShell
+          <DialogContent>
+            {children}
+          </DialogContent>
         ) : (
           <DialogContent>
             {children}

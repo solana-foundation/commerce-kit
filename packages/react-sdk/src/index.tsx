@@ -26,6 +26,7 @@ export type {
 import React, { useState, useCallback, useMemo, memo } from 'react';
 import { DialogTrigger } from '../../ui-primitives/src/react';
 import { ModalShell } from './components/ui/modal-shell';
+import { SecureIframeShell } from './components/ui/secure-iframe-shell';
 import {
   useTheme,
   useTotalAmount,
@@ -156,7 +157,15 @@ export const SolanaCommerceSDK = memo<SolanaCommerceSDKProps>(function SolanaCom
           )
         }
       >
-        {config.mode === 'tip' ? (
+        {config.isolation === 'secure' ? (
+          <SecureIframeShell
+            config={config}
+            theme={theme}
+            onPayment={(amount, currency) => onPayment?.(amount, currency, config.products)}
+            onCancel={handleCancel}
+            wrap={false}
+          />
+        ) : config.mode === 'tip' ? (
           <TipModalContent
             config={config}
             theme={theme}

@@ -1,0 +1,10 @@
+$ tsup --config tsup.iframe.config.ts
+CLI Building entry: src/iframe-app/index.tsx
+CLI Using tsconfig: tsconfig.json
+CLI tsup v8.5.0
+CLI Using tsup config: /Users/stevensarmi/Code/commerce-kit/packages/react-sdk/tsup.iframe.config.ts
+CLI Target: es2020
+CLI Cleaning output folder
+IIFE Build start
+IIFE dist/iframe-app/index.global.js 353.30 KB
+IIFE ⚡️ Build success in 168ms

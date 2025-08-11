@@ -37,3 +37,6 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # references
 /porto-main/
+
+# generated files
+packages/react-sdk/src/iframe-app/bundle.ts
