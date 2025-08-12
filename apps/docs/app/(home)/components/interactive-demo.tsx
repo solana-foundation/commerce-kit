@@ -14,6 +14,7 @@ export function InteractiveDemo() {
   const [selectedMode, setSelectedMode] = useState<Mode>('tip');
   const [checkoutStyle, setCheckoutStyle] = useState<CheckoutStyle>('modal');
   const [isSwapped, setIsSwapped] = useState(false);
+  const [activeTab, setActiveTab] = useState<'demo' | 'code'>('demo');
   
   // Customization state
   const [customizations, setCustomizations] = useState<Customizations>({
@@ -158,7 +159,7 @@ export function InteractiveDemo() {
           <div 
           className="space-y-4 col-span-7"
           >
-            <TabsRoot defaultValue="demo">
+            <TabsRoot value={activeTab} onValueChange={(value) => setActiveTab(value as 'demo' | 'code')} defaultValue="demo">
               <TabsList className="flex bg-zinc-100/50 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-[57px]">
                 <TabsTab 
                   value="demo"
