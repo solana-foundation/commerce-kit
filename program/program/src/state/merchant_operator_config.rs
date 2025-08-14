@@ -28,6 +28,9 @@ pub struct MerchantOperatorConfig {
 
     pub current_order_id: u32,
 
+    /// Number of days after a payment is paid that it can be closed
+    pub days_to_close: u16,
+
     // Dynamic fields that follow the struct
     pub num_policies: u32,
     pub num_accepted_currencies: u32,
@@ -49,6 +52,7 @@ impl AccountSerialize for MerchantOperatorConfig {
         data.extend_from_slice(&self.operator_fee.to_le_bytes());
         data.push(self.fee_type.to_u8());
         data.extend_from_slice(&self.current_order_id.to_le_bytes());
+        data.extend_from_slice(&self.days_to_close.to_le_bytes());
         data.extend_from_slice(&self.num_policies.to_le_bytes());
         data.extend_from_slice(&self.num_accepted_currencies.to_le_bytes());
 
@@ -65,6 +69,7 @@ impl MerchantOperatorConfig {
         8 + // operator_fee
         1 + // fee_type
         4 + // current_order_id
+        2 + // days_to_close
         4 + // num_policies
         4; // num_accepted_currencies
 
@@ -82,6 +87,7 @@ impl MerchantOperatorConfig {
         data.extend_from_slice(&self.operator_fee.to_le_bytes());
         data.push(self.fee_type.to_u8());
         data.extend_from_slice(&self.current_order_id.to_le_bytes());
+        data.extend_from_slice(&self.days_to_close.to_le_bytes());
         data.extend_from_slice(&self.num_policies.to_le_bytes());
         data.extend_from_slice(&self.num_accepted_currencies.to_le_bytes());
 
@@ -262,6 +268,9 @@ impl MerchantOperatorConfig {
         let current_order_id = u32::from_le_bytes(data[offset..offset + 4].try_into().unwrap());
         offset += 4;
 
+        let days_to_close = u16::from_le_bytes(data[offset..offset + 2].try_into().unwrap());
+        offset += 2;
+
         let num_policies = u32::from_le_bytes(data[offset..offset + 4].try_into().unwrap());
         offset += 4;
 
@@ -276,6 +285,7 @@ impl MerchantOperatorConfig {
             operator_fee,
             fee_type,
             current_order_id,
+            days_to_close,
             num_policies,
             num_accepted_currencies,
         };
@@ -423,6 +433,7 @@ mod tests {
             operator_fee: 100,
             fee_type: FeeType::Bps,
             current_order_id: 0,
+            days_to_close: 7,
             num_policies: 0,
             num_accepted_currencies: 0,
         };
@@ -442,6 +453,7 @@ mod tests {
             operator_fee: 100,
             fee_type: FeeType::Bps,
             current_order_id: 0,
+            days_to_close: 7,
             num_policies: 0,
             num_accepted_currencies: 0,
         };
@@ -460,6 +472,7 @@ mod tests {
             operator_fee: 100,
             fee_type: FeeType::Bps,
             current_order_id: 0,
+            days_to_close: 7,
             num_policies: 0,
             num_accepted_currencies: 0,
         };
@@ -479,6 +492,7 @@ mod tests {
             operator_fee: 100,
             fee_type: FeeType::Bps,
             current_order_id: 0,
+            days_to_close: 7,
             num_policies: 0,
             num_accepted_currencies: 0,
         };
@@ -498,6 +512,7 @@ mod tests {
             operator_fee: 100,
             fee_type: FeeType::Bps,
             current_order_id: 0,
+            days_to_close: 7,
             num_policies: 0,
             num_accepted_currencies: 0,
         };
@@ -520,6 +535,7 @@ mod tests {
             operator_fee: 100,
             fee_type: FeeType::Bps,
             current_order_id: 0,
+            days_to_close: 7,
             num_policies: 0,
             num_accepted_currencies: 0,
         };
@@ -542,6 +558,7 @@ mod tests {
             operator_fee: 100,
             fee_type: FeeType::Bps,
             current_order_id: 0,
+            days_to_close: 7,
             num_policies: 0,
             num_accepted_currencies: 0,
         };

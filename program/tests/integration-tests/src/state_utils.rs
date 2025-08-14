@@ -21,6 +21,7 @@ use commerce_program_client::{
     types::{FeeType, PolicyData, Status},
 };
 use solana_sdk::{
+    instruction::AccountMeta,
     pubkey::Pubkey,
     signature::{Keypair, Signer},
     system_program::ID as SYSTEM_PROGRAM_ID,
@@ -133,6 +134,7 @@ pub fn assert_get_or_create_merchant_operator_config(
     operator_fee: u64,
     fee_type: FeeType,
     current_order_id: u32,
+    days_to_close: u16,
     policies: Vec<PolicyData>,
     accepted_currencies: Vec<Pubkey>,
     fail_if_exists: bool,
@@ -145,7 +147,8 @@ pub fn assert_get_or_create_merchant_operator_config(
     }
 
     // Initialize MerchantOperatorConfig instruction
-    let instruction = InitializeMerchantOperatorConfigBuilder::new()
+    let mut builder = InitializeMerchantOperatorConfigBuilder::new();
+    builder
         .payer(context.payer.pubkey())
         .authority(authority.pubkey())
         .merchant(*merchant_pda)
@@ -156,9 +159,16 @@ pub fn assert_get_or_create_merchant_operator_config(
         .bump(merchant_operator_config_bump)
         .operator_fee(operator_fee)
         .fee_type(fee_type)
+        .days_to_close(days_to_close)
         .policies(policies.clone())
-        .accepted_currencies(accepted_currencies.clone())
-        .instruction();
+        .accepted_currencies(accepted_currencies.clone());
+
+    // Add mint accounts as remaining accounts for each accepted currency
+    for currency in &accepted_currencies {
+        builder.add_remaining_account(AccountMeta::new_readonly(*currency, false));
+    }
+
+    let instruction = builder.instruction();
 
     // Send transaction with authority as additional signer
     context

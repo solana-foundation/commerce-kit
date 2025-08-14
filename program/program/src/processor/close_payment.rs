@@ -79,7 +79,10 @@ pub fn process_close_payment(
     let payment = Payment::try_from_bytes(&payment_data)?;
 
     // Validate payment can only be closed if it's cleared
-    payment.validate_status(Status::Cleared)?;
+    payment.validate_not_status(Status::Paid)?;
+
+    // Validate payment can be closed
+    payment.validate_can_close(merchant_operator_config.days_to_close)?;
 
     // Validate Payment PDA using the provided accounts
     payment.validate_pda(

@@ -183,6 +183,10 @@
           }
         },
         {
+          "name": "daysToClose",
+          "type": "u16"
+        },
+        {
           "name": "policies",
           "type": {
             "vec": {
@@ -909,6 +913,10 @@
           {
             "name": "currentOrderId",
             "type": "u32"
+          },
+          {
+            "name": "daysToClose",
+            "type": "u16"
           },
           {
             "name": "numPolicies",

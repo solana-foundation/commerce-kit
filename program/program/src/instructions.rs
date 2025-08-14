@@ -5,6 +5,8 @@ use alloc::vec::Vec;
 use pinocchio::pubkey::Pubkey;
 use shank::ShankInstruction;
 
+use crate::state::{FeeType, PolicyData};
+
 /// Instructions for the Solana Commerce Program. This
 /// is currently not used in the program business logic, but
 /// we include it for IDL generation.
@@ -52,6 +54,7 @@ pub enum CommerceProgramInstruction {
         bump: u8,
         operator_fee: u64,
         fee_type: FeeType,
+        days_to_close: u16,
         policies: Vec<PolicyData>,
         accepted_currencies: Vec<Pubkey>,
     } = 2,

@@ -20,6 +20,7 @@ import {
     assertGetOrCreateMerchantOperatorConfig,
     assertMakePayment,
 } from './helpers/state-utils';
+import { DAYS_TO_CLOSE } from './helpers/constants';
 import { generateManyTokenAccounts, generateMint, mintToOwner } from './helpers/tokens';
 import { findAssociatedTokenPda, TOKEN_PROGRAM_ADDRESS } from 'gill/programs';
 
@@ -129,6 +130,7 @@ describe.only('Make Payment', () => {
             operatorFee,
             feeType,
             currentOrderId: 0, // initialize with 0
+            daysToClose: DAYS_TO_CLOSE,
             policies,
             acceptedCurrencies,
             failIfExists: true

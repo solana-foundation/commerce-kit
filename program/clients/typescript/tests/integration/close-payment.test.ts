@@ -26,6 +26,7 @@ import {
 import { generateManyTokenAccounts, generateMint, mintToOwner } from './helpers/tokens';
 import { findAssociatedTokenPda, TOKEN_PROGRAM_ADDRESS } from 'gill/programs';
 import { assertPaymentAccount } from './helpers/assertions';
+import { DAYS_TO_CLOSE } from './helpers/constants';
 
 describe('Close Payment', () => {
     let client: SolanaClient;
@@ -127,6 +128,7 @@ describe('Close Payment', () => {
             operatorFee,
             feeType,
             currentOrderId: 0, // initialize with 0
+            daysToClose: DAYS_TO_CLOSE,
             policies,
             acceptedCurrencies,
             failIfExists: true

@@ -241,6 +241,7 @@ export async function assertGetOrCreateMerchantOperatorConfig({
   operatorFee,
   feeType,
   currentOrderId,
+  daysToClose,
   policies,
   acceptedCurrencies,
   failIfExists = false,
@@ -255,6 +256,7 @@ export async function assertGetOrCreateMerchantOperatorConfig({
   operatorFee: bigint;
   feeType: FeeType;
   currentOrderId: number;
+  daysToClose: number;
   policies: PolicyData[];
   acceptedCurrencies: Address[];
   failIfExists?: boolean;
@@ -290,6 +292,7 @@ export async function assertGetOrCreateMerchantOperatorConfig({
     bump: merchantOperatorConfigBump,
     operatorFee,
     feeType,
+    daysToClose,
     policies,
     acceptedCurrencies,
   });

@@ -9,6 +9,7 @@ import {
 import { AccountRole } from 'gill';
 import { mockTransactionSigner, TEST_ADDRESSES, EXPECTED_PROGRAM_ADDRESS } from '../../../tests/setup/mocks';
 import { SYSTEM_PROGRAM_ADDRESS } from 'gill/programs';
+import { DAYS_TO_CLOSE } from '../../integration/helpers/constants';
 
 describe('initializeMerchantOperatorConfig', () => {
   it('should create a valid initialize merchant operator config instruction', () => {
@@ -25,6 +26,7 @@ describe('initializeMerchantOperatorConfig', () => {
       bump: 255,
       operatorFee: 100,
       feeType: FeeType.Fixed,
+      daysToClose: DAYS_TO_CLOSE,
       policies: [
         {
           __kind: 'Refund',
@@ -76,6 +78,7 @@ describe('initializeMerchantOperatorConfig', () => {
         bump: 255,
         operatorFee: 100,
         feeType: FeeType.Fixed,
+        daysToClose: DAYS_TO_CLOSE,
         policies: [
           {
             __kind: 'Refund',
@@ -107,6 +110,7 @@ describe('initializeMerchantOperatorConfig', () => {
         bump: 255,
         operatorFee: 100,
         feeType: FeeType.Fixed,
+        daysToClose: DAYS_TO_CLOSE,
         policies: [
           {
             __kind: 'Refund',
@@ -149,6 +153,7 @@ describe('initializeMerchantOperatorConfig', () => {
         bump: 255,
         operatorFee: 100,
         feeType: FeeType.Fixed,
+        daysToClose: DAYS_TO_CLOSE,
         policies: [],
         acceptedCurrencies: [],
       });
@@ -162,6 +167,7 @@ describe('initializeMerchantOperatorConfig', () => {
         bump: 255,
         operatorFee: 100,
         feeType: FeeType.Fixed,
+        daysToClose: DAYS_TO_CLOSE,
         policies: [],
         acceptedCurrencies: [],
       });
@@ -202,6 +208,7 @@ describe('initializeMerchantOperatorConfig', () => {
         bump: 255,
         operatorFee: 100,
         feeType: FeeType.Fixed,
+        daysToClose: DAYS_TO_CLOSE,
         policies: [],
         acceptedCurrencies: [],
       });
@@ -215,6 +222,7 @@ describe('initializeMerchantOperatorConfig', () => {
         bump: 255,
         operatorFee: 100,
         feeType: FeeType.Fixed,
+        daysToClose: DAYS_TO_CLOSE,
         policies: [],
         acceptedCurrencies: [],
       });
