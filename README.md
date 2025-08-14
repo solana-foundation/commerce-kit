@@ -15,10 +15,10 @@ A comprehensive, production-ready Solana e-commerce SDK with full theming, multi
 
 ```bash
 # Install dependencies
-bun install
+pnpm install
 
 # Start development (all packages + docs)
-bun run dev
+pnpm dev
 
 # Open documentation site
 open http://localhost:3000
@@ -120,10 +120,10 @@ packages/
 
 ### Key Commands
 ```bash
-bun run dev          # Start all packages + docs with hot reload
-bun run build        # Build all packages for production
-bun run clean        # Clean build artifacts
-cd apps/docs && bun run dev  # Documentation site only
+pnpm dev          # Start all packages + docs with hot reload
+pnpm build        # Build all packages for production
+pnpm clean        # Clean build artifacts
+cd apps/docs && pnpm dev  # Documentation site only
 ```
 
 ## 🎯 Architecture Highlights
@@ -297,7 +297,7 @@ apps/docs/content/docs/new-guide.mdx
 - **Dialog issues:** Check dialog-alpha system, ensure hooks are called consistently
 - **SSR problems:** Verify client-side only code in useEffect
 - **Payment flow:** Check browser console for Solana Pay URLs
-- **Hot reload not working:** Restart `bun run dev`
+- **Hot reload not working:** Restart `pnpm dev`
 
 ## 🎯 Production Deployment
 

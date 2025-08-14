@@ -6,8 +6,8 @@
     "repository": "git@github.com:solana-commerce/commerce-program.git",
     "license": "MIT",
     "scripts": {
-        "generate": "bun run generate-clients",
-        "generate-clients": "bun ./scripts/generate-client.ts",
+        "generate": "pnpm run generate-clients",
+        "generate-clients": "tsx ./scripts/generate-client.ts",
         "generate-idl": "shank idl -r program -o idl",
         "start-surfpool": "surfpool start"
     },
@@ -23,6 +23,7 @@
         "@types/mocha": "^10.0.10",
         "chai": "^5.2.0",
         "mocha": "^11.7.1",
+        "tsx": "^4.19.2",
         "ts-node": "^10.9.2",
         "typescript": "^5.8.3"
     }
