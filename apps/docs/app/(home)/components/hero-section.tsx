@@ -2,7 +2,7 @@ import { CopyButton } from '../../../components/ui/copy-button';
 import { Button } from '../../../components/ui/button';
 
 export function HeroSection() {
-  const installCommand = 'bun add @solana-commerce/react-sdk';
+  const installCommand = 'pnpm add @solana-commerce/react-sdk';
 
   return (
     <section 

@@ -6,8 +6,8 @@
   "type": "module",
   "types": "dist/index.d.ts",
   "scripts": {
-    "generate": "cd ../.. && bun run generate-clients",
-    "build": "bun run generate && tsc -p tsconfig.build.json",
+    "generate": "cd ../.. && pnpm run generate-clients",
+    "build": "pnpm run generate && tsc -p tsconfig.build.json",
     "test": "jest",
     "test:unit": "jest tests/unit",
     "test:unit:instructions": "jest tests/unit/instructions",
@@ -21,13 +21,13 @@
     "type-check": "tsc --noEmit",
     "fetch-mints": "solana account EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v -um --output-file tests/setup/mints/usdc.json --output json-compact && solana account Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB -um --output-file tests/setup/mints/usdt.json --output json-compact",
     "solana-validator": "solana-test-validator -r --account EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v tests/setup/mints/usdc.json --account Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB tests/setup/mints/usdt.json --bpf-program commkU28d52cwo2Ma3Marxz4Qr9REtfJtuUfqnDnbhT ../../target/deploy/commerce_program.so",
-    "test:ci:unit": "bun run build && jest tests/unit",
-    "test:ci:integration": "bun run build && node tests/setup/test-with-validator.js"
+    "test:ci:unit": "pnpm run build && jest tests/unit",
+    "test:ci:integration": "pnpm run build && node tests/setup/test-with-validator.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "bun@1.2.19",
+  "packageManager": "pnpm@9.12.3",
   "devDependencies": {
     "@jest/globals": "^30.0.5",
     "@types/jest": "^30.0.0",

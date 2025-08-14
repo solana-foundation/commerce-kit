@@ -5,7 +5,7 @@ Framework-agnostic UI primitives built with vanilla JavaScript and HTML. These c
 ## Installation
 
 ```bash
-bun install @solana-commerce/ui-primitives
+pnpm add @solana-commerce/ui-primitives
 ```
 
 ## Dialog Primitive

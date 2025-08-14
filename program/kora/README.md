@@ -26,7 +26,7 @@ The test demonstrates a complete gasless payment flow where:
 1. Install dependencies:
    ```bash
    cd kora/
-   bun install
+   pnpm install
    ```
 
 2. Make sure Docker is running
@@ -52,7 +52,7 @@ This will:
 
 ### TypeScript Test Only
 ```bash
-bun run test
+pnpm test
 ```
 
 This runs just the gasless transaction flow test (requires Kora server to be running).
