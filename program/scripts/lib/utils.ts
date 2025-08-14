@@ -30,18 +30,23 @@ export function preserveConfigFiles(typescriptClientsDir: string, rustClientsDir
   return {
     restore: () => {
       preservedFiles.forEach((tempPath, filename) => {
-        if (filename === 'rust_cargo') {
-          const filePath = path.join(rustClientsDir, 'Cargo.toml');
-          if (fs.existsSync(tempPath)) {
-            fs.copyFileSync(tempPath, filePath);
-            fs.unlinkSync(tempPath);
+        try {
+          if (filename === 'rust_cargo') {
+            const filePath = path.join(rustClientsDir, 'Cargo.toml');
+            if (fs.existsSync(tempPath)) {
+              fs.copyFileSync(tempPath, filePath);
+              fs.unlinkSync(tempPath);
+            }
+          } else {
+            const filePath = path.join(typescriptClientsDir, filename);
+            if (fs.existsSync(tempPath)) {
+              fs.copyFileSync(tempPath, filePath);
+              fs.unlinkSync(tempPath);
+            }
           }
-        } else {
-          const filePath = path.join(typescriptClientsDir, filename);
-          if (fs.existsSync(tempPath)) {
-            fs.copyFileSync(tempPath, filePath);
-            fs.unlinkSync(tempPath);
-          }
+        } catch (error) {
+          // Silently handle cleanup errors - they shouldn't fail the build
+          console.warn(`Warning: Failed to cleanup temporary file ${tempPath}:`, (error as Error).message);
         }
       });
     }
