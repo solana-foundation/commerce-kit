@@ -7,7 +7,6 @@ import {
   assertAccountExists,
 } from "gill";
 import {
-  ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
   SYSTEM_PROGRAM_ADDRESS,
   TOKEN_PROGRAM_ADDRESS,
   findAssociatedTokenPda,
@@ -16,12 +15,7 @@ import {
   findOperatorPda,
   findMerchantPda,
   findMerchantOperatorConfigPda,
-  getCreateOperatorInstruction,
-  getInitializeMerchantOperatorConfigInstruction,
   getClosePaymentInstruction,
-  getUpdateMerchantSettlementWalletInstruction,
-  getUpdateMerchantAuthorityInstruction,
-  getUpdateOperatorAuthorityInstruction,
   FeeType,
   PolicyData,
   Status,
