@@ -171,6 +171,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
       padding: '0',
       height: 'auto',
       maxWidth: '420px',
+      minWidth: '420px',
       width: '100%',
       border: '1px solid #00000060',
       borderRadius: getModalBorderRadius(theme.borderRadius),

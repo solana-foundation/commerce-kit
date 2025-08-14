@@ -10,43 +10,38 @@ interface SecureIframeShellProps {
   theme: Required<ThemeConfig>;
   onPayment: (amount: number, currency: string, products?: readonly any[]) => void;
   onCancel: () => void;
-  wrap?: boolean; // if false, render only the iframe (to embed inside a DialogContent)
 }
 
 /**
  * Secure iframe shell using srcDoc + postMessage (no allow-same-origin).
  * Renders the full modal UI inside the iframe and communicates with parent.
  */
-export function SecureIframeShell({ config, theme, onPayment, onCancel, wrap = true }: SecureIframeShellProps) {
+export function SecureIframeShell({ config, theme, onPayment, onCancel }: SecureIframeShellProps) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [height, setHeight] = useState<number>(400);
   const [ready, setReady] = useState(false);
   const clientRef = useRef<ConnectorClient | null>(null);
 
-  // Create a single ConnectorClient instance for parent-side wallet operations
-  if (!clientRef.current) {
-    clientRef.current = new ConnectorClient({ autoConnect: false, debug: process.env.NODE_ENV !== 'production' });
-  }
+  // Create the ConnectorClient once on mount; cleanup on unmount
+  useEffect(() => {
+    if (!clientRef.current) {
+      clientRef.current = new ConnectorClient({ autoConnect: false, debug: process.env.NODE_ENV !== 'production' });
+    }
+    return () => {
+      try { clientRef.current?.destroy?.(); } catch {}
+      clientRef.current = null;
+    };
+  }, []);
 
   // Create the HTML document for the iframe with the bundled app
   const srcDoc = useMemo(() => {
-    // Base styles for the iframe document
+    // Minimal reset styles for the iframe document. All theming is handled by the content components.
     const globalStyles = `
-      :root { color-scheme: light dark; }
       * { box-sizing: border-box; }
-      html, body { 
-        height: 100%; 
-        margin: 0; 
+      html, body {
+        margin: 0;
         padding: 0;
-        overflow: hidden;
-      }
-      body { 
-        background: ${theme.backgroundColor || 'transparent'};
-        font-family: ${theme.fontFamily || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'};
-        color: ${theme.textColor || '#000'};
-      }
-      #root {
-        min-height: 100%;
+        background: transparent;
       }
     `;
 
@@ -127,11 +122,9 @@ export function SecureIframeShell({ config, theme, onPayment, onCancel, wrap = t
       }
     }
     window.addEventListener('message', onMessage);
-    return () => window.removeEventListener('message', onMessage);
+    window.addEventListener('message', onMessage);
     return () => {
-      // Cleanup ConnectorClient when unmounting
-      try { clientRef.current?.destroy?.(); } catch {}
-      clientRef.current = null;
+      window.removeEventListener('message', onMessage);
     };
   }, [onPayment, onCancel]);
 
@@ -167,43 +160,20 @@ export function SecureIframeShell({ config, theme, onPayment, onCancel, wrap = t
     }
   }, [ready, config, theme]);
 
-  const iframeEl = (
+  return (
     <iframe
       ref={iframeRef}
       title="Commerce Modal"
       srcDoc={srcDoc}
+      width="100%"
+      height={height}
       style={{
-        width: 420,
-        height,
-        display: 'block',
-        border: 'none',
-        background: '#ffffff0',
+        width: '420px',
       }}
       sandbox="allow-scripts allow-forms allow-popups"
       referrerPolicy="no-referrer"
       allow="clipboard-write"
     />
-  );
-
-  if (!wrap) return iframeEl;
-
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        zIndex: 50,
-        maxWidth: '90vw',
-        maxHeight: '90vh',
-      }}
-      role="dialog"
-      aria-modal="true"
-      tabIndex={-1}
-    >
-      {iframeEl}
-    </div>
   );
 }
 

@@ -174,7 +174,6 @@ export const SolanaCommerceSDK = memo<SolanaCommerceSDKProps>(function SolanaCom
               }
             }}
             onCancel={handleCancel}
-            wrap={false}
           />
         ) : config.mode === 'tip' ? (
           <TipModalContent

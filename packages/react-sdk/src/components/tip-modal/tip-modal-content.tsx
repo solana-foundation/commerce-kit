@@ -172,6 +172,7 @@ export const TipModalContent = memo<TipModalContentProps>(({
       padding: '0',
       height: 'auto',
       maxWidth: '420px',
+      minWidth: 'min(420px, 95vw)',
       width: '100%',
       border: '1px solid #00000060',
       borderRadius: getModalBorderRadius(theme.borderRadius),
