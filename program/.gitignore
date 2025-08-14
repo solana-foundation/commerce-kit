@@ -9,7 +9,7 @@ dist/
 
 # Codama generated clients
 /clients/rust/src/generated/*
-#/clients/typescript/src/generated/*
+/clients/typescript/src/generated/*
 
 # Local test validator
 *test-ledger*
