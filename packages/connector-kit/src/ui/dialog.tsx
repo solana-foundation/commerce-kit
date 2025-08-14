@@ -1,7 +1,7 @@
 'use client'
 
 import React, { memo } from 'react'
-import { Dialog, DialogTrigger, DialogContent, DialogBackdrop, DialogClose } from '@arc/ui-primitives'
+import { Dialog, DialogTrigger, DialogContent, DialogBackdrop, DialogClose } from '@solana-commerce/ui-primitives'
 
 export interface ConnectorDialogProps {
   open: boolean

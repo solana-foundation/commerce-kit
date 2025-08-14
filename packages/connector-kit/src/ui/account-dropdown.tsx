@@ -1,38 +1,20 @@
 'use client'
 
 import React, { memo } from 'react'
-import { DropdownRoot, DropdownTrigger, DropdownContent, DropdownItem } from '@arc/ui-primitives'
 
 export interface AccountDropdownProps {
-  label: string
-  onDisconnect: () => Promise<void> | void
+  children: React.ReactNode
+  content: React.ReactNode
 }
 
-export const AccountDropdown = memo<AccountDropdownProps>(({ label, onDisconnect }) => {
-  const [open, setOpen] = React.useState(false)
+export const AccountDropdown = memo<AccountDropdownProps>(({ children, content }) => {
   return (
-    <DropdownRoot open={open} onOpenChange={setOpen}>
-      <DropdownTrigger asChild>
-        <button className="account-dropdown-trigger">
-          {label}
-        </button>
-      </DropdownTrigger>
-      <DropdownContent>
-        <DropdownItem 
-          onSelect={async () => {
-            try {
-              await onDisconnect()
-            } catch (error) {
-              console.error('Failed to disconnect:', error)
-              // Consider showing user-facing error message
-            }
-          }}
-          className="account-dropdown-disconnect-item"
-        >
-          Disconnect
-        </DropdownItem>
-      </DropdownContent>
-    </DropdownRoot>
+    <div style={{ display: 'inline-block', position: 'relative' }}>
+      {children}
+      <div style={{ position: 'absolute', right: 0 }}>
+        {content}
+      </div>
+    </div>
   )
 })
 

@@ -12,7 +12,7 @@ import {
   DropdownTrigger,
   DropdownContent,
   DropdownItem
-} from '@arc/ui-primitives'
+} from '@solana-commerce/ui-primitives'
 import { defaultConnectorTheme, getAccessibleTextColor, getBorderRadius, getButtonBorder, getButtonShadow, type ConnectorTheme } from './theme'
 import { Spinner } from './spinner'
 

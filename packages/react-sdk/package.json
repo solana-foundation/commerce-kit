@@ -32,7 +32,8 @@
   },
   "dependencies": {
     "@solana-commerce/headless-sdk": "workspace:*",
-    "@solana-commerce/ui-primitives": "workspace:*"
+    "@solana-commerce/ui-primitives": "workspace:*",
+    "@solana-commerce/connector-kit": "workspace:*"
   },
   "peerDependencies": {
     "react": ">=16.8.0",

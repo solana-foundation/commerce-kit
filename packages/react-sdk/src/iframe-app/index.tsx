@@ -28,6 +28,7 @@ interface InitMessage {
   theme: Required<ThemeConfig>;
   totalAmount?: number;
   paymentUrl?: string;
+  wallets?: Array<{ name: string; icon?: string; installed: boolean; connectable?: boolean }>
 }
 
 interface OutgoingMessage {
@@ -133,6 +134,10 @@ function init() {
       }
 
       try {
+        // Provide parent-provided wallets to window for consumers inside iframe
+        if (Array.isArray((message as any).wallets)) {
+          (window as any).__IFRAME_WALLETS__ = (message as any).wallets
+        }
         root.render(
           <React.StrictMode>
             <DialogShim.DialogProvider>

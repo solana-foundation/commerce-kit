@@ -161,7 +161,18 @@ export const SolanaCommerceSDK = memo<SolanaCommerceSDKProps>(function SolanaCom
           <SecureIframeShell
             config={config}
             theme={theme}
-            onPayment={(amount, currency) => onPayment?.(amount, currency, config.products)}
+            onPayment={(amount, currency) => {
+              try {
+                onPaymentStart?.();
+                onPayment?.(amount, currency, config.products);
+              } catch (error) {
+                onPaymentError?.(
+                  error instanceof Error
+                    ? error
+                    : createPaymentError('Payment initialization failed', error)
+                );
+              }
+            }}
             onCancel={handleCancel}
             wrap={false}
           />

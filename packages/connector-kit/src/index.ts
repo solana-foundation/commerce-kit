@@ -19,6 +19,7 @@ export { ConnectorDialog } from './ui/dialog'
 export { WalletList } from './ui/wallet-list'
 export { AccountDropdown } from './ui/account-dropdown'
 export type { ConnectorTheme } from './ui/theme'
+export { Spinner } from './ui/spinner'
 
 // Optional programmatic registration helper
 export async function registerMobileWalletAdapter(config: import('./ui/connector-provider').MobileWalletAdapterConfig) {

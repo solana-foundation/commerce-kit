@@ -63,14 +63,22 @@ export class ConnectorClient {
 	}
 
 	private getStorage(): ConnectorConfig['storage'] | null {
-		if (this.config.storage) return this.config.storage
-		if (typeof window !== 'undefined' && window.localStorage) {
-			return {
-				getItem: (k: string) => window.localStorage.getItem(k),
-				setItem: (k: string, v: string) => window.localStorage.setItem(k, v),
-				removeItem: (k: string) => window.localStorage.removeItem(k),
-			}
-		}
+    if (this.config.storage) return this.config.storage
+    if (typeof window !== 'undefined') {
+      try {
+        // Accessing window.localStorage can throw in sandboxed iframes
+        if (window.localStorage) {
+          return {
+            getItem: (k: string) => window.localStorage.getItem(k),
+            setItem: (k: string, v: string) => window.localStorage.setItem(k, v),
+            removeItem: (k: string) => window.localStorage.removeItem(k),
+          }
+        }
+      } catch {
+        // Ignore storage when not available
+        return null
+      }
+    }
 		return null
 	}
 
@@ -107,13 +115,14 @@ export class ConnectorClient {
 	}
 
 	private async attemptAutoConnect() {
-		try {
-			const last = this.getStorage()?.getItem(STORAGE_KEY)
-			if (!last) return
-			if (this.state.wallets.some(w => w.name === last)) await this.select(last)
-		} catch (e) {
-			this.getStorage()?.removeItem(STORAGE_KEY)
-		}
+    try {
+      const storage = this.getStorage()
+      const last = storage?.getItem(STORAGE_KEY)
+      if (!last) return
+      if (this.state.wallets.some(w => w.name === last)) await this.select(last)
+    } catch (e) {
+      try { this.getStorage()?.removeItem(STORAGE_KEY) } catch {}
+    }
 	}
 
 	subscribe(l: Listener) {

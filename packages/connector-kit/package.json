@@ -1,5 +1,5 @@
 {
-  "name": "@arc/connector-kit",
+  "name": "@solana-commerce/connector-kit",
   "version": "0.0.0",
   "description": "Headless wallet connector client and React provider built on Wallet Standard",
   "main": "./dist/index.js",
@@ -30,7 +30,7 @@
   "dependencies": {
     "@wallet-standard/app": "^1.0.0",
     "@wallet-standard/base": "^1.0.0",
-    "@arc/ui-primitives": "workspace:*",
+    "@solana-commerce/ui-primitives": "workspace:*",
     "@solana-mobile/wallet-standard-mobile": "^0.3.0"
   },
   "devDependencies": {

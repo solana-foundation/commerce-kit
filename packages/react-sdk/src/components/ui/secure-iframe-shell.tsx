@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ConnectorClient } from '@solana-commerce/connector-kit';
 import type { SolanaCommerceConfig, ThemeConfig } from '../../types';
 import { IFRAME_BUNDLE } from '../../iframe-app/bundle';
 
@@ -20,6 +21,12 @@ export function SecureIframeShell({ config, theme, onPayment, onCancel, wrap = t
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [height, setHeight] = useState<number>(400);
   const [ready, setReady] = useState(false);
+  const clientRef = useRef<ConnectorClient | null>(null);
+
+  // Create a single ConnectorClient instance for parent-side wallet operations
+  if (!clientRef.current) {
+    clientRef.current = new ConnectorClient({ autoConnect: false, debug: process.env.NODE_ENV !== 'production' });
+  }
 
   // Create the HTML document for the iframe with the bundled app
   const srcDoc = useMemo(() => {
@@ -59,7 +66,17 @@ export function SecureIframeShell({ config, theme, onPayment, onCancel, wrap = t
   }, [theme]);
 
   useEffect(() => {
-    function onMessage(e: MessageEvent) {
+    async function waitForWallets(client: ConnectorClient, timeoutMs = 1500): Promise<void> {
+      const start = Date.now();
+      while (Date.now() - start < timeoutMs) {
+        const wallets = client.getSnapshot().wallets || [];
+        if (wallets.length > 0) return;
+        await new Promise(r => setTimeout(r, 50));
+      }
+      // Let it continue even if empty; select() will throw and be handled below
+    }
+
+    async function onMessage(e: MessageEvent) {
       const data = e.data as any;
       if (!data || typeof data !== 'object') return;
       
@@ -80,11 +97,42 @@ export function SecureIframeShell({ config, theme, onPayment, onCancel, wrap = t
         case 'payment':
           onPayment(data.amount, data.currency, data.products);
           break;
+        case 'walletConnect': {
+          try {
+            const client = clientRef.current!;
+            // Ensure wallet list is ready (Wallet Standard can be async to populate)
+            await waitForWallets(client);
+            const snap = client.getSnapshot();
+            const target = (snap.wallets || []).find((w: any) => w.name === data.walletName);
+            if (!target) throw new Error('Wallet not found');
+            if (process.env.NODE_ENV !== 'production') {
+              console.log('[SecureIframeShell] Selecting wallet for iframe:', data.walletName);
+            }
+            const res = await client.select(data.walletName);
+            const result = client.getSnapshot();
+            const accounts = (result.accounts || []).map((a: any) => ({ address: a.address, icon: a.icon }));
+            if (process.env.NODE_ENV !== 'production') {
+              console.log('[SecureIframeShell] Iframe connect success, accounts:', accounts.map(a => a.address));
+            }
+            iframeRef.current?.contentWindow?.postMessage({ type: 'walletConnectResult', success: true, walletName: data.walletName, accounts }, '*');
+          } catch (err: any) {
+            if (process.env.NODE_ENV !== 'production') {
+              console.warn('[SecureIframeShell] walletConnect failed:', err);
+            }
+            iframeRef.current?.contentWindow?.postMessage({ type: 'walletConnectResult', success: false, walletName: data.walletName, error: err?.message || String(err) }, '*');
+          }
+          break;
+        }
         // Additional event types can be handled here
       }
     }
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
+    return () => {
+      // Cleanup ConnectorClient when unmounting
+      try { clientRef.current?.destroy?.(); } catch {}
+      clientRef.current = null;
+    };
   }, [onPayment, onCancel]);
 
   // Send init message when iframe is ready
@@ -96,13 +144,25 @@ export function SecureIframeShell({ config, theme, onPayment, onCancel, wrap = t
         : `solana:?recipient=${config.merchant.wallet}&amount=${totalAmount}`;
       
       console.log('[SecureIframeShell] Sending init message', { config, theme });
+
+      // Gather wallet list in parent context (Wallet Standard available here)
+      let initialWallets: Array<{ name: string; icon?: string; installed: boolean; connectable?: boolean }> | undefined
+      try {
+        const client = new ConnectorClient({ autoConnect: false });
+        const snap = client.getSnapshot();
+        initialWallets = (snap.wallets || []).map((w: any) => ({ name: w.name, icon: w.icon, installed: w.installed, connectable: w.connectable }))
+        client.destroy?.()
+      } catch {
+        initialWallets = undefined
+      }
       
       iframeRef.current.contentWindow.postMessage({
         type: 'init',
         config,
         theme,
         totalAmount,
-        paymentUrl
+        paymentUrl,
+        wallets: initialWallets
       }, '*');
     }
   }, [ready, config, theme]);
@@ -113,14 +173,11 @@ export function SecureIframeShell({ config, theme, onPayment, onCancel, wrap = t
       title="Commerce Modal"
       srcDoc={srcDoc}
       style={{
-        width: Math.min(500, Math.floor(window.innerWidth * 0.9)),
+        width: 420,
         height,
         display: 'block',
         border: 'none',
-        borderRadius: '12px',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        background: 'transparent',
-        overflow: 'hidden',
+        background: '#ffffff0',
       }}
       sandbox="allow-scripts allow-forms allow-popups"
       referrerPolicy="no-referrer"

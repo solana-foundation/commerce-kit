@@ -33,7 +33,10 @@ export function UnifiedProvider({
   // Wrap with additional providers in reverse order
   // so they nest properly (first provider is outermost)
   for (let i = providers.length - 1; i >= 0; i--) {
-    const { component: Provider, props = {} } = providers[i]
+    const p = providers[i]
+    if (!p) continue
+    const Provider = p.component
+    const props = p.props ?? {}
     content = <Provider {...props}>{content}</Provider>
   }
   

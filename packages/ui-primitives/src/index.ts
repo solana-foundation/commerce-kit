@@ -14,6 +14,13 @@ export {
   DialogProvider
 } from './dialog-alpha';
 
+// Core dropdown components (from dropdown-alpha) - only used exports
+export {
+  DropdownRoot,
+  DropdownTrigger,
+  DropdownContent,
+  DropdownItem
+} from './dropdown-alpha';
 // DialogPortal from react integration
 export { DialogPortal } from './react/index';
 

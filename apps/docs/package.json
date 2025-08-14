@@ -9,6 +9,7 @@
     "postinstall": "fumadocs-mdx"
   },
   "dependencies": {
+    "@solana-commerce/connector-kit": "workspace:*",
     "@solana-commerce/headless-sdk": "workspace:*",
     "@solana-commerce/react-sdk": "workspace:*",
     "@solana-commerce/ui-primitives": "workspace:*",

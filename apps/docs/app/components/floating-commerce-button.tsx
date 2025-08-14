@@ -40,7 +40,8 @@ export function FloatingCommerceButton() {
           showQR: true,
           enableWalletConnect: true,
           showProductDetails: false,
-          showMerchantInfo: true
+          showMerchantInfo: true,
+          isolation: 'secure',
         }}
         // variant="icon-only"
         onPayment={(amount: number, currency: string, products?: readonly OrderItem[]) => {
