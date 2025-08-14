@@ -71,3 +71,13 @@ deploy-devnet: build-devnet
 clean:
 	cargo clean
 	rm -rf tests/integration-tests/deps
+
+## TypeScript SDK
+
+test-ts-unit:
+	cd clients/typescript && bun run test:unit
+
+test-ts-integration:
+	cd clients/typescript && bun run test:ci:integration
+
+test-ts-all: test-ts-unit test-ts-integration

@@ -18,11 +18,14 @@ import {
   airdropFactory,
   lamports,
   KeyPairSigner,
+  SolanaError,
 } from "gill";
 import {
   updateOrAppendSetComputeUnitPriceInstruction,
   updateOrAppendSetComputeUnitLimitInstruction,
 } from "gill/programs";
+
+const DEBUG_TRANSACTIONS = false;
 
 const createDefaultTransaction = async (
   client: SolanaClient,
@@ -84,6 +87,10 @@ async function sendAndConfirmInstructions({
     );
     return signature;
   } catch (error) {
+    if (error instanceof SolanaError && DEBUG_TRANSACTIONS) {
+      console.log("Solana Error:",error.context.__code);
+    }
+
     throw new Error(`Failed to ${description.toLowerCase()}`);
   }
 }

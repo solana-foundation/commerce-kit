@@ -21,7 +21,7 @@ import {
   createPaymentPdaValueNode,
 } from './pda-helpers';
 
-const { constantPdaSeedNode, variablePdaSeedNode, publicKeyTypeNode, stringTypeNode, stringValueNode, numberTypeNode, publicKeyValueNode } = codama;
+const { constantPdaSeedNode, variablePdaSeedNode, publicKeyTypeNode, stringTypeNode, stringValueNode, numberTypeNode, publicKeyValueNode, argumentValueNode, instructionRemainingAccountsNode } = codama;
 
 export function createCommerceCodama(commerceIdl: any): codama.Codama {
   const commerceCodama = codama.createFromRoot(rootNodeFromAnchor(commerceIdl));
@@ -293,6 +293,34 @@ export function createCommerceCodama(commerceIdl: any): codama.Codama {
         defaultValue: createOperatorPdaValueNode('operatorAuthority')
       }
     ])
+  );
+
+  // Add remaining accounts for initializeMerchantOperatorConfig instruction
+  commerceCodama.update(
+    codama.bottomUpTransformerVisitor([
+      {
+        select: "[instructionNode]initializeMerchantOperatorConfig",
+        transform: (node) => {
+          codama.assertIsNode(node, "instructionNode");
+          
+          // Add remaining accounts that point to the acceptedCurrencies argument
+          return {
+            ...node,
+            remainingAccounts: [
+              instructionRemainingAccountsNode(
+                argumentValueNode('acceptedCurrencies'),
+                {
+                  docs: ['The mint accounts for each accepted currency'],
+                  isOptional: false,
+                  isSigner: false,
+                  isWritable: false,
+                }
+              )
+            ]
+          };
+        },
+      },
+    ]),
   );
 
   return commerceCodama;

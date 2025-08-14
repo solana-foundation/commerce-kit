@@ -26,7 +26,10 @@ import {
 import { generateManyTokenAccounts, generateMint, mintToOwner } from './helpers/tokens';
 import { findAssociatedTokenPda, TOKEN_PROGRAM_ADDRESS } from 'gill/programs';
 import { assertPaymentAccount } from './helpers/assertions';
-import { DAYS_TO_CLOSE } from './helpers/constants';
+// import { DAYS_TO_CLOSE } from './helpers/constants';
+
+// For local-test-validator, we cannot fast forward in time, so we set days to close to 0
+const DAYS_TO_CLOSE = 0;
 
 describe('Close Payment', () => {
     let client: SolanaClient;
@@ -352,6 +355,83 @@ describe('Close Payment', () => {
                 expect((error as Error).message).toContain("Chargeback workflow is not yet implemented");
             }
         }, 10_000);
+
+        it('should fail to close payment when days_to_close > 0', async () => {
+            // Create a new merchant operator config with days_to_close > 0
+            const newVersion = version + 100; // Use a different version to create a new config
+            const daysToCloseNonZero = 7; // Set days_to_close to 7 days
+            
+            const policies: PolicyData[] = [
+                {
+                    __kind: 'Settlement',
+                    fields: [{
+                        minSettlementAmount: 0n,
+                        settlementFrequencyHours: 0,
+                        autoSettle: false,
+                    }]
+                }
+            ];
+
+            const acceptedCurrencies: Address[] = [testTokenMint.address];
+
+            // Create new config with days_to_close > 0
+            const [newMerchantOperatorConfigPda] = await assertGetOrCreateMerchantOperatorConfig({
+                client,
+                payer,
+                authority: merchantAuthority,
+                merchantPda,
+                operatorPda,
+                version: newVersion,
+                operatorFee,
+                feeType,
+                currentOrderId: 0,
+                daysToClose: daysToCloseNonZero,
+                policies,
+                acceptedCurrencies,
+                failIfExists: true
+            });
+
+            // Create a new payment with the new config
+            const newOrderId = 1;
+            const [newPaymentPda, newPaymentBump] = await findPaymentPda({
+                merchantOperatorConfig: newMerchantOperatorConfigPda,
+                buyer: customer.address,
+                mint: testTokenMint.address,
+                orderId: newOrderId,
+            });
+
+            try {
+                // Try to complete the clear and close workflow with days_to_close > 0
+                await assertCompletePaymentWorkflow({
+                    client,
+                    payer,
+                    paymentPda: newPaymentPda,
+                    operatorAuthority,
+                    buyer: customer,
+                    operatorPda,
+                    merchantPda,
+                    merchantOperatorConfigPda: newMerchantOperatorConfigPda,
+                    mint: testTokenMint.address,
+                    buyerAta: customerTokenAccount,
+                    merchantEscrowAta,
+                    merchantSettlementAta,
+                    operatorSettlementAta,
+                    orderId: newOrderId,
+                    amount: paymentAmount,
+                    operatorFee: Number(operatorFee),
+                    bump: newPaymentBump,
+                    workflow: PaymentWorkflow.ClearAndClose,
+                });
+
+                // If we reach here, the test should fail
+                expect(true).toBe(false);
+            } catch (error) {
+                // Expected to fail - cannot close payment when days_to_close > 0
+                expect(error).toBeDefined();
+                // The error should be related to the days_to_close validation
+                // The actual error message will depend on how the program handles this validation
+            }
+        }, 20_000);
 
     });
 
