@@ -36,7 +36,8 @@ export function createCommerceCodama(commerceIdl: any): codama.Codama {
 
           // Check if the data is a struct type
           if (codama.isNode(node.data, "structTypeNode")) {
-            return {
+            // Add discriminator field
+            const updatedNode = {
               ...node,
               data: {
                 ...node.data,
@@ -49,6 +50,17 @@ export function createCommerceCodama(commerceIdl: any): codama.Codama {
                 ],
               },
             };
+
+            // Update the size if it's already been calculated
+            // Add 1 byte for the added u8 discriminator field
+            if (node.size !== undefined) {
+              return {
+                ...updatedNode,
+                size: (node.size ?? 0) + 1,
+              };
+            }
+
+            return updatedNode;
           }
 
           return node;

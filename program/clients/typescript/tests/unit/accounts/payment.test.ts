@@ -23,8 +23,7 @@ describe('Payment Account', () => {
     const serialized = encoder.encode(mockPaymentData);
     
     expect(serialized).toBeInstanceOf(Uint8Array);
-    // NOTE: Check actual size matches expected
-    //expect(serialized.length).toBe(getPaymentSize());
+    expect(serialized.length).toBe(getPaymentSize());
     
     // Check discriminator
     expect(serialized[0]).toBe(2);

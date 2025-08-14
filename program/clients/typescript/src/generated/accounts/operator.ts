@@ -80,7 +80,7 @@ export async function fetchAllMaybeOperator(
 }
 
 export function getOperatorSize(): number {
-  return 33;
+  return 34;
 }
 
 

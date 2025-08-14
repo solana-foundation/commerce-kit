@@ -21,10 +21,7 @@ describe('Merchant Account', () => {
     const serialized = encoder.encode(mockMerchantData);
     
     expect(serialized).toBeInstanceOf(Uint8Array);
-    // NOTE: There appears to be a discrepancy between getMerchantSize() (returns 65) 
-    // and the actual encoded size (66). This may be a bug in Codama generation.
-    // TODO: Investigate Codama source for potential off-by-one error in size calculation
-    // expect(serialized.length).toBe(getMerchantSize());
+    expect(serialized.length).toBe(getMerchantSize());
     
     // Check discriminator
     expect(serialized[0]).toBe(0);

@@ -80,7 +80,7 @@ export async function fetchAllMaybeMerchant(
 }
 
 export function getMerchantSize(): number {
-  return 65;
+  return 66;
 }
 
 

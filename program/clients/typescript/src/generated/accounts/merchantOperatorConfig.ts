@@ -81,7 +81,7 @@ export async function fetchAllMaybeMerchantOperatorConfig(
 }
 
 export function getMerchantOperatorConfigSize(): number {
-  return 92;
+  return 93;
 }
 
 
