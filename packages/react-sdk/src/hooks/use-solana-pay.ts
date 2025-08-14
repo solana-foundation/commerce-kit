@@ -3,11 +3,28 @@ import { Recipient, Reference, References, SPLToken } from "@solana-commerce/sol
 import BigNumber from "bignumber.js";
 import { useState, useEffect } from "react";
 
+export interface SolanaPayQROptions {
+  size?: number;
+  background?: string;
+  color?: string;
+  label?: string;
+  message?: string;
+  // Advanced QR customization options
+  margin?: number;
+  errorCorrectionLevel?: 'L' | 'M' | 'Q' | 'H';
+  logo?: string;
+  logoSize?: number;
+  logoBackgroundColor?: string;
+  logoMargin?: number;
+  dotStyle?: 'dots' | 'rounded' | 'square';
+  cornerStyle?: 'square' | 'rounded' | 'extra-rounded' | 'full-rounded' | 'maximum-rounded';
+}
+
 export function useSolanaPay(
   recipient: string,
   amount: number,
   token: SPLToken,
-  opts?: { size?: number; background?: string; color?: string; label?: string; message?: string }
+  opts?: SolanaPayQROptions
 ) {
     const [paymentRequest, setPaymentRequest] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -29,6 +46,15 @@ export function useSolanaPay(
                     size: opts?.size ?? 256,
                     background: opts?.background ?? 'white',
                     color: opts?.color ?? 'black',
+                    // Pass through advanced QR options
+                    margin: opts?.margin,
+                    errorCorrectionLevel: opts?.errorCorrectionLevel,
+                    logo: opts?.logo,
+                    logoSize: opts?.logoSize,
+                    logoBackgroundColor: opts?.logoBackgroundColor,
+                    logoMargin: opts?.logoMargin,
+                    dotStyle: opts?.dotStyle,
+                    cornerStyle: opts?.cornerStyle,
                 });
                 
                 // Add memo to the returned request

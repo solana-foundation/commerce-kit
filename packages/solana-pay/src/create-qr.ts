@@ -13,7 +13,7 @@ export interface QROptions {
   logoBackgroundColor?: string;
   logoMargin?: number;
   dotStyle?: 'dots' | 'rounded' | 'square';
-  cornerStyle?: 'square' | 'rounded' | 'extra-rounded';
+  cornerStyle?: 'square' | 'rounded' | 'extra-rounded' | 'full-rounded' | 'maximum-rounded';
 }
 
 /**
@@ -82,9 +82,47 @@ export async function createStyledQRCode(url: string | URL, options: QROptions):
     const innerSize = 3 * cellSize;
     const middleSize = 5 * cellSize;
     
-    svg += `<rect x="${centerX}" y="${centerY}" width="${patternSize}" height="${patternSize}" fill="${darkColor}" rx="${cellSize}" ry="${cellSize}"/>`;
-    svg += `<rect x="${centerX + cellSize}" y="${centerY + cellSize}" width="${middleSize}" height="${middleSize}" fill="${lightColor}" rx="${cellSize * 0.5}" ry="${cellSize * 0.5}"/>`;
-    svg += `<rect x="${centerX + 2 * cellSize}" y="${centerY + 2 * cellSize}" width="${innerSize}" height="${innerSize}" fill="${darkColor}" rx="${cellSize * 0.3}" ry="${cellSize * 0.3}"/>`;
+    // Determine corner radius based on cornerStyle
+    let outerRadius = 0;
+    let middleRadius = 0;
+    let innerRadius = 0;
+    
+    switch (options.cornerStyle) {
+      case 'square':
+        outerRadius = 0;
+        middleRadius = 0;
+        innerRadius = 0;
+        break;
+      case 'rounded':
+        outerRadius = cellSize * 0.5;
+        middleRadius = cellSize * 0.3;
+        innerRadius = cellSize * 0.2;
+        break;
+      case 'extra-rounded':
+        outerRadius = cellSize;
+        middleRadius = cellSize * 0.5;
+        innerRadius = cellSize * 0.3;
+        break;
+      case 'full-rounded':
+        outerRadius = cellSize * 1.5;
+        middleRadius = cellSize * 0.8;
+        innerRadius = cellSize * 0.5;
+        break;
+      case 'maximum-rounded':
+        outerRadius = cellSize * 2.0;
+        middleRadius = cellSize * 1.2;
+        innerRadius = cellSize * 0.8;
+        break;
+      default:
+        outerRadius = cellSize;
+        middleRadius = cellSize * 0.5;
+        innerRadius = cellSize * 0.3;
+        break;
+    }
+    
+    svg += `<rect x="${centerX}" y="${centerY}" width="${patternSize}" height="${patternSize}" fill="${darkColor}" rx="${outerRadius}" ry="${outerRadius}"/>`;
+    svg += `<rect x="${centerX + cellSize}" y="${centerY + cellSize}" width="${middleSize}" height="${middleSize}" fill="${lightColor}" rx="${middleRadius}" ry="${middleRadius}"/>`;
+    svg += `<rect x="${centerX + 2 * cellSize}" y="${centerY + 2 * cellSize}" width="${innerSize}" height="${innerSize}" fill="${darkColor}" rx="${innerRadius}" ry="${innerRadius}"/>`;
   };
 
   drawFinderPattern(margin, margin);
@@ -97,11 +135,16 @@ export async function createStyledQRCode(url: string | URL, options: QROptions):
         const x = margin + col * cellSize + (cellSize - dotSize) / 2;
         const y = margin + row * cellSize + (cellSize - dotSize) / 2;
 
-        if (options.dotStyle === 'rounded' || options.dotStyle === 'dots') {
+        if (options.dotStyle === 'dots') {
+          // Perfect circles
           svg += `<circle cx="${x + dotSize / 2}" cy="${y + dotSize / 2}" r="${dotSize / 2}" fill="${darkColor}"/>`;
-        } else {
-          const radius = options.dotStyle === 'square' ? 0 : dotSize * 0.2;
+        } else if (options.dotStyle === 'rounded') {
+          // Rounded rectangles
+          const radius = dotSize * 0.3;
           svg += `<rect x="${x}" y="${y}" width="${dotSize}" height="${dotSize}" fill="${darkColor}" rx="${radius}" ry="${radius}"/>`;
+        } else {
+          // Square dots
+          svg += `<rect x="${x}" y="${y}" width="${dotSize}" height="${dotSize}" fill="${darkColor}"/>`;
         }
       }
     }

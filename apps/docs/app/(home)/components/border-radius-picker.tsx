@@ -8,11 +8,8 @@ interface BorderRadiusPickerProps {
 }
 
 const borderRadiusOptions = [
-  { name: 'None', value: 'none', cssValue: '0' },
   { name: 'SM', value: 'sm', cssValue: '0.25rem' },
-  { name: 'MD', value: 'md', cssValue: '0.5rem' },
   { name: 'LG', value: 'lg', cssValue: '0.75rem' },
-  { name: 'XL', value: 'xl', cssValue: '1rem' },
   { name: 'Full', value: 'full', cssValue: '9999px' },
 ];
 
@@ -20,7 +17,7 @@ const BorderRadiusPickerComponent = function BorderRadiusPicker({
   borderRadius,
   onBorderRadiusChange
 }: BorderRadiusPickerProps) {
-  const currentOption = borderRadiusOptions.find(opt => opt.value === borderRadius) || borderRadiusOptions[3];
+  const currentOption = borderRadiusOptions.find(opt => opt.value === borderRadius) || borderRadiusOptions[1];
   const currentIndex = borderRadiusOptions.findIndex(opt => opt.value === borderRadius);
   
   const handleSliderChange = useCallback((values: number[]) => {
@@ -70,11 +67,8 @@ const BorderRadiusPickerComponent = function BorderRadiusPicker({
                 {/* Main corner shape */}
                 <path 
                     d={
-                    currentOption.value === 'none' ? "M31 3H3V31" :
                     currentOption.value === 'sm' ? "M31 3H7C4.79086 3 3 4.79086 3 7V31" :
-                    currentOption.value === 'md' ? "M31 3H11C6.58172 3 3 6.58172 3 11V31" :
                     currentOption.value === 'lg' ? "M31 3H15C8.37258 3 3 8.37258 3 15V31" :
-                    currentOption.value === 'xl' ? "M31 3H18C9.71573 3 3 9.71573 3 18V31" :
                     "M31 3H28C14.1929 3 3 14.1929 3 28V31"
                     }
                     stroke="black" 
@@ -90,7 +84,7 @@ const BorderRadiusPickerComponent = function BorderRadiusPicker({
         
         <div className="space-y-4">
           <Slider
-            value={[currentIndex >= 0 ? currentIndex : 3]}
+            value={[currentIndex >= 0 ? currentIndex : 1]}
             onValueChange={handleSliderChange}
             min={0}
             max={borderRadiusOptions.length - 1}
