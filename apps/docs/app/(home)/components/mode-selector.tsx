@@ -15,6 +15,7 @@ export function ModeSelector({ selectedMode, onModeChange }: ModeSelectorProps) 
         value={selectedMode}
         onValueChange={(value) => {
           if (value === 'tip') onModeChange('tip');
+          if (value === 'qrCustomization') onModeChange('qrCustomization');
         }}
       >
         <TabsList className="flex bg-zinc-100/50 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 z-[9999]">
@@ -25,9 +26,15 @@ export function ModeSelector({ selectedMode, onModeChange }: ModeSelectorProps) 
             Tip Link
           </TabsTab>
           <TabsTab 
+            value="qrCustomization"
+            className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600 data-[state=active]:border-zinc-900 data-[state=active]:text-zinc-900 text-zinc-400 transition-colors text-center cursor-pointer"
+          >
+            QR Customization
+          </TabsTab>
+          <TabsTab 
             value="buyNow"
             disabled
-            className="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-300 cursor-not-allowed opacity-70 select-none"
+            className="hidden px-4 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-300 cursor-not-allowed opacity-70 select-none"
           >
             <span className="inline-flex items-center gap-2">
               <span>Single Item</span>
@@ -37,7 +44,7 @@ export function ModeSelector({ selectedMode, onModeChange }: ModeSelectorProps) 
           <TabsTab 
             value="cart"
             disabled
-            className="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-300 cursor-not-allowed opacity-70 select-none"
+            className="hidden px-4 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-300 cursor-not-allowed opacity-70 select-none"
           >
             <span className="inline-flex items-center gap-2">
               <span>Multiple Items</span>

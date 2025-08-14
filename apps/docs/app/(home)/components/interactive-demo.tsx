@@ -110,6 +110,18 @@ export function InteractiveDemo() {
           ...baseConfig,
           products: demoProducts
         };
+      case 'qrCustomization':
+        return {
+          mode: 'qrCustomization' as const,
+          ...baseConfig,
+          products: [] // No products needed for QR customization
+        };
+      default:
+        return {
+          mode: 'tip' as const,
+          ...baseConfig,
+          products: []
+        };
     }
   };
 

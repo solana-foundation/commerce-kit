@@ -12,6 +12,7 @@ import { Switch } from '../../../components/ui/switch';
 
 // Modal preview components
 import { ModalPreviewContent } from './modal-preview-content';
+import { QRCustomizationPreview } from './qr-customization-preview';
 
 interface DemoPreviewProps {
   selectedMode: Mode;
@@ -74,7 +75,20 @@ export function DemoPreview({
 
   return (
     <div className="flex flex-col h-full">
-      {checkoutStyle === 'modal' ? (
+      {selectedMode === 'qrCustomization' ? (
+        // QR Customization Mode - Show QR preview instead of commerce flow
+        <div className="h-full p-6">
+          <QRCustomizationPreview 
+            theme={{
+              primaryColor: customizations.primaryColor,
+              secondaryColor: customizations.secondaryColor,
+              backgroundColor: customizations.backgroundColor,
+              textColor: customizations.textColor,
+              borderRadius: customizations.borderRadius
+            }}
+          />
+        </div>
+      ) : checkoutStyle === 'modal' ? (
         // Modal Demo - Button and Modal Preview stacked
         <div className="h-full flex flex-col gap-4">
           {/* Button Section */}
