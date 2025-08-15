@@ -60,8 +60,7 @@ jobs:
         working-directory: program/clients/typescript
         run: |
           echo "🧪 Running TypeScript SDK unit tests with coverage..."
-          bun run build
-          jest tests/unit --coverage --coverageDirectory=coverage-unit
+          bun run test:unit --coverage --coverageDirectory=coverage-unit
 
       - name: Upload coverage reports
         uses: actions/upload-artifact@v4

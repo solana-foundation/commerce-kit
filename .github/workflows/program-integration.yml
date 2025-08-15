@@ -78,8 +78,18 @@ jobs:
         run: |
           cd program && make install
 
+      - name: Build program and generate clients
+        run: |
+          echo "🔨 Building program and generating clients..."
+          cd program && make build
+
       - name: Setup Solana CLI
         uses: ./.github/actions/setup-solana
+
+      - name: Setup test dependencies
+        run: |
+          echo "📦 Setting up test dependencies..."
+          cd program && make setup-deps
 
       - name: Run integration tests with coverage
         run: |

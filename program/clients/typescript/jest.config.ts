@@ -7,6 +7,7 @@ const config: Config = {
   testMatch: ['**/*.test.ts'],
   testPathIgnorePatterns: ['/node_modules/', '/dist/'],
   setupFiles: ['<rootDir>/tests/setup/setup.ts'],
+  coverageReporters: ['text', 'lcov', 'clover', 'json-summary'],
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
