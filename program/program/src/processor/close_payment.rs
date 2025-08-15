@@ -7,7 +7,7 @@ use pinocchio::{
 
 use crate::{
     processor::{verify_owner_mutability, verify_signer, verify_system_program},
-    state::{Merchant, MerchantOperatorConfig, Operator, Payment, Status},
+    state::{Merchant, MerchantOperatorConfig, Operator, Payment},
 };
 
 #[inline(always)]

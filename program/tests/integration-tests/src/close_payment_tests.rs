@@ -209,7 +209,7 @@ async fn test_close_payment_unsigned_operator_authority_fails() {
     let instruction = Instruction {
         program_id: commerce_program_client::COMMERCE_PROGRAM_ID,
         accounts,
-        data: vec![10], // ClosePayment discriminator only, no additional data
+        data: vec![9], // ClosePayment discriminator only, no additional data
     };
 
     let result = context.send_transaction_with_signers(instruction, &[]);

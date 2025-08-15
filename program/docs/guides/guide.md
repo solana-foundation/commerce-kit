@@ -683,7 +683,6 @@ When this instruction is executed, the customer will be charged the amount speci
 Once a payment has been made, the operator will need to process it. Processing might include:
 - Settling the payment to the merchant's settlement account,
 - Refunding the payment to the customer, or
-- Processing a chargeback
 
 Processing is governed by the policies specified in the merchant operator config account. For this demonstration, we haven't specified any policies, so we can proceed with processing the settlement. Add the following to the main flow:
 

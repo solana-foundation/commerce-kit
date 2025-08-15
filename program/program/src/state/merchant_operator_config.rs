@@ -303,7 +303,7 @@ impl MerchantOperatorConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::state::policy::{ChargebackPolicy, RefundPolicy, SettlementPolicy};
+    use crate::state::policy::{RefundPolicy, SettlementPolicy};
     use alloc::vec;
 
     fn create_test_merchant() -> Pubkey {
@@ -321,13 +321,6 @@ mod tests {
         })
     }
 
-    fn create_test_chargeback_policy() -> PolicyData {
-        PolicyData::Chargeback(ChargebackPolicy {
-            max_amount: 5000,
-            max_time_after_purchase: 86400,
-        })
-    }
-
     fn create_test_settlement_policy() -> PolicyData {
         PolicyData::Settlement(SettlementPolicy {
             min_settlement_amount: 100,
@@ -338,15 +331,11 @@ mod tests {
 
     #[test]
     fn test_has_policy_type_found() {
-        let policies = vec![create_test_refund_policy(), create_test_chargeback_policy()];
+        let policies = vec![create_test_refund_policy()];
 
         assert!(MerchantOperatorConfig::has_policy_type(
             &policies,
             PolicyType::Refund
-        ));
-        assert!(MerchantOperatorConfig::has_policy_type(
-            &policies,
-            PolicyType::Chargeback
         ));
         assert!(!MerchantOperatorConfig::has_policy_type(
             &policies,
@@ -405,25 +394,6 @@ mod tests {
             },
         );
         assert!(has_auto_settle);
-    }
-
-    #[test]
-    fn test_check_policy_field_wrong_type() {
-        let policies = vec![create_test_refund_policy()];
-
-        // Try to check chargeback field on refund policy
-        let result = MerchantOperatorConfig::check_policy_field(
-            &policies,
-            PolicyType::Chargeback,
-            |policy| {
-                if let PolicyData::Chargeback(chargeback) = policy {
-                    chargeback.max_amount > 0
-                } else {
-                    false
-                }
-            },
-        );
-        assert!(!result);
     }
 
     #[test]
@@ -574,11 +544,7 @@ mod tests {
 
     #[test]
     fn test_multiple_policies_complex_checks() {
-        let policies = vec![
-            create_test_refund_policy(),
-            create_test_chargeback_policy(),
-            create_test_settlement_policy(),
-        ];
+        let policies = vec![create_test_refund_policy(), create_test_settlement_policy()];
 
         // Test complex policy validation - refund with high amount AND settlement with auto_settle
         let has_high_refund =
@@ -604,9 +570,5 @@ mod tests {
 
         assert!(has_high_refund);
         assert!(has_auto_settlement);
-        assert!(MerchantOperatorConfig::has_policy_type(
-            &policies,
-            PolicyType::Chargeback
-        ));
     }
 }

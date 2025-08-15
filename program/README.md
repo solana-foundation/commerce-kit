@@ -21,7 +21,7 @@ The Solana Commerce Program provides a decentralized payment infrastructure that
 - **Escrow-Based Payments** - Secure fund holding until payment clearance
 - **Flexible Fee Structure** - Support for fixed fees or basis point percentages
 - **Multi-Token Support** - Accept payments in various SPL tokens (USDC, USDT, etc.)
-- **Policy Management** - Configurable refund, chargeback, and settlement rules
+- **Policy Management** - Configurable refund and settlement rules
 - **Complete Lifecycle** - Handles payments from creation to settlement and closure
 - **High Performance** - Built with Pinocchio for optimal efficiency
 
