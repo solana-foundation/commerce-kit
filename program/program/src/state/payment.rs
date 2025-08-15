@@ -21,8 +21,7 @@ use super::discriminator::{AccountSerialize, CommerceAccountDiscriminators, Disc
 pub enum Status {
     Paid = 0,
     Cleared = 1,
-    Chargedback = 2,
-    Refunded = 3,
+    Refunded = 2,
 }
 
 impl Status {
@@ -30,8 +29,7 @@ impl Status {
         match value {
             0 => Ok(Status::Paid),
             1 => Ok(Status::Cleared),
-            2 => Ok(Status::Chargedback),
-            3 => Ok(Status::Refunded),
+            2 => Ok(Status::Refunded),
             _ => Err(ProgramError::InvalidAccountData),
         }
     }

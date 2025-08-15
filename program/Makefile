@@ -1,4 +1,4 @@
-.PHONY: setup-deps test test-all test-integration build clean generate-idl generate-clients fmt deploy-devnet
+.PHONY: setup-deps test test-all test-integration test-typescript test-typescript-integration build clean generate-idl generate-clients fmt deploy-devnet
 
 # Install dependencies
 install:
@@ -46,8 +46,17 @@ test-integration: build setup-deps
 	@echo "Running integration tests..."
 	@cd tests/integration-tests && cargo test -- --nocapture
 
-# Run all tests (unit + integration)
-test-all: test test-integration
+# Run TypeScript unit tests
+test-typescript: build
+	@echo "Running TypeScript unit tests..."
+	@cd clients/typescript && bun run test:ci:unit
+
+# Run TypeScript integration tests (requires local validator)
+test-typescript-integration: build
+	@echo "Running TypeScript integration tests..."
+	@cd clients/typescript && bun run test:ci:integration
+
+test-all: test test-integration test-typescript
 
 # Format code and run clippy
 fmt:

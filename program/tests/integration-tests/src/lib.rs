@@ -16,9 +16,6 @@ pub mod clear_payment_tests;
 pub mod refund_payment_tests;
 
 #[cfg(test)]
-pub mod chargeback_payment_tests;
-
-#[cfg(test)]
 pub mod close_payment_tests;
 
 #[cfg(test)]
