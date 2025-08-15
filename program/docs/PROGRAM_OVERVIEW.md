@@ -334,6 +334,7 @@ The program defines the following custom errors:
 | 14 | `MerchantMismatch` | Merchant does not match config merchant |
 | 15 | `OrderIdInvalid` | Order ID is invalid or already used |
 | 16 | `MerchantOperatorConfigInvalidPda` | MerchantOperatorConfig PDA is invalid |
+| 17 | `AcceptedCurrenciesEmpty` | Accepted currencies is empty |
 
 ## Other Constants
 
