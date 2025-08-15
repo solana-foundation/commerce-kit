@@ -19,8 +19,8 @@ pub enum CommerceProgramError {
     InvalidEventAuthority,
     // 7 Invalid ATA
     InvalidAta,
-    // 8 Payment cannot be closed
-    PaymentCannotBeClosed,
+    // 8 Payment close window not reached
+    PaymentCloseWindowNotReached,
 }
 
 impl From<CommerceProgramError> for ProgramError {
