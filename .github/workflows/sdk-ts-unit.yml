@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -56,13 +56,31 @@ jobs:
         working-directory: program/clients/typescript
         run: bun run build
 
-      - name: Run TypeScript unit tests
+      - name: Run TypeScript unit tests with coverage
         working-directory: program/clients/typescript
         run: |
-          echo "🧪 Running TypeScript SDK unit tests..."
-          bun run test:ci:unit
+          echo "🧪 Running TypeScript SDK unit tests with coverage..."
+          bun run build
+          jest tests/unit --coverage --coverageDirectory=coverage-unit
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: ts-unit-coverage-reports
+          path: |
+            program/clients/typescript/coverage-unit/
+          retention-days: 30
+
+      - name: Display coverage summary
+        working-directory: program/clients/typescript
+        run: |
+          if [ -f coverage-unit/coverage-summary.json ]; then
+            echo "📊 Coverage Summary:"
+            cat coverage-unit/coverage-summary.json | jq '.total'
+          fi
 
       - name: Show failure logs
+        if: failure()
         uses: ./.github/actions/show-failure-logs
         with:
           test-type: "TypeScript unit"

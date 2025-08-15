@@ -58,6 +58,28 @@ test-typescript-integration: build
 
 test-all: test test-integration test-typescript
 
+# Run unit tests with coverage
+test-coverage:
+	@echo "Running unit tests with coverage..."
+	@cd program && cargo llvm-cov --lib --tests --lcov --output-path ../coverage-unit.lcov
+	@cd program && cargo llvm-cov --summary-only
+
+# Run integration tests with coverage
+test-integration-coverage: build setup-deps
+	@echo "Running integration tests with coverage..."
+	@cd tests/integration-tests && cargo llvm-cov --lcov --output-path ../../coverage-integration.lcov
+	@cd tests/integration-tests && cargo llvm-cov --summary-only
+
+# Run all tests with coverage
+test-all-coverage: test-coverage test-integration-coverage
+	@echo "All tests with coverage completed"
+
+# Generate HTML coverage report
+coverage-html:
+	@echo "Generating HTML coverage report..."
+	@cd program && cargo llvm-cov --html --output-dir ../coverage-html
+	@echo "Coverage report generated at coverage-html/index.html"
+
 # Format code and run clippy
 fmt:
 	cargo fmt --all

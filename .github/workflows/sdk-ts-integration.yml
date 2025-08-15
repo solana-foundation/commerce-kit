@@ -36,7 +36,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -96,11 +96,30 @@ jobs:
         working-directory: program/clients/typescript
         run: bun run fetch-mints
 
-      - name: Run TypeScript integration tests
+      - name: Run TypeScript integration tests with coverage
         working-directory: program/clients/typescript
         run: |
-          echo "🧪 Running TypeScript SDK integration tests..."
-          bun run test:ci:integration
+          echo "🧪 Running TypeScript SDK integration tests with coverage..."
+          # Build the SDK first
+          bun run build
+          # Run tests with coverage using the test validator script
+          JEST_COVERAGE=true node tests/setup/test-with-validator.js --coverage --coverageDirectory=coverage-integration
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: ts-integration-coverage-reports
+          path: |
+            program/clients/typescript/coverage-integration/
+          retention-days: 30
+
+      - name: Display coverage summary
+        working-directory: program/clients/typescript
+        run: |
+          if [ -f coverage-integration/coverage-summary.json ]; then
+            echo "📊 Coverage Summary:"
+            cat coverage-integration/coverage-summary.json | jq '.total'
+          fi
 
       - name: Show failure logs
         if: failure()
