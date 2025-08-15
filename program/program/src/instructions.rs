@@ -19,15 +19,6 @@ pub enum CommerceProgramInstruction {
     #[account(2, writable, name = "merchant")]
     #[account(3, name = "settlement_wallet")]
     #[account(4, name = "system_program")]
-    // Initialize Merchant Core ATAs (USDC, USDT)
-    #[account(5, writable, name = "settlement_usdc_ata")]
-    #[account(6, writable, name = "escrow_usdc_ata")]
-    #[account(7, name = "usdc_mint")]
-    #[account(8, writable, name = "settlement_usdt_ata")]
-    #[account(9, writable, name = "escrow_usdt_ata")]
-    #[account(10, name = "usdt_mint")]
-    #[account(11, name = "token_program")]
-    #[account(12, name = "associated_token_program")]
     InitializeMerchant { bump: u8 } = 0,
 
     /// Creates the Operator PDA account for an Operator.
@@ -146,13 +137,6 @@ pub enum CommerceProgramInstruction {
     #[account(1, writable, signer, name = "authority")]
     #[account(2, writable, name = "merchant", desc = "Merchant PDA")]
     #[account(3, name = "new_settlement_wallet")]
-    #[account(4, writable, name = "settlement_usdc_ata")]
-    #[account(5, name = "usdc_mint")]
-    #[account(6, writable, name = "settlement_usdt_ata")]
-    #[account(7, name = "usdt_mint")]
-    #[account(8, name = "token_program")]
-    #[account(9, name = "associated_token_program")]
-    #[account(10, name = "system_program")]
     UpdateMerchantSettlementWallet = 6,
 
     // Update Merchant Authority

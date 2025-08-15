@@ -56,7 +56,7 @@ test-typescript-integration: build
 	@echo "Running TypeScript integration tests..."
 	@cd clients/typescript && bun run test:ci:integration
 
-test-all: test test-integration test-typescript
+test-all: test test-integration test-ts-all
 
 # Format code and run clippy
 fmt:
@@ -83,10 +83,14 @@ clean:
 
 ## TypeScript SDK
 
+fetch-mints:
+	cd clients/typescript && bun run fetch-mints
+
 test-ts-unit:
 	cd clients/typescript && bun run test:unit
 
 test-ts-integration:
+	make fetch-mints
 	cd clients/typescript && bun run test:ci:integration
 
-test-ts-all: test-ts-unit test-ts-integration
+test-ts-all: generate-clients test-ts-unit test-ts-integration
