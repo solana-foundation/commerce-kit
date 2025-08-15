@@ -2,13 +2,13 @@ use crate::{
     assertions::{
         assert_account_not_exists, assert_merchant_account,
         assert_merchant_operator_config_account, assert_multiple_token_balance_changes,
-        assert_operator_account, assert_payment_account, assert_token_account,
+        assert_operator_account, assert_payment_account,
         assert_token_balance_changes, BalanceChange,
     },
     utils::{
         assert_event_present, find_merchant_operator_config_pda, find_merchant_pda,
-        find_operator_pda, find_payment_pda, get_token_balance, set_token_balance, TestContext,
-        MAX_BPS, USDC_MINT, USDT_MINT,
+        find_operator_pda, find_payment_pda, get_or_create_associated_token_account,
+        get_token_balance, set_token_balance, TestContext, MAX_BPS,
     },
 };
 use commerce_program_client::{
@@ -75,11 +75,6 @@ pub fn assert_get_or_create_merchant(
         assert_account_not_exists(context, &merchant_pda);
     }
 
-    let settlement_usdc_ata = get_associated_token_address(&settlement_wallet.pubkey(), &USDC_MINT);
-    let settlement_usdt_ata = get_associated_token_address(&settlement_wallet.pubkey(), &USDT_MINT);
-    let escrow_usdc_ata = get_associated_token_address(&merchant_pda, &USDC_MINT);
-    let escrow_usdt_ata = get_associated_token_address(&merchant_pda, &USDT_MINT);
-
     // Initialize merchant instruction
     let instruction = InitializeMerchantBuilder::new()
         .bump(bump)
@@ -88,10 +83,6 @@ pub fn assert_get_or_create_merchant(
         .merchant(merchant_pda)
         .settlement_wallet(settlement_wallet.pubkey())
         .system_program(SYSTEM_PROGRAM_ID)
-        .settlement_usdc_ata(settlement_usdc_ata)
-        .escrow_usdc_ata(escrow_usdc_ata)
-        .settlement_usdt_ata(settlement_usdt_ata)
-        .escrow_usdt_ata(escrow_usdt_ata)
         .instruction();
 
     // Send transaction with authority as additional signer
@@ -106,20 +97,6 @@ pub fn assert_get_or_create_merchant(
         bump,
         &settlement_wallet.pubkey(),
     );
-    assert_token_account(
-        context,
-        &settlement_usdc_ata,
-        &USDC_MINT,
-        &settlement_wallet.pubkey(),
-    );
-    assert_token_account(
-        context,
-        &settlement_usdt_ata,
-        &USDT_MINT,
-        &settlement_wallet.pubkey(),
-    );
-    assert_token_account(context, &escrow_usdc_ata, &USDC_MINT, &merchant_pda);
-    assert_token_account(context, &escrow_usdt_ata, &USDT_MINT, &merchant_pda);
 
     Ok((merchant_pda, bump))
 }
@@ -244,6 +221,14 @@ pub fn assert_make_payment(
     let merchant_settlement_ata = get_associated_token_address(&settlement_wallet, mint);
 
     set_token_balance(context, &buyer_ata, mint, &buyer.pubkey(), amount * 2);
+
+    // Create merchant escrow ATA if it doesn't exist
+    get_or_create_associated_token_account(context, &merchant_pda, mint);
+
+    // Create merchant settlement ATA if it doesn't exist and auto_settle is true
+    if is_auto_settle {
+        get_or_create_associated_token_account(context, &settlement_wallet, mint);
+    }
 
     // Get pre-balances for token transfer assertion (buyer to escrow)
     let pre_balances = [
@@ -471,6 +456,10 @@ pub fn assert_clear_payment(
     let merchant_settlement_ata = get_associated_token_address(&settlement_wallet, mint);
     let operator_settlement_ata = get_associated_token_address(&operator_owner, mint);
 
+    // Create settlement ATAs if they don't exist
+    get_or_create_associated_token_account(context, &settlement_wallet, mint);
+    get_or_create_associated_token_account(context, &operator_owner, mint);
+
     // Get pre-balances for all ATAs
     let pre_balances = vec![
         (
@@ -572,10 +561,6 @@ pub fn assert_update_merchant_settlement_wallet(
     authority: &Keypair,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let new_settlement_wallet = Keypair::new();
-    let new_settlement_usdc_ata =
-        get_associated_token_address(&new_settlement_wallet.pubkey(), &USDC_MINT);
-    let new_settlement_usdt_ata =
-        get_associated_token_address(&new_settlement_wallet.pubkey(), &USDT_MINT);
 
     let (merchant_pda, bump) = find_merchant_pda(&authority.pubkey());
 
@@ -584,11 +569,6 @@ pub fn assert_update_merchant_settlement_wallet(
         .authority(authority.pubkey())
         .merchant(merchant_pda)
         .new_settlement_wallet(new_settlement_wallet.pubkey())
-        .system_program(SYSTEM_PROGRAM_ID)
-        .settlement_usdc_ata(new_settlement_usdc_ata)
-        .usdc_mint(USDC_MINT)
-        .settlement_usdt_ata(new_settlement_usdt_ata)
-        .usdt_mint(USDT_MINT)
         .instruction();
 
     context

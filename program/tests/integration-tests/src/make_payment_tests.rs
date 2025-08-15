@@ -232,7 +232,7 @@ async fn test_make_payment_unsigned_fee_payer_fails() {
 
     let (merchant_pda, _) = find_merchant_pda(&_merchant_authority.pubkey());
 
-    let merchant_escrow_ata = get_associated_token_address(&merchant_pda, &USDC_MINT);
+    let merchant_escrow_ata = get_or_create_associated_token_account(&mut context, &merchant_pda, &USDC_MINT);
     let buyer_ata = get_associated_token_address(&buyer.pubkey(), &USDC_MINT);
     let settlement_ata = get_associated_token_address(&buyer.pubkey(), &USDC_MINT);
 
@@ -516,8 +516,8 @@ async fn test_make_payment_wrong_order_id_fails() {
     );
 
     let (merchant_pda, _) = find_merchant_pda(&_merchant_authority.pubkey());
-
-    let merchant_escrow_ata = get_associated_token_address(&merchant_pda, &USDC_MINT);
+    
+    let merchant_escrow_ata = get_or_create_associated_token_account(&mut context, &merchant_pda, &USDC_MINT);
     let buyer_ata = get_associated_token_address(&buyer.pubkey(), &USDC_MINT);
     let settlement_ata = get_associated_token_address(&buyer.pubkey(), &USDC_MINT);
 
