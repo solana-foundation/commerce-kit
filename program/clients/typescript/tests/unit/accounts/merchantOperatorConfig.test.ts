@@ -95,35 +95,24 @@ describe('MerchantOperatorConfig Account', () => {
     expect(typeof decoded.currentOrderId).toBe('number');
     expect(typeof decoded.numPolicies).toBe('number');
     expect(typeof decoded.numAcceptedCurrencies).toBe('number');
+    const serialized = encoder.encode(mockConfigData);
     
-    // Validate account size
-    // expect(getMerchantOperatorConfigSize()).toBe(
-    //   TODO: look into codama config to see why 92 instead of 93 
-    //    1 + // discriminator
-    //    4 + // version
-    //    1 + // bump
-    //    32 + // merchant
-    //    32 + // operator
-    //    8 + // operator_fee
-    //    1 + // fee_type
-    //    4 + // current_order_id
-    //    2 + // days_to_close
-    //    4 + // num_policies
-    //    4 // num_accepted_currencies
-    // );
-    /**
-     * pub const LEN: usize = 1 + // discriminator
-        4 + // version
-        1 + // bump
-        32 + // merchant
-        32 + // operator
-        8 + // operator_fee
-        1 + // fee_type
-        4 + // current_order_id
-        2 + // days_to_close
-        4 + // num_policies
-        4; // num_accepted_currencies
-     */
+    expect(serialized).toBeInstanceOf(Uint8Array);
+    expect(serialized.length).toBe(getMerchantOperatorConfigSize());
+    
+    expect(getMerchantOperatorConfigSize()).toBe(
+       1 + // discriminator
+       4 + // version
+       1 + // bump
+       32 + // merchant
+       32 + // operator
+       8 + // operator_fee
+       1 + // fee_type
+       4 + // current_order_id
+       2 + // days_to_close
+       4 + // num_policies
+       4 // num_accepted_currencies
+    );
   });
 
   it('should handle edge cases for merchant operator config account', () => {

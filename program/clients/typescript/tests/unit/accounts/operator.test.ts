@@ -20,8 +20,7 @@ describe('Operator Account', () => {
     const serialized = encoder.encode(mockOperatorData);
     
     expect(serialized).toBeInstanceOf(Uint8Array);
-    // NOTE: Similar to Merchant, there may be a size discrepancy with Codama
-    // expect(serialized.length).toBe(getOperatorSize());
+    expect(serialized.length).toBe(getOperatorSize());
     
     // Check discriminator
     expect(serialized[0]).toBe(1);
@@ -67,8 +66,7 @@ describe('Operator Account', () => {
     expect(typeof decoded.bump).toBe('number');
     
     // Validate account size
-    // expect(getOperatorSize()).toBe(34); 
-    // actual encoded size is 34 - potential Codama generator bug
+    expect(getOperatorSize()).toBe(34); 
   });
 
   it('should handle edge cases for operator account', () => {
