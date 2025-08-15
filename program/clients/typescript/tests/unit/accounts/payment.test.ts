@@ -81,6 +81,7 @@ describe('Payment Account', () => {
       amount: 0n,
       createdAt: 0n,
       status: Status.Paid,
+      bump: 0,
     };
     
     const codec = getPaymentCodec();
@@ -114,6 +115,7 @@ describe('Payment Account', () => {
       amount: 18446744073709551615n, // Max u64
       createdAt: 9223372036854775807n, // Max i64
       status: Status.Refunded,
+      bump: 0,
     };
     
     const maxEncoded = codec.encode(maxData);

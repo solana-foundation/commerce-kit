@@ -1,6 +1,8 @@
 use crate::{
     state_utils::*,
-    utils::{get_or_create_associated_token_account, TestContext, USDC_MINT, USDT_MINT},
+    utils::{
+        get_or_create_associated_token_account, TestContext, DAYS_TO_CLOSE, USDC_MINT, USDT_MINT,
+    },
 };
 use commerce_program_client::types::{FeeType, PolicyData, SettlementPolicy};
 use solana_sdk::{signature::Keypair, signer::Signer};
@@ -47,6 +49,7 @@ async fn test_chargeback_payment_placeholder() {
         operator_fee,
         FeeType::Bps,
         current_order_id,
+        DAYS_TO_CLOSE,
         policies,
         accepted_currencies,
         true,

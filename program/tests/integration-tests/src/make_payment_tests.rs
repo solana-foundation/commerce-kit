@@ -2,9 +2,10 @@ use crate::{
     state_utils::*,
     utils::{
         assert_program_error, find_event_authority_pda, find_merchant_pda, find_payment_pda,
-        get_or_create_associated_token_account, set_mint, TestContext, INVALID_ACCOUNT_DATA_ERROR,
-        INVALID_ACCOUNT_OWNER_ERROR, INVALID_INSTRUCTION_DATA_ERROR, INVALID_MINT_ERROR,
-        MISSING_REQUIRED_SIGNATURE_ERROR, TOKEN_INSUFFICIENT_FUNDS_ERROR, USDC_MINT, USDT_MINT,
+        get_or_create_associated_token_account, set_mint, TestContext, DAYS_TO_CLOSE,
+        INVALID_ACCOUNT_DATA_ERROR, INVALID_ACCOUNT_OWNER_ERROR, INVALID_INSTRUCTION_DATA_ERROR,
+        INVALID_MINT_ERROR, MISSING_REQUIRED_SIGNATURE_ERROR, TOKEN_INSUFFICIENT_FUNDS_ERROR,
+        USDC_MINT, USDT_MINT,
     },
 };
 use commerce_program_client::{
@@ -74,6 +75,7 @@ async fn setup_make_payment_test(
         operator_fee,
         FeeType::Bps,
         current_order_id,
+        DAYS_TO_CLOSE,
         policies,
         accepted_currencies,
         true,
@@ -136,6 +138,7 @@ async fn test_make_payment_not_auto_settle_success() {
         operator_fee,
         FeeType::Bps,
         current_order_id,
+        DAYS_TO_CLOSE,
         policies,
         accepted_currencies,
         true,
