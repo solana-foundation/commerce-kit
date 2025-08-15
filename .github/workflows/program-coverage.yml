@@ -6,6 +6,14 @@ on:
     types:
       - completed
   workflow_dispatch:
+  push:
+    branches: [main, feat/coverage-ci]
+    paths:
+      - ".github/workflows/program-coverage.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/program-coverage.yml"
 
 env:
   CARGO_TERM_COLOR: always
