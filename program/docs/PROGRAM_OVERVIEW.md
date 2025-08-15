@@ -335,6 +335,7 @@ The program defines the following custom errors:
 | 15 | `OrderIdInvalid` | Order ID is invalid or already used |
 | 16 | `MerchantOperatorConfigInvalidPda` | MerchantOperatorConfig PDA is invalid |
 | 17 | `AcceptedCurrenciesEmpty` | Accepted currencies is empty |
+| 18 | `DuplicateMint` | Duplicate mint in accepted currencies |
 
 ## Other Constants
 
