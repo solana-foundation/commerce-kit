@@ -37,6 +37,8 @@ pub enum CommerceProgramError {
     OrderIdInvalid,
     // 16 MerchantOperatorConfig PDA is invalid
     MerchantOperatorConfigInvalidPda,
+    // 17 Accepted currencies is empty
+    AcceptedCurrenciesEmpty,
 }
 
 impl From<CommerceProgramError> for ProgramError {

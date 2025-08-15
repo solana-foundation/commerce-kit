@@ -29,46 +29,6 @@
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "settlementUsdcAta",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "escrowUsdcAta",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "usdcMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "settlementUsdtAta",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "escrowUsdtAta",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "usdtMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": [
@@ -554,41 +514,6 @@
         },
         {
           "name": "newSettlementWallet",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "settlementUsdcAta",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "usdcMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "settlementUsdtAta",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "usdtMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
           "isMut": false,
           "isSigner": false
         }

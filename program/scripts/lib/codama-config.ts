@@ -203,26 +203,6 @@ export function createCommerceCodama(commerceIdl: any): codama.Codama {
         account: "merchant",
         defaultValue: createMerchantPdaValueNode("authority"),
       },
-      {
-        instruction: "initializeMerchant",
-        account: "settlementUsdcAta",
-        defaultValue: createAtaPdaValueNode("settlementWallet", "usdcMint"),
-      },
-      {
-        instruction: "initializeMerchant",
-        account: "settlementUsdtAta",
-        defaultValue: createAtaPdaValueNode("settlementWallet", "usdtMint"),
-      },
-      {
-        instruction: "initializeMerchant",
-        account: "escrowUsdcAta",
-        defaultValue: createAtaPdaValueNode("merchant", "usdcMint"),
-      },
-      {
-        instruction: "initializeMerchant",
-        account: "escrowUsdtAta",
-        defaultValue: createAtaPdaValueNode("merchant", "usdtMint"),
-      },
 
       // For updateMerchantAuthority instruction
       {
@@ -236,16 +216,6 @@ export function createCommerceCodama(commerceIdl: any): codama.Codama {
         instruction: "updateMerchantSettlementWallet",
         account: "merchant",
         defaultValue: createMerchantPdaValueNode("authority"),
-      },
-      {
-        instruction: "updateMerchantSettlementWallet",
-        account: "settlementUsdcAta",
-        defaultValue: createAtaPdaValueNode("newSettlementWallet", "usdcMint"),
-      },
-      {
-        instruction: "updateMerchantSettlementWallet",
-        account: "settlementUsdtAta",
-        defaultValue: createAtaPdaValueNode("newSettlementWallet", "usdtMint"),
       },
 
       // For makePayment instruction - derive payment PDA and ATAs

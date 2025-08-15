@@ -4,8 +4,9 @@ use crate::{
         assert_get_or_create_operator,
     },
     utils::{
-        assert_program_error, set_mint, TestContext, DAYS_TO_CLOSE, INVALID_ACCOUNT_OWNER_ERROR,
-        INVALID_MINT_ERROR, NOT_ENOUGH_ACCOUNT_KEYS_ERROR, USDC_MINT, USDT_MINT,
+        assert_program_error, set_mint, TestContext, ACCEPTED_CURRENCIES_EMPTY_ERROR,
+        DAYS_TO_CLOSE, INVALID_ACCOUNT_OWNER_ERROR, INVALID_MINT_ERROR,
+        NOT_ENOUGH_ACCOUNT_KEYS_ERROR, USDC_MINT, USDT_MINT,
     },
 };
 use commerce_program_client::{
@@ -42,7 +43,7 @@ async fn test_initialize_merchant_operator_config_success() {
         max_amount: 1000,
         max_time_after_purchase: 3600,
     })];
-    let accepted_currencies: Vec<Pubkey> = vec![];
+    let accepted_currencies: Vec<Pubkey> = vec![USDC_MINT, USDT_MINT];
 
     assert_get_or_create_merchant_operator_config(
         &mut context,
@@ -59,6 +60,57 @@ async fn test_initialize_merchant_operator_config_success() {
         true,
     )
     .unwrap();
+}
+
+#[tokio::test]
+async fn test_initialize_merchant_operator_config_empty_accepted_currencies_fails() {
+    let mut context = TestContext::new();
+
+    // Setup Merchant
+    let authority = Keypair::new();
+    let settlement_wallet = Keypair::new();
+
+    let (merchant_pda, _) =
+        assert_get_or_create_merchant(&mut context, &authority, &settlement_wallet, false).unwrap();
+
+    // Setup Operator
+    let owner = Keypair::new();
+
+    let (operator_pda, _) = assert_get_or_create_operator(&mut context, &owner, false).unwrap();
+
+    // Setup MerchantOperatorConfig
+    let version = 1;
+    let operator_fee = 100;
+    let fee_type = FeeType::Bps;
+    let policies = vec![PolicyData::Refund(RefundPolicy {
+        max_amount: 1000,
+        max_time_after_purchase: 3600,
+    })];
+    let accepted_currencies: Vec<Pubkey> = vec![];
+
+    let (config_pda, bump) =
+        crate::utils::find_merchant_operator_config_pda(&merchant_pda, &operator_pda, version);
+
+    let instruction = InitializeMerchantOperatorConfigBuilder::new()
+        .payer(context.payer.pubkey())
+        .authority(authority.pubkey())
+        .config(config_pda)
+        .bump(bump)
+        .merchant(merchant_pda)
+        .operator(operator_pda)
+        .version(version)
+        .operator_fee(operator_fee)
+        .fee_type(fee_type)
+        .days_to_close(DAYS_TO_CLOSE)
+        .policies(policies)
+        .accepted_currencies(accepted_currencies)
+        .system_program(SYSTEM_PROGRAM_ID)
+        .instruction();
+
+    let result = context.send_transaction_with_signers(instruction, &[&authority]);
+
+    // Should fail due to empty accepted currencies
+    assert_program_error(result, ACCEPTED_CURRENCIES_EMPTY_ERROR);
 }
 
 #[tokio::test]

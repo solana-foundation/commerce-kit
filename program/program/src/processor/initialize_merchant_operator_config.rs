@@ -34,6 +34,10 @@ pub fn process_initialize_merchant_operator_config(
         return Err(ProgramError::NotEnoughAccountKeys);
     }
 
+    if args.accepted_currencies.is_empty() {
+        return Err(CommerceProgramError::AcceptedCurrenciesEmpty.into());
+    }
+
     let payer_info = &accounts[0];
     let authority_info = &accounts[1];
     let merchant_info = &accounts[2];

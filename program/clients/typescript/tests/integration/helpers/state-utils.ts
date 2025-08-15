@@ -152,27 +152,6 @@ export async function assertGetOrCreateMerchant({
     }
   }
 
-  const [settlementUsdcAta] = await findAssociatedTokenPda({
-    tokenProgram: TOKEN_PROGRAM_ADDRESS,
-    mint: usdcMint,
-    owner: settlementWallet.address,
-  });
-  const [settlementUsdtAta] = await findAssociatedTokenPda({
-    tokenProgram: TOKEN_PROGRAM_ADDRESS,
-    mint: usdtMint,
-    owner: settlementWallet.address,
-  });
-  const [escrowUsdcAta] = await findAssociatedTokenPda({
-    tokenProgram: TOKEN_PROGRAM_ADDRESS,
-    mint: usdcMint,
-    owner: merchantPda,
-  });
-  const [escrowUsdtAta] = await findAssociatedTokenPda({
-    tokenProgram: TOKEN_PROGRAM_ADDRESS,
-    mint: usdtMint,
-    owner: merchantPda,
-  });
-
   // Initialize merchant instruction
   const initMerchantIx = await getInitializeMerchantInstructionAsync({
     bump,
@@ -194,32 +173,6 @@ export async function assertGetOrCreateMerchant({
     expectedOwner: authority.address,
     expectedBump: bump,
     expectedSettlementWallet: settlementWallet.address,
-  });
-
-  // Assert token accounts were created
-  await assertTokenAccount({
-    client,
-    tokenAccount: settlementUsdcAta,
-    expectedMint: usdcMint,
-    expectedOwner: settlementWallet.address,
-  });
-  await assertTokenAccount({
-    client,
-    tokenAccount: settlementUsdtAta,
-    expectedMint: usdtMint,
-    expectedOwner: settlementWallet.address,
-  });
-  await assertTokenAccount({
-    client,
-    tokenAccount: escrowUsdcAta,
-    expectedMint: usdcMint,
-    expectedOwner: merchantPda,
-  });
-  await assertTokenAccount({
-    client,
-    tokenAccount: escrowUsdtAta,
-    expectedMint: usdtMint,
-    expectedOwner: merchantPda,
   });
 
   return [merchantPda, bump];
@@ -649,20 +602,7 @@ export async function assertUpdateMerchantSettlementWallet({
   newSettlementWallet: KeyPairSigner;
   devnet?: boolean;
 }): Promise<void> {
-  const usdcMint = devnet ? DEVNET_USDC_MINT : USDC_MINT;
-  const usdtMint = devnet ? DEVNET_USDT_MINT : USDT_MINT;
 
-  // Find the new settlement wallet's token accounts that will be created
-  const [newSettlementUsdcAta] = await findAssociatedTokenPda({
-    tokenProgram: TOKEN_PROGRAM_ADDRESS,
-    mint: usdcMint,
-    owner: newSettlementWallet.address,
-  });
-  const [newSettlementUsdtAta] = await findAssociatedTokenPda({
-    tokenProgram: TOKEN_PROGRAM_ADDRESS,
-    mint: usdtMint,
-    owner: newSettlementWallet.address,
-  });
 
   const updateMerchantSettlementWalletIx =
     await getUpdateMerchantSettlementWalletInstructionAsync({
@@ -685,20 +625,6 @@ export async function assertUpdateMerchantSettlementWallet({
     expectedOwner: authority.address,
     expectedBump: merchantBump,
     expectedSettlementWallet: newSettlementWallet.address,
-  });
-
-  // Verify new settlement wallet token accounts were created
-  await assertTokenAccount({
-    client,
-    tokenAccount: newSettlementUsdcAta,
-    expectedMint: usdcMint,
-    expectedOwner: newSettlementWallet.address,
-  });
-  await assertTokenAccount({
-    client,
-    tokenAccount: newSettlementUsdtAta,
-    expectedMint: usdtMint,
-    expectedOwner: newSettlementWallet.address,
   });
 }
 

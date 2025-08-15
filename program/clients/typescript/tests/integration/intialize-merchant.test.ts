@@ -21,7 +21,6 @@ describe('Commerce Program Integration Tests', () => {
         merchantAuthority = await generateExtractableKeyPairSigner();
         settlementWallet = await generateExtractableKeyPairSigner();
         await setupWallets(client, [payer, merchantAuthority]);
-
     }, 20_000);
 
     describe('Merchant Management', () => {
