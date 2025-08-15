@@ -46,6 +46,7 @@ pub const OPERATOR_MISMATCH_ERROR: u32 = 13;
 pub const MERCHANT_MISMATCH_ERROR: u32 = 14;
 pub const ORDER_ID_INVALID_ERROR: u32 = 15;
 pub const MERCHANT_OPERATOR_CONFIG_INVALID_PDA_ERROR: u32 = 16;
+pub const ACCEPTED_CURRENCIES_EMPTY_ERROR: u32 = 17;
 
 // Standard Solana Program Error Codes
 pub const INVALID_ARGUMENT_ERROR: u32 = 5; // ProgramError::InvalidArgument
