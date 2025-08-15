@@ -14,9 +14,7 @@ pub fn process_update_merchant_settlement_wallet(
     accounts: &[AccountInfo],
     _instruction_data: &[u8],
 ) -> ProgramResult {
-    let [payer_info, authority_info, merchant_info, new_settlement_wallet_info] =
-        accounts
-    else {
+    let [payer_info, authority_info, merchant_info, new_settlement_wallet_info] = accounts else {
         return Err(ProgramError::NotEnoughAccountKeys);
     };
 

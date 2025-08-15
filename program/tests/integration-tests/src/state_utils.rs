@@ -2,8 +2,8 @@ use crate::{
     assertions::{
         assert_account_not_exists, assert_merchant_account,
         assert_merchant_operator_config_account, assert_multiple_token_balance_changes,
-        assert_operator_account, assert_payment_account,
-        assert_token_balance_changes, BalanceChange,
+        assert_operator_account, assert_payment_account, assert_token_balance_changes,
+        BalanceChange,
     },
     utils::{
         assert_event_present, find_merchant_operator_config_pda, find_merchant_pda,

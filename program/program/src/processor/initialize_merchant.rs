@@ -10,7 +10,8 @@ use pinocchio::{
 use crate::{
     constants::MERCHANT_SEED,
     processor::{
-        create_pda_account, validate_pda, verify_signer, verify_system_account, verify_system_program,
+        create_pda_account, validate_pda, verify_signer, verify_system_account,
+        verify_system_program,
     },
     require_len,
     state::{discriminator::AccountSerialize, Merchant},
