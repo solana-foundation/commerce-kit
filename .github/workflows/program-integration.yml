@@ -81,10 +81,13 @@ jobs:
       - name: Setup Solana CLI
         uses: ./.github/actions/setup-solana
 
-      - name: Generate IDL and clients
+      - name: Add Solana to PATH
+        run: echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Build program and generate clients
         run: |
-          echo "🔨 Generating IDL and clients..."
-          cd program && make generate-clients
+          echo "🔨 Building program and generating clients..."
+          cd program && make build
 
       - name: Setup test dependencies
         run: |
