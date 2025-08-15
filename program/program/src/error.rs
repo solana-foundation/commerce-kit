@@ -39,6 +39,8 @@ pub enum CommerceProgramError {
     MerchantOperatorConfigInvalidPda,
     // 17 Accepted currencies is empty
     AcceptedCurrenciesEmpty,
+    // 18 Duplicate mint in accepted currencies
+    DuplicateMint,
 }
 
 impl From<CommerceProgramError> for ProgramError {

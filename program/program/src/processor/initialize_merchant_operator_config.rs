@@ -13,8 +13,9 @@ use crate::{
     constants::MERCHANT_OPERATOR_CONFIG_SEED,
     error::CommerceProgramError,
     processor::{
-        create_pda_account, validate_pda, verify_mint_account, verify_owner_mutability,
-        verify_signer, verify_system_account, verify_system_program, verify_token_program_account,
+        create_pda_account, mint_utils::validate_mints, validate_pda, verify_mint_account,
+        verify_owner_mutability, verify_signer, verify_system_account, verify_system_program,
+        verify_token_program_account,
     },
     state::{FeeType, MerchantOperatorConfig, PolicyData, PolicyType},
     ID as COMMERCE_PROGRAM_ID,
@@ -65,6 +66,9 @@ pub fn process_initialize_merchant_operator_config(
 
     // Validate system program
     verify_system_program(system_program_info)?;
+
+    // Validate no duplicate mints in accepted currencies
+    validate_mints(&args.accepted_currencies)?;
 
     // Validate mint accounts match accepted currencies and are valid mints
     mint_accounts
