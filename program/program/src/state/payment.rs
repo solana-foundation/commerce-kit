@@ -88,6 +88,8 @@ impl Payment {
     }
 
     pub fn validate_can_close(&self, days_to_close: u16) -> Result<(), ProgramError> {
+        self.validate_not_status(Status::Paid)?;
+
         let now = Clock::get()?.unix_timestamp;
 
         let created_at = self.created_at;
@@ -98,7 +100,7 @@ impl Payment {
             .ok_or(ProgramError::ArithmeticOverflow)?;
 
         if time_diff_in_days < days_to_close as i64 {
-            return Err(CommerceProgramError::PaymentCannotBeClosed.into());
+            return Err(CommerceProgramError::PaymentCloseWindowNotReached.into());
         }
         Ok(())
     }
