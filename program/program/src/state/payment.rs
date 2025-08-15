@@ -4,10 +4,15 @@ use alloc::vec::Vec;
 use pinocchio::{
     program_error::ProgramError,
     pubkey::{find_program_address, Pubkey},
+    sysvars::{clock::Clock, Sysvar},
 };
 use shank::{ShankAccount, ShankType};
 
-use crate::{constants::PAYMENT_SEED, error::CommerceProgramError, ID as COMMERCE_PROGRAM_ID};
+use crate::{
+    constants::{PAYMENT_SEED, SECONDS_PER_DAY},
+    error::CommerceProgramError,
+    ID as COMMERCE_PROGRAM_ID,
+};
 
 use super::discriminator::{AccountSerialize, CommerceAccountDiscriminators, Discriminator};
 
@@ -16,8 +21,7 @@ use super::discriminator::{AccountSerialize, CommerceAccountDiscriminators, Disc
 pub enum Status {
     Paid = 0,
     Cleared = 1,
-    Chargedback = 2,
-    Refunded = 3,
+    Refunded = 2,
 }
 
 impl Status {
@@ -25,8 +29,7 @@ impl Status {
         match value {
             0 => Ok(Status::Paid),
             1 => Ok(Status::Cleared),
-            2 => Ok(Status::Chargedback),
-            3 => Ok(Status::Refunded),
+            2 => Ok(Status::Refunded),
             _ => Err(ProgramError::InvalidAccountData),
         }
     }
@@ -71,6 +74,31 @@ impl Payment {
     pub fn validate_status(&self, status: Status) -> Result<(), ProgramError> {
         if self.status != status {
             return Err(CommerceProgramError::InvalidPaymentStatus.into());
+        }
+        Ok(())
+    }
+
+    pub fn validate_not_status(&self, status: Status) -> Result<(), ProgramError> {
+        if self.status == status {
+            return Err(CommerceProgramError::InvalidPaymentStatus.into());
+        }
+        Ok(())
+    }
+
+    pub fn validate_can_close(&self, days_to_close: u16) -> Result<(), ProgramError> {
+        self.validate_not_status(Status::Paid)?;
+
+        let now = Clock::get()?.unix_timestamp;
+
+        let created_at = self.created_at;
+        let time_diff_in_days = now
+            .checked_sub(created_at)
+            .ok_or(ProgramError::ArithmeticOverflow)?
+            .checked_div(SECONDS_PER_DAY)
+            .ok_or(ProgramError::ArithmeticOverflow)?;
+
+        if time_diff_in_days < days_to_close as i64 {
+            return Err(CommerceProgramError::PaymentCloseWindowNotReached.into());
         }
         Ok(())
     }

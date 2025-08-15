@@ -2,9 +2,10 @@ use crate::{
     state_utils::*,
     utils::{
         assert_program_error, find_event_authority_pda, find_merchant_pda, find_payment_pda,
-        get_or_create_associated_token_account, set_mint, TestContext, INVALID_ACCOUNT_DATA_ERROR,
+        get_or_create_associated_token_account, set_mint, TestContext, DAYS_TO_CLOSE,
         INVALID_ACCOUNT_OWNER_ERROR, INVALID_INSTRUCTION_DATA_ERROR, INVALID_MINT_ERROR,
-        MISSING_REQUIRED_SIGNATURE_ERROR, TOKEN_INSUFFICIENT_FUNDS_ERROR, USDC_MINT, USDT_MINT,
+        MISSING_REQUIRED_SIGNATURE_ERROR, OPERATOR_OWNER_MISMATCH_ERROR,
+        TOKEN_INSUFFICIENT_FUNDS_ERROR, USDC_MINT, USDT_MINT,
     },
 };
 use commerce_program_client::{
@@ -74,6 +75,7 @@ async fn setup_make_payment_test(
         operator_fee,
         FeeType::Bps,
         current_order_id,
+        DAYS_TO_CLOSE,
         policies,
         accepted_currencies,
         true,
@@ -136,6 +138,7 @@ async fn test_make_payment_not_auto_settle_success() {
         operator_fee,
         FeeType::Bps,
         current_order_id,
+        DAYS_TO_CLOSE,
         policies,
         accepted_currencies,
         true,
@@ -229,7 +232,8 @@ async fn test_make_payment_unsigned_fee_payer_fails() {
 
     let (merchant_pda, _) = find_merchant_pda(&_merchant_authority.pubkey());
 
-    let merchant_escrow_ata = get_associated_token_address(&merchant_pda, &USDC_MINT);
+    let merchant_escrow_ata =
+        get_or_create_associated_token_account(&mut context, &merchant_pda, &USDC_MINT);
     let buyer_ata = get_associated_token_address(&buyer.pubkey(), &USDC_MINT);
     let settlement_ata = get_associated_token_address(&buyer.pubkey(), &USDC_MINT);
 
@@ -313,7 +317,7 @@ async fn test_make_payment_unsigned_operator_authority_fails() {
         .instruction();
 
     let result = context.send_transaction_with_signers(instruction, &[&non_signer, &buyer]);
-    assert_program_error(result, INVALID_ACCOUNT_DATA_ERROR);
+    assert_program_error(result, OPERATOR_OWNER_MISMATCH_ERROR);
 }
 
 #[tokio::test]
@@ -514,7 +518,8 @@ async fn test_make_payment_wrong_order_id_fails() {
 
     let (merchant_pda, _) = find_merchant_pda(&_merchant_authority.pubkey());
 
-    let merchant_escrow_ata = get_associated_token_address(&merchant_pda, &USDC_MINT);
+    let merchant_escrow_ata =
+        get_or_create_associated_token_account(&mut context, &merchant_pda, &USDC_MINT);
     let buyer_ata = get_associated_token_address(&buyer.pubkey(), &USDC_MINT);
     let settlement_ata = get_associated_token_address(&buyer.pubkey(), &USDC_MINT);
 
@@ -837,7 +842,7 @@ async fn test_make_payment_auto_settle_unsigned_fee_payer_fails() {
 
     let result = context.send_transaction_with_signers(instruction, &[&non_signer, &buyer]);
 
-    assert_program_error(result, INVALID_ACCOUNT_DATA_ERROR);
+    assert_program_error(result, OPERATOR_OWNER_MISMATCH_ERROR);
 }
 
 #[tokio::test]

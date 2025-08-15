@@ -2,13 +2,13 @@ use crate::{
     assertions::{
         assert_account_not_exists, assert_merchant_account,
         assert_merchant_operator_config_account, assert_multiple_token_balance_changes,
-        assert_operator_account, assert_payment_account, assert_token_account,
-        assert_token_balance_changes, BalanceChange,
+        assert_operator_account, assert_payment_account, assert_token_balance_changes,
+        BalanceChange,
     },
     utils::{
         assert_event_present, find_merchant_operator_config_pda, find_merchant_pda,
-        find_operator_pda, find_payment_pda, get_token_balance, set_token_balance, TestContext,
-        MAX_BPS, USDC_MINT, USDT_MINT,
+        find_operator_pda, find_payment_pda, get_or_create_associated_token_account,
+        get_token_balance, set_token_balance, TestContext, MAX_BPS,
     },
 };
 use commerce_program_client::{
@@ -21,6 +21,7 @@ use commerce_program_client::{
     types::{FeeType, PolicyData, Status},
 };
 use solana_sdk::{
+    instruction::AccountMeta,
     pubkey::Pubkey,
     signature::{Keypair, Signer},
     system_program::ID as SYSTEM_PROGRAM_ID,
@@ -74,11 +75,6 @@ pub fn assert_get_or_create_merchant(
         assert_account_not_exists(context, &merchant_pda);
     }
 
-    let settlement_usdc_ata = get_associated_token_address(&settlement_wallet.pubkey(), &USDC_MINT);
-    let settlement_usdt_ata = get_associated_token_address(&settlement_wallet.pubkey(), &USDT_MINT);
-    let escrow_usdc_ata = get_associated_token_address(&merchant_pda, &USDC_MINT);
-    let escrow_usdt_ata = get_associated_token_address(&merchant_pda, &USDT_MINT);
-
     // Initialize merchant instruction
     let instruction = InitializeMerchantBuilder::new()
         .bump(bump)
@@ -87,10 +83,6 @@ pub fn assert_get_or_create_merchant(
         .merchant(merchant_pda)
         .settlement_wallet(settlement_wallet.pubkey())
         .system_program(SYSTEM_PROGRAM_ID)
-        .settlement_usdc_ata(settlement_usdc_ata)
-        .escrow_usdc_ata(escrow_usdc_ata)
-        .settlement_usdt_ata(settlement_usdt_ata)
-        .escrow_usdt_ata(escrow_usdt_ata)
         .instruction();
 
     // Send transaction with authority as additional signer
@@ -105,20 +97,6 @@ pub fn assert_get_or_create_merchant(
         bump,
         &settlement_wallet.pubkey(),
     );
-    assert_token_account(
-        context,
-        &settlement_usdc_ata,
-        &USDC_MINT,
-        &settlement_wallet.pubkey(),
-    );
-    assert_token_account(
-        context,
-        &settlement_usdt_ata,
-        &USDT_MINT,
-        &settlement_wallet.pubkey(),
-    );
-    assert_token_account(context, &escrow_usdc_ata, &USDC_MINT, &merchant_pda);
-    assert_token_account(context, &escrow_usdt_ata, &USDT_MINT, &merchant_pda);
 
     Ok((merchant_pda, bump))
 }
@@ -133,6 +111,7 @@ pub fn assert_get_or_create_merchant_operator_config(
     operator_fee: u64,
     fee_type: FeeType,
     current_order_id: u32,
+    days_to_close: u16,
     policies: Vec<PolicyData>,
     accepted_currencies: Vec<Pubkey>,
     fail_if_exists: bool,
@@ -145,7 +124,8 @@ pub fn assert_get_or_create_merchant_operator_config(
     }
 
     // Initialize MerchantOperatorConfig instruction
-    let instruction = InitializeMerchantOperatorConfigBuilder::new()
+    let mut builder = InitializeMerchantOperatorConfigBuilder::new();
+    builder
         .payer(context.payer.pubkey())
         .authority(authority.pubkey())
         .merchant(*merchant_pda)
@@ -156,9 +136,16 @@ pub fn assert_get_or_create_merchant_operator_config(
         .bump(merchant_operator_config_bump)
         .operator_fee(operator_fee)
         .fee_type(fee_type)
+        .days_to_close(days_to_close)
         .policies(policies.clone())
-        .accepted_currencies(accepted_currencies.clone())
-        .instruction();
+        .accepted_currencies(accepted_currencies.clone());
+
+    // Add mint accounts as remaining accounts for each accepted currency
+    for currency in &accepted_currencies {
+        builder.add_remaining_account(AccountMeta::new_readonly(*currency, false));
+    }
+
+    let instruction = builder.instruction();
 
     // Send transaction with authority as additional signer
     context
@@ -234,6 +221,14 @@ pub fn assert_make_payment(
     let merchant_settlement_ata = get_associated_token_address(&settlement_wallet, mint);
 
     set_token_balance(context, &buyer_ata, mint, &buyer.pubkey(), amount * 2);
+
+    // Create merchant escrow ATA if it doesn't exist
+    get_or_create_associated_token_account(context, &merchant_pda, mint);
+
+    // Create merchant settlement ATA if it doesn't exist and auto_settle is true
+    if is_auto_settle {
+        get_or_create_associated_token_account(context, &settlement_wallet, mint);
+    }
 
     // Get pre-balances for token transfer assertion (buyer to escrow)
     let pre_balances = [
@@ -311,76 +306,6 @@ pub fn assert_make_payment(
     );
 
     Ok((payment_pda, bump))
-}
-
-pub fn assert_chargeback_payment(
-    _context: &mut TestContext,
-    _payer: &Keypair,
-    _operator_authority: &Keypair,
-    _buyer: &Keypair,
-    _payment_pda: &Pubkey,
-    _mint: &Pubkey,
-    _merchant_operator_config_pda: &Pubkey,
-) -> Result<(), Box<dyn std::error::Error>> {
-    // TODO: Implement chargeback payment testing when chargeback is implemented
-    // context.airdrop_if_required(&payer.pubkey(), 1_000_000_000)?;
-    // context.airdrop_if_required(&operator_authority.pubkey(), 1_000_000_000)?;
-    // context.airdrop_if_required(&buyer.pubkey(), 1_000_000_000)?;
-
-    // // Get payment account to extract required information
-    // let payment_account = context
-    //     .get_account(payment_pda)
-    //     .expect("Payment should exist");
-    // let payment = commerce_program_client::Payment::from_bytes(&payment_account.data)
-    //     .expect("Should deserialize payment");
-
-    // // Get the merchant from the merchant_operator_config
-    // let merchant_operator_config_account = context
-    //     .get_account(&merchant_operator_config_pda)
-    //     .expect("Merchant operator config should exist");
-    // let merchant_operator_config = commerce_program_client::MerchantOperatorConfig::from_bytes(
-    //     &merchant_operator_config_account.data,
-    // )
-    // .expect("Should deserialize merchant operator config");
-    // let merchant_pda = merchant_operator_config.merchant;
-    // let operator_pda = merchant_operator_config.operator;
-
-    // // Calculate ATAs
-    // let buyer_ata = get_associated_token_address(&buyer.pubkey(), &mint);
-    // let merchant_escrow_ata = get_associated_token_address(&merchant_pda, &mint);
-
-    // // Get event authority PDA
-
-    // // Create chargeback payment instruction
-    // let instruction = ChargebackPaymentBuilder::new()
-    //     .payer(payer.pubkey())
-    //     .payment(*payment_pda)
-    //     .operator_authority(operator_authority.pubkey())
-    //     .buyer(buyer.pubkey())
-    //     .merchant(merchant_pda)
-    //     .operator(operator_pda)
-    //     .merchant_operator_config(*merchant_operator_config_pda)
-    //     .mint(*mint)
-    //     .merchant_escrow_ata(merchant_escrow_ata)
-    //     .buyer_ata(buyer_ata)
-    //     .token_program(TOKEN_PROGRAM_ID)
-    //     .system_program(SYSTEM_PROGRAM_ID)
-    //     .instruction();
-
-    // // Send transaction with required signers (payer, operator_authority, buyer)
-    // context
-    //     .send_transaction_with_signers(instruction, &[operator_authority, buyer])
-    //     .expect("Chargeback payment should succeed");
-
-    // assert_payment_account(
-    //     context,
-    //     payment_pda,
-    //     payment.order_id,
-    //     payment.amount,
-    //     Status::Chargedback,
-    // );
-
-    Ok(())
 }
 
 pub fn assert_refund_payment(
@@ -531,6 +456,10 @@ pub fn assert_clear_payment(
     let merchant_settlement_ata = get_associated_token_address(&settlement_wallet, mint);
     let operator_settlement_ata = get_associated_token_address(&operator_owner, mint);
 
+    // Create settlement ATAs if they don't exist
+    get_or_create_associated_token_account(context, &settlement_wallet, mint);
+    get_or_create_associated_token_account(context, &operator_owner, mint);
+
     // Get pre-balances for all ATAs
     let pre_balances = vec![
         (
@@ -632,10 +561,6 @@ pub fn assert_update_merchant_settlement_wallet(
     authority: &Keypair,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let new_settlement_wallet = Keypair::new();
-    let new_settlement_usdc_ata =
-        get_associated_token_address(&new_settlement_wallet.pubkey(), &USDC_MINT);
-    let new_settlement_usdt_ata =
-        get_associated_token_address(&new_settlement_wallet.pubkey(), &USDT_MINT);
 
     let (merchant_pda, bump) = find_merchant_pda(&authority.pubkey());
 
@@ -644,11 +569,6 @@ pub fn assert_update_merchant_settlement_wallet(
         .authority(authority.pubkey())
         .merchant(merchant_pda)
         .new_settlement_wallet(new_settlement_wallet.pubkey())
-        .system_program(SYSTEM_PROGRAM_ID)
-        .settlement_usdc_ata(new_settlement_usdc_ata)
-        .usdc_mint(USDC_MINT)
-        .settlement_usdt_ata(new_settlement_usdt_ata)
-        .usdt_mint(USDT_MINT)
         .instruction();
 
     context

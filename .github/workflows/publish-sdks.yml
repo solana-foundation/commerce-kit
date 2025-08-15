@@ -1,0 +1,187 @@
+name: Publish SDKs
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      publish_typescript:
+        description: "Publish TypeScript SDK to npm"
+        type: boolean
+        default: true
+      publish_rust:
+        description: "Publish Rust SDK to crates.io"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish-typescript:
+    if: ${{ startsWith(github.ref, 'refs/tags/') || github.event.inputs.publish_typescript == 'true' }}
+    runs-on: ubuntu-latest
+    environment: npm-publish
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies (root)
+        run: bun install
+
+      - name: Build Solana program
+        working-directory: program
+        run: |
+          # Install Solana CLI if not available
+          if ! command -v solana &> /dev/null; then
+            curl -sSfL https://release.solana.com/v1.18.20/install | sh
+            echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+          fi
+
+          # Build program
+          make build
+
+      - name: Generate TypeScript client
+        working-directory: program
+        run: bun run generate-clients
+
+      - name: Build TypeScript SDK
+        working-directory: program/clients/typescript
+        run: |
+          bun install
+          bun run build
+
+      - name: Run TypeScript tests
+        working-directory: program/clients/typescript
+        run: bun run test:ci:unit
+
+      - name: Publish to npm
+        working-directory: program/clients/typescript
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-rust:
+    if: ${{ startsWith(github.ref, 'refs/tags/') || github.event.inputs.publish_rust == 'true' }}
+    runs-on: ubuntu-latest
+    environment: crates-publish
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Solana CLI
+        run: |
+          curl -sSfL https://release.solana.com/v1.18.20/install | sh
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            program/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Build Solana program
+        working-directory: program
+        run: make build
+
+      - name: Generate Rust client
+        working-directory: program
+        run: |
+          # Install required tools
+          if ! command -v codama &> /dev/null; then
+            cargo install --force --locked codama-cli
+          fi
+          bun run generate-clients
+
+      - name: Format Rust code
+        working-directory: program/clients/rust
+        run: cargo fmt --check
+
+      - name: Lint Rust code
+        working-directory: program/clients/rust
+        run: cargo clippy -- -D warnings
+
+      - name: Build Rust client
+        working-directory: program/clients/rust
+        run: cargo build --release
+
+      - name: Run Rust tests
+        working-directory: program/clients/rust
+        run: cargo test
+
+      - name: Publish to crates.io
+        working-directory: program/clients/rust
+        run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}
+
+  create-release:
+    if: startsWith(github.ref, 'refs/tags/') && always() && !cancelled()
+    needs: [publish-typescript, publish-rust]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          body: |
+            ## SDKs Published
+
+            ### TypeScript SDK
+            - Package: `@solana-commerce/program-client`
+            - Version: ${{ github.ref_name }}
+            - Registry: npm
+
+            ### Rust SDK  
+            - Package: `commerce-program-client`
+            - Version: ${{ github.ref_name }}
+            - Registry: crates.io
+
+            ## Installation
+
+            **TypeScript/JavaScript:**
+            ```bash
+            npm install @solana-commerce/program-client@${{ github.ref_name }}
+            ```
+
+            **Rust:**
+            ```toml
+            [dependencies]
+            commerce-program-client = "${{ github.ref_name }}"
+            ```
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}

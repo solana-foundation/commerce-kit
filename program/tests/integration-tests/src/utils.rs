@@ -22,6 +22,7 @@ use spl_associated_token_account::{
 
 const MIN_LAMPORTS: u64 = 500_000_000;
 pub const MAX_BPS: u64 = 10_000;
+pub const DAYS_TO_CLOSE: u16 = 7;
 
 pub const ATA_PROGRAM_ID: Pubkey = pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
 pub const USDC_MINT: Pubkey = pubkey!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
@@ -34,6 +35,19 @@ pub const INSUFFICIENT_SETTLEMENT_AMOUNT_ERROR: u32 = 2;
 pub const SETTLEMENT_TOO_EARLY_ERROR: u32 = 3;
 pub const REFUND_AMOUNT_EXCEEDS_POLICY_LIMIT_ERROR: u32 = 4;
 pub const REFUND_WINDOW_EXPIRED_ERROR: u32 = 5;
+pub const INVALID_EVENT_AUTHORITY_ERROR: u32 = 6;
+pub const INVALID_ATA_ERROR: u32 = 7;
+pub const PAYMENT_CANNOT_BE_CLOSED_ERROR: u32 = 8;
+pub const MERCHANT_OWNER_MISMATCH_ERROR: u32 = 9;
+pub const MERCHANT_INVALID_PDA_ERROR: u32 = 10;
+pub const OPERATOR_OWNER_MISMATCH_ERROR: u32 = 11;
+pub const OPERATOR_INVALID_PDA_ERROR: u32 = 12;
+pub const OPERATOR_MISMATCH_ERROR: u32 = 13;
+pub const MERCHANT_MISMATCH_ERROR: u32 = 14;
+pub const ORDER_ID_INVALID_ERROR: u32 = 15;
+pub const MERCHANT_OPERATOR_CONFIG_INVALID_PDA_ERROR: u32 = 16;
+pub const ACCEPTED_CURRENCIES_EMPTY_ERROR: u32 = 17;
+pub const DUPLICATE_MINT_ERROR: u32 = 18;
 
 // Standard Solana Program Error Codes
 pub const INVALID_ARGUMENT_ERROR: u32 = 5; // ProgramError::InvalidArgument

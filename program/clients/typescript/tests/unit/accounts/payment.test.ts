@@ -23,8 +23,7 @@ describe('Payment Account', () => {
     const serialized = encoder.encode(mockPaymentData);
     
     expect(serialized).toBeInstanceOf(Uint8Array);
-    // NOTE: Check actual size matches expected
-    //expect(serialized.length).toBe(getPaymentSize());
+    expect(serialized.length).toBe(getPaymentSize());
     
     // Check discriminator
     expect(serialized[0]).toBe(2);
@@ -81,6 +80,7 @@ describe('Payment Account', () => {
       amount: 0n,
       createdAt: 0n,
       status: Status.Paid,
+      bump: 0,
     };
     
     const codec = getPaymentCodec();
@@ -92,7 +92,7 @@ describe('Payment Account', () => {
     expect(decoded.createdAt).toBe(0n);
     
     // Test with different statuses
-    const statuses = [Status.Paid, Status.Cleared, Status.Chargedback, Status.Refunded];
+    const statuses = [Status.Paid, Status.Cleared, Status.Refunded];
     
     statuses.forEach((status, index) => {
       const statusData: PaymentArgs = {
@@ -114,6 +114,7 @@ describe('Payment Account', () => {
       amount: 18446744073709551615n, // Max u64
       createdAt: 9223372036854775807n, // Max i64
       status: Status.Refunded,
+      bump: 0,
     };
     
     const maxEncoded = codec.encode(maxData);

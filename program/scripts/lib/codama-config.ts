@@ -12,16 +12,25 @@ import {
   MERCHANT_OPERATOR_CONFIG_SEED,
   PAYMENT_SEED,
   EVENT_AUTHORITY_SEED,
-} from './constants';
+} from "./constants";
 import {
   createAtaPdaValueNode,
   createMerchantPdaValueNode,
   createOperatorPdaValueNode,
   createMerchantOperatorConfigPdaValueNode,
   createPaymentPdaValueNode,
-} from './pda-helpers';
+} from "./pda-helpers";
 
-const { constantPdaSeedNode, variablePdaSeedNode, publicKeyTypeNode, stringTypeNode, stringValueNode, numberTypeNode, publicKeyValueNode } = codama;
+const {
+  constantPdaSeedNode,
+  variablePdaSeedNode,
+  publicKeyTypeNode,
+  stringTypeNode,
+  stringValueNode,
+  numberTypeNode,
+  argumentValueNode,
+  instructionRemainingAccountsNode,
+} = codama;
 
 export function createCommerceCodama(commerceIdl: any): codama.Codama {
   const commerceCodama = codama.createFromRoot(rootNodeFromAnchor(commerceIdl));
@@ -36,7 +45,8 @@ export function createCommerceCodama(commerceIdl: any): codama.Codama {
 
           // Check if the data is a struct type
           if (codama.isNode(node.data, "structTypeNode")) {
-            return {
+            // Add discriminator field
+            const updatedNode = {
               ...node,
               data: {
                 ...node.data,
@@ -49,42 +59,53 @@ export function createCommerceCodama(commerceIdl: any): codama.Codama {
                 ],
               },
             };
+
+            // Update the size if it's already been calculated
+            // Add 1 byte for the added u8 discriminator field
+            if (node.size !== undefined) {
+              return {
+                ...updatedNode,
+                size: (node.size ?? 0) + 1,
+              };
+            }
+
+            return updatedNode;
           }
 
           return node;
         },
       },
-    ]),
+    ])
   );
 
   // Set default values for common accounts
   commerceCodama.update(
     codama.setInstructionAccountDefaultValuesVisitor([
       {
-        account: 'tokenProgram',
-        defaultValue: codama.publicKeyValueNode(TOKEN_PROGRAM_ID)
+        account: "tokenProgram",
+        defaultValue: codama.publicKeyValueNode(TOKEN_PROGRAM_ID),
       },
       {
-        account: 'associatedTokenProgram',
-        defaultValue: codama.publicKeyValueNode(ATA_PROGRAM_ID)
+        account: "associatedTokenProgram",
+        defaultValue: codama.publicKeyValueNode(ATA_PROGRAM_ID),
       },
       {
-        account: 'commerceProgram',
-        defaultValue: codama.publicKeyValueNode(COMMERCE_PROGRAM_ID)
+        account: "commerceProgram",
+        defaultValue: codama.publicKeyValueNode(COMMERCE_PROGRAM_ID),
       },
       {
-        account: 'usdcMint',
-        defaultValue: codama.publicKeyValueNode(USDC_MINT)
+        account: "usdcMint",
+        defaultValue: codama.publicKeyValueNode(USDC_MINT),
       },
       {
-        account: 'usdtMint',
-        defaultValue: codama.publicKeyValueNode(USDT_MINT)
+        account: "usdtMint",
+        defaultValue: codama.publicKeyValueNode(USDT_MINT),
       },
       {
-        account: 'eventAuthority',
-        defaultValue: codama.publicKeyValueNode(EVENT_AUTHORITY_PDA)
-      }
-    ]),
+        account: "eventAuthority",
+        defaultValue: codama.publicKeyValueNode(EVENT_AUTHORITY_PDA),
+      },
+    ])
   );
 
   // Add PDA derivers
@@ -92,46 +113,61 @@ export function createCommerceCodama(commerceIdl: any): codama.Codama {
     codama.addPdasVisitor({
       commerceProgram: [
         {
-          name: 'merchant',
+          name: "merchant",
           seeds: [
-            constantPdaSeedNode(stringTypeNode('utf8'), stringValueNode(MERCHANT_SEED)),
-            variablePdaSeedNode('owner', publicKeyTypeNode()),
+            constantPdaSeedNode(
+              stringTypeNode("utf8"),
+              stringValueNode(MERCHANT_SEED)
+            ),
+            variablePdaSeedNode("owner", publicKeyTypeNode()),
           ],
         },
         {
-          name: 'operator',
+          name: "operator",
           seeds: [
-            constantPdaSeedNode(stringTypeNode('utf8'), stringValueNode(OPERATOR_SEED)),
-            variablePdaSeedNode('owner', publicKeyTypeNode()),
+            constantPdaSeedNode(
+              stringTypeNode("utf8"),
+              stringValueNode(OPERATOR_SEED)
+            ),
+            variablePdaSeedNode("owner", publicKeyTypeNode()),
           ],
         },
         {
-          name: 'merchantOperatorConfig',
+          name: "merchantOperatorConfig",
           seeds: [
-            constantPdaSeedNode(stringTypeNode('utf8'), stringValueNode(MERCHANT_OPERATOR_CONFIG_SEED)),
-            variablePdaSeedNode('merchant', publicKeyTypeNode()),
-            variablePdaSeedNode('operator', publicKeyTypeNode()),
-            variablePdaSeedNode('version', numberTypeNode('u32')),
+            constantPdaSeedNode(
+              stringTypeNode("utf8"),
+              stringValueNode(MERCHANT_OPERATOR_CONFIG_SEED)
+            ),
+            variablePdaSeedNode("merchant", publicKeyTypeNode()),
+            variablePdaSeedNode("operator", publicKeyTypeNode()),
+            variablePdaSeedNode("version", numberTypeNode("u32")),
           ],
         },
         {
-          name: 'payment',
+          name: "payment",
           seeds: [
-            constantPdaSeedNode(stringTypeNode('utf8'), stringValueNode(PAYMENT_SEED)),
-            variablePdaSeedNode('merchantOperatorConfig', publicKeyTypeNode()),
-            variablePdaSeedNode('buyer', publicKeyTypeNode()),
-            variablePdaSeedNode('mint', publicKeyTypeNode()),
-            variablePdaSeedNode('orderId', numberTypeNode('u32')),
+            constantPdaSeedNode(
+              stringTypeNode("utf8"),
+              stringValueNode(PAYMENT_SEED)
+            ),
+            variablePdaSeedNode("merchantOperatorConfig", publicKeyTypeNode()),
+            variablePdaSeedNode("buyer", publicKeyTypeNode()),
+            variablePdaSeedNode("mint", publicKeyTypeNode()),
+            variablePdaSeedNode("orderId", numberTypeNode("u32")),
           ],
         },
         {
-          name: 'eventAuthority',
+          name: "eventAuthority",
           seeds: [
-            constantPdaSeedNode(stringTypeNode('utf8'), stringValueNode(EVENT_AUTHORITY_SEED)),
+            constantPdaSeedNode(
+              stringTypeNode("utf8"),
+              stringValueNode(EVENT_AUTHORITY_SEED)
+            ),
           ],
         },
       ],
-    }),
+    })
   );
 
   // Add instruction-specific default values
@@ -139,159 +175,147 @@ export function createCommerceCodama(commerceIdl: any): codama.Codama {
     codama.setInstructionAccountDefaultValuesVisitor([
       // For createOperator instruction
       {
-        instruction: 'createOperator',
-        account: 'operator',
-        defaultValue: createOperatorPdaValueNode('authority')
+        instruction: "createOperator",
+        account: "operator",
+        defaultValue: createOperatorPdaValueNode("authority"),
       },
 
       // For updateOperatorAuthority instruction
       {
-        instruction: 'updateOperatorAuthority',
-        account: 'operator',
-        defaultValue: createOperatorPdaValueNode('authority')
+        instruction: "updateOperatorAuthority",
+        account: "operator",
+        defaultValue: createOperatorPdaValueNode("authority"),
       },
 
       // For initializeMerchantOperatorConfig instruction
       {
-        instruction: 'initializeMerchantOperatorConfig',
-        account: 'config',
-        defaultValue: createMerchantOperatorConfigPdaValueNode('merchant', 'operator')
+        instruction: "initializeMerchantOperatorConfig",
+        account: "config",
+        defaultValue: createMerchantOperatorConfigPdaValueNode(
+          "merchant",
+          "operator"
+        ),
       },
 
       // For initializeMerchant instruction
       {
-        instruction: 'initializeMerchant',
-        account: 'merchant',
-        defaultValue: createMerchantPdaValueNode('authority')
-      },
-      {
-        instruction: 'initializeMerchant',
-        account: 'settlementUsdcAta',
-        defaultValue: createAtaPdaValueNode('settlementWallet', 'usdcMint')
-      },
-      {
-        instruction: 'initializeMerchant',
-        account: 'settlementUsdtAta',
-        defaultValue: createAtaPdaValueNode('settlementWallet', 'usdtMint')
-      },
-      {
-        instruction: 'initializeMerchant',
-        account: 'escrowUsdcAta',
-        defaultValue: createAtaPdaValueNode('merchant', 'usdcMint')
-      },
-      {
-        instruction: 'initializeMerchant',
-        account: 'escrowUsdtAta',
-        defaultValue: createAtaPdaValueNode('merchant', 'usdtMint')
+        instruction: "initializeMerchant",
+        account: "merchant",
+        defaultValue: createMerchantPdaValueNode("authority"),
       },
 
       // For updateMerchantAuthority instruction
       {
-        instruction: 'updateMerchantAuthority',
-        account: 'merchant',
-        defaultValue: createMerchantPdaValueNode('authority')
+        instruction: "updateMerchantAuthority",
+        account: "merchant",
+        defaultValue: createMerchantPdaValueNode("authority"),
       },
 
       // For updateMerchantSettlementWallet instruction
       {
-        instruction: 'updateMerchantSettlementWallet',
-        account: 'merchant',
-        defaultValue: createMerchantPdaValueNode('authority')
-      },
-      {
-        instruction: 'updateMerchantSettlementWallet',
-        account: 'settlementUsdcAta',
-        defaultValue: createAtaPdaValueNode('newSettlementWallet', 'usdcMint')
-      },
-      {
-        instruction: 'updateMerchantSettlementWallet',
-        account: 'settlementUsdtAta',
-        defaultValue: createAtaPdaValueNode('newSettlementWallet', 'usdtMint')
+        instruction: "updateMerchantSettlementWallet",
+        account: "merchant",
+        defaultValue: createMerchantPdaValueNode("authority"),
       },
 
       // For makePayment instruction - derive payment PDA and ATAs
       {
-        instruction: 'makePayment',
-        account: 'payment',
-        defaultValue: createPaymentPdaValueNode('merchantOperatorConfig', 'buyer', 'mint')
+        instruction: "makePayment",
+        account: "payment",
+        defaultValue: createPaymentPdaValueNode(
+          "merchantOperatorConfig",
+          "buyer",
+          "mint"
+        ),
       },
       {
-        instruction: 'makePayment',
-        account: 'buyerAta',
-        defaultValue: createAtaPdaValueNode('buyer', 'mint')
+        instruction: "makePayment",
+        account: "buyerAta",
+        defaultValue: createAtaPdaValueNode("buyer", "mint"),
       },
       {
-        instruction: 'makePayment',
-        account: 'merchantEscrowAta',
-        defaultValue: createAtaPdaValueNode('merchant', 'mint')
+        instruction: "makePayment",
+        account: "merchantEscrowAta",
+        defaultValue: createAtaPdaValueNode("merchant", "mint"),
       },
       {
-        instruction: 'makePayment',
-        account: 'operator',
-        defaultValue: createOperatorPdaValueNode('operatorAuthority')
+        instruction: "makePayment",
+        account: "operator",
+        defaultValue: createOperatorPdaValueNode("operatorAuthority"),
       },
 
       // note: we cannot derive merchantSettlementAta because the settlement wallet is not in the instruction accounts
 
       // For refundPayment instruction
       {
-        instruction: 'refundPayment',
-        account: 'operator',
-        defaultValue: createOperatorPdaValueNode('operatorAuthority')
+        instruction: "refundPayment",
+        account: "operator",
+        defaultValue: createOperatorPdaValueNode("operatorAuthority"),
       },
       {
-        instruction: 'refundPayment',
-        account: 'buyerAta',
-        defaultValue: createAtaPdaValueNode('buyer', 'mint')
+        instruction: "refundPayment",
+        account: "buyerAta",
+        defaultValue: createAtaPdaValueNode("buyer", "mint"),
       },
       {
-        instruction: 'refundPayment',
-        account: 'merchantEscrowAta',
-        defaultValue: createAtaPdaValueNode('merchant', 'mint')
+        instruction: "refundPayment",
+        account: "merchantEscrowAta",
+        defaultValue: createAtaPdaValueNode("merchant", "mint"),
       },
 
       // For clearPayment instruction
       {
-        instruction: 'clearPayment',
-        account: 'operator',
-        defaultValue: createOperatorPdaValueNode('operatorAuthority')
+        instruction: "clearPayment",
+        account: "operator",
+        defaultValue: createOperatorPdaValueNode("operatorAuthority"),
       },
       {
-        instruction: 'clearPayment',
-        account: 'merchantEscrowAta',
-        defaultValue: createAtaPdaValueNode('merchant', 'mint')
+        instruction: "clearPayment",
+        account: "merchantEscrowAta",
+        defaultValue: createAtaPdaValueNode("merchant", "mint"),
       },
       {
-        instruction: 'clearPayment',
-        account: 'operatorSettlementAta',
-        defaultValue: createAtaPdaValueNode('operatorAuthority', 'mint')
+        instruction: "clearPayment",
+        account: "operatorSettlementAta",
+        defaultValue: createAtaPdaValueNode("operatorAuthority", "mint"),
       },
 
       // note: we cannot derive merchantSettlementAta because the settlement wallet is not in the instruction accounts
 
-      // For chargebackPayment instruction
-      {
-        instruction: 'chargebackPayment',
-        account: 'operator',
-        defaultValue: createOperatorPdaValueNode('operatorAuthority')
-      },
-      {
-        instruction: 'chargebackPayment',
-        account: 'buyerAta',
-        defaultValue: createAtaPdaValueNode('buyer', 'mint')
-      },
-      {
-        instruction: 'chargebackPayment',
-        account: 'merchantEscrowAta',
-        defaultValue: createAtaPdaValueNode('merchant', 'mint')
-      },
-
       // For closePayment instruction
       {
-        instruction: 'closePayment',
-        account: 'operator',
-        defaultValue: createOperatorPdaValueNode('operatorAuthority')
-      }
+        instruction: "closePayment",
+        account: "operator",
+        defaultValue: createOperatorPdaValueNode("operatorAuthority"),
+      },
+    ])
+  );
+
+  // Add remaining accounts for initializeMerchantOperatorConfig instruction
+  commerceCodama.update(
+    codama.bottomUpTransformerVisitor([
+      {
+        select: "[instructionNode]initializeMerchantOperatorConfig",
+        transform: (node) => {
+          codama.assertIsNode(node, "instructionNode");
+
+          // Add remaining accounts that point to the acceptedCurrencies argument
+          return {
+            ...node,
+            remainingAccounts: [
+              instructionRemainingAccountsNode(
+                argumentValueNode("acceptedCurrencies"),
+                {
+                  docs: ["The mint accounts for each accepted currency"],
+                  isOptional: false,
+                  isSigner: false,
+                  isWritable: false,
+                }
+              ),
+            ],
+          };
+        },
+      },
     ])
   );
 

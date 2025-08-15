@@ -1,4 +1,4 @@
-.PHONY: setup-deps test test-all test-integration build clean generate-idl generate-clients fmt deploy-devnet
+.PHONY: setup-deps test test-all test-integration test-typescript test-typescript-integration build clean generate-idl generate-clients fmt deploy-devnet
 
 # Install dependencies
 install:
@@ -46,8 +46,39 @@ test-integration: build setup-deps
 	@echo "Running integration tests..."
 	@cd tests/integration-tests && cargo test -- --nocapture
 
-# Run all tests (unit + integration)
-test-all: test test-integration
+# Run TypeScript unit tests
+test-typescript: build
+	@echo "Running TypeScript unit tests..."
+	@cd clients/typescript && bun run test:ci:unit
+
+# Run TypeScript integration tests (requires local validator)
+test-typescript-integration: build
+	@echo "Running TypeScript integration tests..."
+	@cd clients/typescript && bun run test:ci:integration
+
+test-all: test test-integration test-ts-all
+
+# Run unit tests with coverage
+test-coverage:
+	@echo "Running unit tests with coverage..."
+	@cd program && cargo llvm-cov --lib --tests --lcov --output-path ../coverage-unit.lcov
+	@cd program && cargo llvm-cov --summary-only
+
+# Run integration tests with coverage
+test-integration-coverage: build setup-deps
+	@echo "Running integration tests with coverage..."
+	@cd tests/integration-tests && cargo llvm-cov --lcov --output-path ../../coverage-integration.lcov
+	@cd tests/integration-tests && cargo llvm-cov --summary-only
+
+# Run all tests with coverage
+test-all-coverage: test-coverage test-integration-coverage
+	@echo "All tests with coverage completed"
+
+# Generate HTML coverage report
+coverage-html:
+	@echo "Generating HTML coverage report..."
+	@cd program && cargo llvm-cov --html --output-dir ../coverage-html
+	@echo "Coverage report generated at coverage-html/index.html"
 
 # Format code and run clippy
 fmt:
@@ -71,3 +102,17 @@ deploy-devnet: build-devnet
 clean:
 	cargo clean
 	rm -rf tests/integration-tests/deps
+
+## TypeScript SDK
+
+fetch-mints:
+	cd clients/typescript && bun run fetch-mints
+
+test-ts-unit:
+	cd clients/typescript && bun run test:unit
+
+test-ts-integration:
+	make fetch-mints
+	cd clients/typescript && bun run test:ci:integration
+
+test-ts-all: generate-clients test-ts-unit test-ts-integration

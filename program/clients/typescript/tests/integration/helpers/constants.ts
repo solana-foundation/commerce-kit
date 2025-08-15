@@ -1,0 +1,1 @@
+export const DAYS_TO_CLOSE = 7;

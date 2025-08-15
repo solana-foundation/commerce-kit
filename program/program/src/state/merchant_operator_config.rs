@@ -6,6 +6,7 @@ use pinocchio::{program_error::ProgramError, pubkey::Pubkey};
 use shank::ShankAccount;
 
 use crate::constants::MERCHANT_OPERATOR_CONFIG_SEED;
+use crate::error::CommerceProgramError;
 use crate::state::PolicyType;
 
 use super::discriminator::{AccountSerialize, CommerceAccountDiscriminators, Discriminator};
@@ -28,6 +29,9 @@ pub struct MerchantOperatorConfig {
 
     pub current_order_id: u32,
 
+    /// Number of days after a payment is paid that it can be closed
+    pub days_to_close: u16,
+
     // Dynamic fields that follow the struct
     pub num_policies: u32,
     pub num_accepted_currencies: u32,
@@ -49,6 +53,7 @@ impl AccountSerialize for MerchantOperatorConfig {
         data.extend_from_slice(&self.operator_fee.to_le_bytes());
         data.push(self.fee_type.to_u8());
         data.extend_from_slice(&self.current_order_id.to_le_bytes());
+        data.extend_from_slice(&self.days_to_close.to_le_bytes());
         data.extend_from_slice(&self.num_policies.to_le_bytes());
         data.extend_from_slice(&self.num_accepted_currencies.to_le_bytes());
 
@@ -65,6 +70,7 @@ impl MerchantOperatorConfig {
         8 + // operator_fee
         1 + // fee_type
         4 + // current_order_id
+        2 + // days_to_close
         4 + // num_policies
         4; // num_accepted_currencies
 
@@ -82,6 +88,7 @@ impl MerchantOperatorConfig {
         data.extend_from_slice(&self.operator_fee.to_le_bytes());
         data.push(self.fee_type.to_u8());
         data.extend_from_slice(&self.current_order_id.to_le_bytes());
+        data.extend_from_slice(&self.days_to_close.to_le_bytes());
         data.extend_from_slice(&self.num_policies.to_le_bytes());
         data.extend_from_slice(&self.num_accepted_currencies.to_le_bytes());
 
@@ -100,21 +107,21 @@ impl MerchantOperatorConfig {
 
     pub fn validate_operator(&self, operator: &Pubkey) -> Result<(), ProgramError> {
         if self.operator.ne(operator) {
-            return Err(ProgramError::InvalidAccountData);
+            return Err(CommerceProgramError::OperatorMismatch.into());
         }
         Ok(())
     }
 
     pub fn validate_merchant(&self, merchant: &Pubkey) -> Result<(), ProgramError> {
         if self.merchant.ne(merchant) {
-            return Err(ProgramError::InvalidAccountData);
+            return Err(CommerceProgramError::MerchantMismatch.into());
         }
         Ok(())
     }
 
     pub fn validate_order_id(&self, order_id: u32) -> Result<(), ProgramError> {
         if order_id == self.current_order_id {
-            return Err(ProgramError::InvalidArgument);
+            return Err(CommerceProgramError::OrderIdInvalid.into());
         }
         Ok(())
     }
@@ -124,8 +131,11 @@ impl MerchantOperatorConfig {
         operator: &Pubkey,
         merchant: &Pubkey,
     ) -> Result<(), ProgramError> {
-        if self.operator.ne(operator) || self.merchant.ne(merchant) {
-            return Err(ProgramError::InvalidAccountData);
+        if self.operator.ne(operator) {
+            return Err(CommerceProgramError::OperatorMismatch.into());
+        }
+        if self.merchant.ne(merchant) {
+            return Err(CommerceProgramError::MerchantMismatch.into());
         }
         Ok(())
     }
@@ -185,7 +195,7 @@ impl MerchantOperatorConfig {
             &COMMERCE_PROGRAM_ID,
         );
         if pda.ne(account_info_key) || bump != self.bump {
-            return Err(ProgramError::InvalidAccountData);
+            return Err(CommerceProgramError::MerchantOperatorConfigInvalidPda.into());
         }
         Ok(())
     }
@@ -262,6 +272,9 @@ impl MerchantOperatorConfig {
         let current_order_id = u32::from_le_bytes(data[offset..offset + 4].try_into().unwrap());
         offset += 4;
 
+        let days_to_close = u16::from_le_bytes(data[offset..offset + 2].try_into().unwrap());
+        offset += 2;
+
         let num_policies = u32::from_le_bytes(data[offset..offset + 4].try_into().unwrap());
         offset += 4;
 
@@ -276,6 +289,7 @@ impl MerchantOperatorConfig {
             operator_fee,
             fee_type,
             current_order_id,
+            days_to_close,
             num_policies,
             num_accepted_currencies,
         };
@@ -289,7 +303,7 @@ impl MerchantOperatorConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::state::policy::{ChargebackPolicy, RefundPolicy, SettlementPolicy};
+    use crate::state::policy::{RefundPolicy, SettlementPolicy};
     use alloc::vec;
 
     fn create_test_merchant() -> Pubkey {
@@ -307,13 +321,6 @@ mod tests {
         })
     }
 
-    fn create_test_chargeback_policy() -> PolicyData {
-        PolicyData::Chargeback(ChargebackPolicy {
-            max_amount: 5000,
-            max_time_after_purchase: 86400,
-        })
-    }
-
     fn create_test_settlement_policy() -> PolicyData {
         PolicyData::Settlement(SettlementPolicy {
             min_settlement_amount: 100,
@@ -324,15 +331,11 @@ mod tests {
 
     #[test]
     fn test_has_policy_type_found() {
-        let policies = vec![create_test_refund_policy(), create_test_chargeback_policy()];
+        let policies = vec![create_test_refund_policy()];
 
         assert!(MerchantOperatorConfig::has_policy_type(
             &policies,
             PolicyType::Refund
-        ));
-        assert!(MerchantOperatorConfig::has_policy_type(
-            &policies,
-            PolicyType::Chargeback
         ));
         assert!(!MerchantOperatorConfig::has_policy_type(
             &policies,
@@ -394,25 +397,6 @@ mod tests {
     }
 
     #[test]
-    fn test_check_policy_field_wrong_type() {
-        let policies = vec![create_test_refund_policy()];
-
-        // Try to check chargeback field on refund policy
-        let result = MerchantOperatorConfig::check_policy_field(
-            &policies,
-            PolicyType::Chargeback,
-            |policy| {
-                if let PolicyData::Chargeback(chargeback) = policy {
-                    chargeback.max_amount > 0
-                } else {
-                    false
-                }
-            },
-        );
-        assert!(!result);
-    }
-
-    #[test]
     fn test_validate_operator_success() {
         let operator = create_test_operator();
         let config = MerchantOperatorConfig {
@@ -423,6 +407,7 @@ mod tests {
             operator_fee: 100,
             fee_type: FeeType::Bps,
             current_order_id: 0,
+            days_to_close: 7,
             num_policies: 0,
             num_accepted_currencies: 0,
         };
@@ -442,6 +427,7 @@ mod tests {
             operator_fee: 100,
             fee_type: FeeType::Bps,
             current_order_id: 0,
+            days_to_close: 7,
             num_policies: 0,
             num_accepted_currencies: 0,
         };
@@ -460,6 +446,7 @@ mod tests {
             operator_fee: 100,
             fee_type: FeeType::Bps,
             current_order_id: 0,
+            days_to_close: 7,
             num_policies: 0,
             num_accepted_currencies: 0,
         };
@@ -479,6 +466,7 @@ mod tests {
             operator_fee: 100,
             fee_type: FeeType::Bps,
             current_order_id: 0,
+            days_to_close: 7,
             num_policies: 0,
             num_accepted_currencies: 0,
         };
@@ -498,6 +486,7 @@ mod tests {
             operator_fee: 100,
             fee_type: FeeType::Bps,
             current_order_id: 0,
+            days_to_close: 7,
             num_policies: 0,
             num_accepted_currencies: 0,
         };
@@ -520,6 +509,7 @@ mod tests {
             operator_fee: 100,
             fee_type: FeeType::Bps,
             current_order_id: 0,
+            days_to_close: 7,
             num_policies: 0,
             num_accepted_currencies: 0,
         };
@@ -542,6 +532,7 @@ mod tests {
             operator_fee: 100,
             fee_type: FeeType::Bps,
             current_order_id: 0,
+            days_to_close: 7,
             num_policies: 0,
             num_accepted_currencies: 0,
         };
@@ -553,11 +544,7 @@ mod tests {
 
     #[test]
     fn test_multiple_policies_complex_checks() {
-        let policies = vec![
-            create_test_refund_policy(),
-            create_test_chargeback_policy(),
-            create_test_settlement_policy(),
-        ];
+        let policies = vec![create_test_refund_policy(), create_test_settlement_policy()];
 
         // Test complex policy validation - refund with high amount AND settlement with auto_settle
         let has_high_refund =
@@ -583,9 +570,5 @@ mod tests {
 
         assert!(has_high_refund);
         assert!(has_auto_settlement);
-        assert!(MerchantOperatorConfig::has_policy_type(
-            &policies,
-            PolicyType::Chargeback
-        ));
     }
 }

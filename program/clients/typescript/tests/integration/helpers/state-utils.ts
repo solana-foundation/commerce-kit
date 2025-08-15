@@ -7,7 +7,6 @@ import {
   assertAccountExists,
 } from "gill";
 import {
-  ASSOCIATED_TOKEN_PROGRAM_ADDRESS,
   SYSTEM_PROGRAM_ADDRESS,
   TOKEN_PROGRAM_ADDRESS,
   findAssociatedTokenPda,
@@ -16,12 +15,7 @@ import {
   findOperatorPda,
   findMerchantPda,
   findMerchantOperatorConfigPda,
-  getCreateOperatorInstruction,
-  getInitializeMerchantOperatorConfigInstruction,
   getClosePaymentInstruction,
-  getUpdateMerchantSettlementWalletInstruction,
-  getUpdateMerchantAuthorityInstruction,
-  getUpdateOperatorAuthorityInstruction,
   FeeType,
   PolicyData,
   Status,
@@ -158,27 +152,6 @@ export async function assertGetOrCreateMerchant({
     }
   }
 
-  const [settlementUsdcAta] = await findAssociatedTokenPda({
-    tokenProgram: TOKEN_PROGRAM_ADDRESS,
-    mint: usdcMint,
-    owner: settlementWallet.address,
-  });
-  const [settlementUsdtAta] = await findAssociatedTokenPda({
-    tokenProgram: TOKEN_PROGRAM_ADDRESS,
-    mint: usdtMint,
-    owner: settlementWallet.address,
-  });
-  const [escrowUsdcAta] = await findAssociatedTokenPda({
-    tokenProgram: TOKEN_PROGRAM_ADDRESS,
-    mint: usdcMint,
-    owner: merchantPda,
-  });
-  const [escrowUsdtAta] = await findAssociatedTokenPda({
-    tokenProgram: TOKEN_PROGRAM_ADDRESS,
-    mint: usdtMint,
-    owner: merchantPda,
-  });
-
   // Initialize merchant instruction
   const initMerchantIx = await getInitializeMerchantInstructionAsync({
     bump,
@@ -202,32 +175,6 @@ export async function assertGetOrCreateMerchant({
     expectedSettlementWallet: settlementWallet.address,
   });
 
-  // Assert token accounts were created
-  await assertTokenAccount({
-    client,
-    tokenAccount: settlementUsdcAta,
-    expectedMint: usdcMint,
-    expectedOwner: settlementWallet.address,
-  });
-  await assertTokenAccount({
-    client,
-    tokenAccount: settlementUsdtAta,
-    expectedMint: usdtMint,
-    expectedOwner: settlementWallet.address,
-  });
-  await assertTokenAccount({
-    client,
-    tokenAccount: escrowUsdcAta,
-    expectedMint: usdcMint,
-    expectedOwner: merchantPda,
-  });
-  await assertTokenAccount({
-    client,
-    tokenAccount: escrowUsdtAta,
-    expectedMint: usdtMint,
-    expectedOwner: merchantPda,
-  });
-
   return [merchantPda, bump];
 }
 
@@ -241,6 +188,7 @@ export async function assertGetOrCreateMerchantOperatorConfig({
   operatorFee,
   feeType,
   currentOrderId,
+  daysToClose,
   policies,
   acceptedCurrencies,
   failIfExists = false,
@@ -255,6 +203,7 @@ export async function assertGetOrCreateMerchantOperatorConfig({
   operatorFee: bigint;
   feeType: FeeType;
   currentOrderId: number;
+  daysToClose: number;
   policies: PolicyData[];
   acceptedCurrencies: Address[];
   failIfExists?: boolean;
@@ -281,18 +230,21 @@ export async function assertGetOrCreateMerchantOperatorConfig({
     }
   }
 
-  const instruction = await getInitializeMerchantOperatorConfigInstructionAsync({
-    payer: payer,
-    authority: authority,
-    merchant: merchantPda,
-    operator: operatorPda,
-    version,
-    bump: merchantOperatorConfigBump,
-    operatorFee,
-    feeType,
-    policies,
-    acceptedCurrencies,
-  });
+  const instruction = await getInitializeMerchantOperatorConfigInstructionAsync(
+    {
+      payer: payer,
+      authority: authority,
+      merchant: merchantPda,
+      operator: operatorPda,
+      version,
+      bump: merchantOperatorConfigBump,
+      operatorFee,
+      feeType,
+      daysToClose,
+      policies,
+      acceptedCurrencies,
+    }
+  );
 
   await sendAndConfirmInstructions({
     client,
@@ -650,23 +602,10 @@ export async function assertUpdateMerchantSettlementWallet({
   newSettlementWallet: KeyPairSigner;
   devnet?: boolean;
 }): Promise<void> {
-  const usdcMint = devnet ? DEVNET_USDC_MINT : USDC_MINT;
-  const usdtMint = devnet ? DEVNET_USDT_MINT : USDT_MINT;
 
-  // Find the new settlement wallet's token accounts that will be created
-  const [newSettlementUsdcAta] = await findAssociatedTokenPda({
-    tokenProgram: TOKEN_PROGRAM_ADDRESS,
-    mint: usdcMint,
-    owner: newSettlementWallet.address,
-  });
-  const [newSettlementUsdtAta] = await findAssociatedTokenPda({
-    tokenProgram: TOKEN_PROGRAM_ADDRESS,
-    mint: usdtMint,
-    owner: newSettlementWallet.address,
-  });
 
   const updateMerchantSettlementWalletIx =
-   await getUpdateMerchantSettlementWalletInstructionAsync({
+    await getUpdateMerchantSettlementWalletInstructionAsync({
       payer,
       authority,
       newSettlementWallet: newSettlementWallet.address,
@@ -687,20 +626,6 @@ export async function assertUpdateMerchantSettlementWallet({
     expectedBump: merchantBump,
     expectedSettlementWallet: newSettlementWallet.address,
   });
-
-  // Verify new settlement wallet token accounts were created
-  await assertTokenAccount({
-    client,
-    tokenAccount: newSettlementUsdcAta,
-    expectedMint: usdcMint,
-    expectedOwner: newSettlementWallet.address,
-  });
-  await assertTokenAccount({
-    client,
-    tokenAccount: newSettlementUsdtAta,
-    expectedMint: usdtMint,
-    expectedOwner: newSettlementWallet.address,
-  });
 }
 
 export async function assertUpdateMerchantAuthority({
@@ -720,11 +645,12 @@ export async function assertUpdateMerchantAuthority({
   settlementWallet: Address;
   newAuthority: KeyPairSigner;
 }): Promise<void> {
-  const updateMerchantAuthorityIx = await getUpdateMerchantAuthorityInstructionAsync({
-    payer,
-    authority: currentAuthority,
-    newAuthority: newAuthority.address,
-  });
+  const updateMerchantAuthorityIx =
+    await getUpdateMerchantAuthorityInstructionAsync({
+      payer,
+      authority: currentAuthority,
+      newAuthority: newAuthority.address,
+    });
 
   await sendAndConfirmInstructions({
     client,
@@ -758,11 +684,12 @@ export async function assertUpdateOperatorAuthority({
   operatorBump: number;
   newAuthority: KeyPairSigner;
 }): Promise<void> {
-  const updateOperatorAuthorityIx = await getUpdateOperatorAuthorityInstructionAsync({
-    payer,
-    authority: currentAuthority,
-    newOperatorAuthority: newAuthority.address,
-  });
+  const updateOperatorAuthorityIx =
+    await getUpdateOperatorAuthorityInstructionAsync({
+      payer,
+      authority: currentAuthority,
+      newOperatorAuthority: newAuthority.address,
+    });
 
   await sendAndConfirmInstructions({
     client,
@@ -882,12 +809,10 @@ export enum PaymentWorkflow {
   ClearOnly = "clear_only",
   /** Make Payment → Refund Payment (cannot close refunded payments) */
   RefundOnly = "refund_only",
-  /** Make Payment → Chargeback Payment → Close Payment (when chargeback is implemented) */
-  ChargebackAndClose = "chargeback_and_close",
 }
 
 /**
- * Complete payment workflow that handles make payment followed by settlement/refund/chargeback and optional close
+ * Complete payment workflow that handles make payment followed by settlement/refund and optional close
  */
 export async function assertCompletePaymentWorkflow({
   client,
@@ -1044,13 +969,6 @@ export async function assertCompletePaymentWorkflow({
       finalStatus = Status.Refunded;
       accountClosed = false;
       break;
-
-    case PaymentWorkflow.ChargebackAndClose:
-      // Note: Chargeback is not yet implemented in the processor
-      // This is a placeholder for future implementation
-      throw new Error(
-        "Chargeback workflow is not yet implemented in the program"
-      );
 
     default:
       throw new Error(`Unknown payment workflow: ${workflow}`);

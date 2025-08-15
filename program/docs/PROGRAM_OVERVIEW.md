@@ -7,6 +7,7 @@ commkU28d52cwo2Ma3Marxz4Qr9REtfJtuUfqnDnbhT
 ```
 - [Instruction Details](#instruction-details)
 - [Accounts](#accounts)
+- [Errors](#errors)
 - [Other Constants](#other-constants)
 
 ## Instructions
@@ -19,17 +20,16 @@ commkU28d52cwo2Ma3Marxz4Qr9REtfJtuUfqnDnbhT
 | [`MakePayment`](#makepayment) | Process a payment from buyer to merchant | 3 |
 | [`ClearPayment`](#clearpayment) | Clear payment from escrow to settlement wallets | 4 |
 | [`RefundPayment`](#refundpayment) | Refund payment back to buyer | 5 |
-| [`ChargebackPayment`](#chargebackpayment) | Process chargeback to buyer | 6 |
-| [`UpdateMerchantSettlementWallet`](#updatemerchantsettlementwallet) | Update merchant's settlement wallet | 7 |
-| [`UpdateMerchantAuthority`](#updatemerchantauthority) | Update merchant's authority | 8 |
-| [`UpdateOperatorAuthority`](#updateoperatorauthority) | Update operator's authority | 9 |
-| [`ClosePayment`](#closepayment) | Close payment account | 10 |
+| [`UpdateMerchantSettlementWallet`](#updatemerchantsettlementwallet) | Update merchant's settlement wallet | 6 |
+| [`UpdateMerchantAuthority`](#updatemerchantauthority) | Update merchant's authority | 7 |
+| [`UpdateOperatorAuthority`](#updateoperatorauthority) | Update operator's authority | 8 |
+| [`ClosePayment`](#closepayment) | Close payment account | 9 |
 | [`EmitEvent`](#emitevent) | Emit event via CPI | 228 |
 
 ### Instruction Details
 
 #### InitializeMerchant
-Initializes the merchant PDA and creates settlement ATAs for USDC and USDT.
+Initializes the merchant PDA.
 
 **Parameters:**
 | Parameter | Type | Description |
@@ -44,14 +44,6 @@ Initializes the merchant PDA and creates settlement ATAs for USDC and USDT.
 | 2 | `merchant` | | ✓ | Merchant PDA to initialize |
 | 3 | `settlement_wallet` | | | Settlement wallet for receiving funds |
 | 4 | `system_program` | | | System program |
-| 5 | `settlement_usdc_ata` | | ✓ | Settlement USDC ATA |
-| 6 | `escrow_usdc_ata` | | ✓ | Escrow USDC ATA |
-| 7 | `usdc_mint` | | | USDC mint |
-| 8 | `settlement_usdt_ata` | | ✓ | Settlement USDT ATA |
-| 9 | `escrow_usdt_ata` | | ✓ | Escrow USDT ATA |
-| 10 | `usdt_mint` | | | USDT mint |
-| 11 | `token_program` | | | Token program |
-| 12 | `associated_token_program` | | | Associated token program |
 
 #### CreateOperator
 Creates the Operator PDA account for managing merchant configurations.
@@ -79,7 +71,7 @@ Initializes the configuration between a merchant and operator.
 | `bump` | u8 | PDA bump seed |
 | `operator_fee` | u64 | Operator fee amount |
 | `fee_type` | FeeType | Fee type (Bps=0, Fixed=1) |
-| `policies` | Vec&lt;PolicyData&gt; | List of policies (refund, chargeback, settlement) |
+| `policies` | Vec&lt;PolicyData&gt; | List of policies (refund, settlement) |
 | `accepted_currencies` | Vec&lt;Pubkey&gt; | List of accepted token mints |
 
 **Accounts:**
@@ -166,27 +158,6 @@ Refunds payment back to buyer.
 | 11 | `system_program` | | | System program |
 | 12 | `event_authority` | | | Event authority PDA |
 
-#### ChargebackPayment
-Process chargeback to buyer.
-
-**Parameters:** None
-
-**Accounts:**
-| Account | Name | Signer | Writable | Description |
-|---------|------|--------|----------|-------------|
-| 0 | `payer` | ✓ | ✓ | Transaction fee payer |
-| 1 | `payment` | | ✓ | Payment PDA |
-| 2 | `operator_authority` | ✓ | | Operator authority |
-| 3 | `buyer` | | | Chargeback destination owner |
-| 4 | `merchant` | | | Merchant PDA |
-| 5 | `operator` | | | Operator PDA |
-| 6 | `merchant_operator_config` | | | Config PDA |
-| 7 | `mint` | | | Token mint |
-| 8 | `merchant_escrow_ata` | | ✓ | Merchant escrow ATA |
-| 9 | `buyer_ata` | | ✓ | Buyer's token account |
-| 10 | `token_program` | | | Token program |
-| 11 | `system_program` | | | System program |
-| 12 | `event_authority` | | | Event authority PDA |
 
 #### UpdateMerchantSettlementWallet
 Updates the merchant's settlement wallet and recreates ATAs for the new wallet.
@@ -200,13 +171,6 @@ Updates the merchant's settlement wallet and recreates ATAs for the new wallet.
 | 1 | `authority` | ✓ | ✓ | Merchant authority |
 | 2 | `merchant` | | ✓ | Merchant PDA |
 | 3 | `new_settlement_wallet` | | | New settlement wallet |
-| 4 | `settlement_usdc_ata` | | ✓ | New settlement USDC ATA |
-| 5 | `usdc_mint` | | | USDC mint |
-| 6 | `settlement_usdt_ata` | | ✓ | New settlement USDT ATA |
-| 7 | `usdt_mint` | | | USDT mint |
-| 8 | `token_program` | | | Token program |
-| 9 | `associated_token_program` | | | Associated token program |
-| 10 | `system_program` | | | System program |
 
 #### UpdateMerchantAuthority
 Updates the merchant's authority to a new owner.
@@ -310,7 +274,7 @@ Configuration linking a merchant with an operator, including fees and policies.
 | `num_accepted_currencies` | u32 | Number of accepted token mints stored after policies |
 
 **Dynamic data (stored after fixed fields):**
-- `policies`: Vec&lt;PolicyData&gt; - Variable number of policies (refund, chargeback, settlement)
+- `policies`: Vec&lt;PolicyData&gt; - Variable number of policies (refund, settlement)
 - `accepted_currencies`: Vec&lt;Pubkey&gt; - Variable number of accepted token mints
 
 ### Payment
@@ -347,11 +311,32 @@ Represents a payment transaction.
 | `settlement_frequency_hours` | u32 | Hours between settlements |
 | `auto_settle` | bool | Enable automatic settlement |
 
+## Errors
+
+The program defines the following custom errors:
+
+| Error Code | Error Name | Description |
+|------------|------------|-------------|
+| 0 | `InvalidMint` | Incorrect mint provided |
+| 1 | `InvalidPaymentStatus` | Invalid payment status for the operation |
+| 2 | `InsufficientSettlementAmount` | Insufficient settlement amount |
+| 3 | `SettlementTooEarly` | Settlement attempted too early |
+| 4 | `RefundAmountExceedsPolicyLimit` | Refund amount exceeds policy limit |
+| 5 | `RefundWindowExpired` | Refund window expired |
+| 6 | `InvalidEventAuthority` | Invalid event authority |
+| 7 | `InvalidAta` | Invalid ATA |
+| 8 | `PaymentCloseWindowNotReached` | Payment close window not reached |
+| 9 | `MerchantOwnerMismatch` | Merchant owner does not match expected owner |
+| 10 | `MerchantInvalidPda` | Merchant PDA is invalid |
+| 11 | `OperatorOwnerMismatch` | Operator owner does not match expected owner |
+| 12 | `OperatorInvalidPda` | Operator PDA is invalid |
+| 13 | `OperatorMismatch` | Operator does not match config operator |
+| 14 | `MerchantMismatch` | Merchant does not match config merchant |
+| 15 | `OrderIdInvalid` | Order ID is invalid or already used |
+| 16 | `MerchantOperatorConfigInvalidPda` | MerchantOperatorConfig PDA is invalid |
+| 17 | `AcceptedCurrenciesEmpty` | Accepted currencies is empty |
+| 18 | `DuplicateMint` | Duplicate mint in accepted currencies |
+
 ## Other Constants
 
 - **Event Authority PDA**: Derived from `["event_authority"]`
-- **Default Mints**:
-  - USDC (Mainnet): `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`
-  - USDT (Mainnet): `Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB`
-  - USDC (Devnet): `5S2UmJm13KgrQozS8FwMTvQVusFLdnNjeAVBL1dHFZpN`
-  - USDT (Devnet): `2UEzfJMY6dNgAu3wgLmJ7izGt2Z3sPcgLW4q5UpNqJgj`

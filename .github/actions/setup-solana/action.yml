@@ -35,3 +35,4 @@ runs:
         # Verify installation
         solana --version
         solana-test-validator --version
+        cargo-build-sbf --version

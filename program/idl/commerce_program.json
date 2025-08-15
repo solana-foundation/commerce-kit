@@ -29,46 +29,6 @@
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "settlementUsdcAta",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "escrowUsdcAta",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "usdcMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "settlementUsdtAta",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "escrowUsdtAta",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "usdtMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": [
@@ -181,6 +141,10 @@
           "type": {
             "defined": "FeeType"
           }
+        },
+        {
+          "name": "daysToClose",
+          "type": "u16"
         },
         {
           "name": "policies",
@@ -528,110 +492,6 @@
       }
     },
     {
-      "name": "ChargebackPayment",
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "payment",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Payment PDA being updated"
-          ]
-        },
-        {
-          "name": "operatorAuthority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "buyer",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Chargeback destination owner"
-          ]
-        },
-        {
-          "name": "merchant",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Merchant PDA"
-          ]
-        },
-        {
-          "name": "operator",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Operator PDA"
-          ]
-        },
-        {
-          "name": "merchantOperatorConfig",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Merchant Operator Config PDA"
-          ]
-        },
-        {
-          "name": "mint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "merchantEscrowAta",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Merchant Escrow ATA (Merchant PDA is owner)"
-          ]
-        },
-        {
-          "name": "buyerAta",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "eventAuthority",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Event authority PDA"
-          ]
-        },
-        {
-          "name": "commerceProgram",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "Commerce Program ID"
-          ]
-        }
-      ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 6
-      }
-    },
-    {
       "name": "UpdateMerchantSettlementWallet",
       "accounts": [
         {
@@ -656,47 +516,12 @@
           "name": "newSettlementWallet",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "settlementUsdcAta",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "usdcMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "settlementUsdtAta",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "usdtMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": [],
       "discriminant": {
         "type": "u8",
-        "value": 7
+        "value": 6
       }
     },
     {
@@ -729,7 +554,7 @@
       "args": [],
       "discriminant": {
         "type": "u8",
-        "value": 8
+        "value": 7
       }
     },
     {
@@ -762,7 +587,7 @@
       "args": [],
       "discriminant": {
         "type": "u8",
-        "value": 9
+        "value": 8
       }
     },
     {
@@ -835,7 +660,7 @@
       "args": [],
       "discriminant": {
         "type": "u8",
-        "value": 10
+        "value": 9
       }
     },
     {
@@ -909,6 +734,10 @@
           {
             "name": "currentOrderId",
             "type": "u32"
+          },
+          {
+            "name": "daysToClose",
+            "type": "u16"
           },
           {
             "name": "numPolicies",
@@ -1070,55 +899,7 @@
       }
     },
     {
-      "name": "PaymentChargebackedEvent",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "discriminator",
-            "type": "u8"
-          },
-          {
-            "name": "buyer",
-            "type": "publicKey"
-          },
-          {
-            "name": "merchant",
-            "type": "publicKey"
-          },
-          {
-            "name": "operator",
-            "type": "publicKey"
-          },
-          {
-            "name": "amount",
-            "type": "u64"
-          },
-          {
-            "name": "orderId",
-            "type": "u32"
-          }
-        ]
-      }
-    },
-    {
       "name": "RefundPolicy",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "maxAmount",
-            "type": "u64"
-          },
-          {
-            "name": "maxTimeAfterPurchase",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "ChargebackPolicy",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1165,9 +946,6 @@
             "name": "Cleared"
           },
           {
-            "name": "Chargedback"
-          },
-          {
             "name": "Refunded"
           }
         ]
@@ -1196,9 +974,6 @@
             "name": "Refund"
           },
           {
-            "name": "Chargeback"
-          },
-          {
             "name": "Settlement"
           }
         ]
@@ -1214,14 +989,6 @@
             "fields": [
               {
                 "defined": "RefundPolicy"
-              }
-            ]
-          },
-          {
-            "name": "Chargeback",
-            "fields": [
-              {
-                "defined": "ChargebackPolicy"
               }
             ]
           },

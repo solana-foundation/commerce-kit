@@ -5,11 +5,10 @@ use pinocchio::{
 
 use crate::{
     processor::{
-        process_chargeback_payment, process_clear_payment, process_close_payment,
-        process_create_operator, process_emit_event, process_initialize_merchant,
-        process_initialize_merchant_operator_config, process_make_payment, process_refund_payment,
-        process_update_merchant_authority, process_update_merchant_settlement_wallet,
-        process_update_operator_authority,
+        process_clear_payment, process_close_payment, process_create_operator, process_emit_event,
+        process_initialize_merchant, process_initialize_merchant_operator_config,
+        process_make_payment, process_refund_payment, process_update_merchant_authority,
+        process_update_merchant_settlement_wallet, process_update_operator_authority,
     },
     state::discriminator::CommerceInstructionDiscriminators,
 };
@@ -46,9 +45,6 @@ pub fn process_instruction(
         }
         CommerceInstructionDiscriminators::RefundPayment => {
             process_refund_payment(program_id, accounts, instruction_data)
-        }
-        CommerceInstructionDiscriminators::ChargebackPayment => {
-            process_chargeback_payment(program_id, accounts, instruction_data)
         }
         CommerceInstructionDiscriminators::UpdateMerchantSettlementWallet => {
             process_update_merchant_settlement_wallet(program_id, accounts, instruction_data)
