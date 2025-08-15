@@ -41,7 +41,6 @@ export function FloatingCommerceButton() {
           enableWalletConnect: true,
           showProductDetails: false,
           showMerchantInfo: true,
-          isolation: 'secure',
         }}
         // variant="icon-only"
         onPayment={(amount: number, currency: string, products?: readonly OrderItem[]) => {

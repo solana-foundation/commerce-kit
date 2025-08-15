@@ -85,8 +85,7 @@ export function InteractiveDemo() {
       showProductDetails: customizations.showProductDetails,
       showMerchantInfo: customizations.showMerchantInfo,
       position: customizations.position as 'overlay' | 'inline',
-      allowedMints: customizations.supportedCurrencies,
-      isolation: 'secure'
+      allowedMints: customizations.supportedCurrencies
     };
 
     switch (selectedMode) {
