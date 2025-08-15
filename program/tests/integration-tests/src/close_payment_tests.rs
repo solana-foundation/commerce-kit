@@ -3,7 +3,8 @@ use crate::{
     utils::{
         assert_program_error, get_or_create_associated_token_account, TestContext, DAYS_TO_CLOSE,
         INVALID_ACCOUNT_DATA_ERROR, INVALID_ACCOUNT_OWNER_ERROR, INVALID_PAYMENT_STATUS_ERROR,
-        MISSING_REQUIRED_SIGNATURE_ERROR, PAYMENT_CANNOT_BE_CLOSED_ERROR, USDC_MINT, USDT_MINT,
+        MISSING_REQUIRED_SIGNATURE_ERROR, OPERATOR_OWNER_MISMATCH_ERROR,
+        PAYMENT_CANNOT_BE_CLOSED_ERROR, USDC_MINT, USDT_MINT,
     },
 };
 use commerce_program_client::{
@@ -666,5 +667,5 @@ async fn test_close_payment_wrong_operator_authority_fails() {
         .instruction();
 
     let result = context.send_transaction_with_signers(instruction, &[&wrong_authority]);
-    assert_program_error(result, INVALID_ACCOUNT_DATA_ERROR);
+    assert_program_error(result, OPERATOR_OWNER_MISMATCH_ERROR);
 }

@@ -3,9 +3,9 @@ use crate::{
     utils::{
         assert_program_error, find_event_authority_pda, find_merchant_pda, find_payment_pda,
         get_or_create_associated_token_account, set_mint, TestContext, DAYS_TO_CLOSE,
-        INVALID_ACCOUNT_DATA_ERROR, INVALID_ACCOUNT_OWNER_ERROR, INVALID_INSTRUCTION_DATA_ERROR,
-        INVALID_MINT_ERROR, MISSING_REQUIRED_SIGNATURE_ERROR, TOKEN_INSUFFICIENT_FUNDS_ERROR,
-        USDC_MINT, USDT_MINT,
+        INVALID_ACCOUNT_OWNER_ERROR, INVALID_INSTRUCTION_DATA_ERROR, INVALID_MINT_ERROR,
+        MISSING_REQUIRED_SIGNATURE_ERROR, OPERATOR_OWNER_MISMATCH_ERROR,
+        TOKEN_INSUFFICIENT_FUNDS_ERROR, USDC_MINT, USDT_MINT,
     },
 };
 use commerce_program_client::{
@@ -316,7 +316,7 @@ async fn test_make_payment_unsigned_operator_authority_fails() {
         .instruction();
 
     let result = context.send_transaction_with_signers(instruction, &[&non_signer, &buyer]);
-    assert_program_error(result, INVALID_ACCOUNT_DATA_ERROR);
+    assert_program_error(result, OPERATOR_OWNER_MISMATCH_ERROR);
 }
 
 #[tokio::test]
@@ -840,7 +840,7 @@ async fn test_make_payment_auto_settle_unsigned_fee_payer_fails() {
 
     let result = context.send_transaction_with_signers(instruction, &[&non_signer, &buyer]);
 
-    assert_program_error(result, INVALID_ACCOUNT_DATA_ERROR);
+    assert_program_error(result, OPERATOR_OWNER_MISMATCH_ERROR);
 }
 
 #[tokio::test]

@@ -7,8 +7,8 @@ use pinocchio::{
 };
 use shank::ShankAccount;
 
-use crate::constants::MERCHANT_SEED;
 use crate::ID as COMMERCE_PROGRAM_ID;
+use crate::{constants::MERCHANT_SEED, error::CommerceProgramError};
 
 use super::discriminator::{AccountSerialize, CommerceAccountDiscriminators, Discriminator};
 
@@ -46,7 +46,7 @@ impl Merchant {
 
     pub fn validate_owner(&self, owner: &Pubkey) -> Result<(), ProgramError> {
         if self.owner.ne(owner) {
-            return Err(ProgramError::InvalidAccountData);
+            return Err(CommerceProgramError::MerchantOwnerMismatch.into());
         }
         Ok(())
     }
@@ -56,7 +56,7 @@ impl Merchant {
             find_program_address(&[MERCHANT_SEED, self.owner.as_ref()], &COMMERCE_PROGRAM_ID);
 
         if pda.ne(account_info_key) || bump != self.bump {
-            return Err(ProgramError::InvalidAccountData);
+            return Err(CommerceProgramError::MerchantInvalidPda.into());
         }
 
         Ok(())

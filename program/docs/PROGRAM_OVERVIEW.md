@@ -7,6 +7,7 @@ commkU28d52cwo2Ma3Marxz4Qr9REtfJtuUfqnDnbhT
 ```
 - [Instruction Details](#instruction-details)
 - [Accounts](#accounts)
+- [Errors](#errors)
 - [Other Constants](#other-constants)
 
 ## Instructions
@@ -311,6 +312,43 @@ Represents a payment transaction.
 |-------|------|-------------|
 | `max_amount` | u64 | Maximum refundable amount |
 | `max_time_after_purchase` | u64 | Time window for refunds (seconds) |
+
+### ChargebackPolicy
+| Field | Type | Description |
+|-------|------|-------------|
+| `max_amount` | u64 | Maximum chargeback amount |
+| `max_time_after_purchase` | u64 | Time window for chargebacks (seconds) |
+
+### SettlementPolicy
+| Field | Type | Description |
+|-------|------|-------------|
+| `min_settlement_amount` | u64 | Minimum amount for settlement |
+| `settlement_frequency_hours` | u32 | Hours between settlements |
+| `auto_settle` | bool | Enable automatic settlement |
+
+## Errors
+
+The program defines the following custom errors:
+
+| Error Code | Error Name | Description |
+|------------|------------|-------------|
+| 0 | `InvalidMint` | Incorrect mint provided |
+| 1 | `InvalidPaymentStatus` | Invalid payment status for the operation |
+| 2 | `InsufficientSettlementAmount` | Insufficient settlement amount |
+| 3 | `SettlementTooEarly` | Settlement attempted too early |
+| 4 | `RefundAmountExceedsPolicyLimit` | Refund amount exceeds policy limit |
+| 5 | `RefundWindowExpired` | Refund window expired |
+| 6 | `InvalidEventAuthority` | Invalid event authority |
+| 7 | `InvalidAta` | Invalid ATA |
+| 8 | `PaymentCloseWindowNotReached` | Payment close window not reached |
+| 9 | `MerchantOwnerMismatch` | Merchant owner does not match expected owner |
+| 10 | `MerchantInvalidPda` | Merchant PDA is invalid |
+| 11 | `OperatorOwnerMismatch` | Operator owner does not match expected owner |
+| 12 | `OperatorInvalidPda` | Operator PDA is invalid |
+| 13 | `OperatorMismatch` | Operator does not match config operator |
+| 14 | `MerchantMismatch` | Merchant does not match config merchant |
+| 15 | `OrderIdInvalid` | Order ID is invalid or already used |
+| 16 | `MerchantOperatorConfigInvalidPda` | MerchantOperatorConfig PDA is invalid |
 
 ## Other Constants
 

@@ -21,6 +21,22 @@ pub enum CommerceProgramError {
     InvalidAta,
     // 8 Payment close window not reached
     PaymentCloseWindowNotReached,
+    // 9 Merchant owner does not match expected owner
+    MerchantOwnerMismatch,
+    // 10 Merchant PDA is invalid
+    MerchantInvalidPda,
+    // 11 Operator owner does not match expected owner
+    OperatorOwnerMismatch,
+    // 12 Operator PDA is invalid
+    OperatorInvalidPda,
+    // 13 Operator does not match config operator
+    OperatorMismatch,
+    // 14 Merchant does not match config merchant
+    MerchantMismatch,
+    // 15 Order ID is invalid or already used
+    OrderIdInvalid,
+    // 16 MerchantOperatorConfig PDA is invalid
+    MerchantOperatorConfigInvalidPda,
 }
 
 impl From<CommerceProgramError> for ProgramError {

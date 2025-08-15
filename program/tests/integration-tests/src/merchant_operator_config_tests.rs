@@ -4,8 +4,8 @@ use crate::{
         assert_get_or_create_operator,
     },
     utils::{
-        assert_program_error, set_mint, TestContext, DAYS_TO_CLOSE, INVALID_ACCOUNT_DATA_ERROR,
-        INVALID_ACCOUNT_OWNER_ERROR, NOT_ENOUGH_ACCOUNT_KEYS_ERROR, USDC_MINT, USDT_MINT,
+        assert_program_error, set_mint, TestContext, DAYS_TO_CLOSE, INVALID_ACCOUNT_OWNER_ERROR,
+        INVALID_MINT_ERROR, NOT_ENOUGH_ACCOUNT_KEYS_ERROR, USDC_MINT, USDT_MINT,
     },
 };
 use commerce_program_client::{
@@ -237,7 +237,7 @@ async fn test_initialize_merchant_operator_config_wrong_mint_address_fails() {
     let result = context.send_transaction_with_signers(instruction, &[&authority]);
 
     // Should fail because accepted_currencies contains USDC_MINT but we pass valid_mint as remaining account
-    assert_program_error(result, INVALID_ACCOUNT_DATA_ERROR);
+    assert_program_error(result, INVALID_MINT_ERROR);
 }
 
 #[tokio::test]
