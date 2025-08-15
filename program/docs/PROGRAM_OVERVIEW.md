@@ -29,7 +29,7 @@ commkU28d52cwo2Ma3Marxz4Qr9REtfJtuUfqnDnbhT
 ### Instruction Details
 
 #### InitializeMerchant
-Initializes the merchant PDA and creates settlement ATAs for USDC and USDT.
+Initializes the merchant PDA.
 
 **Parameters:**
 | Parameter | Type | Description |
@@ -44,14 +44,6 @@ Initializes the merchant PDA and creates settlement ATAs for USDC and USDT.
 | 2 | `merchant` | | ✓ | Merchant PDA to initialize |
 | 3 | `settlement_wallet` | | | Settlement wallet for receiving funds |
 | 4 | `system_program` | | | System program |
-| 5 | `settlement_usdc_ata` | | ✓ | Settlement USDC ATA |
-| 6 | `escrow_usdc_ata` | | ✓ | Escrow USDC ATA |
-| 7 | `usdc_mint` | | | USDC mint |
-| 8 | `settlement_usdt_ata` | | ✓ | Settlement USDT ATA |
-| 9 | `escrow_usdt_ata` | | ✓ | Escrow USDT ATA |
-| 10 | `usdt_mint` | | | USDT mint |
-| 11 | `token_program` | | | Token program |
-| 12 | `associated_token_program` | | | Associated token program |
 
 #### CreateOperator
 Creates the Operator PDA account for managing merchant configurations.
@@ -179,13 +171,6 @@ Updates the merchant's settlement wallet and recreates ATAs for the new wallet.
 | 1 | `authority` | ✓ | ✓ | Merchant authority |
 | 2 | `merchant` | | ✓ | Merchant PDA |
 | 3 | `new_settlement_wallet` | | | New settlement wallet |
-| 4 | `settlement_usdc_ata` | | ✓ | New settlement USDC ATA |
-| 5 | `usdc_mint` | | | USDC mint |
-| 6 | `settlement_usdt_ata` | | ✓ | New settlement USDT ATA |
-| 7 | `usdt_mint` | | | USDT mint |
-| 8 | `token_program` | | | Token program |
-| 9 | `associated_token_program` | | | Associated token program |
-| 10 | `system_program` | | | System program |
 
 #### UpdateMerchantAuthority
 Updates the merchant's authority to a new owner.
@@ -353,8 +338,3 @@ The program defines the following custom errors:
 ## Other Constants
 
 - **Event Authority PDA**: Derived from `["event_authority"]`
-- **Default Mints**:
-  - USDC (Mainnet): `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`
-  - USDT (Mainnet): `Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB`
-  - USDC (Devnet): `5S2UmJm13KgrQozS8FwMTvQVusFLdnNjeAVBL1dHFZpN`
-  - USDT (Devnet): `2UEzfJMY6dNgAu3wgLmJ7izGt2Z3sPcgLW4q5UpNqJgj`

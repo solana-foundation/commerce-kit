@@ -31,13 +31,13 @@ Starting Solana Commerce Payment Demo
 
 1. Setting up wallets and funding accounts...
     - Accounts funded successfully
+    - Settlement and escrow token accounts created
 
 2. Creating Operator...
     - Operator created - PDA: 8x9V2kF3mX7nQ4pR6tE8wZ1jY0sL5vA2cB3hU9mN6dK7
 
 3. Creating Merchant...
     - Merchant created - PDA: 3yB9Xrgg73oWxuQv8564q9LwwRL2rX2fjZD7ssy3X4M3
-    - Settlement and escrow token accounts created
 
 4. Configuring Merchant-Operator Settings...
     - Merchant-Operator config created - PDA: FfNqeLfPHy4p7FPgH2LDTm9gzVWSDcupA3LUhiMEzBXw
@@ -95,7 +95,7 @@ Each component is represented on-chain as an account governed by the Commerce Pr
 * **Escrow Protection** - Customer funds are held in escrow until payment is cleared
 * **Configurable Fees** - Support for fixed fees or basis point percentages
 * **Policy Management** - Define refund policies, settlement rules, and other constraints
-* **Multi-token Support** - Accept payments in various SPL tokens (as configured) *[default accepted payment methods: USDC and USDT]*
+* **Multi-token Support** - Accept payments in various SPL tokens (as configured)
 * **State Management** - Payments progress through well-defined states
 * **Rent Optimization** - Payment accounts can be closed to reclaim SOL rent
 
@@ -536,42 +536,12 @@ Merchants are the entities that will be receiving payments in exchange for goods
             owner: merchant.address
         });
 
-        const [settlementUsdcAta] = await findAssociatedTokenPda({
-            tokenProgram: TOKEN_PROGRAM_ADDRESS,
-            mint: CONFIG.USDC_MINT,
-            owner: settlementWallet.address
-        });
-
-        const [escrowUsdcAta] = await findAssociatedTokenPda({
-            tokenProgram: TOKEN_PROGRAM_ADDRESS,
-            mint: CONFIG.USDC_MINT,
-            owner: merchantPda
-        });
-
-        const [settlementUsdtAta] = await findAssociatedTokenPda({
-            tokenProgram: TOKEN_PROGRAM_ADDRESS,
-            mint: CONFIG.USDT_MINT,
-            owner: settlementWallet.address
-        });
-
-        const [escrowUsdtAta] = await findAssociatedTokenPda({
-            tokenProgram: TOKEN_PROGRAM_ADDRESS,
-            mint: CONFIG.USDT_MINT,
-            owner: merchantPda
-        });
-
         const initMerchantIx = getInitializeMerchantInstruction({
             bump: merchantBump,
             payer,
             authority: merchant,
             merchant: merchantPda,
             settlementWallet: settlementWallet.address,
-            settlementUsdcAta,
-            escrowUsdcAta,
-            usdcMint: CONFIG.USDC_MINT,
-            settlementUsdtAta,
-            escrowUsdtAta,
-            usdtMint: CONFIG.USDT_MINT,
         });
 
         if (!CONFIG.SKIP.CREATE_MERCHANT) {
@@ -582,11 +552,17 @@ Merchants are the entities that will be receiving payments in exchange for goods
                 description: 'Merchant created'
             });
         }
+
+        // Create token accounts for the merchant and settlement wallet if they don't exist
+        await generateManyTokenAccounts({
+            client,
+            payer,
+            mint: CONFIG.USDC_MINT,
+            owners: [merchantPda, settlementWallet.address]
+        });
         console.log(`    - Merchant PDA: ${merchantPda}`);
         console.log(`    - Settlement and escrow token accounts created`);
 ```
-
-The Merchant initialization instruction creates associated token accounts for the merchant's settlement and escrow wallets for both USDC and USDT--so each of those accounts needs to be derived and specified in the `getInitializeMerchantInstruction` call.
 
 ### Step 4: Configure Merchant-Operator Relationship
 
