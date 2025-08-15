@@ -19,10 +19,10 @@ commkU28d52cwo2Ma3Marxz4Qr9REtfJtuUfqnDnbhT
 | [`MakePayment`](#makepayment) | Process a payment from buyer to merchant | 3 |
 | [`ClearPayment`](#clearpayment) | Clear payment from escrow to settlement wallets | 4 |
 | [`RefundPayment`](#refundpayment) | Refund payment back to buyer | 5 |
-| [`UpdateMerchantSettlementWallet`](#updatemerchantsettlementwallet) | Update merchant's settlement wallet | 7 |
-| [`UpdateMerchantAuthority`](#updatemerchantauthority) | Update merchant's authority | 8 |
-| [`UpdateOperatorAuthority`](#updateoperatorauthority) | Update operator's authority | 9 |
-| [`ClosePayment`](#closepayment) | Close payment account | 10 |
+| [`UpdateMerchantSettlementWallet`](#updatemerchantsettlementwallet) | Update merchant's settlement wallet | 6 |
+| [`UpdateMerchantAuthority`](#updatemerchantauthority) | Update merchant's authority | 7 |
+| [`UpdateOperatorAuthority`](#updateoperatorauthority) | Update operator's authority | 8 |
+| [`ClosePayment`](#closepayment) | Close payment account | 9 |
 | [`EmitEvent`](#emitevent) | Emit event via CPI | 228 |
 
 ### Instruction Details
