@@ -141,32 +141,6 @@ pub enum CommerceProgramInstruction {
     #[account(13, name = "commerce_program", desc = "Commerce Program ID")]
     RefundPayment = 5,
 
-    // Chargeback Payment
-    #[account(0, writable, signer, name = "payer")]
-    #[account(1, writable, name = "payment", desc = "Payment PDA being updated")]
-    #[account(2, signer, name = "operator_authority")]
-    #[account(3, name = "buyer", desc = "Chargeback destination owner")]
-    #[account(4, name = "merchant", desc = "Merchant PDA")]
-    #[account(5, name = "operator", desc = "Operator PDA")]
-    #[account(
-        6,
-        name = "merchant_operator_config",
-        desc = "Merchant Operator Config PDA"
-    )]
-    #[account(7, name = "mint")]
-    #[account(
-        8,
-        writable,
-        name = "merchant_escrow_ata",
-        desc = "Merchant Escrow ATA (Merchant PDA is owner)"
-    )]
-    #[account(9, writable, name = "buyer_ata")]
-    #[account(10, name = "token_program")]
-    #[account(11, name = "system_program")]
-    #[account(12, name = "event_authority", desc = "Event authority PDA")]
-    #[account(13, name = "commerce_program", desc = "Commerce Program ID")]
-    ChargebackPayment = 6,
-
     // Update Merchant Settlement Wallet
     #[account(0, writable, signer, name = "payer")]
     #[account(1, writable, signer, name = "authority")]
@@ -179,21 +153,21 @@ pub enum CommerceProgramInstruction {
     #[account(8, name = "token_program")]
     #[account(9, name = "associated_token_program")]
     #[account(10, name = "system_program")]
-    UpdateMerchantSettlementWallet = 7,
+    UpdateMerchantSettlementWallet = 6,
 
     // Update Merchant Authority
     #[account(0, writable, signer, name = "payer")]
     #[account(1, writable, signer, name = "authority")]
     #[account(2, writable, name = "merchant", desc = "Merchant PDA")]
     #[account(3, name = "new_authority")]
-    UpdateMerchantAuthority = 8,
+    UpdateMerchantAuthority = 7,
 
     // Update Operator Authority
     #[account(0, writable, signer, name = "payer")]
     #[account(1, writable, signer, name = "authority")]
     #[account(2, writable, name = "operator", desc = "Operator PDA")]
     #[account(3, name = "new_operator_authority")]
-    UpdateOperatorAuthority = 9,
+    UpdateOperatorAuthority = 8,
 
     // Close Payment
     #[account(0, writable, signer, name = "payer")]
@@ -209,7 +183,7 @@ pub enum CommerceProgramInstruction {
     )]
     #[account(7, name = "mint", desc = "Token mint")]
     #[account(8, name = "system_program")]
-    ClosePayment = 10,
+    ClosePayment = 9,
 
     /// Invoked via CPI from another program to log event via instruction data.
     #[account(0, signer, name = "event_authority")]

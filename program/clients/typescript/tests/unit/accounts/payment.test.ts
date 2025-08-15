@@ -92,7 +92,7 @@ describe('Payment Account', () => {
     expect(decoded.createdAt).toBe(0n);
     
     // Test with different statuses
-    const statuses = [Status.Paid, Status.Cleared, Status.Chargedback, Status.Refunded];
+    const statuses = [Status.Paid, Status.Cleared, Status.Refunded];
     
     statuses.forEach((status, index) => {
       const statusData: PaymentArgs = {

@@ -19,11 +19,10 @@ commkU28d52cwo2Ma3Marxz4Qr9REtfJtuUfqnDnbhT
 | [`MakePayment`](#makepayment) | Process a payment from buyer to merchant | 3 |
 | [`ClearPayment`](#clearpayment) | Clear payment from escrow to settlement wallets | 4 |
 | [`RefundPayment`](#refundpayment) | Refund payment back to buyer | 5 |
-| [`ChargebackPayment`](#chargebackpayment) | Process chargeback to buyer | 6 |
-| [`UpdateMerchantSettlementWallet`](#updatemerchantsettlementwallet) | Update merchant's settlement wallet | 7 |
-| [`UpdateMerchantAuthority`](#updatemerchantauthority) | Update merchant's authority | 8 |
-| [`UpdateOperatorAuthority`](#updateoperatorauthority) | Update operator's authority | 9 |
-| [`ClosePayment`](#closepayment) | Close payment account | 10 |
+| [`UpdateMerchantSettlementWallet`](#updatemerchantsettlementwallet) | Update merchant's settlement wallet | 6 |
+| [`UpdateMerchantAuthority`](#updatemerchantauthority) | Update merchant's authority | 7 |
+| [`UpdateOperatorAuthority`](#updateoperatorauthority) | Update operator's authority | 8 |
+| [`ClosePayment`](#closepayment) | Close payment account | 9 |
 | [`EmitEvent`](#emitevent) | Emit event via CPI | 228 |
 
 ### Instruction Details
@@ -79,7 +78,7 @@ Initializes the configuration between a merchant and operator.
 | `bump` | u8 | PDA bump seed |
 | `operator_fee` | u64 | Operator fee amount |
 | `fee_type` | FeeType | Fee type (Bps=0, Fixed=1) |
-| `policies` | Vec&lt;PolicyData&gt; | List of policies (refund, chargeback, settlement) |
+| `policies` | Vec&lt;PolicyData&gt; | List of policies (refund, settlement) |
 | `accepted_currencies` | Vec&lt;Pubkey&gt; | List of accepted token mints |
 
 **Accounts:**
@@ -166,27 +165,6 @@ Refunds payment back to buyer.
 | 11 | `system_program` | | | System program |
 | 12 | `event_authority` | | | Event authority PDA |
 
-#### ChargebackPayment
-Process chargeback to buyer.
-
-**Parameters:** None
-
-**Accounts:**
-| Account | Name | Signer | Writable | Description |
-|---------|------|--------|----------|-------------|
-| 0 | `payer` | ✓ | ✓ | Transaction fee payer |
-| 1 | `payment` | | ✓ | Payment PDA |
-| 2 | `operator_authority` | ✓ | | Operator authority |
-| 3 | `buyer` | | | Chargeback destination owner |
-| 4 | `merchant` | | | Merchant PDA |
-| 5 | `operator` | | | Operator PDA |
-| 6 | `merchant_operator_config` | | | Config PDA |
-| 7 | `mint` | | | Token mint |
-| 8 | `merchant_escrow_ata` | | ✓ | Merchant escrow ATA |
-| 9 | `buyer_ata` | | ✓ | Buyer's token account |
-| 10 | `token_program` | | | Token program |
-| 11 | `system_program` | | | System program |
-| 12 | `event_authority` | | | Event authority PDA |
 
 #### UpdateMerchantSettlementWallet
 Updates the merchant's settlement wallet and recreates ATAs for the new wallet.
@@ -310,7 +288,7 @@ Configuration linking a merchant with an operator, including fees and policies.
 | `num_accepted_currencies` | u32 | Number of accepted token mints stored after policies |
 
 **Dynamic data (stored after fixed fields):**
-- `policies`: Vec&lt;PolicyData&gt; - Variable number of policies (refund, chargeback, settlement)
+- `policies`: Vec&lt;PolicyData&gt; - Variable number of policies (refund, settlement)
 - `accepted_currencies`: Vec&lt;Pubkey&gt; - Variable number of accepted token mints
 
 ### Payment
@@ -333,19 +311,6 @@ Represents a payment transaction.
 |-------|------|-------------|
 | `max_amount` | u64 | Maximum refundable amount |
 | `max_time_after_purchase` | u64 | Time window for refunds (seconds) |
-
-### ChargebackPolicy
-| Field | Type | Description |
-|-------|------|-------------|
-| `max_amount` | u64 | Maximum chargeback amount |
-| `max_time_after_purchase` | u64 | Time window for chargebacks (seconds) |
-
-### SettlementPolicy
-| Field | Type | Description |
-|-------|------|-------------|
-| `min_settlement_amount` | u64 | Minimum amount for settlement |
-| `settlement_frequency_hours` | u32 | Hours between settlements |
-| `auto_settle` | bool | Enable automatic settlement |
 
 ## Other Constants
 

@@ -277,19 +277,21 @@ export async function assertGetOrCreateMerchantOperatorConfig({
     }
   }
 
-  const instruction = await getInitializeMerchantOperatorConfigInstructionAsync({
-    payer: payer,
-    authority: authority,
-    merchant: merchantPda,
-    operator: operatorPda,
-    version,
-    bump: merchantOperatorConfigBump,
-    operatorFee,
-    feeType,
-    daysToClose,
-    policies,
-    acceptedCurrencies,
-  });
+  const instruction = await getInitializeMerchantOperatorConfigInstructionAsync(
+    {
+      payer: payer,
+      authority: authority,
+      merchant: merchantPda,
+      operator: operatorPda,
+      version,
+      bump: merchantOperatorConfigBump,
+      operatorFee,
+      feeType,
+      daysToClose,
+      policies,
+      acceptedCurrencies,
+    }
+  );
 
   await sendAndConfirmInstructions({
     client,
@@ -663,7 +665,7 @@ export async function assertUpdateMerchantSettlementWallet({
   });
 
   const updateMerchantSettlementWalletIx =
-   await getUpdateMerchantSettlementWalletInstructionAsync({
+    await getUpdateMerchantSettlementWalletInstructionAsync({
       payer,
       authority,
       newSettlementWallet: newSettlementWallet.address,
@@ -717,11 +719,12 @@ export async function assertUpdateMerchantAuthority({
   settlementWallet: Address;
   newAuthority: KeyPairSigner;
 }): Promise<void> {
-  const updateMerchantAuthorityIx = await getUpdateMerchantAuthorityInstructionAsync({
-    payer,
-    authority: currentAuthority,
-    newAuthority: newAuthority.address,
-  });
+  const updateMerchantAuthorityIx =
+    await getUpdateMerchantAuthorityInstructionAsync({
+      payer,
+      authority: currentAuthority,
+      newAuthority: newAuthority.address,
+    });
 
   await sendAndConfirmInstructions({
     client,
@@ -755,11 +758,12 @@ export async function assertUpdateOperatorAuthority({
   operatorBump: number;
   newAuthority: KeyPairSigner;
 }): Promise<void> {
-  const updateOperatorAuthorityIx = await getUpdateOperatorAuthorityInstructionAsync({
-    payer,
-    authority: currentAuthority,
-    newOperatorAuthority: newAuthority.address,
-  });
+  const updateOperatorAuthorityIx =
+    await getUpdateOperatorAuthorityInstructionAsync({
+      payer,
+      authority: currentAuthority,
+      newOperatorAuthority: newAuthority.address,
+    });
 
   await sendAndConfirmInstructions({
     client,
@@ -879,12 +883,10 @@ export enum PaymentWorkflow {
   ClearOnly = "clear_only",
   /** Make Payment → Refund Payment (cannot close refunded payments) */
   RefundOnly = "refund_only",
-  /** Make Payment → Chargeback Payment → Close Payment (when chargeback is implemented) */
-  ChargebackAndClose = "chargeback_and_close",
 }
 
 /**
- * Complete payment workflow that handles make payment followed by settlement/refund/chargeback and optional close
+ * Complete payment workflow that handles make payment followed by settlement/refund and optional close
  */
 export async function assertCompletePaymentWorkflow({
   client,
@@ -1041,13 +1043,6 @@ export async function assertCompletePaymentWorkflow({
       finalStatus = Status.Refunded;
       accountClosed = false;
       break;
-
-    case PaymentWorkflow.ChargebackAndClose:
-      // Note: Chargeback is not yet implemented in the processor
-      // This is a placeholder for future implementation
-      throw new Error(
-        "Chargeback workflow is not yet implemented in the program"
-      );
 
     default:
       throw new Error(`Unknown payment workflow: ${workflow}`);

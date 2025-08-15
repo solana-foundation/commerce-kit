@@ -1,4 +1,3 @@
-pub mod chargeback_payment;
 pub mod clear_payment;
 pub mod close_payment;
 pub mod create_operator;
@@ -12,7 +11,6 @@ pub mod update_merchant_authority;
 pub mod update_merchant_settlement_wallet;
 pub mod update_operator_authority;
 
-pub use chargeback_payment::*;
 pub use clear_payment::*;
 pub use close_payment::*;
 pub use create_operator::*;
