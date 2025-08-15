@@ -11,6 +11,7 @@ use alloc::vec::Vec;
 
 use crate::{
     constants::MERCHANT_OPERATOR_CONFIG_SEED,
+    error::CommerceProgramError,
     processor::{
         create_pda_account, validate_pda, verify_mint_account, verify_owner_mutability,
         verify_signer, verify_system_account, verify_system_program, verify_token_program_account,
@@ -68,7 +69,7 @@ pub fn process_initialize_merchant_operator_config(
         .try_for_each(|(i, mint_info)| {
             // Validate mint account key matches the expected accepted currency
             if mint_info.key() != &args.accepted_currencies[i] {
-                return Err(ProgramError::InvalidAccountData);
+                return Err(CommerceProgramError::InvalidMint.into());
             }
 
             // Validate mint is owned by token program

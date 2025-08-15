@@ -3,7 +3,7 @@ use crate::{
     utils::{
         assert_program_error, get_or_create_associated_token_account, TestContext, DAYS_TO_CLOSE,
         INVALID_ACCOUNT_DATA_ERROR, INVALID_ACCOUNT_OWNER_ERROR, INVALID_INSTRUCTION_DATA_ERROR,
-        INVALID_PAYMENT_STATUS_ERROR, NOT_ENOUGH_ACCOUNT_KEYS_ERROR,
+        INVALID_PAYMENT_STATUS_ERROR, NOT_ENOUGH_ACCOUNT_KEYS_ERROR, OPERATOR_OWNER_MISMATCH_ERROR,
         REFUND_AMOUNT_EXCEEDS_POLICY_LIMIT_ERROR, REFUND_WINDOW_EXPIRED_ERROR, USDC_MINT,
         USDT_MINT,
     },
@@ -314,7 +314,7 @@ async fn test_refund_payment_invalid_signer_verification_fails() {
         .instruction();
 
     let result = context.send_transaction_with_signers(instruction, &[&wrong_signer]);
-    assert_program_error(result, INVALID_ACCOUNT_DATA_ERROR);
+    assert_program_error(result, OPERATOR_OWNER_MISMATCH_ERROR);
 }
 
 #[tokio::test]
@@ -355,7 +355,7 @@ async fn test_refund_payment_unsigned_operator_authority_fails() {
         .instruction();
 
     let result = context.send_transaction_with_signers(instruction, &[&non_signer]);
-    assert_program_error(result, INVALID_ACCOUNT_DATA_ERROR);
+    assert_program_error(result, OPERATOR_OWNER_MISMATCH_ERROR);
 }
 
 #[tokio::test]

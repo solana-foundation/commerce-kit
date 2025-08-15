@@ -2,9 +2,9 @@ use crate::{
     state_utils::*,
     utils::{
         assert_program_error, get_or_create_associated_token_account, set_mint, TestContext,
-        DAYS_TO_CLOSE, INSUFFICIENT_SETTLEMENT_AMOUNT_ERROR, INVALID_ACCOUNT_DATA_ERROR,
-        INVALID_ACCOUNT_OWNER_ERROR, INVALID_INSTRUCTION_DATA_ERROR, INVALID_MINT_ERROR,
-        INVALID_PAYMENT_STATUS_ERROR, NOT_ENOUGH_ACCOUNT_KEYS_ERROR, SETTLEMENT_TOO_EARLY_ERROR,
+        DAYS_TO_CLOSE, INSUFFICIENT_SETTLEMENT_AMOUNT_ERROR, INVALID_ACCOUNT_OWNER_ERROR,
+        INVALID_INSTRUCTION_DATA_ERROR, INVALID_MINT_ERROR, INVALID_PAYMENT_STATUS_ERROR,
+        NOT_ENOUGH_ACCOUNT_KEYS_ERROR, OPERATOR_OWNER_MISMATCH_ERROR, SETTLEMENT_TOO_EARLY_ERROR,
         USDC_MINT, USDT_MINT,
     },
 };
@@ -625,7 +625,7 @@ async fn test_clear_payment_unsigned_operator_authority_fails() {
         .instruction();
 
     let result = context.send_transaction_with_signers(instruction, &[&non_signer]);
-    assert_program_error(result, INVALID_ACCOUNT_DATA_ERROR);
+    assert_program_error(result, OPERATOR_OWNER_MISMATCH_ERROR);
 }
 
 #[tokio::test]

@@ -6,6 +6,7 @@ use pinocchio::{program_error::ProgramError, pubkey::Pubkey};
 use shank::ShankAccount;
 
 use crate::constants::MERCHANT_OPERATOR_CONFIG_SEED;
+use crate::error::CommerceProgramError;
 use crate::state::PolicyType;
 
 use super::discriminator::{AccountSerialize, CommerceAccountDiscriminators, Discriminator};
@@ -106,21 +107,21 @@ impl MerchantOperatorConfig {
 
     pub fn validate_operator(&self, operator: &Pubkey) -> Result<(), ProgramError> {
         if self.operator.ne(operator) {
-            return Err(ProgramError::InvalidAccountData);
+            return Err(CommerceProgramError::OperatorMismatch.into());
         }
         Ok(())
     }
 
     pub fn validate_merchant(&self, merchant: &Pubkey) -> Result<(), ProgramError> {
         if self.merchant.ne(merchant) {
-            return Err(ProgramError::InvalidAccountData);
+            return Err(CommerceProgramError::MerchantMismatch.into());
         }
         Ok(())
     }
 
     pub fn validate_order_id(&self, order_id: u32) -> Result<(), ProgramError> {
         if order_id == self.current_order_id {
-            return Err(ProgramError::InvalidArgument);
+            return Err(CommerceProgramError::OrderIdInvalid.into());
         }
         Ok(())
     }
@@ -130,8 +131,11 @@ impl MerchantOperatorConfig {
         operator: &Pubkey,
         merchant: &Pubkey,
     ) -> Result<(), ProgramError> {
-        if self.operator.ne(operator) || self.merchant.ne(merchant) {
-            return Err(ProgramError::InvalidAccountData);
+        if self.operator.ne(operator) {
+            return Err(CommerceProgramError::OperatorMismatch.into());
+        }
+        if self.merchant.ne(merchant) {
+            return Err(CommerceProgramError::MerchantMismatch.into());
         }
         Ok(())
     }
@@ -191,7 +195,7 @@ impl MerchantOperatorConfig {
             &COMMERCE_PROGRAM_ID,
         );
         if pda.ne(account_info_key) || bump != self.bump {
-            return Err(ProgramError::InvalidAccountData);
+            return Err(CommerceProgramError::MerchantOperatorConfigInvalidPda.into());
         }
         Ok(())
     }
