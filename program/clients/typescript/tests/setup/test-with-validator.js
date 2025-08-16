@@ -69,7 +69,7 @@ async function runTestsWithValidator() {
     await waitForValidator();
 
     console.log('Running tests...');
-    const testProcess = spawn('bun', ['run', 'test:integration'], {
+    const testProcess = spawn('pnpm', ['test:integration'], {
       stdio: 'inherit',
       shell: platform() === 'win32' // Windows compatibility
     });
