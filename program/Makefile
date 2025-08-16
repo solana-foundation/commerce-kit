@@ -2,17 +2,17 @@
 
 # Install dependencies
 install:
-	bun install
+	pnpm install
 
 # Generate IDL from Shank annotations
 generate-idl:
 	@echo "Generating IDL..."
-	bun run generate-idl
+	pnpm run generate-idl
 
 # Generate clients from IDL using Codama
 generate-clients: generate-idl
 	@echo "Generating clients..."
-	bun run generate-clients
+	pnpm run generate-clients
 
 # Build the program
 build:
@@ -49,12 +49,12 @@ test-integration: build setup-deps
 # Run TypeScript unit tests
 test-typescript: build
 	@echo "Running TypeScript unit tests..."
-	@cd clients/typescript && bun run test:ci:unit
+	@cd clients/typescript && pnpm run test:ci:unit
 
 # Run TypeScript integration tests (requires local validator)
 test-typescript-integration: build
 	@echo "Running TypeScript integration tests..."
-	@cd clients/typescript && bun run test:ci:integration
+	@cd clients/typescript && pnpm run test:ci:integration
 
 test-all: test test-integration test-ts-all
 
@@ -106,13 +106,13 @@ clean:
 ## TypeScript SDK
 
 fetch-mints:
-	cd clients/typescript && bun run fetch-mints
+	cd clients/typescript && pnpm run fetch-mints
 
 test-ts-unit:
-	cd clients/typescript && bun run test:unit
+	cd clients/typescript && pnpm run test:unit
 
 test-ts-integration:
 	make fetch-mints
-	cd clients/typescript && bun run test:ci:integration
+	cd clients/typescript && pnpm run test:ci:integration
 
 test-ts-all: generate-clients test-ts-unit test-ts-integration

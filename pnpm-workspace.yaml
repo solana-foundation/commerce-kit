@@ -1,0 +1,6 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+  - "program"
+  - "program/*"
+  - "program/clients/typescript"

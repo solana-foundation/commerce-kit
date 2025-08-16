@@ -6,12 +6,13 @@ const withMDX = createMDX();
 const config = {
   reactStrictMode: true,
   transpilePackages: [
+    '@solana-commerce/connector-kit',
     '@solana-commerce/ui-primitives',
     '@solana-commerce/react-sdk',
     '@solana-commerce/headless-sdk'
   ],
   experimental: {
-    optimizePackageImports: ['@solana-commerce/headless-sdk', '@solana-commerce/react-sdk', '@solana-commerce/ui-primitives'],
+    optimizePackageImports: ['@solana-commerce/connector-kit', '@solana-commerce/headless-sdk', '@solana-commerce/react-sdk', '@solana-commerce/ui-primitives'],
   },
   // Turbopack configuration
   turbopack: {

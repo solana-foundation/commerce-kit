@@ -48,6 +48,7 @@ export interface SolanaCommerceConfig {
   readonly enableWalletConnect?: boolean;
   readonly showMerchantInfo?: boolean;
   readonly showProductDetails?: boolean;
+
 }
 
 // Payment callbacks
@@ -89,6 +90,7 @@ export interface ProductListProps {
   readonly showDetails: boolean;
 }
 
+// Internal component props for iframe components
 export interface PaymentModalContentProps {
   readonly config: SolanaCommerceConfig;
   readonly theme: Required<ThemeConfig>;
@@ -104,6 +106,8 @@ export interface TipModalContentProps {
   readonly onPayment: (amount: number, currency: string, paymentMethod: PaymentMethod) => void;
   readonly onCancel: () => void;
 }
+
+
 
 export type PaymentMethod = 'wallet' | 'qr';
 export type Currency = 'USDC' | 'SOL' | 'USDT' | 'USDC_DEVNET' | 'SOL_DEVNET' | 'USDT_DEVNET';

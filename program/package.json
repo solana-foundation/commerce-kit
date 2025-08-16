@@ -1,19 +1,19 @@
 {
-    "name": "commerce-program",
+    "name": "@solana-commerce/commerce-program",
     "version": "0.0.1",
     "main": "index.js",
     "description": "Commerce Program",
     "repository": "git@github.com:solana-commerce/commerce-program.git",
     "license": "MIT",
     "scripts": {
-        "generate": "bun run generate-clients",
-        "generate-clients": "bun ./scripts/generate-client.ts",
+        "generate": "pnpm run generate-clients",
+        "generate-clients": "tsx ./scripts/generate-client.ts",
         "generate-idl": "shank idl -r program -o idl",
         "start-surfpool": "surfpool start"
     },
     "dependencies": {
         "@codama/nodes-from-anchor": "^1.2.3",
-        "@codama/renderers": "^1.0.28",
+        "@codama/renderers": "1.0.28",
         "@codama/renderers-js": "^1.3.2",
         "@solana/kit": "^2.3.0",
         "codama": "^1.3.1"
@@ -23,6 +23,7 @@
         "@types/mocha": "^10.0.10",
         "chai": "^5.2.0",
         "mocha": "^11.7.1",
+        "tsx": "^4.19.2",
         "ts-node": "^10.9.2",
         "typescript": "^5.8.3"
     }

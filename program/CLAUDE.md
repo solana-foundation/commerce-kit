@@ -30,13 +30,13 @@ cargo build --release
 
 ### Generating IDL
 ```bash
-bun run generate-idl
+pnpm run generate-idl
 # or directly: shank idl -r program -o idl
 ```
 
 ### Generating Clients
 ```bash
-bun run generate-clients
+pnpm run generate-clients
 # Uses ts-node to run scripts/generate-client.ts
 ```
 
@@ -51,14 +51,14 @@ TypeScript client unit tests:
 
 ```bash
 cd clients/typescript
-bun run test:ci:unit
+pnpm run test:ci:unit
 ```
 
 TypeScript client integration tests:
 
 ```bash
 cd clients/typescript
-bun run test:ci:integration
+pnpm run test:ci:integration
 ```
 
 

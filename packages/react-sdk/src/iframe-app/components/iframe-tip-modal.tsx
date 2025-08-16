@@ -1,5 +1,4 @@
 import React, { useState, useCallback, memo, useMemo } from 'react';
-import { DialogClose } from '../../../../ui-primitives/src/react';
 import { 
   getBorderRadius,
   getModalBorderRadius, 
@@ -7,19 +6,18 @@ import {
   DEFAULT_PROFILE_SVG,
   getButtonShadow,
   getButtonBorder,
-  getAccessibleTextColor
+  getAccessibleTextColor,
 } from '../../utils';
-import { QRPaymentContent } from './qr-payment-content';
-import { WalletPaymentContent } from './wallet-payment-content';
+import { QRPaymentContent } from '../components/iframe-qr-payment';
+import { WalletPaymentContent } from '../components/iframe-wallet-payment';
 import {
   type TipModalContentProps,
   type PaymentMethod,
   type Currency,
   CurrencyMap
 } from '../../types';
-// No direct SPLToken usage in this file; keep dependencies minimal
 
-// Static icons and constants hoisted to avoid re-creating on each render
+// Copy the static icons and constants from the original
 const WALLET_ICON = (
   <svg width="21" height="16" viewBox="0 0 21 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M13.5 9.55556H13.5078M3 2.55556V13.4444C3 14.3036 3.69645 15 4.55556 15H15.4444C16.3036 15 17 14.3036 17 13.4444V5.66667C17 4.80756 16.3036 4.11111 15.4444 4.11111L4.55556 4.11111C3.69645 4.11111 3 3.41466 3 2.55556ZM3 2.55556C3 1.69645 3.69645 1 4.55556 1H13.8889M13.8889 9.55556C13.8889 9.77033 13.7148 9.94444 13.5 9.94444C13.2852 9.94444 13.1111 9.77033 13.1111 9.55556C13.1111 9.34078 13.2852 9.16667 13.5 9.16667C13.7148 9.16667 13.8889 9.34078 13.8889 9.55556Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -45,13 +43,27 @@ const ALL_CURRENCIES = [
   { value: 'USDT_DEVNET', label: 'Tether USD Devnet', symbol: 'USDT_DEVNET' }
 ] as const;
 
-export const TipModalContent = memo<TipModalContentProps>(({ 
+// Helper function for clipboard
+const copyToClipboard = (text: string) => {
+  navigator.clipboard.writeText(text).catch(() => {
+    // Fallback for older browsers
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+  });
+};
+
+// This is the iframe-safe version of TipModalContent without DialogClose
+export const IframeTipModalContent = memo<TipModalContentProps>(({ 
   config, 
   theme, 
   onPayment, 
   onCancel 
 }) => {
-  // Inject a local slide-up animation for the inner modal container to ensure visible motion
+  // Inject animation styles
   if (typeof document !== 'undefined' && !document.getElementById('sc-tip-modal-anim')) {
     const styleEl = document.createElement('style');
     styleEl.id = 'sc-tip-modal-anim';
@@ -59,6 +71,8 @@ export const TipModalContent = memo<TipModalContentProps>(({
 @keyframes sc-tip-modal-slide-up {\n  0% { transform: translateY(16px); opacity: 0; }\n  100% { transform: translateY(0); opacity: 1; }\n}\n\n@media (prefers-reduced-motion: reduce) {\n  .sc-tip-modal-anim { animation: none !important; }\n}`;
     document.head.appendChild(styleEl);
   }
+
+  // Copy all the state from the original component
   const [selectedAmount, setSelectedAmount] = useState<number>(5);
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>(
     (config.allowedMints?.[0] as Currency) || 'USDC'
@@ -71,13 +85,11 @@ export const TipModalContent = memo<TipModalContentProps>(({
   const [isActionButtonHovered, setIsActionButtonHovered] = useState(false);
   const [isActionButtonPressed, setIsActionButtonPressed] = useState(false);
 
-  // Derived memoized data
   const currencies = useMemo(() => ALL_CURRENCIES.filter(c => config.allowedMints?.includes(c.value as any)), [config.allowedMints]);
 
   const handleSubmit = useCallback(async () => {
     try {
       setIsProcessing(true);
-      // Move to payment step
       setCurrentStep('payment');
     } catch (error) {
       console.error('Payment failed:', error);
@@ -104,26 +116,12 @@ export const TipModalContent = memo<TipModalContentProps>(({
     }
   }, [selectedAmount, selectedCurrency, selectedPaymentMethod, showCustomInput, customAmount, onPayment]);
 
-  const copyToClipboard = useCallback((text: string) => {
-    navigator.clipboard.writeText(text).catch(() => {
-      // Fallback for older browsers
-      const textArea = document.createElement('textarea');
-      textArea.value = text;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-    });
-  }, []);
-
-  
-
   const paymentMethods: Array<{ value: PaymentMethod; label: string; description: string; icon: React.ReactNode }> = [
     { value: 'qr', label: 'Pay', description: 'QR code', icon: SOLANA_PAY_ICON },
     { value: 'wallet', label: 'Wallet', description: 'Browser wallet', icon: WALLET_ICON }
   ];
 
-  // Action button styles - matching trigger button pattern
+  // Action button styles
   const actionButtonStyles: React.CSSProperties = useMemo(() => {
     const isDisabled = isProcessing || (showCustomInput && !customAmount);
     const borderStyle = (() => {
@@ -165,6 +163,7 @@ export const TipModalContent = memo<TipModalContentProps>(({
     };
   }, [theme, isActionButtonHovered, isActionButtonPressed, isProcessing, showCustomInput, customAmount]);
 
+  // The entire modal content - same as original but with regular close button
   return (
     <div className="sc-tip-modal-anim" style={{
       fontFamily: theme.fontFamily,
@@ -172,6 +171,7 @@ export const TipModalContent = memo<TipModalContentProps>(({
       padding: '0',
       height: 'auto',
       maxWidth: '420px',
+      minWidth: '420px',
       width: '100%',
       border: '1px solid #00000060',
       borderRadius: getModalBorderRadius(theme.borderRadius),
@@ -222,7 +222,7 @@ export const TipModalContent = memo<TipModalContentProps>(({
             </button>
           ) : (
             <button
-              onClick={() => {}} // Does nothing for now
+              onClick={() => {}}
               style={{
                 background: 'none',
                 border: 'none',
@@ -272,41 +272,39 @@ export const TipModalContent = memo<TipModalContentProps>(({
           }
         </h2>
         
-        {/* Right side - Close button */}
-        <DialogClose asChild>
-          <button
-            style={{
-              background: 'none',
-              border: 'none',
-              fontSize: '1.5rem',
-              color: `${theme.textColor}60`,
-              cursor: 'pointer',
-              padding: '0.25rem',
-              borderRadius: '50%',
-              width: '2rem',
-              height: '2rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s'
-            }}
-            type="button"
-            onClick={onCancel}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = `${theme.primaryColor}10`;
-              e.currentTarget.style.color = theme.primaryColor;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = `${theme.textColor}60`;
-            }}
-          >
-            ×
-          </button>
-        </DialogClose>
+        {/* Right side - Close button (no DialogClose) */}
+        <button
+          style={{
+            background: 'none',
+            border: 'none',
+            fontSize: '1.5rem',
+            color: `${theme.textColor}60`,
+            cursor: 'pointer',
+            padding: '0.25rem',
+            borderRadius: '50%',
+            width: '2rem',
+            height: '2rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.2s'
+          }}
+          type="button"
+          onClick={onCancel}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = `${theme.primaryColor}10`;
+            e.currentTarget.style.color = theme.primaryColor;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.color = `${theme.textColor}60`;
+          }}
+        >
+          ×
+        </button>
       </div>
 
-      {/* Main Content */}
+      {/* Main Content - render the full form content here (same as original) */}
       {currentStep === 'form' ? (
         <div style={{ padding: '1.5rem' }}>
           {/* Profile Section */}
@@ -411,20 +409,6 @@ export const TipModalContent = memo<TipModalContentProps>(({
                 transition: 'all 200ms ease-in-out',
                 boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = '#D8D8D8';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#EBEBEB';
-              }}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = '#585858';
-                e.currentTarget.style.boxShadow = '0 1px 2px 0 rgba(0, 0, 0, 0.05), 0 0 0 3px #DBDADA';
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = '#EBEBEB';
-                e.currentTarget.style.boxShadow = '0 1px 2px 0 rgba(0, 0, 0, 0.05)';
-              }}
             >
               {currencies.map(currency => (
                 <option key={currency.value} value={currency.value}>
@@ -470,25 +454,12 @@ export const TipModalContent = memo<TipModalContentProps>(({
                     fontWeight: '600',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
-                    transform: selectedAmount === amount && !showCustomInput ? 'scale(1)' : 'scale(1)',
                     boxShadow: selectedAmount === amount && !showCustomInput 
                       ? '0 0 0 2px rgba(143, 143, 143, 1)' 
                       : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!(selectedAmount === amount && !showCustomInput)) {
-                      e.currentTarget.style.borderColor = '#9ca3af';
-                      e.currentTarget.style.transform = 'scale(1.05)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!(selectedAmount === amount && !showCustomInput)) {
-                      e.currentTarget.style.borderColor = '#e5e7eb';
-                      e.currentTarget.style.transform = 'scale(1)';
-                    }
                   }}
                 >
                   ${amount}
@@ -508,7 +479,6 @@ export const TipModalContent = memo<TipModalContentProps>(({
                   fontWeight: '600',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
-                  transform: showCustomInput ? 'scale(1)' : 'scale(1)',
                   boxShadow: showCustomInput 
                     ? '0 0 0 2px rgba(143, 143, 143, 1)' 
                     : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
@@ -516,73 +486,36 @@ export const TipModalContent = memo<TipModalContentProps>(({
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}
-                onMouseEnter={(e) => {
-                  if (!showCustomInput) {
-                    e.currentTarget.style.borderColor = '#9ca3af';
-                    e.currentTarget.style.transform = 'scale(1.05)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!showCustomInput) {
-                    e.currentTarget.style.borderColor = '#e5e7eb';
-                    e.currentTarget.style.transform = 'scale(1)';
-                  }
-                }}
               >
                 Custom
               </button>
             </div>
-            <div
-              className={showCustomInput ? 'sc-collapsible-expanded' : 'sc-collapsible-collapsed'}
-              style={{
-                display: 'grid',
-                gridTemplateRows: showCustomInput ? '1fr' : '0fr',
-                transition: 'grid-template-rows 200ms ease-in',
-                marginTop: '0.75rem'
-              }}
-              aria-hidden={!showCustomInput}
-            >
-              <div style={{ overflow: 'hidden' }}>
-                <input
-                  type="number"
-                  value={customAmount}
-                  onChange={(e) => setCustomAmount(e.target.value)}
-                  placeholder="Enter amount"
-                  style={{
-                    width: '100%',
-                    height: '2.75rem',
-                    padding: '0.75rem 1rem',
-                    border: '1px solid #EBEBEB',
-                    borderRadius: '12px',
-                    backgroundColor: '#F5F5F5',
-                    color: theme.textColor,
-                    fontSize: '0.875rem',
-                    fontWeight: '400',
-                    outline: 'none',
-                    transition: 'border-color 200ms ease-in, box-shadow 200ms ease-in',
-                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-                  }}
-                  disabled={!showCustomInput}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = '#D8D8D8';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = '#EBEBEB';
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = '#585858';
-                    e.currentTarget.style.boxShadow = '0 1px 2px 0 rgba(0, 0, 0, 0.05), 0 0 0 3px #DBDADA';
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = '#EBEBEB';
-                    e.currentTarget.style.boxShadow = '0 1px 2px 0 rgba(0, 0, 0, 0.05)';
-                  }}
-                />
-              </div>
-            </div>
+            {showCustomInput && (
+              <input
+                type="number"
+                value={customAmount}
+                onChange={(e) => setCustomAmount(e.target.value)}
+                placeholder="Enter amount"
+                style={{
+                  width: '100%',
+                  height: '2.75rem',
+                  padding: '0.75rem 1rem',
+                  border: '1px solid #EBEBEB',
+                  borderRadius: '12px',
+                  backgroundColor: '#F5F5F5',
+                  color: theme.textColor,
+                  fontSize: '0.875rem',
+                  fontWeight: '400',
+                  outline: 'none',
+                  marginTop: '0.75rem',
+                  transition: 'border-color 200ms ease-in, box-shadow 200ms ease-in',
+                  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                }}
+              />
+            )}
           </div>
 
-          {/* Payment Method */}
+          {/* Payment Method selection */}
           <div style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
             <label style={{
               display: 'block',
@@ -649,39 +582,12 @@ export const TipModalContent = memo<TipModalContentProps>(({
             disabled={isProcessing || (showCustomInput && !customAmount)}
             style={actionButtonStyles}
             type="button"
-            onMouseEnter={() => {
-              if (!isProcessing && !(showCustomInput && !customAmount)) {
-                setIsActionButtonHovered(true);
-              }
-            }}
-            onMouseLeave={() => {
-              setIsActionButtonHovered(false);
-              setIsActionButtonPressed(false);
-            }}
-            onMouseDown={() => {
-              if (!isProcessing && !(showCustomInput && !customAmount)) {
-                setIsActionButtonPressed(true);
-              }
-            }}
-            onMouseUp={() => setIsActionButtonPressed(false)}
-            onFocus={(e) => {
-              if (!isProcessing && !(showCustomInput && !customAmount)) {
-                setIsActionButtonHovered(true);
-                e.currentTarget.style.boxShadow = `${getButtonShadow(theme.buttonShadow)}, 0 0 0 4px rgba(202, 202, 202, 0.45)`;
-              }
-            }}
-            onBlur={(e) => {
-              setIsActionButtonHovered(false);
-              if (!isProcessing && !(showCustomInput && !customAmount)) {
-                e.currentTarget.style.boxShadow = getButtonShadow(theme.buttonShadow);
-              }
-            }}
           >
             {isProcessing ? 'Processing...' : `Pay $${showCustomInput ? customAmount || '0' : selectedAmount}`}
           </button>
         </div>
       ) : (
-        // Payment Step - Render QR or Wallet component based on selected method
+        // Payment Step
         selectedPaymentMethod === 'qr' ? (
           <QRPaymentContent 
             theme={theme}
@@ -693,7 +599,6 @@ export const TipModalContent = memo<TipModalContentProps>(({
             onPaymentComplete={handlePaymentComplete}
             onPaymentError={(error) => {
               console.error('Payment error:', error);
-              // Could add additional error handling here
             }}
           />
         ) : (
@@ -713,4 +618,4 @@ export const TipModalContent = memo<TipModalContentProps>(({
   );
 });
 
-TipModalContent.displayName = 'TipModalContent';
+IframeTipModalContent.displayName = 'IframeTipModalContent';

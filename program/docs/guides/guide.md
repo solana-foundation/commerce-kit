@@ -65,7 +65,7 @@ Before starting this tutorial, ensure you have:
 * [**Solana CLI**](https://solana.com/docs/intro/installation) v2.2 or greater
 * **Familiarity** with [Solana Program Derived Addresses (PDAs)](https://solana.com/docs/core/pda) and [on-chain accounts](https://solana.com/docs/core/accounts)
 * [**TypeScript**](http://typescriptlang.org/) Experience
-* [**Bun**](https://bun.sh/docs/installation)
+* [**pnpm**](https://pnpm.io/installation)
 
 ## Understanding the Commerce Program
 
@@ -114,9 +114,9 @@ mkdir solana-commerce-demo && cd solana-commerce-demo
 Initialize a new Node.js blank project with the required dependencies:
 
 ```bash
-bun init
-bun add gill
-bun add --dev typescript tsx @types/node
+pnpm init
+pnpm add gill
+pnpm add -D typescript tsx @types/node
 ```
 
 Replace the `tsconfig.json` file with the following:
@@ -175,13 +175,13 @@ Install the dependencies:
 
 ```bash
 cd commerce-kit/program
-bun install
+pnpm install
 ```
 
 Generate the client:
 
 ```bash
-bun run generate-clients
+pnpm run generate-clients
 ```
 
 You should now have a generated TypeScript client in:
@@ -196,15 +196,15 @@ Link the client to your project:
 # navigate to the client directory
 cd commerce-kit/program/clients/typescript
 # install the dependencies
-bun install
+pnpm install
 # build the client
-bun run build
+pnpm run build
 # link the client to your project
-bun link
+pnpm link --global
 # navigate back to the root project directory
 cd ../../../../
 # link the client to your project
-bun link @solana-commerce/program-client
+pnpm link --global @solana-commerce/program-client
 ```
 
 
@@ -738,7 +738,7 @@ When executed, this will close the payment account and reclaim the rent to the o
 If have followed the wallet setup instructions correctly, you should now be able to run the demonstration. In your terminal, run the following command:
 
 ```bash
-bun start
+pnpm start
 ```
 
 You should see output like the following:

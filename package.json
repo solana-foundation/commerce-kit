@@ -1,7 +1,7 @@
 {
-  "name": "@commercekit",
+  "name": "commerce-kit",
   "private": true,
-  "packageManager": "bun@1.2.19",
+  "packageManager": "pnpm@10.14.0",
   "workspaces": [
     "apps/*",
     "packages/*",
@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "build": "turbo build",
-    "generate-clients": "cd program && bun run generate-clients",
+    "generate-clients": "cd program && pnpm run generate-clients",
     "build:docs": "turbo build --filter=docs",
     "dev": "turbo dev",
     "lint": "turbo lint",

@@ -1,5 +1,17 @@
 import { OrderItem } from "@solana-commerce/headless-sdk";
 
+export interface QRCustomizations {
+  size: number;
+  margin: number;
+  dotStyle: 'dots' | 'rounded' | 'square';
+  cornerStyle: 'square' | 'rounded' | 'extra-rounded' | 'full-rounded' | 'maximum-rounded';
+  errorCorrectionLevel: 'L' | 'M' | 'Q' | 'H';
+  logo?: string;
+  logoSize?: number;
+  logoBackgroundColor?: string;
+  logoMargin?: number;
+}
+
 export interface Customizations {
   primaryColor: string;
   secondaryColor: string;
@@ -22,9 +34,10 @@ export interface Customizations {
   productPrice: string;
   buttonShadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   buttonBorder?: 'none' | 'black-10' | 'white-10';
+  qrCustomizations?: QRCustomizations;
 }
 
-export type Mode = 'tip' | 'buyNow' | 'cart';
+export type Mode = 'tip' | 'buyNow' | 'cart' | 'qrCustomization';
 export type CheckoutStyle = 'modal' | 'page';
 
 export interface ColorPreset {

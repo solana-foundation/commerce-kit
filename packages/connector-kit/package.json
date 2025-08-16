@@ -1,0 +1,42 @@
+{
+  "name": "@solana-commerce/connector-kit",
+  "version": "0.0.0",
+  "description": "Headless wallet connector client and React provider built on Wallet Standard",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": ["dist/**"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "type-check": "tsc --noEmit",
+    "lint": "biome lint src/",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": { "optional": true }
+  },
+  "dependencies": {
+    "@wallet-standard/app": "^1.0.0",
+    "@wallet-standard/base": "^1.0.0",
+    "@solana-commerce/ui-primitives": "workspace:*",
+    "@solana-mobile/wallet-standard-mobile": "^0.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0"
+  },
+  "license": "MIT"
+}

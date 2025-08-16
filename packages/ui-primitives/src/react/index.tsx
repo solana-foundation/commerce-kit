@@ -14,5 +14,9 @@ export { DialogClose } from '../dialog-alpha/close';
 export { DialogPortal } from '../dialog-alpha/portal';
 export { DialogProvider, useDialog } from '../dialog-alpha/context';
 export type { DialogContextType, DialogState } from '../dialog-alpha/types';
+export { DropdownRoot } from '../dropdown-alpha/root';
+export { DropdownTrigger } from '../dropdown-alpha/trigger';
+export { DropdownContent } from '../dropdown-alpha/content';
+export { DropdownItem } from '../dropdown-alpha/item';
 
 // Note: DialogPortal is excluded due to react-dom bundling issues 

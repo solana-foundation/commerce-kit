@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "bignumber.js": "4.0.4",
-    "gill": "^latest",
+    "gill": "^0.10.2",
     "qrcode": "^1.5.4"
   },
   "devDependencies": {

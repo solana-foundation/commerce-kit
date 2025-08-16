@@ -1,5 +1,7 @@
 import '@/app/global.css';
 import { RootProvider } from 'fumadocs-ui/provider';
+import { ClientRootProvider } from './client-root-provider';
+export const dynamic = 'force-dynamic';
 import { Inter } from 'next/font/google';
 import { FloatingCommerceButton } from './components/floating-commerce-button';
 
@@ -37,15 +39,9 @@ export default function Layout({ children }: LayoutProps) {
         `}</style>
       </head>
       <body className="flex flex-col min-h-screen" suppressHydrationWarning>
-        <RootProvider
-          theme={{
-            enabled: false,
-            defaultTheme: 'light'
-          }}
-        >
+        <ClientRootProvider>
           {children}
-          <FloatingCommerceButton />
-        </RootProvider>
+        </ClientRootProvider>
       </body>
     </html>
   );

@@ -23,21 +23,26 @@
     }
   },
   "scripts": {
-    "build": "tsup src/index.tsx --format cjs,esm --dts --splitting --clean --external react --external react-dom",
+    "build": "pnpm run build:iframe && pnpm run generate:iframe-bundle && pnpm run build:sdk",
+    "build:sdk": "tsup src/index.tsx --format cjs,esm --dts --splitting --clean --external react --external react-dom",
+    "build:iframe": "tsup --config tsup.iframe.config.ts",
+    "generate:iframe-bundle": "tsx scripts/generate-iframe-bundle.ts",
     "dev": "tsup src/index.tsx --format cjs,esm --dts --splitting --watch --external react --external react-dom",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@solana-commerce/headless-sdk": "workspace:*",
-    "@solana-commerce/ui-primitives": "workspace:*"
+    "@solana-commerce/ui-primitives": "workspace:*",
+    "@solana-commerce/connector-kit": "workspace:*"
   },
   "peerDependencies": {
-    "react": ">=16.8.0"
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
   },
   "devDependencies": {
     "@types/react": "^19.1.9",
     "tsup": "^8.0.0",
-    "typescript": "^5.0.0"
+    "tsx": "^4.19.2"
   },
   "files": [
     "dist"

@@ -3,7 +3,7 @@
 import React from 'react';
 import type { OrderItem } from '@solana-commerce/headless-sdk';
 import { SolanaCommerceClient } from './solana-commerce-client';
-import { SingleItemCart, MultiItemCart, type CartItem } from '@solana-commerce/react-sdk';
+import { SingleItemCart, MultiItemCart, type CartItem, type CommerceMode } from '@solana-commerce/react-sdk';
 
 import type { Mode, CheckoutStyle, Customizations, DemoConfig } from './types';
 import { IconCursorarrowRays, IconHandPointUpLeftFill, IconInsetFilledCenterRectangle, IconApp, IconShadow } from 'symbols-react';
@@ -12,6 +12,7 @@ import { Switch } from '../../../components/ui/switch';
 
 // Modal preview components
 import { ModalPreviewContent } from './modal-preview-content';
+import { QRCustomizationPreview } from './qr-customization-preview';
 
 interface DemoPreviewProps {
   selectedMode: Mode;
@@ -74,7 +75,20 @@ export function DemoPreview({
 
   return (
     <div className="flex flex-col h-full">
-      {checkoutStyle === 'modal' ? (
+      {selectedMode === 'qrCustomization' ? (
+        // QR Customization Mode - Show QR preview instead of commerce flow
+        <div className="h-full p-6">
+          <QRCustomizationPreview 
+            theme={{
+              primaryColor: customizations.primaryColor,
+              secondaryColor: customizations.secondaryColor,
+              backgroundColor: customizations.backgroundColor,
+              textColor: customizations.textColor,
+              borderRadius: customizations.borderRadius
+            }}
+          />
+        </div>
+      ) : checkoutStyle === 'modal' ? (
         // Modal Demo - Button and Modal Preview stacked
         <div className="h-full flex flex-col gap-4">
           {/* Button Section */}
@@ -96,7 +110,10 @@ export function DemoPreview({
             }}
             className="flex flex-col items-center justify-center border border-gray-200 dark:border-gray-700 rounded-lg bg-zinc-100 p-6 py-12 text-center relative">
               <SolanaCommerceClient
-                config={config}
+                config={{
+                  ...config,
+                  mode: config.mode === 'qrCustomization' ? 'buyNow' : config.mode as CommerceMode
+                }}
                 variant={customizations.buttonVariant}
                 onPayment={(amount: number, currency: string, products?: readonly OrderItem[]) => {
                   console.log('Demo payment:', { amount, currency, products });

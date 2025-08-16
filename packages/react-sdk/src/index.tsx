@@ -24,7 +24,9 @@ export type {
 } from './types';
 
 import React, { useState, useCallback, useMemo, memo } from 'react';
-import { Dialog, DialogContent, DialogBackdrop, DialogTrigger, DialogPortal } from '../../ui-primitives/src/react';
+import { DialogTrigger } from '../../ui-primitives/src/react';
+import { ModalShell } from './components/ui/modal-shell';
+import { SecureIframeShell } from './components/ui/secure-iframe-shell';
 import {
   useTheme,
   useTotalAmount,
@@ -34,9 +36,8 @@ import {
   getBorderRadius,
   sanitizeString
 } from './utils';
-import { TriggerButton, ProductList, PaymentModalContent } from './components/ui';
-import { TipModalContent } from './components/tip-modal';
-import type { SolanaCommerceSDKProps, PaymentMethod } from './types';
+import { TriggerButton, ProductList } from './components/ui';
+import type { SolanaCommerceSDKProps } from './types';
 
 /**
  * Main Solana Commerce SDK Component
@@ -58,31 +59,9 @@ export const SolanaCommerceSDK = memo<SolanaCommerceSDKProps>(function SolanaCom
   const paymentUrl = usePaymentUrl(config.merchant, totalAmount, config.mode);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handlePayment = useCallback(() => {
-    try {
-      onPaymentStart?.();
-      onPayment?.(totalAmount, config.allowedMints?.[0] || 'SOL', config.products);
-    } catch (error) {
-      onPaymentError?.(error instanceof Error ? error : createPaymentError('Payment initialization failed', error));
-    }
-  }, [totalAmount, config.allowedMints, config.products, onPaymentStart, onPayment, onPaymentError]);
 
-  const handleTipPayment = useCallback((amount: number, currency: string, paymentMethod: PaymentMethod) => {
-    try {
-      onPaymentStart?.();
-      // For tips, create a simple product representation
-      const tipProduct = {
-        id: 'tip-payment',
-        name: 'Tip',
-        description: `Tip payment via ${paymentMethod}`,
-        price: amount,
-        currency
-      };
-      onPayment?.(amount, currency, [tipProduct]);
-    } catch (error) {
-      onPaymentError?.(error instanceof Error ? error : createPaymentError('Tip payment failed', error));
-    }
-  }, [onPaymentStart, onPayment, onPaymentError]);
+
+
 
   const handleCancel = useCallback(() => {
     setIsDialogOpen(false);
@@ -108,72 +87,65 @@ export const SolanaCommerceSDK = memo<SolanaCommerceSDKProps>(function SolanaCom
   if (config.position === 'inline') {
     return (
       <div style={{ fontFamily: theme.fontFamily, ...style }} className={className}>
-        <div style={{
-          backgroundColor: theme.backgroundColor,
-          border: `1px solid ${theme.primaryColor}20`,
-          borderRadius: getBorderRadius(theme.borderRadius),
-          padding: '1.5rem',
-          textAlign: 'center'
-        }}>
-          <h3 style={{ color: theme.textColor, marginTop: 0 }}>
-            {sanitizeString(config.merchant.name)}
-          </h3>
-          <ProductList
-            products={config.products || []}
-            theme={theme}
-            showDetails={config.showProductDetails ?? true}
-          />
-          <TriggerButton
-            theme={theme}
-            mode={config.mode}
-            onClick={handlePayment}
-            variant={variant}
-            style={{ width: '100%', marginTop: '1rem' }}
-          />
-        </div>
+        <SecureIframeShell
+          config={config}
+          theme={theme}
+          onPayment={(amount, currency) => {
+            try {
+              onPaymentStart?.();
+              onPayment?.(amount, currency, config.products);
+            } catch (error) {
+              onPaymentError?.(
+                error instanceof Error
+                  ? error
+                  : createPaymentError('Payment initialization failed', error)
+              );
+            }
+          }}
+          onCancel={handleCancel}
+        />
       </div>
     );
   }
 
-  // Overlay mode (modal)
+  // Overlay mode (modal) - always uses secure iframe
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogTrigger asChild>
-        {children || (
-          <TriggerButton
-            theme={theme}
-            mode={config.mode}
-            className={className}
-            style={style}
-            variant={variant}
-            onClick={handleTriggerClick}
-          />
-        )}
-      </DialogTrigger>
-      
-      <DialogPortal>
-        <DialogBackdrop onClick={handleCancel} />
-        <DialogContent>
-          {config.mode === 'tip' ? (
-            <TipModalContent
-              config={config}
+    <>
+      <ModalShell
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        trigger={
+          (children as React.ReactNode) || (
+            <TriggerButton
               theme={theme}
-              onPayment={handleTipPayment}
-              onCancel={handleCancel}
+              mode={config.mode}
+              className={className}
+              style={style}
+              variant={variant}
+              onClick={handleTriggerClick}
             />
-          ) : (
-            <PaymentModalContent
-              config={config}
-              theme={theme}
-              totalAmount={totalAmount}
-              paymentUrl={paymentUrl}
-              onPayment={handlePayment}
-              onCancel={handleCancel}
-            />
-          )}
-        </DialogContent>
-      </DialogPortal>
-    </Dialog>
+          )
+        }
+      >
+        <SecureIframeShell
+          config={config}
+          theme={theme}
+          onPayment={(amount, currency) => {
+            try {
+              onPaymentStart?.();
+              onPayment?.(amount, currency, config.products);
+            } catch (error) {
+              onPaymentError?.(
+                error instanceof Error
+                  ? error
+                  : createPaymentError('Payment initialization failed', error)
+              );
+            }
+          }}
+          onCancel={handleCancel}
+        />
+      </ModalShell>
+    </>
   );
 });
 
