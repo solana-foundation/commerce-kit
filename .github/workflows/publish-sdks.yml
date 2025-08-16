@@ -28,19 +28,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           registry-url: "https://registry.npmjs.org"
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.14.0
+
       - name: Install dependencies (root)
-        run: bun install
+        run: pnpm install
 
       - name: Build Solana program
         working-directory: program
@@ -56,17 +56,17 @@ jobs:
 
       - name: Generate TypeScript client
         working-directory: program
-        run: bun run generate-clients
+        run: pnpm run generate-clients
 
       - name: Build TypeScript SDK
         working-directory: program/clients/typescript
         run: |
-          bun install
-          bun run build
+          pnpm install
+          pnpm run build
 
       - name: Run TypeScript tests
         working-directory: program/clients/typescript
-        run: bun run test:ci:unit
+        run: pnpm run test:ci:unit
 
       - name: Publish to npm
         working-directory: program/clients/typescript
@@ -88,10 +88,10 @@ jobs:
         with:
           components: rustfmt, clippy
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
         with:
-          bun-version: latest
+          version: 10.14.0
 
       - name: Setup Solana CLI
         run: |
@@ -120,7 +120,7 @@ jobs:
           if ! command -v codama &> /dev/null; then
             cargo install --force --locked codama-cli
           fi
-          bun run generate-clients
+          pnpm run generate-clients
 
       - name: Format Rust code
         working-directory: program/clients/rust

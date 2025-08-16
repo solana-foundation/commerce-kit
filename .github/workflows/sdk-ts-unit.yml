@@ -28,39 +28,39 @@ jobs:
         with:
           node-version: "lts/*"
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
         with:
-          bun-version: 1.2.19
+          version: 10.14.0
 
-      # Cache only bun cache - NOT Rust build artifacts that could contain generated IDL
-      - name: Setup Bun cache
+      # Cache only pnpm cache - NOT Rust build artifacts that could contain generated IDL
+      - name: Setup pnpm cache
         uses: actions/cache@v4
         with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
-          restore-keys: ${{ runner.os }}-bun-
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-
 
       - name: Install root dependencies
         shell: bash
-        run: cd program && bun install --frozen-lockfile
+        run: cd program && pnpm install --frozen-lockfile
 
       - name: Generate clients
-        run: cd program && bun run generate-clients
+        run: cd program && pnpm run generate-clients
 
       - name: Install test dependencies
         working-directory: program/clients/typescript
-        run: bun install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Build TypeScript SDK
         working-directory: program/clients/typescript
-        run: bun run build
+        run: pnpm run build
 
       - name: Run TypeScript unit tests with coverage
         working-directory: program/clients/typescript
         run: |
           echo "🧪 Running TypeScript SDK unit tests with coverage..."
-          bun run test:unit --coverage --coverageDirectory=coverage-unit
+          pnpm run test:unit --coverage --coverageDirectory=coverage-unit
 
       - name: Upload coverage reports
         uses: actions/upload-artifact@v4
