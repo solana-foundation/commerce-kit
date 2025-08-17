@@ -1004,6 +1004,103 @@
       }
     }
   ],
+  "errors": [
+    {
+      "code": 0,
+      "name": "InvalidMint",
+      "msg": "Incorrect mint provided"
+    },
+    {
+      "code": 1,
+      "name": "InvalidPaymentStatus",
+      "msg": "Invalid payment status for the operation"
+    },
+    {
+      "code": 2,
+      "name": "InsufficientSettlementAmount",
+      "msg": "Insufficient settlement amount"
+    },
+    {
+      "code": 3,
+      "name": "SettlementTooEarly",
+      "msg": "Settlement attempted too early"
+    },
+    {
+      "code": 4,
+      "name": "RefundAmountExceedsPolicyLimit",
+      "msg": "Refund amount exceeds policy limit"
+    },
+    {
+      "code": 5,
+      "name": "RefundWindowExpired",
+      "msg": "Refund window expired"
+    },
+    {
+      "code": 6,
+      "name": "InvalidEventAuthority",
+      "msg": "Invalid event authority"
+    },
+    {
+      "code": 7,
+      "name": "InvalidAta",
+      "msg": "Invalid ATA"
+    },
+    {
+      "code": 8,
+      "name": "PaymentCloseWindowNotReached",
+      "msg": "Payment close window not reached"
+    },
+    {
+      "code": 9,
+      "name": "MerchantOwnerMismatch",
+      "msg": "Merchant owner does not match expected owner"
+    },
+    {
+      "code": 10,
+      "name": "MerchantInvalidPda",
+      "msg": "Merchant PDA is invalid"
+    },
+    {
+      "code": 11,
+      "name": "OperatorOwnerMismatch",
+      "msg": "Operator owner does not match expected owner"
+    },
+    {
+      "code": 12,
+      "name": "OperatorInvalidPda",
+      "msg": "Operator PDA is invalid"
+    },
+    {
+      "code": 13,
+      "name": "OperatorMismatch",
+      "msg": "Operator does not match config operator"
+    },
+    {
+      "code": 14,
+      "name": "MerchantMismatch",
+      "msg": "Merchant does not match config merchant"
+    },
+    {
+      "code": 15,
+      "name": "OrderIdInvalid",
+      "msg": "Order ID is invalid or already used"
+    },
+    {
+      "code": 16,
+      "name": "MerchantOperatorConfigInvalidPda",
+      "msg": "MerchantOperatorConfig PDA is invalid"
+    },
+    {
+      "code": 17,
+      "name": "AcceptedCurrenciesEmpty",
+      "msg": "Accepted currencies is empty"
+    },
+    {
+      "code": 18,
+      "name": "DuplicateMint",
+      "msg": "Duplicate mint in accepted currencies"
+    }
+  ],
   "metadata": {
     "origin": "shank",
     "address": "commkU28d52cwo2Ma3Marxz4Qr9REtfJtuUfqnDnbhT"

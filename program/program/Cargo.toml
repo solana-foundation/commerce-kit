@@ -20,3 +20,4 @@ pinocchio-system = { workspace = true }
 pinocchio-token = { workspace = true }
 pinocchio-associated-token-account = { workspace = true }
 shank = { workspace = true }
+thiserror = { workspace = true }
