@@ -1,7 +1,7 @@
 import path from "path";
 import * as renderers from "@codama/renderers";
 import { preserveConfigFiles } from './lib/utils';
-import { createCommerceCodama } from './lib/codama-config';
+import { createCommerceCodamaBuilder } from './lib/commerce-codama-builder';
 import { renderVisitor as renderRustVisitor } from '@codama/renderers-rust';
 
 const projectRoot = path.join(__dirname, "..");
@@ -15,8 +15,15 @@ const typescriptClientsDir = path.join(
   "typescript",
 );
 
-// Create and configure the codama instance
-const commerceCodama = createCommerceCodama(commerceIdl);
+// Create and configure the codama instance using the builder pattern
+const commerceCodama = createCommerceCodamaBuilder(commerceIdl)
+  .appendAccountDiscriminator()
+  .setDefaultAccountValues()
+  .appendMOConfigFields()
+  .appendPdaDerivers()
+  .setInstructionAccountDefaultValues()
+  .appendMOConfigRemainingAccounts()
+  .build();
 
 // Preserve configuration files during generation
 const configPreserver = preserveConfigFiles(typescriptClientsDir, rustClientsDir);
