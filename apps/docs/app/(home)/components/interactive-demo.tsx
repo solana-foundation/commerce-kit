@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { TabsRoot, TabsList, TabsTab, TabsPanel } from '@solana-commerce/ui-primitives';
-import { HeroSection } from './hero-section';
 import { ModeSelector } from './mode-selector';
 import { CustomizationPanel } from './customization-panel';
 import { DemoPreview } from './demo-preview';
@@ -143,12 +142,10 @@ export function InteractiveDemo() {
 
   return (
     <section className="h-[calc(100vh-100px)]">
-      <div className="max-w-7xl h-full mx-auto border-r border-l border-gray-200 dark:border-gray-800">
-        <HeroSection />
-
+      <div className="w-full h-full mx-auto border-r border-l border-gray-200 dark:border-gray-800">
         <div className="grid grid-cols-1 sm:grid-cols-12 divide-x divide-gray-200 dark:divide-gray-800 border-t border-gray-200 dark:border-gray-800">
           {/* Left Column - Mode Selector & Customization Panel */}
-          <div className="space-y-4 col-span-5">
+          <div className="space-y-4 col-span-3">
             {/* Mode Selector Tabs */}
             <ModeSelector 
               selectedMode={selectedMode}
@@ -168,7 +165,7 @@ export function InteractiveDemo() {
           </div>
           {/* Right Column - Demo and Code Tabs */}
           <div 
-          className="space-y-4 col-span-7"
+          className="space-y-4 col-span-9"
           >
             <TabsRoot value={activeTab} onValueChange={(value) => setActiveTab(value as 'demo' | 'code')} defaultValue="demo">
               <TabsList className="flex bg-zinc-100/50 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-[57px]">

@@ -22,7 +22,7 @@
     "clean": "rm -rf dist"
   },
   "peerDependencies": {
-    "react": ">=18.0.0"
+    "react": "^19.1.0"
   },
   "peerDependenciesMeta": {
     "react": { "optional": true }
@@ -31,10 +31,12 @@
     "@wallet-standard/app": "^1.0.0",
     "@wallet-standard/base": "^1.0.0",
     "@solana-commerce/ui-primitives": "workspace:*",
-    "@solana-mobile/wallet-standard-mobile": "^0.3.0"
+    "@solana-mobile/wallet-standard-mobile": "^0.3.0",
+    "bs58": "^6.0.0"
   },
   "devDependencies": {
-    "@types/react": "^18.0.0",
+    "@types/node": "^24.1.0",
+    "@types/react": "^19.1.0",
     "tsup": "^8.0.0",
     "typescript": "^5.3.0"
   },

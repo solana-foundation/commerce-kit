@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react'
-import { RootProvider } from 'fumadocs-ui/provider'
 import { AppProvider, type MobileWalletAdapterConfig } from '@solana-commerce/connector-kit'
 import { FloatingCommerceButton } from './components/floating-commerce-button'
 
@@ -16,15 +15,9 @@ export function ClientRootProvider({ children }: { children: React.ReactNode }) 
 
   return (
     <AppProvider connectorConfig={{ autoConnect: false, debug: process.env.NODE_ENV !== 'production' }} mobile={mobile}>
-      <RootProvider
-        theme={{
-          enabled: false,
-          defaultTheme: 'light',
-        }}
-      >
-        {children}
-        <FloatingCommerceButton />
-      </RootProvider>
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+      {children as any}
+      <FloatingCommerceButton />
     </AppProvider>
   )
 }

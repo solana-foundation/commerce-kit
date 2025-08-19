@@ -1,16 +1,6 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import { SolanaCommerceSDK } from '@solana-commerce/react-sdk';
-
-// Create a client-only version to avoid SSR issues
-const ClientOnlyCommerceSDK = dynamic(
-  () => Promise.resolve(SolanaCommerceSDK),
-  { 
-    ssr: false,
-    loading: () => null
-  }
-);
 
 interface FullPageBuyNowProps {
   rpcUrl?: string;
