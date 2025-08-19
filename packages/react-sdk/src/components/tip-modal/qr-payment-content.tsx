@@ -1,5 +1,5 @@
 import React, { memo, useEffect, useState, useRef } from 'react';
-import { getBorderRadius, getContainerBorderRadius, sanitizeString } from '../../utils';
+import { getBorderRadius, getContainerBorderRadius, sanitizeString, DEFAULT_PROFILE_SVG } from '../../utils';
 import { type ThemeConfig, type MerchantConfig, type Currency, CurrencyMap} from '../../types';
 import { useSolanaPay } from '../../hooks/use-solana-pay';
 import { SPLToken } from '@solana-commerce/solana-pay';
@@ -32,6 +32,8 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
   const [paymentStatus, setPaymentStatus] = useState<'scanning' | 'processing' | 'success' | 'error'>('scanning');
   const [pollingMessage, setPollingMessage] = useState('Waiting for payment...');
   const [timeRemaining, setTimeRemaining] = useState(120); // 60 polls * 2 seconds = 120 seconds
+  const [copied, setCopied] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const { paymentRequest, loading } = useSolanaPay(config.merchant.wallet, selectedAmount, CurrencyMap[selectedCurrency]);
@@ -138,6 +140,32 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
     onPaymentComplete?.();
   };
 
+  const handleCopyAddress = async () => {
+    try {
+      await navigator.clipboard.writeText(config.merchant.wallet);
+      setCopied(true);
+      setIsHovered(false);
+      setTimeout(() => {
+        setCopied(false);
+        setIsHovered(false);
+      }, 2000); // Reset after 2 seconds
+    } catch (err) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = config.merchant.wallet;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setIsHovered(false);
+      setTimeout(() => {
+        setCopied(false);
+        setIsHovered(false);
+      }, 2000);
+    }
+  };
+
   // dev only logs could be added behind NODE_ENV checks if necessary
   
   return (
@@ -179,7 +207,7 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
             zIndex: 1
           }}
         >
-          <path d="M3.5 264.06C3.5 272.587 10.4127 279.5 18.9399 279.5H32.8799C33.7083 279.5 34.3799 280.172 34.3799 281V281C34.3799 281.828 33.7083 282.5 32.8799 282.5H17.4399C8.08427 282.5 0.5 274.916 0.5 265.56V250.12C0.5 249.292 1.17157 248.62 2 248.62V248.62C2.82843 248.62 3.5 249.292 3.5 250.12V264.06ZM282.5 266.058C282.5 275.139 275.139 282.5 266.058 282.5H251.116C250.288 282.5 249.616 281.828 249.616 281V281C249.616 280.172 250.288 279.5 251.116 279.5H264.558C272.81 279.5 279.5 272.81 279.5 264.558V250.12C279.5 249.292 280.172 248.62 281 248.62V248.62C281.828 248.62 282.5 249.292 282.5 250.12V266.058ZM34.3799 2C34.3799 2.82843 33.7083 3.5 32.8799 3.5H18.9399C10.4127 3.5 3.5 10.4127 3.5 18.9399V32.8799C3.5 33.7083 2.82843 34.3799 2 34.3799V34.3799C1.17157 34.3799 0.5 33.7083 0.5 32.8799V17.4399C0.5 8.08427 8.08427 0.5 17.4399 0.5H32.8799C33.7083 0.5 34.3799 1.17157 34.3799 2V2ZM282.5 32.8799C282.5 33.7083 281.828 34.3799 281 34.3799V34.3799C280.172 34.3799 279.5 33.7083 279.5 32.8799V18.4419C279.5 10.1897 272.81 3.5 264.558 3.5H251.116C250.288 3.5 249.616 2.82843 249.616 2V2C249.616 1.17157 250.288 0.5 251.116 0.5H266.058C275.139 0.5 282.5 7.86129 282.5 16.9419V32.8799Z" fill="#2D2D2D" fillOpacity="0.24"/>
+          <path d="M3.5 264.06C3.5 272.587 10.4127 279.5 18.9399 279.5H32.8799C33.7083 279.5 34.3799 280.172 34.3799 281V281C34.3799 281.828 33.7083 282.5 32.8799 282.5H17.4399C8.08427 282.5 0.5 274.916 0.5 265.56V250.12C0.5 249.292 1.17157 248.62 2 248.62V248.62C2.82843 248.62 3.5 249.292 3.5 250.12V264.06ZM282.5 266.058C282.5 275.139 275.139 282.5 266.058 282.5H251.116C250.288 282.5 249.616 281.828 249.616 281V281C249.616 280.172 250.288 279.5 251.116 279.5H264.558C272.81 279.5 279.5 272.81 279.5 264.558V250.12C279.5 249.292 280.172 248.62 281 248.62V248.62C281.828 248.62 282.5 249.292 282.5 250.12V266.058ZM34.3799 2C34.3799 2.82843 33.7083 3.5 32.8799 3.5H18.9399C10.4127 3.5 3.5 10.4127 3.5 18.9399V32.8799C3.5 33.7083 2.82843 34.3799 2 34.3799V34.3799C1.17157 34.3799 0.5 33.7083 0.5 32.8799V17.4399C0.5 8.08427 8.08427 0.5 17.4399 0.5H32.8799C33.7083 0.5 34.3799 1.17157 34.3799 2V2ZM282.5 32.8799C282.5 33.7083 281.828 34.3799 281 34.3799V34.3799C280.172 34.3799 279.5 33.7083 279.5 32.8799V18.4419C279.5 10.1897 272.81 3.5 264.558 3.5H251.116C250.288 3.5 249.616 2.82843 249.616 2V2C249.616 1.17157 250.288 0.5 251.116 0.5H266.058C275.139 0.5 282.5 7.86129 282.5 16.9419V32.8799Z" fill={paymentStatus === 'error' ? '#FF0000' : '#2D2D2D'} fillOpacity={paymentStatus === 'error' ? '0.56' : '0.24'}/>
         </svg>
         
         {/* QR Code Content */}
@@ -262,15 +290,20 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexDirection: 'column',
-                gap: '1rem',
-                color: '#ef4444'
+                gap: '1.5rem',
+                color: '#2D2D2D'
               }}>
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="15" y1="9" x2="9" y2="15"></line>
-                  <line x1="9" y1="9" x2="15" y2="15"></line>
+                <svg width="48" height="49" viewBox="0 0 28 29" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7.33333 15.5003H14V22.167M2.01333 15.5003H2M8.68 22.167H8.66667M14.0133 27.5003H14M26.0133 15.5003H26M2 22.167H4M18.6667 15.5003H21.3333M2 27.5003H8.66667M14 2.16699V10.167M21.4667 27.5003H23.8667C24.6134 27.5003 24.9868 27.5003 25.272 27.355C25.5229 27.2272 25.7268 27.0232 25.8547 26.7723C26 26.4871 26 26.1137 26 25.367V22.967C26 22.2203 26 21.8469 25.8547 21.5617C25.7268 21.3108 25.5229 21.1068 25.272 20.979C24.9868 20.8337 24.6134 20.8337 23.8667 20.8337H21.4667C20.7199 20.8337 20.3466 20.8337 20.0613 20.979C19.8105 21.1068 19.6065 21.3108 19.4787 21.5617C19.3333 21.8469 19.3333 22.2203 19.3333 22.967V25.367C19.3333 26.1137 19.3333 26.4871 19.4787 26.7723C19.6065 27.0232 19.8105 27.2272 20.0613 27.355C20.3466 27.5003 20.7199 27.5003 21.4667 27.5003ZM21.4667 10.167H23.8667C24.6134 10.167 24.9868 10.167 25.272 10.0217C25.5229 9.89384 25.7268 9.68986 25.8547 9.43898C26 9.15376 26 8.7804 26 8.03366V5.63366C26 4.88692 26 4.51355 25.8547 4.22834C25.7268 3.97746 25.5229 3.77348 25.272 3.64565C24.9868 3.50033 24.6134 3.50033 23.8667 3.50033H21.4667C20.7199 3.50033 20.3466 3.50033 20.0613 3.64565C19.8105 3.77348 19.6065 3.97746 19.4787 4.22834C19.3333 4.51355 19.3333 4.88692 19.3333 5.63366V8.03366C19.3333 8.7804 19.3333 9.15376 19.4787 9.43898C19.6065 9.68986 19.8105 9.89384 20.0613 10.0217C20.3466 10.167 20.7199 10.167 21.4667 10.167ZM4.13333 10.167H6.53333C7.28007 10.167 7.65344 10.167 7.93865 10.0217C8.18954 9.89384 8.39351 9.68986 8.52134 9.43898C8.66667 9.15376 8.66667 8.7804 8.66667 8.03366V5.63366C8.66667 4.88692 8.66667 4.51355 8.52134 4.22834C8.39351 3.97746 8.18954 3.77348 7.93865 3.64565C7.65344 3.50033 7.28007 3.50033 6.53333 3.50033H4.13333C3.3866 3.50033 3.01323 3.50033 2.72801 3.64565C2.47713 3.77348 2.27316 3.97746 2.14532 4.22834C2 4.51355 2 4.88692 2 5.63366V8.03366C2 8.7804 2 9.15376 2.14532 9.43898C2.27316 9.68986 2.47713 9.89384 2.72801 10.0217C3.01323 10.167 3.3866 10.167 4.13333 10.167Z" stroke="#FF0000" strokeOpacity="0.56" strokeWidth="2.66667" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                <div style={{ fontSize: '1rem', textAlign: 'center' }}>{pollingMessage}</div>
+                <div style={{ 
+                  fontSize: '1.25rem', 
+                  textAlign: 'center', 
+                  fontWeight: '600',
+                  color: '#2D2D2D'
+                }}>
+                  Payment time out
+                </div>
                 <button
                   onClick={() => {
                     setPaymentStatus('scanning');
@@ -278,14 +311,29 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
                     setTimeRemaining(120);
                   }}
                   style={{
-                    padding: '0.5rem 1rem',
-                    backgroundColor: theme.primaryColor,
-                    color: 'white',
-                    border: 'none',
+                    padding: '0.75rem 1.25rem',
+                    backgroundColor: '#f5f5f5',
+                    color: '#2D2D2D',
+                    border: '1px solid #e5e7eb',
                     borderRadius: getBorderRadius(theme.borderRadius),
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#e5e7eb';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f5f5f5';
                   }}
                 >
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9.30087 3.20164C8.45564 2.35583 7.2893 1.83366 5.9999 1.83366C3.42257 1.83366 1.33323 3.923 1.33323 6.50033C1.33323 9.07765 3.42257 11.167 5.9999 11.167C8.12658 11.167 9.9224 9.74394 10.4842 7.79693C10.5736 7.48739 10.8969 7.30887 11.2064 7.39819C11.516 7.48751 11.6945 7.81085 11.6052 8.12039C10.9031 10.5534 8.66016 12.3337 5.9999 12.3337C2.77824 12.3337 0.166563 9.72199 0.166563 6.50033C0.166563 3.27866 2.77824 0.666992 5.9999 0.666992C7.61129 0.666992 9.07102 1.32114 10.1261 2.37696C10.4972 2.74826 10.8965 3.20899 11.2498 3.63869V1.83366C11.2498 1.51149 11.511 1.25033 11.8332 1.25033C12.1553 1.25033 12.4165 1.51149 12.4165 1.83366V5.33366C12.4165 5.65583 12.1553 5.91699 11.8332 5.91699H8.33317C8.011 5.91699 7.74984 5.65583 7.74984 5.33366C7.74984 5.01149 8.011 4.75033 8.33317 4.75033H10.6486C10.2495 4.2495 9.74668 3.64775 9.30087 3.20164Z" fill="black" fillOpacity="0.72"/>
+                  </svg>
                   Try Again
                 </button>
               </div>
@@ -348,12 +396,12 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
         </div>
       </div>
 
-      {/* Timer Pill - Show countdown when scanning */}
-      {paymentStatus === 'scanning' && pollingIntervalRef.current && (
+      {/* Timer Pill - Always show when not in success state */}
+      {paymentStatus !== 'success' && (
         <div style={{
           display: 'flex',
           justifyContent: 'center',
-          marginBottom: '1.5rem',
+          marginBottom: '1rem',
         }}>
           <div style={{
             backgroundColor: 'white',
@@ -364,18 +412,21 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
             alignItems: 'center',
             gap: '0.5rem',
             fontSize: '0.875rem',
-            color: theme.primaryColor,
+            color: '#2D2D2D',
             fontWeight: '500'
           }}>
             <div style={{
               width: '8px',
               height: '8px',
-              backgroundColor: theme.primaryColor,
+              backgroundColor: '#2D2D2D',
               borderRadius: '50%',
               animation: 'pulse 2s infinite'
             }}></div>
             <span>
-              {Math.floor(timeRemaining / 60)}:{String(timeRemaining % 60).padStart(2, '0')}
+              {pollingIntervalRef.current 
+                ? `${Math.floor(timeRemaining / 60)}:${String(timeRemaining % 60).padStart(2, '0')}`
+                : '2:00'
+              }
             </span>
           </div>
         </div>
@@ -385,36 +436,103 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
       {paymentStatus !== 'success' && (
         <>
           <h2 style={{
-            margin: '0 0 0.5rem 0',
-            fontSize: '1.5rem',
+            margin: '0 0 1.5rem 0',
+            fontSize: '2rem',
             fontWeight: '600',
             color: theme.textColor
           }}>
             Send ${displayAmount} {selectedCurrency}
           </h2>
           
-          <p style={{
-            margin: '0 0 2rem 0',
-            fontSize: '1rem',
-            color: `${theme.textColor}70`
-          }}>
-            to {sanitizeString(config.merchant.name)}
-          </p>
-          
-          {/* Wallet Address */}
+          {/* Profile Picture and Name Pill - Shows address on hover */}
           <div style={{
-            fontSize: '0.875rem',
-            fontFamily: 'monospace',
-            color: `${theme.textColor}60`,
-            backgroundColor: theme.backgroundColor === '#ffffff' ? '#f3f4f6' : `${theme.backgroundColor}20`,
-            padding: '1rem',
-            borderRadius: getContainerBorderRadius(theme.borderRadius),
-            wordBreak: 'break-all',
-            border: `1px solid ${theme.backgroundColor === '#ffffff' ? '#e5e7eb' : `${theme.textColor}10`}`,
-            maxWidth: '400px',
-            margin: '0 auto'
+            display: 'flex',
+            justifyContent: 'center',
+            marginBottom: '2rem'
           }}>
-            {config.merchant.wallet}
+            <div 
+              onClick={handleCopyAddress}
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+              style={{
+                backgroundColor: 'white',
+                border: `1px solid #00000030`,
+                borderRadius: '50px',
+                padding: '0.5rem 1rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                fontSize: '0.875rem',
+                color: '#2D2D2D',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                maxWidth: '320px'
+              }}
+            >
+              <img
+                src={config.merchant.logo || DEFAULT_PROFILE_SVG}
+                alt={sanitizeString(config.merchant.name)}
+                style={{
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  background: config.merchant.logo ? 'transparent' : `linear-gradient(135deg, ${theme.primaryColor} 0%, ${theme.secondaryColor} 100%)`,
+                  flexShrink: 0
+                }}
+              />
+              
+              {copied ? (
+                <span style={{
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  color: '#22c55e',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>
+                  Copied to clipboard
+                </span>
+              ) : isHovered ? (
+                <div style={{ 
+                  fontSize: '0.75rem', 
+                  fontFamily: 'monospace',
+                  color: '#666666',
+                  overflow: 'hidden',
+                  whiteSpace: 'nowrap'
+                }}>
+                  {config.merchant.wallet.slice(0, 4)}...{config.merchant.wallet.slice(-4)}
+                </div>
+              ) : (
+                <span style={{
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  color: theme.textColor,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>
+                  {sanitizeString(config.merchant.name)}
+                </span>
+              )}
+              
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                marginLeft: '0.25rem'
+              }}>
+                {copied ? (
+                  <svg width="16" height="11" viewBox="0 0 16 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fillRule="evenodd" clipRule="evenodd" d="M15.2559 0.41107C15.5814 0.736507 15.5814 1.26414 15.2559 1.58958L6.08926 10.7562C5.76382 11.0817 5.23618 11.0817 4.91074 10.7562L0.744078 6.58958C0.418641 6.26414 0.418641 5.73651 0.744078 5.41107C1.06951 5.08563 1.59715 5.08563 1.92259 5.41107L5.5 8.98848L14.0774 0.41107C14.4028 0.0856329 14.9305 0.0856329 15.2559 0.41107Z" fill="#22c55e"/>
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5.3335 10.6673V12.534C5.3335 13.2807 5.3335 13.6541 5.47882 13.9393C5.60665 14.1902 5.81063 14.3942 6.06151 14.522C6.34672 14.6673 6.72009 14.6673 7.46683 14.6673H12.5335C13.2802 14.6673 13.6536 14.6673 13.9388 14.522C14.1897 14.3942 14.3937 14.1902 14.5215 13.9393C14.6668 13.6541 14.6668 13.2807 14.6668 12.534V7.46732C14.6668 6.72058 14.6668 6.34721 14.5215 6.062C14.3937 5.81111 14.1897 5.60714 13.9388 5.47931C13.6536 5.33398 13.2802 5.33398 12.5335 5.33398H10.6668M3.46683 10.6673H8.5335C9.28023 10.6673 9.6536 10.6673 9.93882 10.522C10.1897 10.3942 10.3937 10.1902 10.5215 9.93931C10.6668 9.65409 10.6668 9.28072 10.6668 8.53398V3.46732C10.6668 2.72058 10.6668 2.34721 10.5215 2.062C10.3937 1.81111 10.1897 1.60714 9.93882 1.47931C9.6536 1.33398 9.28023 1.33398 8.5335 1.33398H3.46683C2.72009 1.33398 2.34672 1.33398 2.06151 1.47931C1.81063 1.60714 1.60665 1.81111 1.47882 2.062C1.3335 2.34721 1.3335 2.72058 1.3335 3.46732V8.53398C1.3335 9.28072 1.3335 9.65409 1.47882 9.93931C1.60665 10.1902 1.81063 10.3942 2.06151 10.522C2.34672 10.6673 2.72009 10.6673 3.46683 10.6673Z" stroke="currentColor" strokeOpacity="0.72" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+              </div>
+            </div>
           </div>
         </>
       )}

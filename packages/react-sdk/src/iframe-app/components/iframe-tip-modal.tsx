@@ -228,19 +228,21 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
               </svg>
             </button>
           ) : null}
-          <img
-            src={config.merchant.logo || DEFAULT_PROFILE_SVG}
-            alt={sanitizeString(config.merchant.name)}
-            style={{
-              width: '28px',
-              height: '28px',
-              borderRadius: '50%',
-              objectFit: 'cover',
-              background: config.merchant.logo ? 'transparent' : `linear-gradient(135deg, ${theme.primaryColor} 0%, ${theme.secondaryColor} 100%)`,
-              flexShrink: 0
-            }}
-          />
-          {!(currentStep === 'payment' && selectedPaymentMethod === 'qr') && (
+          {currentStep === 'form' && (
+            <img
+              src={config.merchant.logo || DEFAULT_PROFILE_SVG}
+              alt={sanitizeString(config.merchant.name)}
+              style={{
+                width: '28px',
+                height: '28px',
+                borderRadius: '50%',
+                objectFit: 'cover',
+                background: config.merchant.logo ? 'transparent' : `linear-gradient(135deg, ${theme.primaryColor} 0%, ${theme.secondaryColor} 100%)`,
+                flexShrink: 0
+              }}
+            />
+          )}
+          {currentStep === 'form' && (
             <h2 style={{
               margin: 0,
               fontSize: '1.1rem',
@@ -251,15 +253,12 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
               overflow: 'hidden',
               textOverflow: 'ellipsis'
             }}>
-              {currentStep === 'form' 
-                ? `Support ${sanitizeString(config.merchant.name)}`
-                : `Connect your wallet — ${sanitizeString(config.merchant.name)}`
-              }
+              Support {sanitizeString(config.merchant.name)}
             </h2>
           )}
         </div>
 
-        {currentStep === 'payment' && selectedPaymentMethod === 'qr' && (
+        {currentStep === 'payment' && (
           <h2 style={{
             margin: 0,
             fontSize: '1.1rem',
@@ -270,7 +269,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
             transform: 'translateX(-50%)',
             textAlign: 'center'
           }}>
-            Scan to pay
+            {selectedPaymentMethod === 'qr' ? 'Scan to pay' : 'Connect Wallet'}
           </h2>
         )}
 
@@ -310,7 +309,12 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
 
       {/* Main Content - render the full form content here (same as original) */}
       {currentStep === 'form' ? (
-        <div style={{ padding: '1.5rem' }}>
+        <div style={{ 
+          padding: '1.5rem',
+          backgroundColor: theme.backgroundColor === '#ffffff' ? '#f8f9fa' : `${theme.backgroundColor}08`,
+          borderBottomLeftRadius: getModalBorderRadius(theme.borderRadius),
+          borderBottomRightRadius: getModalBorderRadius(theme.borderRadius)
+        }}>
           {/* Profile Section */}
           {/* <div style={{
             display: 'flex',
@@ -614,6 +618,9 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
                     textAlign: 'left',
                     width: '248px',
                     height: '110px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'flex-end'
                   }}
                 >
                   <div style={{
@@ -647,7 +654,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
               ))}
             </div>
           </div>
-          
+
           {/* Action Button */}
           <button
             onClick={handleSubmit}
@@ -660,31 +667,37 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
         </div>
       ) : (
         // Payment Step
-        selectedPaymentMethod === 'qr' ? (
-          <QRPaymentContent 
-            theme={theme}
-            config={config}
-            selectedAmount={selectedAmount}
-            selectedCurrency={selectedCurrency}
-            customAmount={customAmount}
-            showCustomInput={showCustomInput}
-            onPaymentComplete={handlePaymentComplete}
-            onPaymentError={(error) => {
-              console.error('Payment error:', error);
-            }}
-          />
-        ) : (
-          <WalletPaymentContent 
-            theme={theme}
-            config={config}
-            selectedAmount={selectedAmount}
-            selectedCurrency={selectedCurrency}
-            customAmount={customAmount}
-            showCustomInput={showCustomInput}
-            onPaymentComplete={handlePaymentComplete}
-            walletIcon={WALLET_ICON}
-          />
-        )
+        <div style={{
+          backgroundColor: theme.backgroundColor === '#ffffff' ? '#f8f9fa' : `${theme.backgroundColor}08`,
+          borderBottomLeftRadius: getModalBorderRadius(theme.borderRadius),
+          borderBottomRightRadius: getModalBorderRadius(theme.borderRadius)
+        }}>
+          {selectedPaymentMethod === 'qr' ? (
+            <QRPaymentContent 
+              theme={theme}
+              config={config}
+              selectedAmount={selectedAmount}
+              selectedCurrency={selectedCurrency}
+              customAmount={customAmount}
+              showCustomInput={showCustomInput}
+              onPaymentComplete={handlePaymentComplete}
+              onPaymentError={(error) => {
+                console.error('Payment error:', error);
+              }}
+            />
+          ) : (
+            <WalletPaymentContent 
+              theme={theme}
+              config={config}
+              selectedAmount={selectedAmount}
+              selectedCurrency={selectedCurrency}
+              customAmount={customAmount}
+              showCustomInput={showCustomInput}
+              onPaymentComplete={handlePaymentComplete}
+              walletIcon={WALLET_ICON}
+            />
+          )}
+        </div>
       )}
     </div>
   );
