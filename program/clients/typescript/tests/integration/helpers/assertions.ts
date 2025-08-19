@@ -7,6 +7,7 @@ import {
     fetchMerchantOperatorConfig,
     Status,
     fetchPayment,
+    PolicyData,
 } from '../../../src/generated';
 
 export async function assertMerchantAccount({
@@ -73,8 +74,8 @@ export async function assertMerchantOperatorConfigAccount({
     expectedOperator,
     expectedOperatorFee,
     expectedCurrentOrderId,
-    expectedNumPolicies,
-    expectedNumAcceptedCurrencies
+    expectedPolicies,
+    expectedAcceptedCurrencies
 }: {
     client: SolanaClient,
     merchantOperatorConfigPda: Address,
@@ -84,10 +85,21 @@ export async function assertMerchantOperatorConfigAccount({
     expectedOperator: Address,
     expectedOperatorFee: bigint,
     expectedCurrentOrderId: number,
-    expectedNumPolicies: number,
-    expectedNumAcceptedCurrencies: number
+    expectedPolicies: PolicyData[],
+    expectedAcceptedCurrencies: Address[]
 }) {
     const merchantOperatorConfig = await fetchMerchantOperatorConfig(client.rpc, merchantOperatorConfigPda, { commitment: 'processed' });
+
+    const safeLogBigint = (value: any) => {
+        return JSON.stringify(value, (key, value) => {
+            if (typeof value === 'bigint') {
+                return value.toString();
+            }
+            return value;
+        });
+    }
+    console.log(safeLogBigint(merchantOperatorConfig.data));
+
     expect(merchantOperatorConfig.data).not.toBeNull();
     expect(merchantOperatorConfig.data.bump).toBe(expectedBump);
     expect(merchantOperatorConfig.data.version).toBe(expectedVersion);
@@ -95,8 +107,10 @@ export async function assertMerchantOperatorConfigAccount({
     expect(merchantOperatorConfig.data.operator).toBe(expectedOperator);
     expect(merchantOperatorConfig.data.operatorFee).toBe(expectedOperatorFee);
     expect(merchantOperatorConfig.data.currentOrderId).toBe(expectedCurrentOrderId);
-    expect(merchantOperatorConfig.data.numPolicies).toBe(expectedNumPolicies);
-    expect(merchantOperatorConfig.data.numAcceptedCurrencies).toBe(expectedNumAcceptedCurrencies);
+    expect(merchantOperatorConfig.data.numPolicies).toBe(expectedPolicies.length);
+    expect(merchantOperatorConfig.data.numAcceptedCurrencies).toBe(expectedAcceptedCurrencies.length);
+    expect(merchantOperatorConfig.data.policies).toEqual(expectedPolicies);
+    expect(merchantOperatorConfig.data.acceptedCurrencies).toEqual(expectedAcceptedCurrencies);
     // TODO Check policies and accepted currencies
 }
 

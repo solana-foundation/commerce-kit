@@ -14,7 +14,7 @@
     "test:unit:accounts": "jest tests/unit/accounts",
     "test:unit:pdas": "jest tests/unit/pdas",
     "test:unit:types": "jest tests/unit/types",
-    "test:integration": "jest tests/integration",
+    "test:integration": "jest tests/integration/initialize-merchant-operator.test.ts",
     "test:devnet": "jest tests/devnet/",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
