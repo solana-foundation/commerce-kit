@@ -21,10 +21,9 @@ export const PaymentModalContent = memo<PaymentModalContentProps>(({
     fontFamily: theme.fontFamily,
     backgroundColor: theme.backgroundColor,
     padding: '2rem',
-    maxWidth: '420px',
-    minWidth: 'min(420px, 100vw)',
+    maxWidth: '560px',
+    minWidth: 'min(560px, 100vw)',
     width: '100%',
-    border: '1px solid #00000060',
     borderRadius: getModalBorderRadius(theme.borderRadius),
     boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
     overflow: 'hidden'

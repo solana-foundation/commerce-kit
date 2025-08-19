@@ -31,6 +31,7 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
   const displayAmount = showCustomInput ? customAmount || '0' : selectedAmount.toString();
   const [paymentStatus, setPaymentStatus] = useState<'scanning' | 'processing' | 'success' | 'error'>('scanning');
   const [pollingMessage, setPollingMessage] = useState('Waiting for payment...');
+  const [timeRemaining, setTimeRemaining] = useState(120); // 60 polls * 2 seconds = 120 seconds
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const { paymentRequest, loading } = useSolanaPay(config.merchant.wallet, selectedAmount, CurrencyMap[selectedCurrency]);
@@ -66,9 +67,12 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
     const maxPolls = 60;
 
     setPollingMessage('Waiting for payment...');
+    setTimeRemaining(120); // Reset timer to full 2 minutes (60 polls * 2 seconds)
 
     pollingIntervalRef.current = setInterval(async () => {
       pollCount++;
+      const remaining = Math.max(0, (maxPolls - pollCount) * 2); // 2 seconds per poll
+      setTimeRemaining(remaining);
       
       if (pollCount >= maxPolls) {
         if (pollingIntervalRef.current) {
@@ -151,22 +155,43 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
         `}
       </style>
       <div style={{ padding: '2rem', textAlign: 'center' }}>
-      {/* QR Code Container - Clean and Simple like Demo */}
+      {/* QR Code Container with Viewfinder */}
       <div style={{
-        width: '100%',
-        maxWidth: '400px',
-        margin: '0 auto 2rem auto',
-        backgroundColor: theme.backgroundColor === '#ffffff' ? '#f9fafb' : `${theme.backgroundColor}10`,
-        border: theme.backgroundColor === '#ffffff' 
-          ? '2px dashed #e5e7eb' 
-          : `2px dashed ${theme.primaryColor}40`,
-        borderRadius: getContainerBorderRadius(theme.borderRadius),
-        padding: '2rem',
+        width: '283px',
+        height: '283px',
+        margin: '0 auto 0rem auto',
+        position: 'relative',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '300px'
+        justifyContent: 'center'
       }}>
+        {/* Viewfinder SVG Background */}
+        <svg 
+          width="283" 
+          height="283" 
+          viewBox="0 0 283 283" 
+          fill="none" 
+          xmlns="http://www.w3.org/2000/svg"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            zIndex: 1
+          }}
+        >
+          <path d="M3.5 264.06C3.5 272.587 10.4127 279.5 18.9399 279.5H32.8799C33.7083 279.5 34.3799 280.172 34.3799 281V281C34.3799 281.828 33.7083 282.5 32.8799 282.5H17.4399C8.08427 282.5 0.5 274.916 0.5 265.56V250.12C0.5 249.292 1.17157 248.62 2 248.62V248.62C2.82843 248.62 3.5 249.292 3.5 250.12V264.06ZM282.5 266.058C282.5 275.139 275.139 282.5 266.058 282.5H251.116C250.288 282.5 249.616 281.828 249.616 281V281C249.616 280.172 250.288 279.5 251.116 279.5H264.558C272.81 279.5 279.5 272.81 279.5 264.558V250.12C279.5 249.292 280.172 248.62 281 248.62V248.62C281.828 248.62 282.5 249.292 282.5 250.12V266.058ZM34.3799 2C34.3799 2.82843 33.7083 3.5 32.8799 3.5H18.9399C10.4127 3.5 3.5 10.4127 3.5 18.9399V32.8799C3.5 33.7083 2.82843 34.3799 2 34.3799V34.3799C1.17157 34.3799 0.5 33.7083 0.5 32.8799V17.4399C0.5 8.08427 8.08427 0.5 17.4399 0.5H32.8799C33.7083 0.5 34.3799 1.17157 34.3799 2V2ZM282.5 32.8799C282.5 33.7083 281.828 34.3799 281 34.3799V34.3799C280.172 34.3799 279.5 33.7083 279.5 32.8799V18.4419C279.5 10.1897 272.81 3.5 264.558 3.5H251.116C250.288 3.5 249.616 2.82843 249.616 2V2C249.616 1.17157 250.288 0.5 251.116 0.5H266.058C275.139 0.5 282.5 7.86129 282.5 16.9419V32.8799Z" fill="#2D2D2D" fillOpacity="0.24"/>
+        </svg>
+        
+        {/* QR Code Content */}
+        <div style={{
+          position: 'relative',
+          zIndex: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '100%',
+          height: '100%'
+        }}>
         {(() => {
           if (loading) {
             return (
@@ -250,6 +275,7 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
                   onClick={() => {
                     setPaymentStatus('scanning');
                     setPollingMessage('Waiting for payment...');
+                    setTimeRemaining(120);
                   }}
                   style={{
                     padding: '0.5rem 1rem',
@@ -319,7 +345,41 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
               </div>
             );
         })()}
+        </div>
       </div>
+
+      {/* Timer Pill - Show countdown when scanning */}
+      {paymentStatus === 'scanning' && pollingIntervalRef.current && (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          marginBottom: '1.5rem',
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            border: `1px solid #00000030`,
+            borderRadius: '50px',
+            padding: '0.5rem 1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            fontSize: '0.875rem',
+            color: theme.primaryColor,
+            fontWeight: '500'
+          }}>
+            <div style={{
+              width: '8px',
+              height: '8px',
+              backgroundColor: theme.primaryColor,
+              borderRadius: '50%',
+              animation: 'pulse 2s infinite'
+            }}></div>
+            <span>
+              {Math.floor(timeRemaining / 60)}:{String(timeRemaining % 60).padStart(2, '0')}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Simple Payment Info - Matching Demo Layout */}
       {paymentStatus !== 'success' && (
@@ -359,37 +419,7 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
         </>
       )}
 
-      {/* Status Indicator - Only show when actively polling */}
-      {paymentStatus === 'scanning' && pollingIntervalRef.current && (
-        <div style={{
-          marginTop: '1.5rem',
-          padding: '0.75rem 1rem',
-          backgroundColor: `${theme.primaryColor}10`,
-          borderRadius: getContainerBorderRadius(theme.borderRadius),
-          border: `1px solid ${theme.primaryColor}30`,
-          textAlign: 'center',
-          maxWidth: '300px',
-          margin: '1.5rem auto 0'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.5rem',
-            fontSize: '0.875rem',
-            color: theme.primaryColor
-          }}>
-            <div style={{
-              width: '8px',
-              height: '8px',
-              backgroundColor: theme.primaryColor,
-              borderRadius: '50%',
-              animation: 'pulse 2s infinite'
-            }}></div>
-            {pollingMessage}
-          </div>
-        </div>
-      )}
+
 
       {/* Test button for development - remove in production */}
       {process.env.NODE_ENV === 'development' && paymentStatus === 'processing' && (

@@ -100,7 +100,7 @@ const ColorPickerPopoverComponent = function ColorPickerPopover({
         <Popover open={isOpen} onOpenChange={setIsOpen}>
           <PopoverTrigger asChild>
             <button 
-              className="p-2 bg-zinc-50 rounded-lg border border-gray-300 dark:border-gray-600 hover:border-gray-400 transition-colors text-left flex flex-row items-center justify-start w-full hover:ring-4 hover:ring-inset-2 hover:ring-gray-200 transition-all duration-300 ease-in-out cursor-pointer active:scale-[0.99]"
+              className="p-2 bg-zinc-50 rounded-lg border border-gray-300 hover:border-gray-400 transition-colors text-left flex flex-row items-center justify-start w-full hover:ring-4 hover:ring-inset-2 hover:ring-gray-200 transition-all duration-300 ease-in-out cursor-pointer active:scale-[0.99]"
               title="Click to customize colors"
               style={{
                 backgroundImage: `repeating-linear-gradient(
@@ -134,7 +134,7 @@ const ColorPickerPopoverComponent = function ColorPickerPopover({
                     </div>
                   </div>
                 </div>            
-                </button>
+              </button>
           </PopoverTrigger>
 
           <PopoverContent className="w-80 p-0 rounded-xl mt-[-100px] overflow-hidden" align="start" side="right" sideOffset={20}>

@@ -5,8 +5,7 @@
  * Production-ready e-commerce solution for Solana payments
  */
 
-// Re-export legacy components
-export { SolanaPayButton } from './solana-pay-button';
+// Re-export components
 export * from './components';
 export * from './hooks';
 

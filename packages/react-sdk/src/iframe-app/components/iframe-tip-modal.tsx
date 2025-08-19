@@ -16,6 +16,12 @@ import {
   type Currency,
   CurrencyMap
 } from '../../types';
+import {
+  DropdownRoot,
+  DropdownTrigger,
+  DropdownContent,
+  DropdownItem
+} from '../../../../ui-primitives/src/react'
 
 // Copy the static icons and constants from the original
 const WALLET_ICON = (
@@ -32,7 +38,7 @@ const SOLANA_PAY_ICON = (
   </svg>
 );
 
-const PRESET_AMOUNTS = [1, 5, 15, 25] as const;
+const PRESET_AMOUNTS = [1, 5, 15, 25, 50] as const;
 
 const ALL_CURRENCIES = [
   { value: 'USDC', label: 'USD Coin', symbol: 'USDC' },
@@ -84,6 +90,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
   const [currentStep, setCurrentStep] = useState<'form' | 'payment'>('form');
   const [isActionButtonHovered, setIsActionButtonHovered] = useState(false);
   const [isActionButtonPressed, setIsActionButtonPressed] = useState(false);
+  const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false)
 
   const currencies = useMemo(() => ALL_CURRENCIES.filter(c => config.allowedMints?.includes(c.value as any)), [config.allowedMints]);
 
@@ -170,13 +177,11 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
       backgroundColor: theme.backgroundColor,
       padding: '0',
       height: 'auto',
-      maxWidth: '420px',
-      minWidth: '420px',
+      maxWidth: '560px',
+      minWidth: '560px',
       width: '100%',
-      border: '1px solid #00000060',
       borderRadius: getModalBorderRadius(theme.borderRadius),
       boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-      overflow: 'hidden',
       animation: 'sc-tip-modal-slide-up 125ms ease-in'
     }}>
       {/* Header */}
@@ -184,12 +189,12 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '1rem',
+        padding: '1.5rem',
         borderBottom: `1px solid ${theme.backgroundColor === '#ffffff' ? '#f3f4f6' : `${theme.textColor}10`}`,
         position: 'relative'
       }}>
-        {/* Left side - Back button or help button */}
-        <div style={{ width: '2rem', display: 'flex', justifyContent: 'flex-start' }}>
+        {/* Left side - Back (in payment) + Avatar + Title */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
           {currentStep === 'payment' ? (
             <button
               onClick={handleBack}
@@ -210,68 +215,65 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
               }}
               type="button"
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = `${theme.primaryColor}10`;
-                e.currentTarget.style.color = theme.primaryColor;
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = `${theme.primaryColor}10`;
+                (e.currentTarget as HTMLButtonElement).style.color = theme.primaryColor;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = `${theme.textColor}70`;
+                (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent';
+                (e.currentTarget as HTMLButtonElement).style.color = `${theme.textColor}70`;
               }}
             >
-              ←
+              <svg width="16" height="17" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M15 8.5H1M1 8.5L8 15.5M1 8.5L8 1.5" stroke="currentColor" strokeOpacity="0.72" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </button>
-          ) : (
-            <button
-              onClick={() => {}}
-              style={{
-                background: 'none',
-                border: 'none',
-                fontSize: '1.25rem',
-                color: `${theme.textColor}70`,
-                cursor: 'pointer',
-                padding: '0.25rem',
-                borderRadius: '50%',
-                width: '2rem',
-                height: '2rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s'
-              }}
-              type="button"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = `${theme.primaryColor}10`;
-                e.currentTarget.style.color = theme.primaryColor;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = `${theme.textColor}70`;
-              }}
-            >
-              ?
-            </button>
+          ) : null}
+          <img
+            src={config.merchant.logo || DEFAULT_PROFILE_SVG}
+            alt={sanitizeString(config.merchant.name)}
+            style={{
+              width: '28px',
+              height: '28px',
+              borderRadius: '50%',
+              objectFit: 'cover',
+              background: config.merchant.logo ? 'transparent' : `linear-gradient(135deg, ${theme.primaryColor} 0%, ${theme.secondaryColor} 100%)`,
+              flexShrink: 0
+            }}
+          />
+          {!(currentStep === 'payment' && selectedPaymentMethod === 'qr') && (
+            <h2 style={{
+              margin: 0,
+              fontSize: '1.1rem',
+              fontWeight: '600',
+              color: theme.textColor,
+              textAlign: 'left',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}>
+              {currentStep === 'form' 
+                ? `Support ${sanitizeString(config.merchant.name)}`
+                : `Connect your wallet — ${sanitizeString(config.merchant.name)}`
+              }
+            </h2>
           )}
         </div>
-        
-        {/* Center - Title */}
-        <h2 style={{
-          margin: 0,
-          fontSize: '1.1rem',
-          fontWeight: '600',
-          color: theme.textColor,
-          position: 'absolute',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          textAlign: 'center'
-        }}>
-          {currentStep === 'form' 
-            ? `Support ${sanitizeString(config.merchant.name)}`
-            : selectedPaymentMethod === 'qr' 
-              ? `Scan to Pay`
-              : `Connect your wallet`
-          }
-        </h2>
-        
+
+        {currentStep === 'payment' && selectedPaymentMethod === 'qr' && (
+          <h2 style={{
+            margin: 0,
+            fontSize: '1.1rem',
+            fontWeight: '600',
+            color: theme.textColor,
+            position: 'absolute',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            textAlign: 'center'
+          }}>
+            Scan to pay
+          </h2>
+        )}
+
         {/* Right side - Close button (no DialogClose) */}
         <button
           style={{
@@ -299,16 +301,18 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
             e.currentTarget.style.backgroundColor = 'transparent';
             e.currentTarget.style.color = `${theme.textColor}60`;
           }}
-        >
-          ×
-        </button>
+                  >
+            <svg width="14" height="15" viewBox="0 0 14 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M13.7071 2.20711C14.0976 1.81658 14.0976 1.18342 13.7071 0.792893C13.3166 0.402369 12.6834 0.402369 12.2929 0.792893L7 6.08579L1.70711 0.792893C1.31658 0.402369 0.683417 0.402369 0.292893 0.792893C-0.0976311 1.18342 -0.0976311 1.81658 0.292893 2.20711L5.58579 7.5L0.292893 12.7929C-0.0976311 13.1834 -0.0976311 13.8166 0.292893 14.2071C0.683417 14.5976 1.31658 14.5976 1.70711 14.2071L7 8.91421L12.2929 14.2071C12.6834 14.5976 13.3166 14.5976 13.7071 14.2071C14.0976 13.8166 14.0976 13.1834 13.7071 12.7929L8.41421 7.5L13.7071 2.20711Z" fill="currentColor" fillOpacity="0.72"/>
+            </svg>
+          </button>
       </div>
 
       {/* Main Content - render the full form content here (same as original) */}
       {currentStep === 'form' ? (
         <div style={{ padding: '1.5rem' }}>
           {/* Profile Section */}
-          <div style={{
+          {/* <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: '0.75rem',
@@ -373,7 +377,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
                 </button>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Currency Selector */}
           <div style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
@@ -386,36 +390,98 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
             }}>
               Select stablecoin
             </label>
-            <select
-              value={selectedCurrency}
-              onChange={(e) => setSelectedCurrency(e.target.value as Currency)}
-              style={{
-                width: '100%',
-                height: '2.25rem',
-                padding: '0.25rem 0.75rem',
-                border: '1px solid #EBEBEB',
-                borderRadius: '12px',
-                backgroundColor: '#FFFFFF',
-                color: theme.textColor,
-                fontSize: '0.875rem',
-                fontWeight: '400',
-                cursor: 'pointer',
-                outline: 'none',
-                appearance: 'none',
-                backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23666' d='M2 0L0 2h4zm0 5L0 3h4z'/></svg>")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 0.7rem center',
-                backgroundSize: '0.65rem auto',
-                transition: 'all 200ms ease-in-out',
-                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-              }}
+            
+            <DropdownRoot 
+              open={currencyDropdownOpen} 
+              onOpenChange={setCurrencyDropdownOpen}
             >
-              {currencies.map(currency => (
-                <option key={currency.value} value={currency.value}>
-                  {currency.symbol}
-                </option>
-              ))}
-            </select>
+              <DropdownTrigger asChild>
+                <div
+                  style={{
+                    width: '100%',
+                    height: '2.25rem',
+                    padding: '0.25rem 0.75rem',
+                    border: '1px solid #EBEBEB',
+                    borderRadius: '12px',
+                    backgroundColor: '#FFFFFF',
+                    color: theme.textColor,
+                    fontSize: '0.875rem',
+                    fontWeight: '400',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    transition: 'all 200ms ease-in-out',
+                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                  }}
+                >
+                  <span>
+                    {currencies.find(c => c.value === selectedCurrency)?.symbol || selectedCurrency}
+                  </span>
+                  <svg 
+                    width="12" 
+                    height="12" 
+                    viewBox="0 0 12 12" 
+                    fill="none"
+                    style={{ 
+                      transform: currencyDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 200ms ease-in-out'
+                    }}
+                  >
+                    <path 
+                      d="M3 4.5L6 7.5L9 4.5" 
+                      stroke="#666" 
+                      strokeWidth="1.5" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+              </DropdownTrigger>
+              
+              <DropdownContent align="start">
+                <div style={{
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #EBEBEB',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                  padding: '8px',
+                  minWidth: '200px'
+                }}>
+                {currencies.map(currency => (
+                  <DropdownItem
+                    key={currency.value}
+                    onSelect={() => setSelectedCurrency(currency.value as Currency)}
+                  >
+                    <div style={{
+                      fontSize: '0.875rem',
+                      fontWeight: '400',
+                      color: theme.textColor,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      backgroundColor: selectedCurrency === currency.value ? '#F3F4F6' : 'transparent',
+                      width: '100%'
+                    }}>
+                    {currency.symbol}
+                    {selectedCurrency === currency.value && (
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ marginLeft: 'auto' }}>
+                        <path 
+                          d="M13.5 4.5L6 12L2.5 8.5" 
+                          stroke={theme.primaryColor} 
+                          strokeWidth="2" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
+                    </div>
+                  </DropdownItem>
+                ))}
+                </div>
+              </DropdownContent>
+            </DropdownRoot>
           </div>
 
           {/* Amount Selection */}
@@ -430,10 +496,9 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
               Select amount
             </label>
             <div style={{
-              display: 'flex',
-              gap: '1rem',
-              flexWrap: 'wrap',
-              justifyContent: 'center'
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+              gap: '1rem'
             }}>
               {PRESET_AMOUNTS.map(amount => (
                 <button
@@ -444,8 +509,8 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
                     setShowCustomInput(false);
                   }}
                   style={{
-                    width: '60px',
-                    height: '44px',
+                    width: '100%',
+                    height: '68px',
                     border: selectedAmount === amount && !showCustomInput ? `3px solid #ffffff` : '1px solid #e5e7eb',
                     borderRadius: '12px',
                     backgroundColor: selectedAmount === amount && !showCustomInput ? '#F5F5F5' : '#ffffff',
@@ -469,8 +534,8 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
                 type="button"
                 onClick={() => setShowCustomInput(true)}
                 style={{
-                  width: '60px',
-                  height: '44px',
+                  width: '100%',
+                  height: '68px',
                   border: showCustomInput ? `3px solid #ffffff` : '1px solid #e5e7eb',
                   borderRadius: '12px',
                   backgroundColor: showCustomInput ? '#F5F5F5' : '#ffffff',
@@ -516,7 +581,12 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
           </div>
 
           {/* Payment Method selection */}
-          <div style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
+          <div style={{ 
+            marginBottom: '1.5rem', 
+            textAlign: 'left',        
+            borderBottom: `1px solid ${theme.backgroundColor === '#ffffff' ? '#f3f4f6' : `${theme.textColor}10`}`,
+            paddingBottom: '1.5rem'
+            }}>
             <label style={{
               display: 'block',
               fontSize: '0.8rem',
@@ -541,7 +611,9 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
                     cursor: 'pointer',
                     boxShadow: selectedPaymentMethod === method.value ? '0 0 0 2px rgba(143, 143, 143, 1)' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                     transition: 'all 0.2s',
-                    textAlign: 'left'
+                    textAlign: 'left',
+                    width: '248px',
+                    height: '110px',
                   }}
                 >
                   <div style={{
@@ -575,7 +647,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
               ))}
             </div>
           </div>
-
+          
           {/* Action Button */}
           <button
             onClick={handleSubmit}

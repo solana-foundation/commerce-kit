@@ -168,7 +168,7 @@ export function SecureIframeShell({ config, theme, onPayment, onCancel }: Secure
       width="100%"
       height={height}
       style={{
-        width: '420px',
+        width: '560px',
       }}
       sandbox="allow-scripts allow-forms allow-popups"
       referrerPolicy="no-referrer"
