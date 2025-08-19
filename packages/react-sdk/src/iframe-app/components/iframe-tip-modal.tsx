@@ -3,7 +3,6 @@ import {
   getBorderRadius,
   getModalBorderRadius, 
   sanitizeString,
-  DEFAULT_PROFILE_SVG,
   getButtonShadow,
   getButtonBorder,
   getAccessibleTextColor,
@@ -229,9 +228,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
             </button>
           ) : null}
           {currentStep === 'form' && (
-            <img
-              src={config.merchant.logo || DEFAULT_PROFILE_SVG}
-              alt={sanitizeString(config.merchant.name)}
+            <div
               style={{
                 width: '28px',
                 height: '28px',
@@ -406,7 +403,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
                     height: '2.25rem',
                     padding: '0.25rem 0.75rem',
                     border: '1px solid #EBEBEB',
-                    borderRadius: '12px',
+                    borderRadius: getBorderRadius(theme.borderRadius),
                     backgroundColor: '#FFFFFF',
                     color: theme.textColor,
                     fontSize: '0.875rem',
@@ -448,7 +445,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
                 <div style={{
                   backgroundColor: '#FFFFFF',
                   border: '1px solid #EBEBEB',
-                  borderRadius: '12px',
+                  borderRadius: getBorderRadius(theme.borderRadius),
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
                   padding: '8px',
                   minWidth: '200px'
@@ -516,7 +513,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
                     width: '100%',
                     height: '68px',
                     border: selectedAmount === amount && !showCustomInput ? `3px solid #ffffff` : '1px solid #e5e7eb',
-                    borderRadius: '12px',
+                    borderRadius: getBorderRadius(theme.borderRadius),
                     backgroundColor: selectedAmount === amount && !showCustomInput ? '#F5F5F5' : '#ffffff',
                     color: selectedAmount === amount && !showCustomInput ? theme.primaryColor : theme.textColor,
                     fontSize: '0.875rem',
@@ -541,7 +538,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
                   width: '100%',
                   height: '68px',
                   border: showCustomInput ? `3px solid #ffffff` : '1px solid #e5e7eb',
-                  borderRadius: '12px',
+                  borderRadius: getBorderRadius(theme.borderRadius),
                   backgroundColor: showCustomInput ? '#F5F5F5' : '#ffffff',
                   color: showCustomInput ? theme.primaryColor : theme.textColor,
                   fontSize: '0.875rem',
@@ -570,7 +567,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
                   height: '2.75rem',
                   padding: '0.75rem 1rem',
                   border: '1px solid #EBEBEB',
-                  borderRadius: '12px',
+                  borderRadius: getBorderRadius(theme.borderRadius),
                   backgroundColor: '#F5F5F5',
                   color: theme.textColor,
                   fontSize: '0.875rem',
@@ -610,7 +607,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
                     flex: 1,
                     padding: '1rem',
                     border: `3px solid ${selectedPaymentMethod === method.value ? '#ffffff' : '#e5e7eb'}`,
-                    borderRadius: getBorderRadius('lg'),
+                    borderRadius: getBorderRadius(theme.borderRadius),
                     backgroundColor: selectedPaymentMethod === method.value ? '#F5F5F5' : theme.backgroundColor,
                     cursor: 'pointer',
                     boxShadow: selectedPaymentMethod === method.value ? '0 0 0 2px rgba(143, 143, 143, 1)' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',

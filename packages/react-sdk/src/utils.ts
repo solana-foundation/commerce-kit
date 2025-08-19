@@ -14,7 +14,7 @@ export const BORDER_RADIUS_MAP = {
   md: '0.75rem', 
   lg: '1rem',
   xl: '1.2rem',
-  full: '9999px'
+  full: '1.5rem' // Cap at reasonable radius instead of fully rounded
 } as const;
 
 export const MODAL_BORDER_RADIUS_MAP = {
