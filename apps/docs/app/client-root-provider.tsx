@@ -1,10 +1,10 @@
 'use client'
 
-import React from 'react'
+import React, { type ReactNode } from 'react'
 import { AppProvider, type MobileWalletAdapterConfig } from '@solana-commerce/connector-kit'
 import { FloatingCommerceButton } from './components/floating-commerce-button'
 
-export function ClientRootProvider({ children }: { children: React.ReactNode }) {
+export function ClientRootProvider({ children }: { children: ReactNode }) {
   const mobile: MobileWalletAdapterConfig = {
     appIdentity: {
       name: 'Commerce Docs',
@@ -15,8 +15,7 @@ export function ClientRootProvider({ children }: { children: React.ReactNode }) 
 
   return (
     <AppProvider connectorConfig={{ autoConnect: false, debug: process.env.NODE_ENV !== 'production' }} mobile={mobile}>
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-      {children as any}
+      {children}
       <FloatingCommerceButton />
     </AppProvider>
   )
