@@ -1,7 +1,7 @@
 // This is the iframe-safe version of WalletPaymentContent
 // It's the same as the original but without any ui-primitives dependencies
 
-export { WalletPaymentContent } from '../../components/tip-modal/wallet-payment-content';
+export { WalletPaymentContent } from '../tip-modal/wallet-payment-content';
 
 // Patch WalletConnectList inside iframe to call parent for connect since sandbox blocks providers
 if (typeof window !== 'undefined') {

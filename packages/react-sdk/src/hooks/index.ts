@@ -5,3 +5,7 @@
 
 export { useCheckout } from './use-checkout';
 export { usePayment } from './use-payment';
+export { useSolanaPay } from './use-solana-pay';
+export { useTipForm } from './use-tip-form';
+export { useButtonStyles } from './use-button-styles';
+export { useAnimationStyles } from './use-animation-styles';
