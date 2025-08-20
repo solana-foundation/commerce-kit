@@ -9,8 +9,6 @@ import {
   definedTypeLinkNode,
   prefixedCountNode,
   publicKeyTypeNode,
-  enumTypeNode,
-  enumStructVariantTypeNode,
   constantDiscriminatorNode,
   constantValueNode,
   numberValueNode,
@@ -27,7 +25,6 @@ export function appendMOConfigFields(commerceCodama: Codama): Codama {
 
           // Check if it's already an enum
           if (isNode(node.type, "enumTypeNode")) {
-            console.log("node.type", node.type);
             // Update the enum variants to have explicit discriminators
             const updatedNode = {
               ...node,
@@ -54,7 +51,6 @@ export function appendMOConfigFields(commerceCodama: Codama): Codama {
               },
               
             };
-            console.log("updatedNode", updatedNode.type);
             return updatedNode;
           }
 
