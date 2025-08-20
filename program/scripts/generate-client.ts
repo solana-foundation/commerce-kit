@@ -2,6 +2,7 @@ import path from "path";
 import * as renderers from "@codama/renderers";
 import { preserveConfigFiles } from './lib/utils';
 import { createCommerceCodama } from './lib/codama-config';
+import { renderVisitor as renderRustVisitor } from '@codama/renderers-rust';
 
 const projectRoot = path.join(__dirname, "..");
 const idlDir = path.join(projectRoot, "idl");
@@ -22,7 +23,7 @@ const configPreserver = preserveConfigFiles(typescriptClientsDir, rustClientsDir
 
 // Generate Rust client
 commerceCodama.accept(
-  renderers.renderRustVisitor(path.join(rustClientsDir, "src", "generated"), {
+  renderRustVisitor(path.join(rustClientsDir, "src", "generated"), {
     formatCode: false,
     crateFolder: rustClientsDir,
     deleteFolderBeforeRendering: false,
@@ -34,7 +35,7 @@ commerceCodama.accept(
   renderers.renderJavaScriptVisitor(
     path.join(typescriptClientsDir, "src", "generated"),
     {
-      formatCode: false,
+      formatCode: true,
       deleteFolderBeforeRendering: false,
     },
   ),
