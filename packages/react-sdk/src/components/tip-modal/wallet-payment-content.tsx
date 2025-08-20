@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useState } from 'react';
+import React, { memo, useState } from 'react';
 import { ConnectorProvider, useConnector, injectArcConnectorGlobalStyles, Spinner } from '@solana-commerce/connector-kit';
 import { getBorderRadius, sanitizeString, DEFAULT_PROFILE_SVG } from '../../utils';
 import type { ThemeConfig, MerchantConfig, Currency } from '../../types';

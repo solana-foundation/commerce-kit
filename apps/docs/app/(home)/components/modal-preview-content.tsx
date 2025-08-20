@@ -4,6 +4,14 @@ import React, { useState, useCallback } from 'react';
 import type { DemoConfig, Mode } from './types';
 import { cn } from '../../../lib/utils';
 import { OrderItem } from '@solana-commerce/headless-sdk';
+import { TokenIcon } from '../../../../../packages/react-sdk/src/components/icons';
+import { getButtonBorder, getButtonShadow, getAccessibleTextColor } from '../../../../../packages/react-sdk/src/utils';
+import {
+  DropdownRoot,
+  DropdownTrigger,
+  DropdownContent,
+  DropdownItem
+} from '../../../../../packages/ui-primitives/src/react';
 
 // Local border radius utilities to match the React SDK
 const BORDER_RADIUS_MAP = {
@@ -44,10 +52,12 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
     (config.allowedMints[0] as Currency) || 'USDC'
   );
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('qr');
-  const [customAmount, setCustomAmount] = useState<number>(0);
+  const [customAmount, setCustomAmount] = useState<string>('');
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState<'form' | 'payment'>('form');
+  const [isActionButtonHovered, setIsActionButtonHovered] = useState(false);
+  const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false);
 
   const theme = {
     ...config.theme,
@@ -103,8 +113,8 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
   );
 
   const paymentMethods: Array<{ value: PaymentMethod; label: string; description: string; icon: React.ReactNode }> = [
-    { value: 'qr', label: 'Pay', description: 'QR code', icon: solanaPayIcon },
-    { value: 'wallet', label: 'Wallet', description: 'Browser wallet', icon: walletIcon }
+    { value: 'qr', label: 'Pay', description: 'Scan a QR code', icon: solanaPayIcon },
+    { value: 'wallet', label: 'Wallet', description: 'Connect your wallet', icon: walletIcon }
   ];
 
   if (selectedMode === 'tip') {
@@ -179,7 +189,7 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
             {currentStep === 'form' && (
               <h2 style={{
                 margin: 0,
-                fontSize: '1.1rem',
+                fontSize: '24px',
                 fontWeight: '600',
                 color: theme.textColor,
                 textAlign: 'left',
@@ -195,7 +205,7 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
           {currentStep === 'payment' && (
             <h2 style={{
               margin: 0,
-              fontSize: '1.1rem',
+              fontSize: '24px',
               fontWeight: '600',
               color: theme.textColor,
               position: 'absolute',
@@ -245,48 +255,117 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
         {currentStep === 'form' ? (
           <div style={{
             padding: '1.5rem',
-            backgroundColor: theme.backgroundColor === '#ffffff' ? '#f8f9fa' : `${theme.backgroundColor}08`,
             borderBottomLeftRadius: getModalBorderRadius(theme.borderRadius),
             borderBottomRightRadius: getModalBorderRadius(theme.borderRadius)
           }}>
             {/* Currency Selector */}
-            <div className="mb-6 text-left">
-              <label 
-                className="block text-xs font-normal mb-2"
-                style={{ color: `${theme.textColor}70` }}
-              >
+            <div style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '0.8rem',
+                fontWeight: '400',
+                color: `${theme.textColor}70`,
+                marginBottom: '0.5rem'
+              }}>
                 Select stablecoin
               </label>
-              <select
-                value={selectedCurrency}
-                onChange={(e) => setSelectedCurrency(e.target.value as Currency)}
-                style={{
-                  width: '100%',
-                  height: '2.25rem',
-                  padding: '0.25rem 0.75rem',
-                  border: '1px solid #EBEBEB',
-                  borderRadius: getBorderRadius(theme.borderRadius),
-                  backgroundColor: '#FFFFFF',
-                  color: theme.textColor,
-                  fontSize: '0.875rem',
-                  fontWeight: '400',
-                  cursor: 'pointer',
-                  outline: 'none',
-                  transition: 'all 200ms ease-in-out',
-                  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                  appearance: 'none',
-                  backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23666' d='M2 0L0 2h4zm0 5L0 3h4z'/></svg>")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 0.7rem center',
-                  backgroundSize: '0.65rem auto'
-                }}
+              
+              <DropdownRoot 
+                open={currencyDropdownOpen} 
+                onOpenChange={setCurrencyDropdownOpen}
               >
-                {currencies.map(currency => (
-                  <option key={currency.value} value={currency.value}>
-                    {currency.symbol}
-                  </option>
-                ))}
-              </select>
+                <DropdownTrigger asChild>
+                  <div
+                    style={{
+                      width: 'fit-content',
+                      minWidth: '120px',
+                      height: '2.25rem',
+                      padding: '0.25rem 0.45rem',
+                      border: '1px solid #EBEBEB',
+                      borderRadius: getBorderRadius(theme.borderRadius),
+                      backgroundColor: '#FFFFFF',
+                      color: theme.textColor,
+                      fontWeight: '400',
+                      cursor: 'pointer',
+                      outline: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      transition: 'all 200ms ease-in-out',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <TokenIcon symbol={selectedCurrency} size={24} />
+                      <span style={{ marginRight: '4px', fontWeight: '600', fontSize: '16px' }}>
+                        {currencies.find(c => c.value === selectedCurrency)?.symbol || selectedCurrency}
+                      </span>
+                    </div>  
+                    <svg 
+                      width="12" 
+                      height="12" 
+                      viewBox="0 0 24 25" 
+                      fill="none"
+                      style={{ 
+                        transform: currencyDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transition: 'transform 200ms ease-in-out'
+                      }}
+                    >
+                      <path 
+                        d="M6 9.5L12 15.5L18 9.5" 
+                        stroke="black" 
+                        strokeOpacity="0.72" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                </DropdownTrigger>
+                
+                <DropdownContent align="start">
+                  <div style={{
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #EBEBEB',
+                    borderRadius: getBorderRadius(theme.borderRadius),
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                    padding: '8px',
+                    minWidth: '200px'
+                  }}>
+                  {currencies.map(currency => (
+                    <DropdownItem
+                      key={currency.value}
+                      onSelect={() => setSelectedCurrency(currency.value as Currency)}
+                    >
+                      <div style={{
+                        fontSize: '0.875rem',
+                        fontWeight: '400',
+                        color: theme.textColor,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        backgroundColor: 'transparent',
+                        width: '100%'
+                      }}>
+                        <TokenIcon symbol={currency.value} size={16} />
+                        <span>{currency.symbol}</span>
+                        {selectedCurrency === currency.value && (
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ marginLeft: 'auto' }}>
+                            <path 
+                              d="M13.5 4.5L6 12L2.5 8.5" 
+                              stroke={theme.primaryColor} 
+                              strokeWidth="2" 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        )}
+                      </div>
+                    </DropdownItem>
+                  ))}
+                  </div>
+                </DropdownContent>
+              </DropdownRoot>
             </div>
 
             {/* Amount Selection */}
@@ -310,19 +389,29 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
                       setSelectedAmount(amount);
                       setShowCustomInput(false);
                     }}
+                    onMouseDown={(e) => {
+                      e.currentTarget.style.transform = 'scale(0.98)';
+                    }}
+                    onMouseUp={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
                     style={{
                       width: '100%',
                       height: '68px',
                       border: selectedAmount === amount && !showCustomInput ? `3px solid #ffffff` : '1px solid #e5e7eb',
                       borderRadius: getBorderRadius(theme.borderRadius),
-                      backgroundColor: selectedAmount === amount && !showCustomInput ? '#F5F5F5' : '#ffffff',
-                      color: selectedAmount === amount && !showCustomInput ? theme.primaryColor : theme.textColor,
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
+                      backgroundColor: selectedAmount === amount && !showCustomInput ? `${theme.primaryColor}10` : '#ffffff',
+                      color: selectedAmount === amount && !showCustomInput ? 'rgba(0, 0, 0, 0.7)' : theme.textColor,
+                      fontSize: '19px',
+                      fontWeight: '400',
                       cursor: 'pointer',
-                      transition: 'all 0.2s',
+                      transition: 'all 0.2s, transform 0.1s ease',
+                      transform: 'scale(1)',
                       boxShadow: selectedAmount === amount && !showCustomInput 
-                        ? '0 0 0 2px rgba(143, 143, 143, 1)' 
+                        ? `0 0 0 2px ${theme.primaryColor}60` 
                         : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                       display: 'flex',
                       alignItems: 'center',
@@ -335,19 +424,29 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
                 <button
                   type="button"
                   onClick={() => setShowCustomInput(true)}
+                  onMouseDown={(e) => {
+                    e.currentTarget.style.transform = 'scale(0.98)';
+                  }}
+                  onMouseUp={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
                   style={{
                     width: '100%',
                     height: '68px',
                     border: showCustomInput ? `3px solid #ffffff` : '1px solid #e5e7eb',
                     borderRadius: getBorderRadius(theme.borderRadius),
-                    backgroundColor: showCustomInput ? '#F5F5F5' : '#ffffff',
-                    color: showCustomInput ? theme.primaryColor : theme.textColor,
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
+                    backgroundColor: showCustomInput ? `${theme.primaryColor}10` : '#ffffff',
+                    color: showCustomInput ? 'rgba(0, 0, 0, 0.8)' : theme.textColor,
+                    fontSize: '19px',
+                    fontWeight: '400',
                     cursor: 'pointer',
-                    transition: 'all 0.2s',
+                    transition: 'all 0.2s, transform 0.1s ease',
+                    transform: 'scale(1)',
                     boxShadow: showCustomInput 
-                      ? '0 0 0 2px rgba(143, 143, 143, 1)' 
+                      ? `0 0 0 2px ${theme.primaryColor}60` 
                       : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                     display: 'flex',
                     alignItems: 'center',
@@ -361,7 +460,7 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
                 <input
                   type="number"
                   value={customAmount}
-                  onChange={(e) => setCustomAmount(Number(e.target.value))}
+                  onChange={(e) => setCustomAmount(e.target.value)}
                   placeholder="Enter amount"
                   style={{
                     width: '100%',
@@ -371,7 +470,7 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
                     borderRadius: getBorderRadius(theme.borderRadius),
                     backgroundColor: '#F5F5F5',
                     color: theme.textColor,
-                    fontSize: '0.875rem',
+                    fontSize: '19px',
                     fontWeight: '400',
                     outline: 'none',
                     marginTop: '0.75rem',
@@ -404,15 +503,25 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
                     key={method.value}
                     type="button"
                     onClick={() => setSelectedPaymentMethod(method.value)}
+                    onMouseDown={(e) => {
+                      e.currentTarget.style.transform = 'scale(0.98)';
+                    }}
+                    onMouseUp={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
                     style={{
                       flex: 1,
                       padding: '1rem',
-                      border: `3px solid ${selectedPaymentMethod === method.value ? '#ffffff' : '#e5e7eb'}`,
+                      border: `${selectedPaymentMethod === method.value ? '3px solid #ffffff' : '1px solid #e5e7eb'}`,
                       borderRadius: getBorderRadius(theme.borderRadius),
-                      backgroundColor: selectedPaymentMethod === method.value ? '#F5F5F5' : theme.backgroundColor,
+                      backgroundColor: selectedPaymentMethod === method.value ? `${theme.primaryColor}10` : theme.backgroundColor,
                       cursor: 'pointer',
-                      boxShadow: selectedPaymentMethod === method.value ? '0 0 0 2px rgba(143, 143, 143, 1)' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                      transition: 'all 0.2s',
+                      boxShadow: selectedPaymentMethod === method.value ? `0 0 0 2px ${theme.primaryColor}60` : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                      transition: 'all 0.2s, transform 0.1s ease',
+                      transform: 'scale(1)',
                       textAlign: 'left',
                       width: '248px',
                       height: '110px',
@@ -430,20 +539,20 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
                       <span style={{ 
                         display: 'flex', 
                         alignItems: 'center',
-                        color: selectedPaymentMethod === method.value ? theme.primaryColor : theme.textColor
+                        color: selectedPaymentMethod === method.value ? 'rgba(0, 0, 0, 0.8)' : theme.textColor
                       }}>
                         {method.icon}
                       </span>
                       <span style={{
-                        fontSize: '0.875rem',
+                        fontSize: '19px',
                         fontWeight: '600',
-                        color: selectedPaymentMethod === method.value ? theme.primaryColor : theme.textColor
+                        color: selectedPaymentMethod === method.value ? 'rgba(0, 0, 0, 0.8)' : theme.textColor
                       }}>
                         {method.label}
                       </span>
                     </div>
                     <div style={{
-                      fontSize: '0.75rem',
+                      fontSize: '12px',
                       color: `${theme.textColor}60`
                     }}>
                       {method.description}
@@ -460,29 +569,65 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
               style={{
                 width: '100%',
                 padding: '1rem',
-                backgroundColor: isProcessing || (showCustomInput && !customAmount) ? '#9ca3af' : theme.primaryColor,
-                color: 'white',
-                border: 'none',
+                backgroundColor: isProcessing || (showCustomInput && !customAmount) 
+                  ? '#9ca3af' 
+                  : isActionButtonHovered 
+                    ? theme.secondaryColor 
+                    : theme.primaryColor,
+                color: isProcessing || (showCustomInput && !customAmount)
+                  ? 'white' 
+                  : getAccessibleTextColor(isActionButtonHovered ? theme.secondaryColor : theme.primaryColor),
+                border: isProcessing || (showCustomInput && !customAmount) 
+                  ? '1.5px solid transparent' 
+                  : (() => {
+                    const border = getButtonBorder({...theme, buttonBorder: theme.buttonBorder || 'none', buttonShadow: theme.buttonShadow || 'none'});
+                    return border === 'none' ? '1.5px solid transparent' : border;
+                  })(),
                 borderRadius: getBorderRadius(theme.borderRadius),
                 fontSize: '1rem',
                 fontWeight: '600',
                 cursor: isProcessing || (showCustomInput && !customAmount) ? 'not-allowed' : 'pointer',
                 transition: 'background-color 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease',
-                fontFamily: theme.fontFamily
+                fontFamily: theme.fontFamily,
+                boxShadow: isProcessing || (showCustomInput && !customAmount)
+                  ? 'none'
+                  : isActionButtonHovered
+                    ? `${getButtonShadow(theme.buttonShadow || 'none')}, 0 0 0 4px rgba(202, 202, 202, 0.45)`
+                    : getButtonShadow(theme.buttonShadow || 'none'),
+                transform: 'scale(1)',
+                outlineOffset: 2
               }}
               type="button"
-              onMouseEnter={(e) => {
+              onMouseEnter={() => {
                 if (!isProcessing && !(showCustomInput && !customAmount)) {
-                  e.currentTarget.style.backgroundColor = theme.secondaryColor;
+                  setIsActionButtonHovered(true);
                 }
               }}
-              onMouseLeave={(e) => {
+              onMouseLeave={() => {
+                setIsActionButtonHovered(false);
+              }}
+              onMouseDown={(e) => {
                 if (!isProcessing && !(showCustomInput && !customAmount)) {
-                  e.currentTarget.style.backgroundColor = theme.primaryColor;
+                  e.currentTarget.style.transform = 'scale(0.97)';
+                }
+              }}
+              onMouseUp={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+              onFocus={(e) => { 
+                if (!isProcessing && !(showCustomInput && !customAmount)) {
+                  setIsActionButtonHovered(true);
+                  e.currentTarget.style.boxShadow = `${getButtonShadow(theme.buttonShadow || 'none')}, 0 0 0 4px rgba(202, 202, 202, 0.45)`; 
+                }
+              }}
+              onBlur={(e) => { 
+                setIsActionButtonHovered(false);
+                if (!isProcessing && !(showCustomInput && !customAmount)) {
+                  e.currentTarget.style.boxShadow = getButtonShadow(theme.buttonShadow || 'none'); 
                 }
               }}
             >
-              {isProcessing ? 'Processing...' : `Pay $${showCustomInput ? customAmount || '0' : selectedAmount}`}
+              <span style={{ fontSize: '19px', fontWeight: '600' }}>{isProcessing ? 'Processing...' : `Pay $${showCustomInput ? customAmount || '0' : selectedAmount}`}</span>
             </button>
           </div>
         ) : (
@@ -490,9 +635,10 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
           <div style={{
             padding: '1.5rem',
             textAlign: 'center',
-            backgroundColor: theme.backgroundColor === '#ffffff' ? '#f8f9fa' : `${theme.backgroundColor}08`,
+            backgroundColor: selectedPaymentMethod === 'wallet' ? '#F5F5F5' : 'transparent',
             borderBottomLeftRadius: getModalBorderRadius(theme.borderRadius),
-            borderBottomRightRadius: getModalBorderRadius(theme.borderRadius)
+            borderBottomRightRadius: getModalBorderRadius(theme.borderRadius),
+            transition: 'background-color 150ms ease'
           }}>
             <div style={{
               marginBottom: '2rem',

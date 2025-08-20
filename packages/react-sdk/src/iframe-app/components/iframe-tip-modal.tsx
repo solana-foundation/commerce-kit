@@ -128,7 +128,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
     { value: 'wallet', label: 'Wallet', description: 'Connect your wallet', icon: WALLET_ICON }
   ];
 
-  // Action button styles
+  // Action button styles - matching trigger button pattern
   const actionButtonStyles: React.CSSProperties = useMemo(() => {
     const isDisabled = isProcessing || (showCustomInput && !customAmount);
     const borderStyle = (() => {
@@ -152,7 +152,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
       fontSize: '1rem',
       fontWeight: '600',
       cursor: isDisabled ? 'not-allowed' : 'pointer',
-      transition: 'background-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease',
+      transition: 'background-color 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease',
       fontFamily: theme.fontFamily,
       boxShadow: isDisabled 
         ? 'none'
@@ -455,15 +455,15 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
                     height: '68px',
                     border: selectedAmount === amount && !showCustomInput ? `3px solid #ffffff` : '1px solid #e5e7eb',
                     borderRadius: getRadius('preset', theme.borderRadius),
-                    backgroundColor: selectedAmount === amount && !showCustomInput ? '#F5F5F5' : '#ffffff',
-                    color: selectedAmount === amount && !showCustomInput ? theme.primaryColor : theme.textColor,
+                    backgroundColor: selectedAmount === amount && !showCustomInput ? `${theme.primaryColor}10` : '#ffffff',
+                    color: selectedAmount === amount && !showCustomInput ? 'rgba(0, 0, 0, 0.8)' : theme.textColor,
                     fontSize: '19px',
                     fontWeight: '400',
                     cursor: 'pointer',
                     transition: 'all 0.2s, transform 0.1s ease',
                     transform: 'scale(1)',
                     boxShadow: selectedAmount === amount && !showCustomInput 
-                      ? '0 0 0 2px rgba(143, 143, 143, 1)' 
+                      ? `0 0 0 2px ${theme.primaryColor}60` 
                       : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                     display: 'flex',
                     alignItems: 'center',
@@ -490,15 +490,15 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
                   height: '68px',
                   border: showCustomInput ? `3px solid #ffffff` : '1px solid #e5e7eb',
                   borderRadius: getRadius('preset', theme.borderRadius),
-                  backgroundColor: showCustomInput ? '#F5F5F5' : '#ffffff',
-                  color: showCustomInput ? theme.primaryColor : theme.textColor,
+                  backgroundColor: showCustomInput ? `${theme.primaryColor}10` : '#ffffff',
+                  color: showCustomInput ? 'rgba(0, 0, 0, 0.8)' : theme.textColor,
                     fontSize: '19px',
                     fontWeight: '400',
                     cursor: 'pointer',
                     transition: 'all 0.2s, transform 0.1s ease',
                     transform: 'scale(1)',
                   boxShadow: showCustomInput 
-                    ? '0 0 0 2px rgba(143, 143, 143, 1)' 
+                    ? `0 0 0 2px ${theme.primaryColor}40` 
                     : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                   display: 'flex',
                   alignItems: 'center',
@@ -567,11 +567,11 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
                   style={{
                     flex: 1,
                     padding: '1rem',
-                    border: `${selectedPaymentMethod === method.value ? '3px solid #ffffff' : '1px solid #e5e7eb'}`,
+                    border: `${selectedPaymentMethod === method.value ? `3px solid #ffffff` : '1px solid #e5e7eb'}`,
                     borderRadius: getRadius('payment', theme.borderRadius),
-                    backgroundColor: selectedPaymentMethod === method.value ? '#F5F5F5' : theme.backgroundColor,
+                    backgroundColor: selectedPaymentMethod === method.value ? `${theme.primaryColor}10` : theme.backgroundColor,
                     cursor: 'pointer',
-                    boxShadow: selectedPaymentMethod === method.value ? '0 0 0 2px rgba(143, 143, 143, 1)' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                    boxShadow: selectedPaymentMethod === method.value ? `0 0 0 2px ${theme.primaryColor}60` : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                     transition: 'all 0.2s, transform 0.1s ease',
                     transform: 'scale(1)',
                     textAlign: 'left',
@@ -591,14 +591,14 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
                     <span style={{ 
                       display: 'flex', 
                       alignItems: 'center',
-                      color: selectedPaymentMethod === method.value ? theme.primaryColor : theme.textColor
+                      color: selectedPaymentMethod === method.value ? 'rgba(0, 0, 0, 0.7)' : theme.textColor
                     }}>
                       {method.icon}
                     </span>
                     <span style={{
                       fontSize: '19px',
                       fontWeight: '600',
-                      color: selectedPaymentMethod === method.value ? theme.primaryColor : theme.textColor
+                      color: selectedPaymentMethod === method.value ? 'rgba(0, 0, 0, 0.7)' : theme.textColor
                     }}>
                       {method.label}
                     </span>
@@ -620,16 +620,33 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
             disabled={isProcessing || (showCustomInput && !customAmount)}
             style={actionButtonStyles}
             type="button"
+            onMouseEnter={() => {
+              if (!isProcessing && !(showCustomInput && !customAmount)) {
+                setIsActionButtonHovered(true);
+              }
+            }}
+            onMouseLeave={() => {
+              setIsActionButtonHovered(false);
+            }}
             onMouseDown={(e) => {
               if (!isProcessing && !(showCustomInput && !customAmount)) {
-                e.currentTarget.style.transform = 'scale(0.98)';
+                e.currentTarget.style.transform = 'scale(0.97)';
               }
             }}
             onMouseUp={(e) => {
               e.currentTarget.style.transform = 'scale(1)';
             }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1)';
+            onFocus={(e) => { 
+              if (!isProcessing && !(showCustomInput && !customAmount)) {
+                setIsActionButtonHovered(true);
+                e.currentTarget.style.boxShadow = `${getButtonShadow(theme.buttonShadow)}, 0 0 0 4px rgba(202, 202, 202, 0.45)`; 
+              }
+            }}
+            onBlur={(e) => { 
+              setIsActionButtonHovered(false);
+              if (!isProcessing && !(showCustomInput && !customAmount)) {
+                e.currentTarget.style.boxShadow = getButtonShadow(theme.buttonShadow); 
+              }
             }}
           >
             <span style={{ fontSize: '19px', fontWeight: '600' }}>{isProcessing ? 'Processing...' : `Pay $${showCustomInput ? customAmount || '0' : selectedAmount}`}</span>
