@@ -19,7 +19,7 @@ const typescriptClientsDir = path.join(
 const commerceCodama = createCommerceCodamaBuilder(commerceIdl)
   .appendAccountDiscriminator()
   .setDefaultAccountValues()
-  .appendMOConfigFields()
+  //.appendMOConfigFields()
   .appendPdaDerivers()
   .setInstructionAccountDefaultValues()
   .appendMOConfigRemainingAccounts()
