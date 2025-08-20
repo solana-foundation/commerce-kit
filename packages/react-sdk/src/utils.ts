@@ -10,11 +10,11 @@ import { OrderItem, validateWalletAddress as coreValidateWalletAddress } from '@
 // Constants
 export const BORDER_RADIUS_MAP = {
   none: '0',
-  sm: '0.5rem',
-  md: '0.75rem', 
-  lg: '1rem',
-  xl: '1.2rem',
-  full: '1.5rem' // Cap at reasonable radius instead of fully rounded
+  sm: '12px',
+  md: '16px',
+  lg: '20px',
+  xl: '24px',
+  full: '1.5rem' // Cap at reasonable radius instead of fully rounded for selection items
 } as const;
 
 export const MODAL_BORDER_RADIUS_MAP = {
@@ -32,7 +32,7 @@ export const DEFAULT_THEME: Required<ThemeConfig> = {
   secondaryColor: '#14F195', 
   backgroundColor: '#ffffff',
   textColor: '#111827',
-  borderRadius: 'md',
+  borderRadius: 'lg',
   fontFamily: 'system-ui, -apple-system, sans-serif',
   buttonShadow: 'md',
   buttonBorder: 'black-10'
@@ -40,13 +40,65 @@ export const DEFAULT_THEME: Required<ThemeConfig> = {
 
 // Utility functions
 export const getBorderRadius = (radius?: BorderRadius): string => 
-  BORDER_RADIUS_MAP[radius ?? 'md'];
+  BORDER_RADIUS_MAP[radius ?? 'lg'];
 
 export const getModalBorderRadius = (radius?: BorderRadius): string => 
-  MODAL_BORDER_RADIUS_MAP[radius ?? 'md'];
+  getRadius('modal', radius);
 
 export const getContainerBorderRadius = (radius?: BorderRadius): string => 
   CONTAINER_BORDER_RADIUS_MAP[radius ?? 'md'];
+
+// Component-category radius scales
+export type RadiusCategory = 'modal' | 'payment' | 'preset' | 'dropdown' | 'button';
+
+const CATEGORY_RADIUS_MAP: Record<RadiusCategory, Record<'sm' | 'lg' | 'full', string>> = {
+  // Modal shell corners
+  modal: {
+    sm: '16px',
+    lg: '20px',
+    full: '2.5rem'
+  },
+  // Payment method tiles (selection cards)
+  payment: {
+    sm: '12px',
+    lg: '20px',
+    full: '1rem'
+  },
+  // Preset amount tiles (and similar small selection buttons)
+  preset: {
+    sm: '12px',
+    lg: '16px',
+    full: '1rem'
+  },
+  // Dropdown trigger/content and text inputs
+  dropdown: {
+    sm: '8px',
+    lg: '10px',
+    full: '12px'
+  },
+  // Primary action buttons
+  button: {
+    sm: '12px',
+    lg: '16px',
+    full: '2rem'
+  }
+};
+
+function normalizeRadiusSize(radius?: BorderRadius): 'sm' | 'lg' | 'full' {
+  if (radius === 'full') return 'full';
+  if (radius === 'xl') return 'full';
+  if (radius === 'lg') return 'lg';
+  if (radius === 'md') return 'lg'; // md not used; closest is lg
+  if (radius === 'sm') return 'sm';
+  // Treat 'none' and undefined as sensible defaults per category elsewhere
+  return 'lg';
+}
+
+export function getRadius(category: RadiusCategory, radius?: BorderRadius): string {
+  if (radius === 'none') return '0';
+  const size = normalizeRadiusSize(radius);
+  return CATEGORY_RADIUS_MAP[category][size];
+}
 
 // Shadow map for buttons
 const BUTTON_SHADOW_MAP: Record<NonNullable<ThemeConfig['buttonShadow']>, string> = {

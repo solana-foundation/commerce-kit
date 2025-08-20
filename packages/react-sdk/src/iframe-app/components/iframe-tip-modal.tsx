@@ -1,11 +1,11 @@
 import React, { useState, useCallback, memo, useMemo } from 'react';
 import { 
-  getBorderRadius,
-  getModalBorderRadius, 
+  getModalBorderRadius,
   sanitizeString,
   getButtonShadow,
   getButtonBorder,
   getAccessibleTextColor,
+  getRadius,
 } from '../../utils';
 import { QRPaymentContent } from '../components/iframe-qr-payment';
 import { WalletPaymentContent } from '../components/iframe-wallet-payment';
@@ -15,6 +15,7 @@ import {
   type Currency,
   CurrencyMap
 } from '../../types';
+import { TokenIcon } from '../../components/icons';
 import {
   DropdownRoot,
   DropdownTrigger,
@@ -88,7 +89,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState<'form' | 'payment'>('form');
   const [isActionButtonHovered, setIsActionButtonHovered] = useState(false);
-  const [isActionButtonPressed, setIsActionButtonPressed] = useState(false);
+
   const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false)
 
   const currencies = useMemo(() => ALL_CURRENCIES.filter(c => config.allowedMints?.includes(c.value as any)), [config.allowedMints]);
@@ -123,8 +124,8 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
   }, [selectedAmount, selectedCurrency, selectedPaymentMethod, showCustomInput, customAmount, onPayment]);
 
   const paymentMethods: Array<{ value: PaymentMethod; label: string; description: string; icon: React.ReactNode }> = [
-    { value: 'qr', label: 'Pay', description: 'QR code', icon: SOLANA_PAY_ICON },
-    { value: 'wallet', label: 'Wallet', description: 'Browser wallet', icon: WALLET_ICON }
+    { value: 'qr', label: 'Pay', description: 'Scan a QR code', icon: SOLANA_PAY_ICON },
+    { value: 'wallet', label: 'Wallet', description: 'Connect your wallet', icon: WALLET_ICON }
   ];
 
   // Action button styles
@@ -147,27 +148,21 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
         ? 'white' 
         : getAccessibleTextColor(isActionButtonHovered ? theme.secondaryColor : theme.primaryColor),
       border: isDisabled ? '1.5px solid transparent' : borderStyle,
-      borderRadius: getBorderRadius(theme.borderRadius),
+      borderRadius: getRadius('button', theme.borderRadius),
       fontSize: '1rem',
       fontWeight: '600',
       cursor: isDisabled ? 'not-allowed' : 'pointer',
-      transition: 'background-color 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease',
+      transition: 'background-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease',
       fontFamily: theme.fontFamily,
       boxShadow: isDisabled 
         ? 'none'
         : isActionButtonHovered
           ? `${getButtonShadow(theme.buttonShadow)}, 0 0 0 4px rgba(202, 202, 202, 0.45)`
           : getButtonShadow(theme.buttonShadow),
-      transform: isDisabled 
-        ? 'scale(1)' 
-        : isActionButtonPressed 
-          ? 'scale(0.97)' 
-          : isActionButtonHovered 
-            ? 'scale(1)' 
-            : 'scale(1)',
+      transform: 'scale(1)',
       outlineOffset: 2,
     };
-  }, [theme, isActionButtonHovered, isActionButtonPressed, isProcessing, showCustomInput, customAmount]);
+  }, [theme, isActionButtonHovered, isProcessing, showCustomInput, customAmount]);
 
   // The entire modal content - same as original but with regular close button
   return (
@@ -242,7 +237,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
           {currentStep === 'form' && (
             <h2 style={{
               margin: 0,
-              fontSize: '1.1rem',
+              fontSize: '24px',
               fontWeight: '600',
               color: theme.textColor,
               textAlign: 'left',
@@ -258,7 +253,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
         {currentStep === 'payment' && (
           <h2 style={{
             margin: 0,
-            fontSize: '1.1rem',
+            fontSize: '24px',
             fontWeight: '600',
             color: theme.textColor,
             position: 'absolute',
@@ -308,77 +303,9 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
       {currentStep === 'form' ? (
         <div style={{ 
           padding: '1.5rem',
-          backgroundColor: theme.backgroundColor === '#ffffff' ? '#f8f9fa' : `${theme.backgroundColor}08`,
           borderBottomLeftRadius: getModalBorderRadius(theme.borderRadius),
           borderBottomRightRadius: getModalBorderRadius(theme.borderRadius)
         }}>
-          {/* Profile Section */}
-          {/* <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-            marginBottom: '1.5rem'
-          }}>
-            <img
-              src={config.merchant.logo || DEFAULT_PROFILE_SVG}
-              alt={sanitizeString(config.merchant.name)}
-              style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '50%',
-                objectFit: 'cover',
-                background: config.merchant.logo ? 'transparent' : `linear-gradient(135deg, ${theme.primaryColor} 0%, ${theme.secondaryColor} 100%)`,
-                flexShrink: 0
-              }}
-            />
-            <div style={{ flex: 1, maxWidth: '100%', textAlign: 'left', minWidth: 0 }}>
-              <h3 style={{
-                margin: 0,
-                fontSize: '1.125rem',
-                fontWeight: '600',
-                color: theme.textColor,
-                marginBottom: '-5px'
-              }}>
-                {sanitizeString(config.merchant.name)}
-              </h3>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}>
-                <span style={{
-                  fontSize: '0.875rem',
-                  fontFamily: 'monospace',
-                  color: `${theme.textColor}70`
-                }}>
-                  {config.merchant.wallet.slice(0, 4)}...{config.merchant.wallet.slice(-4)}
-                </span>
-                <button
-                  onClick={() => copyToClipboard(config.merchant.wallet)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    padding: '0.25rem',
-                    color: theme.primaryColor,
-                    fontSize: '0.875rem',
-                    borderRadius: getBorderRadius('sm'),
-                    transition: 'all 0.2s'
-                  }}
-                  type="button"
-                  title="Copy address"
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = `${theme.primaryColor}10`;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  📋
-                </button>
-              </div>
-            </div>
-          </div> */}
 
           {/* Currency Selector */}
           <div style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
@@ -399,14 +326,14 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
               <DropdownTrigger asChild>
                 <div
                   style={{
-                    width: '100%',
+                    width: 'fit-content',
+                    minWidth: '120px',
                     height: '2.25rem',
-                    padding: '0.25rem 0.75rem',
+                    padding: '0.25rem 0.45rem',
                     border: '1px solid #EBEBEB',
-                    borderRadius: getBorderRadius(theme.borderRadius),
+                    borderRadius: getRadius('dropdown', theme.borderRadius),
                     backgroundColor: '#FFFFFF',
                     color: theme.textColor,
-                    fontSize: '0.875rem',
                     fontWeight: '400',
                     cursor: 'pointer',
                     outline: 'none',
@@ -417,13 +344,16 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
                     boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
                   }}
                 >
-                  <span>
-                    {currencies.find(c => c.value === selectedCurrency)?.symbol || selectedCurrency}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <TokenIcon symbol={selectedCurrency} size={24} />
+                    <span style={{ marginRight: '4px', fontWeight: '600', fontSize: '16px' }}>
+                      {currencies.find(c => c.value === selectedCurrency)?.symbol || selectedCurrency}
+                    </span>
+                  </div>  
                   <svg 
                     width="12" 
                     height="12" 
-                    viewBox="0 0 12 12" 
+                    viewBox="0 0 24 25" 
                     fill="none"
                     style={{ 
                       transform: currencyDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
@@ -431,9 +361,10 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
                     }}
                   >
                     <path 
-                      d="M3 4.5L6 7.5L9 4.5" 
-                      stroke="#666" 
-                      strokeWidth="1.5" 
+                      d="M6 9.5L12 15.5L18 9.5" 
+                      stroke="black" 
+                      strokeOpacity="0.72" 
+                      strokeWidth="2" 
                       strokeLinecap="round" 
                       strokeLinejoin="round"
                     />
@@ -445,7 +376,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
                 <div style={{
                   backgroundColor: '#FFFFFF',
                   border: '1px solid #EBEBEB',
-                  borderRadius: getBorderRadius(theme.borderRadius),
+                  borderRadius: getRadius('dropdown', theme.borderRadius),
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
                   padding: '8px',
                   minWidth: '200px'
@@ -462,21 +393,22 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
                       display: 'flex',
                       alignItems: 'center',
                       gap: '8px',
-                      backgroundColor: selectedCurrency === currency.value ? '#F3F4F6' : 'transparent',
+                      backgroundColor: 'transparent',
                       width: '100%'
                     }}>
-                    {currency.symbol}
-                    {selectedCurrency === currency.value && (
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ marginLeft: 'auto' }}>
-                        <path 
-                          d="M13.5 4.5L6 12L2.5 8.5" 
-                          stroke={theme.primaryColor} 
-                          strokeWidth="2" 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    )}
+                      <TokenIcon symbol={currency.value} size={16} />
+                      <span>{currency.symbol}</span>
+                      {selectedCurrency === currency.value && (
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ marginLeft: 'auto' }}>
+                          <path 
+                            d="M13.5 4.5L6 12L2.5 8.5" 
+                            stroke={theme.primaryColor} 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      )}
                     </div>
                   </DropdownItem>
                 ))}
@@ -509,17 +441,27 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
                     setSelectedAmount(amount);
                     setShowCustomInput(false);
                   }}
+                  onMouseDown={(e) => {
+                    e.currentTarget.style.transform = 'scale(0.98)';
+                  }}
+                  onMouseUp={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
                   style={{
                     width: '100%',
                     height: '68px',
                     border: selectedAmount === amount && !showCustomInput ? `3px solid #ffffff` : '1px solid #e5e7eb',
-                    borderRadius: getBorderRadius(theme.borderRadius),
+                    borderRadius: getRadius('preset', theme.borderRadius),
                     backgroundColor: selectedAmount === amount && !showCustomInput ? '#F5F5F5' : '#ffffff',
                     color: selectedAmount === amount && !showCustomInput ? theme.primaryColor : theme.textColor,
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
+                    fontSize: '19px',
+                    fontWeight: '400',
                     cursor: 'pointer',
-                    transition: 'all 0.2s',
+                    transition: 'all 0.2s, transform 0.1s ease',
+                    transform: 'scale(1)',
                     boxShadow: selectedAmount === amount && !showCustomInput 
                       ? '0 0 0 2px rgba(143, 143, 143, 1)' 
                       : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
@@ -534,17 +476,27 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
               <button
                 type="button"
                 onClick={() => setShowCustomInput(true)}
+                onMouseDown={(e) => {
+                  e.currentTarget.style.transform = 'scale(0.98)';
+                }}
+                onMouseUp={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
                 style={{
                   width: '100%',
                   height: '68px',
                   border: showCustomInput ? `3px solid #ffffff` : '1px solid #e5e7eb',
-                  borderRadius: getBorderRadius(theme.borderRadius),
+                  borderRadius: getRadius('preset', theme.borderRadius),
                   backgroundColor: showCustomInput ? '#F5F5F5' : '#ffffff',
                   color: showCustomInput ? theme.primaryColor : theme.textColor,
-                  fontSize: '0.875rem',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
+                    fontSize: '19px',
+                    fontWeight: '400',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s, transform 0.1s ease',
+                    transform: 'scale(1)',
                   boxShadow: showCustomInput 
                     ? '0 0 0 2px rgba(143, 143, 143, 1)' 
                     : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
@@ -567,10 +519,10 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
                   height: '2.75rem',
                   padding: '0.75rem 1rem',
                   border: '1px solid #EBEBEB',
-                  borderRadius: getBorderRadius(theme.borderRadius),
+                  borderRadius: getRadius('dropdown', theme.borderRadius),
                   backgroundColor: '#F5F5F5',
                   color: theme.textColor,
-                  fontSize: '0.875rem',
+                  fontSize: '19px',
                   fontWeight: '400',
                   outline: 'none',
                   marginTop: '0.75rem',
@@ -603,15 +555,25 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
                   key={method.value}
                   type="button"
                   onClick={() => setSelectedPaymentMethod(method.value)}
+                  onMouseDown={(e) => {
+                    e.currentTarget.style.transform = 'scale(0.98)';
+                  }}
+                  onMouseUp={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
                   style={{
                     flex: 1,
                     padding: '1rem',
-                    border: `3px solid ${selectedPaymentMethod === method.value ? '#ffffff' : '#e5e7eb'}`,
-                    borderRadius: getBorderRadius(theme.borderRadius),
+                    border: `${selectedPaymentMethod === method.value ? '3px solid #ffffff' : '1px solid #e5e7eb'}`,
+                    borderRadius: getRadius('payment', theme.borderRadius),
                     backgroundColor: selectedPaymentMethod === method.value ? '#F5F5F5' : theme.backgroundColor,
                     cursor: 'pointer',
                     boxShadow: selectedPaymentMethod === method.value ? '0 0 0 2px rgba(143, 143, 143, 1)' : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                    transition: 'all 0.2s',
+                    transition: 'all 0.2s, transform 0.1s ease',
+                    transform: 'scale(1)',
                     textAlign: 'left',
                     width: '248px',
                     height: '110px',
@@ -634,7 +596,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
                       {method.icon}
                     </span>
                     <span style={{
-                      fontSize: '0.875rem',
+                      fontSize: '19px',
                       fontWeight: '600',
                       color: selectedPaymentMethod === method.value ? theme.primaryColor : theme.textColor
                     }}>
@@ -642,7 +604,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
                     </span>
                   </div>
                   <div style={{
-                    fontSize: '0.75rem',
+                    fontSize: '12px',
                     color: `${theme.textColor}60`
                   }}>
                     {method.description}
@@ -658,16 +620,28 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
             disabled={isProcessing || (showCustomInput && !customAmount)}
             style={actionButtonStyles}
             type="button"
+            onMouseDown={(e) => {
+              if (!isProcessing && !(showCustomInput && !customAmount)) {
+                e.currentTarget.style.transform = 'scale(0.98)';
+              }
+            }}
+            onMouseUp={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
           >
-            {isProcessing ? 'Processing...' : `Pay $${showCustomInput ? customAmount || '0' : selectedAmount}`}
+            <span style={{ fontSize: '19px', fontWeight: '600' }}>{isProcessing ? 'Processing...' : `Pay $${showCustomInput ? customAmount || '0' : selectedAmount}`}</span>
           </button>
         </div>
       ) : (
         // Payment Step
         <div style={{
-          backgroundColor: theme.backgroundColor === '#ffffff' ? '#f8f9fa' : `${theme.backgroundColor}08`,
           borderBottomLeftRadius: getModalBorderRadius(theme.borderRadius),
-          borderBottomRightRadius: getModalBorderRadius(theme.borderRadius)
+          borderBottomRightRadius: getModalBorderRadius(theme.borderRadius),
+          backgroundColor: selectedPaymentMethod === 'wallet' ? '#F5F5F5' : 'transparent',
+          transition: 'background-color 150ms ease'
         }}>
           {selectedPaymentMethod === 'qr' ? (
             <QRPaymentContent 

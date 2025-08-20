@@ -218,8 +218,27 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
           alignItems: 'center',
           justifyContent: 'center',
           width: '100%',
-          height: '100%'
+          height: '100%',
+          border: paymentStatus === 'error' ? '3px solid #ff00001c' : '3px solid #0000000d',
+          borderRadius: '18px'
         }}>
+        {/* Gradient Background */}
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%) scale(0.90)',
+          width: '270px',
+          height: '270px',
+          background: paymentStatus === 'error' 
+            ? 'radial-gradient(circle at bottom center,rgba(255, 0, 0, 0.08) 0%,rgba(255, 68, 68, 0.15) 100%)' 
+            : 'radial-gradient(circle at bottom center, #00ff88 0%, #8B5CF6 100%)',
+          opacity: 0.2,
+          filter: 'blur(15px)',
+          zIndex: 5,
+          borderRadius: '14px',
+          pointerEvents: 'none'
+        }} />
         {(() => {
           if (loading) {
             return (
@@ -229,7 +248,9 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
                 justifyContent: 'center',
                 flexDirection: 'column',
                 gap: '1rem',
-                color: `${theme.textColor}70`
+                color: `${theme.textColor}70`,
+                position: 'relative',
+                zIndex: 3
               }}>
                 <div style={{ fontSize: '1rem' }}>Loading QR code...</div>
               </div>
@@ -244,7 +265,9 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
                 justifyContent: 'center',
                 flexDirection: 'column',
                 gap: '1rem',
-                color: `${theme.textColor}70`
+                color: `${theme.textColor}70`,
+                position: 'relative',
+                zIndex: 3
               }}>
                 <div style={{ fontSize: '1rem' }}>Failed to generate QR code</div>
                 <button
@@ -272,7 +295,9 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
                 justifyContent: 'center',
                 flexDirection: 'column',
                 gap: '1rem',
-                color: theme.primaryColor
+                color: theme.primaryColor,
+                position: 'relative',
+                zIndex: 3
               }}>
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
@@ -291,13 +316,15 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
                 justifyContent: 'center',
                 flexDirection: 'column',
                 gap: '1.5rem',
-                color: '#2D2D2D'
+                color: '#2D2D2D',
+                position: 'relative',
+                zIndex: 3
               }}>
                 <svg width="48" height="49" viewBox="0 0 28 29" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M7.33333 15.5003H14V22.167M2.01333 15.5003H2M8.68 22.167H8.66667M14.0133 27.5003H14M26.0133 15.5003H26M2 22.167H4M18.6667 15.5003H21.3333M2 27.5003H8.66667M14 2.16699V10.167M21.4667 27.5003H23.8667C24.6134 27.5003 24.9868 27.5003 25.272 27.355C25.5229 27.2272 25.7268 27.0232 25.8547 26.7723C26 26.4871 26 26.1137 26 25.367V22.967C26 22.2203 26 21.8469 25.8547 21.5617C25.7268 21.3108 25.5229 21.1068 25.272 20.979C24.9868 20.8337 24.6134 20.8337 23.8667 20.8337H21.4667C20.7199 20.8337 20.3466 20.8337 20.0613 20.979C19.8105 21.1068 19.6065 21.3108 19.4787 21.5617C19.3333 21.8469 19.3333 22.2203 19.3333 22.967V25.367C19.3333 26.1137 19.3333 26.4871 19.4787 26.7723C19.6065 27.0232 19.8105 27.2272 20.0613 27.355C20.3466 27.5003 20.7199 27.5003 21.4667 27.5003ZM21.4667 10.167H23.8667C24.6134 10.167 24.9868 10.167 25.272 10.0217C25.5229 9.89384 25.7268 9.68986 25.8547 9.43898C26 9.15376 26 8.7804 26 8.03366V5.63366C26 4.88692 26 4.51355 25.8547 4.22834C25.7268 3.97746 25.5229 3.77348 25.272 3.64565C24.9868 3.50033 24.6134 3.50033 23.8667 3.50033H21.4667C20.7199 3.50033 20.3466 3.50033 20.0613 3.64565C19.8105 3.77348 19.6065 3.97746 19.4787 4.22834C19.3333 4.51355 19.3333 4.88692 19.3333 5.63366V8.03366C19.3333 8.7804 19.3333 9.15376 19.4787 9.43898C19.6065 9.68986 19.8105 9.89384 20.0613 10.0217C20.3466 10.167 20.7199 10.167 21.4667 10.167ZM4.13333 10.167H6.53333C7.28007 10.167 7.65344 10.167 7.93865 10.0217C8.18954 9.89384 8.39351 9.68986 8.52134 9.43898C8.66667 9.15376 8.66667 8.7804 8.66667 8.03366V5.63366C8.66667 4.88692 8.66667 4.51355 8.52134 4.22834C8.39351 3.97746 8.18954 3.77348 7.93865 3.64565C7.65344 3.50033 7.28007 3.50033 6.53333 3.50033H4.13333C3.3866 3.50033 3.01323 3.50033 2.72801 3.64565C2.47713 3.77348 2.27316 3.97746 2.14532 4.22834C2 4.51355 2 4.88692 2 5.63366V8.03366C2 8.7804 2 9.15376 2.14532 9.43898C2.27316 9.68986 2.47713 9.89384 2.72801 10.0217C3.01323 10.167 3.3866 10.167 4.13333 10.167Z" stroke="#FF0000" strokeOpacity="0.56" strokeWidth="2.66667" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 <div style={{ 
-                  fontSize: '1.25rem', 
+                  fontSize: '21px', 
                   textAlign: 'center', 
                   fontWeight: '600',
                   color: '#2D2D2D'
@@ -341,14 +368,17 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
             }
             
           return (
-            <div style={{ position: 'relative' }}>
+            <div style={{ position: 'relative', zIndex: 3 }}>
               <div 
                 dangerouslySetInnerHTML={{ __html: paymentRequest.qr }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  opacity: paymentStatus === 'processing' ? 0.6 : 1
+                  opacity: paymentStatus === 'processing' ? 0.6 : 1,
+                  transform: 'scale(0.85)',
+                  position: 'relative',
+                  zIndex: 3
                 }}
               />
                 {paymentStatus === 'processing' && (
@@ -363,7 +393,8 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
                     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
                     textAlign: 'center',
                     minWidth: '200px',
-                    border: `2px solid ${theme.primaryColor}20`
+                    border: `2px solid ${theme.primaryColor}20`,
+                    zIndex: 4
                   }}>
                     <div style={{
                       width: '32px',
@@ -402,10 +433,11 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
           display: 'flex',
           justifyContent: 'center',
           marginBottom: '1rem',
+          marginTop: '-19px'
         }}>
           <div style={{
             backgroundColor: 'white',
-            border: `1px solid #00000030`,
+            border: `1px solid #00000020`,
             borderRadius: '50px',
             padding: '0.5rem 1rem',
             display: 'flex',
@@ -413,7 +445,9 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
             gap: '0.5rem',
             fontSize: '0.875rem',
             color: '#2D2D2D',
-            fontWeight: '500'
+            fontWeight: '500',
+            zIndex: 10,
+            boxShadow: '0 0 10px 0 rgba(0, 0, 0, 0.05)'
           }}>
             <div style={{
               width: '8px',
@@ -437,11 +471,12 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
         <>
           <h2 style={{
             margin: '0 0 1.5rem 0',
-            fontSize: '2rem',
+            fontSize: '24px',
             fontWeight: '600',
+            marginTop: '20px',
             color: theme.textColor
           }}>
-            Send ${displayAmount} {selectedCurrency}
+            <span style={{ opacity: 0.7 }}>Send</span> ${displayAmount} {selectedCurrency}
           </h2>
           
           {/* Profile Picture and Name Pill - Shows address on hover */}
@@ -456,7 +491,7 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
               onMouseLeave={() => setIsHovered(false)}
               style={{
                 backgroundColor: 'white',
-                border: `1px solid #00000030`,
+                border: `1px solid #00000020`,
                 borderRadius: '50px',
                 padding: '0.5rem 1rem',
                 display: 'flex',
@@ -467,7 +502,8 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
                 fontWeight: '500',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
-                maxWidth: '320px'
+                maxWidth: '320px',
+                boxShadow: '0 0 10px 0 rgba(0, 0, 0, 0.05)'
               }}
             >
               <img

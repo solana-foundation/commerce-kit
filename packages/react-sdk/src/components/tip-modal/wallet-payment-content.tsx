@@ -88,6 +88,7 @@ function WalletConnectList({ theme, onIframeConnected }: { theme: Required<Theme
                 border: '1px solid #e5e7eb',
                 borderRadius: getBorderRadius(theme.borderRadius ?? 'md'),
                 backgroundColor: '#ffffff',
+                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
               }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = '#d1d5db' }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = '#e5e7eb' }}
@@ -134,6 +135,7 @@ function WalletConnectList({ theme, onIframeConnected }: { theme: Required<Theme
                     color: '#fff',
                     cursor: connecting ? 'not-allowed' : 'pointer',
                     display: 'inline-flex', alignItems: 'center', gap: 8,
+                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
                   }}
                 >
                   {connecting ? <Spinner size={16} /> : null}
@@ -250,11 +252,12 @@ function WalletFlow({ theme, onPaymentComplete, walletIcon, config, selectedAmou
         <div style={{ marginBottom: '2rem' }}>
           <h2 style={{
             margin: '0 0 1.5rem 0',
-            fontSize: '2rem',
+            fontSize: '24px',
             fontWeight: '600',
+            marginTop: '20px',
             color: theme.textColor
           }}>
-            Send ${displayAmount} {selectedCurrency}
+            <span style={{ opacity: 0.7 }}>Send</span> ${displayAmount} {selectedCurrency}
           </h2>
           
           {/* Profile Picture and Name Pill - Shows address on hover */}
