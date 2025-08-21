@@ -169,6 +169,11 @@ export function SecureIframeShell({ config, theme, onPayment, onCancel }: Secure
       height={height}
       style={{
         width: '560px',
+        maxWidth: '560px',
+        minWidth: '560px',
+        backgroundColor: 'transparent',
+        border: 'none',
+        transition: 'height 300ms cubic-bezier(0.19, 1, 0.22, 1)',
       }}
       sandbox="allow-scripts allow-forms allow-popups"
       referrerPolicy="no-referrer"

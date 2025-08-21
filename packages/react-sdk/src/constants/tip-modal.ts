@@ -114,8 +114,15 @@ export const ANIMATION_STYLES = `
   100% { transform: translateY(0); opacity: 1; }
 }
 
+.sc-tip-modal-anim {
+  transition: height 500ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .sc-tip-modal-anim { animation: none !important; }
+  .sc-tip-modal-anim { 
+    animation: none !important;
+    transition: none !important;
+  }
 }
 `;
 

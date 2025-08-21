@@ -162,7 +162,7 @@ function init() {
         );
       }
 
-      // Set up resize observer
+      // Set up ResizeObserver for automatic height adjustment
       const resizeObserver = new ResizeObserver(entries => {
         const entry = entries[0];
         if (entry) {

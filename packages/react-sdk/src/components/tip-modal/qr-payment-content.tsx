@@ -180,6 +180,10 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
             0%, 100% { opacity: 1; }
             50% { opacity: 0.3; }
           }
+          @keyframes slide {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+          }
         `}
       </style>
       <div style={{ padding: '2rem', textAlign: 'center' }}>
@@ -233,12 +237,28 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
           background: paymentStatus === 'error' 
             ? 'radial-gradient(circle at bottom center,rgba(255, 0, 0, 0.08) 0%,rgba(255, 68, 68, 0.15) 100%)' 
             : 'radial-gradient(circle at bottom center, #00ff88 0%, #8B5CF6 100%)',
-          opacity: 0.2,
+          opacity: 0.25,
           filter: 'blur(15px)',
           zIndex: 5,
           borderRadius: '14px',
-          pointerEvents: 'none'
-        }} />
+          pointerEvents: 'none',
+          overflow: 'hidden'
+        }}>
+          {/* Shine Effect - Only show when not in error state and payment is scanning */}
+          {paymentStatus !== 'error' && paymentStatus === 'scanning' && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%)',
+              animation: 'slide 2s infinite',
+              zIndex: 1,
+              pointerEvents: 'none'
+            }} />
+          )}
+        </div>
         {(() => {
           if (loading) {
             return (
