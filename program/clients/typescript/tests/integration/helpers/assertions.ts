@@ -3,11 +3,12 @@ import { fetchToken } from 'gill/programs';
 import { expect } from '@jest/globals';
 import {
     fetchMerchant,
-    fetchOperator,
     fetchMerchantOperatorConfig,
+    fetchOperator,
     Status,
     fetchPayment,
-} from '../../../src/generated';
+    PolicyData,
+} from '../../../src/';
 
 export async function assertMerchantAccount({
     client,
@@ -73,8 +74,8 @@ export async function assertMerchantOperatorConfigAccount({
     expectedOperator,
     expectedOperatorFee,
     expectedCurrentOrderId,
-    expectedNumPolicies,
-    expectedNumAcceptedCurrencies
+    expectedPolicies,
+    expectedAcceptedCurrencies
 }: {
     client: SolanaClient,
     merchantOperatorConfigPda: Address,
@@ -84,20 +85,43 @@ export async function assertMerchantOperatorConfigAccount({
     expectedOperator: Address,
     expectedOperatorFee: bigint,
     expectedCurrentOrderId: number,
-    expectedNumPolicies: number,
-    expectedNumAcceptedCurrencies: number
+    expectedPolicies: PolicyData[],
+    expectedAcceptedCurrencies: Address[]
 }) {
     const merchantOperatorConfig = await fetchMerchantOperatorConfig(client.rpc, merchantOperatorConfigPda, { commitment: 'processed' });
-    expect(merchantOperatorConfig.data).not.toBeNull();
+
+    expect(merchantOperatorConfig).not.toBeNull();
     expect(merchantOperatorConfig.data.bump).toBe(expectedBump);
     expect(merchantOperatorConfig.data.version).toBe(expectedVersion);
     expect(merchantOperatorConfig.data.merchant).toBe(expectedMerchant);
     expect(merchantOperatorConfig.data.operator).toBe(expectedOperator);
     expect(merchantOperatorConfig.data.operatorFee).toBe(expectedOperatorFee);
     expect(merchantOperatorConfig.data.currentOrderId).toBe(expectedCurrentOrderId);
-    expect(merchantOperatorConfig.data.numPolicies).toBe(expectedNumPolicies);
-    expect(merchantOperatorConfig.data.numAcceptedCurrencies).toBe(expectedNumAcceptedCurrencies);
-    // TODO Check policies and accepted currencies
+    expect(merchantOperatorConfig.data.numPolicies).toBe(expectedPolicies.length);
+    expect(merchantOperatorConfig.data.numAcceptedCurrencies).toBe(expectedAcceptedCurrencies.length);
+    expect(merchantOperatorConfig.data.acceptedCurrencies).toEqual(expectedAcceptedCurrencies);
+    expect(merchantOperatorConfig.data.policies.length).toBe(expectedPolicies.length);
+    
+    merchantOperatorConfig.data.policies.forEach((policy, index) => {
+        const expectedPolicy = expectedPolicies[index];
+        expect(policy.__kind).toBe(expectedPolicy.__kind);
+        
+        // Compare fields based on policy type
+        if (policy.__kind === 'Settlement' && expectedPolicy.__kind === 'Settlement') {
+            const actualData = policy.fields[0];
+            const expectedData = expectedPolicy.fields[0];
+            
+            expect(actualData.minSettlementAmount).toBe(BigInt(expectedData.minSettlementAmount));
+            expect(actualData.settlementFrequencyHours).toBe(expectedData.settlementFrequencyHours);
+            expect(actualData.autoSettle).toBe(expectedData.autoSettle);
+        } else if (policy.__kind === 'Refund' && expectedPolicy.__kind === 'Refund') {
+            const actualData = policy.fields[0];
+            const expectedData = expectedPolicy.fields[0];
+            
+            expect(actualData.maxAmount).toBe(BigInt(expectedData.maxAmount));
+            expect(actualData.maxTimeAfterPurchase).toBe(BigInt(expectedData.maxTimeAfterPurchase));
+        }
+    });
 }
 
 
