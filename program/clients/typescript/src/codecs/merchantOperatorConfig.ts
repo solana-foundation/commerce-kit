@@ -1,12 +1,23 @@
 import {
+  assertAccountExists,
+  assertAccountsExist,
   combineCodec,
+  decodeAccount,
+  fetchEncodedAccount,
+  fetchEncodedAccounts,
   getAddressDecoder,
   getAddressEncoder,
-  type ReadonlyUint8Array,
+  type Account,
   type Address,
   type Codec,
   type Decoder,
   type Encoder,
+  type EncodedAccount,
+  type FetchAccountConfig,
+  type FetchAccountsConfig,
+  type MaybeAccount,
+  type MaybeEncodedAccount,
+  type ReadonlyUint8Array,
 } from '@solana/kit';
 import { type FeeType } from '../generated/types/feeType';
 import {
@@ -15,7 +26,12 @@ import {
   type PolicyData,
   type PolicyDataArgs,
 } from '../generated/types/policyData';
-import { getMerchantOperatorConfigEncoder as generatedEncoder, getMerchantOperatorConfigDecoder as generatedDecoder } from '../generated/accounts/merchantOperatorConfig';
+import {
+  getMerchantOperatorConfigEncoder as generatedEncoder, getMerchantOperatorConfigDecoder as generatedDecoder
+} from '../generated/accounts/merchantOperatorConfig';
+
+const POLICY_DATA_SIZE = 101;
+const ADDRESS_SIZE = 32;
 
 export type MerchantOperatorConfig = {
   discriminator: number;
@@ -51,43 +67,57 @@ export type MerchantOperatorConfigArgs = {
 
 
 export function getMerchantOperatorConfigEncoder(): Encoder<MerchantOperatorConfigArgs> {
+
   return {
     getSizeFromValue(value: MerchantOperatorConfigArgs): number {
       return (
         MERCHANT_OPERATOR_CONFIG_BASE_SIZE +
-        value.numPolicies * 101 + // Each PolicyData is 101 bytes
-        value.numAcceptedCurrencies * 32 // Each Address is 32 bytes
+        value.policies.length * POLICY_DATA_SIZE + // Each PolicyData is 101 bytes
+        value.acceptedCurrencies.length * ADDRESS_SIZE // Each Address is 32 bytes
       );
     },
     encode(value: MerchantOperatorConfigArgs): Uint8Array {
-      // First encode the base struct
+      // First encode the base struct (without policies and acceptedCurrencies)
       const baseEncoder = generatedEncoder();
+      const baseValue = {
+        discriminator: value.discriminator,
+        version: value.version,
+        bump: value.bump,
+        merchant: value.merchant,
+        operator: value.operator,
+        operatorFee: value.operatorFee,
+        feeType: value.feeType,
+        currentOrderId: value.currentOrderId,
+        daysToClose: value.daysToClose,
+        numPolicies: value.policies.length,
+        numAcceptedCurrencies: value.acceptedCurrencies.length,
+      };
+      const baseBytes = baseEncoder.encode(baseValue);
 
-      const baseBytes = baseEncoder.encode(value);
-
-      // Encode policies (101 bytes each)
-      const policiesBytes = new Uint8Array(value.numPolicies * 101);
+      const policiesBytes = new Uint8Array(value.policies.length * POLICY_DATA_SIZE);
       let offset = 0;
       for (const policy of value.policies) {
         const policyBytes = getPolicyDataEncoder().encode(policy);
         policiesBytes.set(policyBytes, offset);
-        offset += 101;
+        offset += POLICY_DATA_SIZE;
       }
 
-      // Encode accepted currencies (32 bytes each)
-      const currenciesBytes = new Uint8Array(value.numAcceptedCurrencies * 32);
+      const currenciesBytes = new Uint8Array(value.acceptedCurrencies.length * ADDRESS_SIZE);
       offset = 0;
       for (const currency of value.acceptedCurrencies) {
         const currencyBytes = getAddressEncoder().encode(currency);
         currenciesBytes.set(currencyBytes, offset);
-        offset += 32;
+        offset += ADDRESS_SIZE;
       }
 
       // Combine all bytes
+      const basePosition = 0;
+      const policiesPosition = baseBytes.length;
+      const currenciesPosition = policiesPosition + policiesBytes.length;
       const result = new Uint8Array(baseBytes.length + policiesBytes.length + currenciesBytes.length);
-      result.set(baseBytes, 0);
-      result.set(policiesBytes, baseBytes.length);
-      result.set(currenciesBytes, baseBytes.length + policiesBytes.length);
+      result.set(baseBytes, basePosition);
+      result.set(policiesBytes, policiesPosition);
+      result.set(currenciesBytes, currenciesPosition);
 
       return result;
     },
@@ -104,7 +134,7 @@ export function getMerchantOperatorConfigDecoder(): Decoder<MerchantOperatorConf
     decode(bytes: Uint8Array | ReadonlyUint8Array, offset = 0): MerchantOperatorConfig {
       // Convert to Uint8Array if needed
       const bytesArray = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-      
+
       // Decode base struct
       const baseDecoder = generatedDecoder();
 
@@ -116,7 +146,7 @@ export function getMerchantOperatorConfigDecoder(): Decoder<MerchantOperatorConf
       for (let i = 0; i < baseData.numPolicies; i++) {
         const policy = getPolicyDataDecoder().decode(bytesArray, currentOffset);
         policies.push(policy);
-        currentOffset += 101;
+        currentOffset += POLICY_DATA_SIZE;
       }
 
       // Decode accepted currencies
@@ -124,7 +154,7 @@ export function getMerchantOperatorConfigDecoder(): Decoder<MerchantOperatorConf
       for (let i = 0; i < baseData.numAcceptedCurrencies; i++) {
         const currency = getAddressDecoder().decode(bytesArray, currentOffset);
         acceptedCurrencies.push(currency);
-        currentOffset += 32;
+        currentOffset += ADDRESS_SIZE;
       }
 
       return {
@@ -135,9 +165,9 @@ export function getMerchantOperatorConfigDecoder(): Decoder<MerchantOperatorConf
     },
     read(bytes: Uint8Array | ReadonlyUint8Array, offset: number): [MerchantOperatorConfig, number] {
       const result = this.decode(bytes, offset);
-      const size = MERCHANT_OPERATOR_CONFIG_BASE_SIZE + 
-        result.numPolicies * 101 + 
-        result.numAcceptedCurrencies * 32;
+      const size = MERCHANT_OPERATOR_CONFIG_BASE_SIZE +
+        result.numPolicies * POLICY_DATA_SIZE +
+        result.numAcceptedCurrencies * ADDRESS_SIZE;
       return [result, offset + size];
     }
   };
@@ -154,7 +184,7 @@ export function getMerchantOperatorConfigCodec(): Codec<
 }
 
 // Fixed size for the base struct (without dynamic arrays)
-export const MERCHANT_OPERATOR_CONFIG_BASE_SIZE = 
+export const MERCHANT_OPERATOR_CONFIG_BASE_SIZE =
   1 +  // discriminator
   4 +  // version
   1 +  // bump
@@ -176,5 +206,74 @@ export function getMerchantOperatorConfigSize(config: {
     MERCHANT_OPERATOR_CONFIG_BASE_SIZE +
     config.numPolicies * 101 + // Each PolicyData is 101 bytes
     config.numAcceptedCurrencies * 32 // Each Address is 32 bytes
+  );
+}
+
+export function decodeMerchantOperatorConfig<TAddress extends string = string>(
+  encodedAccount: EncodedAccount<TAddress>
+): Account<MerchantOperatorConfig, TAddress>;
+export function decodeMerchantOperatorConfig<TAddress extends string = string>(
+  encodedAccount: MaybeEncodedAccount<TAddress>
+): MaybeAccount<MerchantOperatorConfig, TAddress>;
+export function decodeMerchantOperatorConfig<TAddress extends string = string>(
+  encodedAccount: EncodedAccount<TAddress> | MaybeEncodedAccount<TAddress>
+):
+  | Account<MerchantOperatorConfig, TAddress>
+  | MaybeAccount<MerchantOperatorConfig, TAddress> {
+  return decodeAccount(
+    encodedAccount as MaybeEncodedAccount<TAddress>,
+    getMerchantOperatorConfigDecoder()
+  );
+}
+
+export async function fetchMerchantOperatorConfig<
+  TAddress extends string = string,
+>(
+  rpc: Parameters<typeof fetchEncodedAccount>[0],
+  address: Address<TAddress>,
+  config?: FetchAccountConfig
+): Promise<Account<MerchantOperatorConfig, TAddress>> {
+  const maybeAccount = await fetchMaybeMerchantOperatorConfig(
+    rpc,
+    address,
+    config
+  );
+  assertAccountExists(maybeAccount);
+  return maybeAccount;
+}
+
+export async function fetchMaybeMerchantOperatorConfig<
+  TAddress extends string = string,
+>(
+  rpc: Parameters<typeof fetchEncodedAccount>[0],
+  address: Address<TAddress>,
+  config?: FetchAccountConfig
+): Promise<MaybeAccount<MerchantOperatorConfig, TAddress>> {
+  const maybeAccount = await fetchEncodedAccount(rpc, address, config);
+  return decodeMerchantOperatorConfig(maybeAccount);
+}
+
+export async function fetchAllMerchantOperatorConfig(
+  rpc: Parameters<typeof fetchEncodedAccounts>[0],
+  addresses: Array<Address>,
+  config?: FetchAccountsConfig
+): Promise<Account<MerchantOperatorConfig>[]> {
+  const maybeAccounts = await fetchAllMaybeMerchantOperatorConfig(
+    rpc,
+    addresses,
+    config
+  );
+  assertAccountsExist(maybeAccounts);
+  return maybeAccounts;
+}
+
+export async function fetchAllMaybeMerchantOperatorConfig(
+  rpc: Parameters<typeof fetchEncodedAccounts>[0],
+  addresses: Array<Address>,
+  config?: FetchAccountsConfig
+): Promise<MaybeAccount<MerchantOperatorConfig>[]> {
+  const maybeAccounts = await fetchEncodedAccounts(rpc, addresses, config);
+  return maybeAccounts.map((maybeAccount) =>
+    decodeMerchantOperatorConfig(maybeAccount)
   );
 }

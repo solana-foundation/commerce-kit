@@ -3,7 +3,6 @@ import { AnchorIdl, rootNodeFromAnchor } from "@codama/nodes-from-anchor";
 import {
   appendAccountDiscriminator,
   setDefaultAccountValues,
-  appendMOConfigFields,
   appendPdaDerivers,
   setInstructionAccountDefaultValues,
   appendMOConfigRemainingAccounts,
@@ -23,11 +22,6 @@ export class CommerceCodamaBuilder {
 
   setDefaultAccountValues(): this {
     this.codama = setDefaultAccountValues(this.codama);
-    return this;
-  }
-
-  appendMOConfigFields(): this {
-    this.codama = appendMOConfigFields(this.codama);
     return this;
   }
 

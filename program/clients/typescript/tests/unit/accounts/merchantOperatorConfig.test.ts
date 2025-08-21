@@ -1,14 +1,16 @@
 import { expect } from '@jest/globals';
 import {
+  FeeType,
+  policyData, 
+  RefundPolicyArgs, 
+  SettlementPolicyArgs,
   getMerchantOperatorConfigEncoder,
   getMerchantOperatorConfigDecoder,
   getMerchantOperatorConfigCodec,
   getMerchantOperatorConfigSize,
   type MerchantOperatorConfigArgs,
-} from '../../../src/generated/accounts/merchantOperatorConfig';
-import { FeeType } from '../../../src/generated/types/feeType';
+} from '../../../src/';
 import { address, getAddressCodec } from 'gill';
-import { policyData, RefundPolicyArgs, SettlementPolicyArgs } from '../../../src/generated';
 
 describe('MerchantOperatorConfig Account', () => {
   const mockConfigData: MerchantOperatorConfigArgs = {
@@ -20,8 +22,8 @@ describe('MerchantOperatorConfig Account', () => {
     operatorFee: 250n, // 2.5% in basis points or fixed amount
     feeType: FeeType.Bps,
     currentOrderId: 100,
-    numPolicies: 5,
-    numAcceptedCurrencies: 3,
+    numPolicies: 0,
+    numAcceptedCurrencies: 0,
     daysToClose: 0,
     policies: [],
     acceptedCurrencies: [],
@@ -103,7 +105,10 @@ describe('MerchantOperatorConfig Account', () => {
     expect(serialized).toBeInstanceOf(Uint8Array);
     // expect(serialized.length).toBe(getMerchantOperatorConfigSize());
     
-    expect(getMerchantOperatorConfigSize()).toBe(
+    expect(getMerchantOperatorConfigSize({
+      numPolicies: 0,
+      numAcceptedCurrencies: 0,
+    })).toBe(
        1 + // discriminator
        4 + // version
        1 + // bump
@@ -114,7 +119,9 @@ describe('MerchantOperatorConfig Account', () => {
        4 + // current_order_id
        2 + // days_to_close
        4 + // num_policies
-       4 // num_accepted_currencies
+       4 + // num_accepted_currencies
+       101 * 0 + // policies
+       32 * 0 // accepted_currencies
     );
   });
 
