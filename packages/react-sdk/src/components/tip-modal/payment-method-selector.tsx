@@ -22,15 +22,17 @@ export const PaymentMethodSelector = memo<PaymentMethodSelectorProps>(({
   return (
     <div 
       className="ck-form-section with-border"
+      role="group"
+      aria-labelledby="payment-method-label"
       style={{
         '--section-border-color': theme.backgroundColor === '#ffffff' ? '#f3f4f6' : `${theme.textColor}10`
       } as React.CSSProperties}
     >
-      <label className="ck-form-label">
+      <label id="payment-method-label" className="ck-form-label">
         Payment method
       </label>
       
-      <div className="ck-payment-methods-grid">
+      <div className="ck-payment-methods-grid" role="radiogroup" aria-labelledby="payment-method-label">
         {PAYMENT_METHODS.map(method => (
           <PaymentMethodButton
             key={method.value}
@@ -62,6 +64,9 @@ const PaymentMethodButton = memo<PaymentMethodButtonProps>(({
   return (
     <button
       type="button"
+      role="radio"
+      aria-checked={isSelected}
+      aria-label={`${method.label}: ${method.description}`}
       onClick={onClick}
       className={`ck-payment-method ${isSelected ? 'selected' : ''}`}
       style={{

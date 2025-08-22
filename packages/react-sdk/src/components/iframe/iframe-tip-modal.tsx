@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { getModalBorderRadius } from '../../utils';
+import { getModalBorderRadius, getCurrencySymbol } from '../../utils';
 import { QRPaymentContent } from './iframe-qr-payment';
 import { WalletPaymentContent } from './iframe-wallet-payment';
 import { WALLET_ICON } from '../../constants/tip-modal';
@@ -12,7 +12,27 @@ import {
   PaymentMethodSelector,
   ActionButton
 } from '../tip-modal';
-import type { TipModalContentProps } from '../../types';
+import type { TipModalContentProps, Currency } from '../../types';
+
+// Currency-aware payment label formatter
+function formatPayLabel(currency: Currency, amount: number): string {
+  if (amount <= 0) return '0';
+  
+  const formattedAmount = amount.toString();
+  
+  // Use $ prefix for USD-based stablecoins
+  if (currency === 'USDC' || currency === 'USDT' || currency === 'USDC_DEVNET' || currency === 'USDT_DEVNET') {
+    return `$${formattedAmount}`;
+  }
+  
+  // Use ◎ symbol for SOL
+  if (currency === 'SOL' || currency === 'SOL_DEVNET') {
+    return `◎${formattedAmount}`;
+  }
+  
+  // Fallback to currency symbol suffix
+  return `${formattedAmount} ${currency}`;
+}
 
 // Optimized iframe-safe version of TipModalContent
 export const IframeTipModalContent = memo<TipModalContentProps>(({ 
@@ -83,6 +103,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
               selectedAmount={state.selectedAmount}
               showCustomInput={state.showCustomInput}
               customAmount={state.customAmount}
+              currencySymbol={getCurrencySymbol(state.selectedCurrency)}
               onAmountSelect={actions.setAmount}
               onCustomToggle={actions.toggleCustomInput}
               onCustomAmountChange={actions.setCustomAmount}
@@ -100,7 +121,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
               isProcessing={state.isProcessing}
               onClick={handlers.handleSubmit}
             >
-              {state.isProcessing ? 'Processing...' : `Pay $${computed.finalAmount || '0'}`}
+              {state.isProcessing ? 'Processing...' : `Pay ${formatPayLabel(state.selectedCurrency, computed.finalAmount || 0)}`}
             </ActionButton>
           </div>
         </div>

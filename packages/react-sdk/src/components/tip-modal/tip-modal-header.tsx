@@ -44,12 +44,23 @@ export const TipModalHeader = memo<TipModalHeaderProps>(({
           </button>
         )}
         {currentStep === 'form' && (
-          <div
-            className="ck-header-avatar"
-            style={{
-              background: config.merchant.logo ? 'transparent' : `linear-gradient(135deg, ${theme.primaryColor} 0%, ${theme.secondaryColor} 100%)`
-            }}
-          />
+          config.merchant.logo ? (
+            <img
+              className="ck-header-avatar"
+              src={config.merchant.logo}
+              alt={`${sanitizeString(config.merchant.name)} logo`}
+              loading="lazy"
+              decoding="async"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div
+              className="ck-header-avatar"
+              style={{
+                background: `linear-gradient(135deg, ${theme.primaryColor} 0%, ${theme.secondaryColor} 100%)`
+              }}
+            />
+          )
         )}
         {currentStep === 'form' && (
           <h2 className="ck-header-title">

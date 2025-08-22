@@ -61,9 +61,9 @@ export const CLOSE_ICON = React.createElement(
 
 export const CHEVRON_DOWN_ICON = React.createElement(
   'svg',
-  { width: "12", height: "12", viewBox: "0 0 24 25", fill: "none" },
+  { width: "12", height: "12", viewBox: "0 0 12 12", fill: "none" },
   React.createElement('path', {
-    d: "M6 9.5L12 15.5L18 9.5",
+    d: "M3 4.5L6 7.5L9 4.5",
     stroke: "black",
     strokeOpacity: "0.72",
     strokeWidth: "2",
@@ -71,7 +71,6 @@ export const CHEVRON_DOWN_ICON = React.createElement(
     strokeLinejoin: "round"
   })
 );
-
 export const CHECK_ICON = React.createElement(
   'svg',
   { width: "16", height: "16", viewBox: "0 0 16 16", fill: "none" },
@@ -108,7 +107,7 @@ export const PAYMENT_METHODS: Array<{
 ];
 
 // Animation styles
-export const ANIMATION_STYLES = `
+export const ANIMATION_STYLES = `s
 @keyframes sc-tip-modal-slide-up {
   0% { transform: translateY(16px); opacity: 0; }
   100% { transform: translateY(0); opacity: 1; }

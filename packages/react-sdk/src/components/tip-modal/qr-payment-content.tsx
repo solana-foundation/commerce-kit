@@ -2,6 +2,7 @@ import React, { memo, useEffect, useState, useRef } from 'react';
 import { getBorderRadius, getContainerBorderRadius, sanitizeString, DEFAULT_PROFILE_SVG } from '../../utils';
 import { type ThemeConfig, type MerchantConfig, type Currency, CurrencyMap} from '../../types';
 import { useSolanaPay } from '../../hooks/use-solana-pay';
+import { useCopyToClipboard } from '../../hooks/use-copy-to-clipboard';
 // import { SPLToken } from '@solana-commerce/solana-pay';
 import { createCommerceClient, verifyPayment, waitForConfirmation } from '@solana-commerce/headless-sdk';
 import { address } from 'gill';
@@ -32,9 +33,9 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
   const [paymentStatus, setPaymentStatus] = useState<'scanning' | 'processing' | 'success' | 'error'>('scanning');
   const [pollingMessage, setPollingMessage] = useState('Waiting for payment...');
   const [timeRemaining, setTimeRemaining] = useState(120); // 60 polls * 2 seconds = 120 seconds
-  const [copied, setCopied] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  const { copied, isHovered, setIsHovered, copyToClipboard } = useCopyToClipboard();
 
   const { paymentRequest, loading } = useSolanaPay(config.merchant.wallet, selectedAmount, CurrencyMap[selectedCurrency]);
 
@@ -69,8 +70,7 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
     const maxPolls = 60;
 
     setPollingMessage('Waiting for payment...');
-    setTimeRemaining(120); // Reset timer to full 2 minutes (60 polls * 2 seconds)
-
+    setTimeRemaining(118); // Account for 2-second delay before polling starts
     pollingIntervalRef.current = setInterval(async () => {
       pollCount++;
       const remaining = Math.max(0, (maxPolls - pollCount) * 2); // 2 seconds per poll
@@ -140,31 +140,7 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
     onPaymentComplete?.();
   };
 
-  const handleCopyAddress = async () => {
-    try {
-      await navigator.clipboard.writeText(config.merchant.wallet);
-      setCopied(true);
-      setIsHovered(false);
-      setTimeout(() => {
-        setCopied(false);
-        setIsHovered(false);
-      }, 2000); // Reset after 2 seconds
-    } catch (err) {
-      // Fallback for older browsers
-      const textArea = document.createElement('textarea');
-      textArea.value = config.merchant.wallet;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      setCopied(true);
-      setIsHovered(false);
-      setTimeout(() => {
-        setCopied(false);
-        setIsHovered(false);
-      }, 2000);
-    }
-  };
+
 
   // dev only logs could be added behind NODE_ENV checks if necessary
   
@@ -406,7 +382,7 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
             marginBottom: '2rem'
           }}>
             <div 
-              onClick={handleCopyAddress}
+              onClick={() => copyToClipboard(config.merchant.wallet)}
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
               style={{

@@ -4,7 +4,7 @@
  */
 
 import { useMemo } from 'react';
-import type { ThemeConfig, BorderRadius, CommerceMode, MerchantConfig } from './types';
+import type { ThemeConfig, BorderRadius, CommerceMode, MerchantConfig, Currency } from './types';
 import { OrderItem, validateWalletAddress as coreValidateWalletAddress } from '@solana-commerce/headless-sdk';
 
 // Constants
@@ -262,4 +262,20 @@ export const getButtonText = (mode: CommerceMode): string => {
     default:
       return 'Pay Now';
   }
+};
+
+// Get currency symbol for amount display
+export const getCurrencySymbol = (currency: Currency): string => {
+  // Use $ prefix for USD-based stablecoins
+  if (currency === 'USDC' || currency === 'USDT' || currency === 'USDC_DEVNET' || currency === 'USDT_DEVNET') {
+    return '$';
+  }
+  
+  // Use ◎ symbol for SOL
+  if (currency === 'SOL' || currency === 'SOL_DEVNET') {
+    return '◎';
+  }
+  
+  // Fallback to dollar sign for unknown currencies
+  return '$';
 };

@@ -75,7 +75,7 @@ export function useTipForm(config: SolanaCommerceConfig) {
 
   // Available currencies based on config
   const availableCurrencies = useMemo(() => 
-    ALL_CURRENCIES.filter(c => config.allowedMints?.includes(c.value as any)), 
+    ALL_CURRENCIES.filter(c => config.allowedMints?.includes(c.value)), 
     [config.allowedMints]
   );
 
@@ -113,6 +113,11 @@ export function useTipForm(config: SolanaCommerceConfig) {
     handlePaymentComplete: useCallback((onPayment: (amount: number, currency: string, method: PaymentMethod) => void) => {
       return async () => {
         try {
+          if (!isFinite(computed.finalAmount) || computed.finalAmount <= 0) {
+            console.error('Invalid payment amount:', computed.finalAmount);
+            return;
+          }
+          
           const lamports = state.selectedCurrency === 'USDC' 
             ? Math.round(computed.finalAmount * 1000000) // USDC has 6 decimals
             : Math.round(computed.finalAmount * 1000000000); // SOL has 9 decimals

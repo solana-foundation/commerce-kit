@@ -21,6 +21,8 @@ export function useButtonStyles({
   isSelected = false 
 }: ButtonStyleHookOptions) {
   const [isHovered, setIsHovered] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   // Base styles computation
   const styles = useMemo(() => {
@@ -50,10 +52,10 @@ export function useButtonStyles({
         fontFamily: theme.fontFamily,
         boxShadow: isDisabled 
           ? 'none'
-          : isHovered
+          : (isHovered || isFocused)
             ? `${getButtonShadow(theme.buttonShadow)}, 0 0 0 4px rgba(202, 202, 202, 0.45)`
             : getButtonShadow(theme.buttonShadow),
-        transform: 'scale(1)',
+        transform: isPressed ? 'scale(0.97)' : 'scale(1)',
         outlineOffset: 2,
       } as React.CSSProperties;
     }
@@ -68,7 +70,7 @@ export function useButtonStyles({
       fontWeight: '400',
       cursor: 'pointer',
       transition: 'all 0.2s, transform 0.1s ease',
-      transform: 'scale(1)',
+      transform: isPressed ? 'scale(0.98)' : 'scale(1)',
       boxShadow: isSelected 
         ? `0 0 0 2px ${theme.primaryColor}60` 
         : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
@@ -76,7 +78,7 @@ export function useButtonStyles({
       alignItems: 'center',
       justifyContent: 'center'
     } as React.CSSProperties;
-  }, [theme, isDisabled, isHovered, variant, isSelected]);
+  }, [theme, isDisabled, isHovered, isFocused, variant, isSelected, isPressed]);
 
   // Event handlers
   const handlers = {
@@ -86,38 +88,40 @@ export function useButtonStyles({
 
     onMouseLeave: useCallback(() => {
       setIsHovered(false);
-    }, []),
+      setIsPressed(false);
+    }, [setIsPressed]),
 
     onMouseDown: useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
       if (!isDisabled) {
-        e.currentTarget.style.transform = variant === 'action' ? 'scale(0.97)' : 'scale(0.98)';
+        setIsPressed(true);
+      }
+    }, [isDisabled, setIsPressed, variant]),
+
+    onMouseUp: useCallback(() => {
+      setIsPressed(false);
+    }, [setIsPressed]),
+
+    onTouchEnd: useCallback(() => {
+      setIsPressed(false);
+    }, [setIsPressed]),
+
+    onFocus: useCallback(() => {
+      if (!isDisabled && variant === 'action') {
+        setIsFocused(true);
       }
     }, [isDisabled, variant]),
 
-    onMouseUp: useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-      e.currentTarget.style.transform = 'scale(1)';
-    }, []),
-
-    onFocus: useCallback((e: React.FocusEvent<HTMLButtonElement>) => {
-      if (!isDisabled && variant === 'action') {
-        setIsHovered(true);
-        e.currentTarget.style.boxShadow = `${getButtonShadow(theme.buttonShadow)}, 0 0 0 4px rgba(202, 202, 202, 0.45)`;
-      }
-    }, [isDisabled, variant, theme]),
-
-    onBlur: useCallback((e: React.FocusEvent<HTMLButtonElement>) => {
+    onBlur: useCallback(() => {
       if (variant === 'action') {
-        setIsHovered(false);
-        if (!isDisabled) {
-          e.currentTarget.style.boxShadow = getButtonShadow(theme.buttonShadow);
-        }
+        setIsFocused(false);
       }
-    }, [isDisabled, variant, theme]),
+    }, [variant]),
   };
 
   return {
     styles,
     handlers,
     isHovered,
+    isFocused,
   };
 }

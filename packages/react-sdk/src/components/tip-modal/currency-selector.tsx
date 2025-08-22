@@ -48,8 +48,12 @@ export const CurrencySelector = memo<CurrencySelectorProps>(({
       
       <DropdownRoot open={isOpen} onOpenChange={onOpenChange}>
         <DropdownTrigger asChild>
-          <div
+          <button
+            type="button"
             className="ck-currency-container"
+            aria-haspopup="listbox"
+            aria-expanded={isOpen}
+            aria-label="Select currency"
             style={{
               '--dropdown-radius': getRadius('dropdown', theme.borderRadius),
               '--text-color': theme.textColor
@@ -64,7 +68,7 @@ export const CurrencySelector = memo<CurrencySelectorProps>(({
             <div className={`ck-currency-chevron ${isOpen ? 'open' : ''}`}>
               {CHEVRON_DOWN_ICON}
             </div>
-          </div>
+          </button>
         </DropdownTrigger>
         
         <DropdownContent align="start">

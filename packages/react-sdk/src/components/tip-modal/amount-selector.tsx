@@ -13,6 +13,7 @@ interface AmountSelectorProps {
   selectedAmount: number;
   showCustomInput: boolean;
   customAmount: string;
+  currencySymbol?: string;
   onAmountSelect: (amount: number) => void;
   onCustomToggle: (show: boolean) => void;
   onCustomAmountChange: (amount: string) => void;
@@ -23,6 +24,7 @@ export const AmountSelector = memo<AmountSelectorProps>(({
   selectedAmount,
   showCustomInput,
   customAmount,
+  currencySymbol = '$',
   onAmountSelect,
   onCustomToggle,
   onCustomAmountChange
@@ -39,6 +41,7 @@ export const AmountSelector = memo<AmountSelectorProps>(({
             key={amount}
             theme={theme}
             amount={amount}
+            currencySymbol={currencySymbol}
             isSelected={selectedAmount === amount && !showCustomInput}
             onClick={() => {
               onAmountSelect(amount);
@@ -50,6 +53,7 @@ export const AmountSelector = memo<AmountSelectorProps>(({
         <AmountButton
           theme={theme}
           amount="Custom"
+          currencySymbol={currencySymbol}
           isSelected={showCustomInput}
           onClick={() => onCustomToggle(true)}
         />
@@ -79,11 +83,12 @@ export const AmountSelector = memo<AmountSelectorProps>(({
 interface AmountButtonProps {
   theme: Required<ThemeConfig>;
   amount: number | string;
+  currencySymbol: string;
   isSelected: boolean;
   onClick: () => void;
 }
 
-const AmountButton = memo<AmountButtonProps>(({ theme, amount, isSelected, onClick }) => {
+const AmountButton = memo<AmountButtonProps>(({ theme, amount, currencySymbol, isSelected, onClick }) => {
   return (
     <button
       type="button"
@@ -97,7 +102,7 @@ const AmountButton = memo<AmountButtonProps>(({ theme, amount, isSelected, onCli
         '--primary-color-60': `${theme.primaryColor}60`
       } as React.CSSProperties}
     >
-      {typeof amount === 'number' ? `$${amount}` : amount}
+      {typeof amount === 'number' ? `${currencySymbol}${amount}` : amount}
     </button>
   );
 });

@@ -24,6 +24,7 @@ export const PaymentModalContent = memo<PaymentModalContentProps>(({
     maxWidth: '560px',
     minWidth: 'min(560px, 100vw)',
     width: '100%',
+    boxSizing: 'border-box',
     borderRadius: getModalBorderRadius(theme.borderRadius),
   }}>
     {/* Header */}

@@ -58,27 +58,31 @@ const GenericTokenIcon: React.FC<{ size: number; symbol: string; className?: str
   );
 };
 
-export const TokenIcon: React.FC<TokenIconProps> = ({ 
-  symbol, 
-  size = 24, 
-  className, 
-  customIconUrl 
+export const TokenIcon: React.FC<TokenIconProps> = ({
+  symbol,
+  size = 24,
+  className,
+  customIconUrl
 }) => {
-  // If a custom icon URL is provided, use it
-  if (customIconUrl) {
+  const [imgError, setImgError] = React.useState(false);
+
+  // If a custom icon URL is provided and hasn't failed, use it
+  if (customIconUrl && !imgError) {
     return (
-      <img 
-        src={customIconUrl} 
+      <img
+        src={customIconUrl}
         alt={`${symbol} token`}
         width={size}
         height={size}
         className={className}
         style={{ borderRadius: '50%' }}
-        onError={(e) => {
+        loading="lazy"
+        decoding="async"
+        referrerPolicy="no-referrer"
+        crossOrigin="anonymous"
+        onError={() => {
           // Fallback to generic icon if custom image fails to load
-          const target = e.target as HTMLImageElement;
-          target.style.display = 'none';
-          // You could replace with GenericTokenIcon here programmatically
+          setImgError(true);
         }}
       />
     );

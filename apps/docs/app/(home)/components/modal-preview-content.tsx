@@ -53,7 +53,7 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
     (config.allowedMints[0] as Currency) || 'USDC'
   );
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('qr');
-  const [customAmount, setCustomAmount] = useState<string>('');
+  const [customAmount, setCustomAmount] = useState<number>(0);
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState<'form' | 'payment'>('form');
@@ -467,7 +467,7 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
                 <input
                   type="number"
                   value={customAmount}
-                  onChange={(e) => setCustomAmount(e.target.value)}
+                  onChange={(e) => setCustomAmount(parseFloat(e.target.value) || 0)}
                   placeholder="Enter amount"
                   style={{
                     width: '100%',
@@ -572,11 +572,11 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
             {/* Action Button */}
             <button
               onClick={handleSubmit}
-              disabled={isProcessing || (showCustomInput && !customAmount)}
+              disabled={isProcessing || (showCustomInput && customAmount <= 0)}
               style={{
                 width: '100%',
                 padding: '1rem',
-                backgroundColor: isProcessing || (showCustomInput && !customAmount) 
+                backgroundColor: isProcessing || (showCustomInput && customAmount <= 0) 
                   ? '#9ca3af' 
                   : isActionButtonHovered 
                     ? theme.secondaryColor 
@@ -634,7 +634,11 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
                 }
               }}
             >
-              <span style={{ fontSize: '19px', fontWeight: '600' }}>{isProcessing ? 'Processing...' : `Pay $${showCustomInput ? customAmount || '0' : selectedAmount}`}</span>
+              <span style={{ fontSize: '19px', fontWeight: '600' }}>
+                {isProcessing
+                  ? 'Processing...'
+                  : `Pay ${showCustomInput ? (customAmount > 0 ? customAmount : '0') : selectedAmount}`}
+              </span>
             </button>
           </div>
         ) : (

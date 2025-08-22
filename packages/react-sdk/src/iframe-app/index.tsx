@@ -117,7 +117,7 @@ function init() {
     rootEl.style.setProperty('--modal-border-radius', getModalBorderRadius(theme.borderRadius));
     rootEl.style.setProperty('--font-family', theme.fontFamily);
     rootEl.style.setProperty('--button-shadow', getButtonShadow(theme.buttonShadow));
-    rootEl.style.setProperty('--button-border', getButtonBorder(theme as Required<ThemeConfig>));
+    rootEl.style.setProperty('--button-border', getButtonBorder(theme));
   }
 
   // Add error handler

@@ -5,8 +5,8 @@
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts --clean --external ws --external node-fetch",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch --external ws --external node-fetch",
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
     "lint": "echo 'Linting headless-sdk...'",
     "clean": "rm -rf .turbo dist node_modules"
   },
@@ -15,9 +15,6 @@
     "@solana-commerce/program-client": "workspace:*",
     "bignumber.js": "4.0.4",
     "gill": "^0.10.2"
-  },
-  "peerDependencies": {
-    "ws": ">=8.18.0"
   },
   "devDependencies": {
     "tsup": "^8.0.0",

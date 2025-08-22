@@ -14,9 +14,6 @@
     "gill": "^0.10.2",
     "qrcode": "^1.5.4"
   },
-  "peerDependencies": {
-    "ws": ">=8.18.0"
-  },
   "devDependencies": {
     "@types/qrcode": "^1.5.5",
     "tsup": "^8.0.0",

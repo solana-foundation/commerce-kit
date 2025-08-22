@@ -2,6 +2,7 @@ import React, { memo, useState } from 'react';
 import { ConnectorProvider, useConnector, injectArcConnectorGlobalStyles, Spinner } from '@solana-commerce/connector-kit';
 import { sanitizeString, DEFAULT_PROFILE_SVG } from '../../utils';
 import type { ThemeConfig, MerchantConfig, Currency } from '../../types';
+import { useCopyToClipboard } from '../../hooks/use-copy-to-clipboard';
 
 interface WalletPaymentContentProps {
   theme: Required<ThemeConfig>;
@@ -157,35 +158,9 @@ function WalletFlow({ theme, onPaymentComplete, walletIcon, config, selectedAmou
   const [devOutcome, setDevOutcome] = React.useState<'idle' | 'success' | 'declined'>('idle');
   const [iframeConnected, setIframeConnected] = React.useState(false);
   const [iframeAccount, setIframeAccount] = React.useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+  const { copied, isHovered, setIsHovered, copyToClipboard } = useCopyToClipboard();
 
   const displayAmount = showCustomInput ? customAmount || '0' : selectedAmount.toString();
-
-  const handleCopyAddress = async () => {
-    try {
-      await navigator.clipboard.writeText(config.merchant.wallet);
-      setCopied(true);
-      setIsHovered(false);
-      setTimeout(() => {
-        setCopied(false);
-        setIsHovered(false);
-      }, 2000);
-    } catch (err) {
-      const textArea = document.createElement('textarea');
-      textArea.value = config.merchant.wallet;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      setCopied(true);
-      setIsHovered(false);
-      setTimeout(() => {
-        setCopied(false);
-        setIsHovered(false);
-      }, 2000);
-    }
-  };
 
   // Dev log: connected account
   React.useEffect(() => {
@@ -214,7 +189,7 @@ function WalletFlow({ theme, onPaymentComplete, walletIcon, config, selectedAmou
     if (process.env.NODE_ENV !== 'production') {
       console.log('[WalletFlow] Showing loading state', { connected, iframeConnected, selectedAccount })
     }
-    const isDev = true; // Always show dev buttons
+    const isDev = process.env.NODE_ENV !== 'production';
     const message = devOutcome === 'success'
       ? 'Payment sent successfully.'
       : devOutcome === 'declined'
@@ -232,7 +207,7 @@ function WalletFlow({ theme, onPaymentComplete, walletIcon, config, selectedAmou
           {/* Profile Picture and Name Pill - Shows address on hover */}
           <div className="ck-merchant-container">
             <div 
-              onClick={handleCopyAddress}
+              onClick={() => copyToClipboard(config.merchant.wallet)}
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
               className="ck-merchant-pill"
@@ -334,36 +309,38 @@ function WalletFlow({ theme, onPaymentComplete, walletIcon, config, selectedAmou
           setIframeConnected(true);
         }}
       />
-      <div className="ck-wallet-flow-dev-section">
-        <button
-          type="button"
-          onClick={() => { setIframeConnected(true); setDevOutcome('idle'); }}
-          className="ck-wallet-dev-button"
-        >
-          Dev: Show Loading
-        </button>
-        <button
-          type="button"
-          onClick={() => { setIframeConnected(true); setDevOutcome('declined'); }}
-          className="ck-wallet-dev-button"
-        >
-          Dev: Sad Path
-        </button>
-        <button
-          type="button"
-          onClick={() => { setIframeConnected(true); setDevOutcome('success'); }}
-          className="ck-wallet-dev-button"
-        >
-          Dev: Happy Path
-        </button>
-        <button
-          type="button"
-          onClick={() => { setIframeConnected(false); setDevOutcome('idle'); setIframeAccount(null); }}
-          className="ck-wallet-dev-button"
-        >
-          Dev: Reset
-        </button>
-      </div>
+      {process.env.NODE_ENV !== 'production' && (
+        <div className="ck-wallet-flow-dev-section">
+          <button
+            type="button"
+            onClick={() => { setIframeConnected(true); setDevOutcome('idle'); }}
+            className="ck-wallet-dev-button"
+          >
+            Dev: Show Loading
+          </button>
+          <button
+            type="button"
+            onClick={() => { setIframeConnected(true); setDevOutcome('declined'); }}
+            className="ck-wallet-dev-button"
+          >
+            Dev: Sad Path
+          </button>
+          <button
+            type="button"
+            onClick={() => { setIframeConnected(true); setDevOutcome('success'); }}
+            className="ck-wallet-dev-button"
+          >
+            Dev: Happy Path
+          </button>
+          <button
+            type="button"
+            onClick={() => { setIframeConnected(false); setDevOutcome('idle'); setIframeAccount(null); }}
+            className="ck-wallet-dev-button"
+          >
+            Dev: Reset
+          </button>
+        </div>
+      )}
     </div>
   );
 }

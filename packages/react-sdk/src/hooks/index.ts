@@ -7,3 +7,4 @@ export { useSolanaPay } from './use-solana-pay';
 export { useTipForm } from './use-tip-form';
 export { useButtonStyles } from './use-button-styles';
 export { useAnimationStyles } from './use-animation-styles';
+export { useCopyToClipboard } from './use-copy-to-clipboard';
