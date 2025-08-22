@@ -11,8 +11,10 @@ if (typeof window !== 'undefined') {
 }
 
 // Now import the iframe-safe modal components
-import { IframeTipModalContent } from './components/iframe-tip-modal';
+import { IframeTipModalContent } from '../components/iframe/iframe-tip-modal';
 import { PaymentModalContent } from '../components/ui/payment-modal-content';
+import './styles.css';
+import { getBorderRadius, getModalBorderRadius, getButtonShadow, getButtonBorder } from '../utils';
 
 // Global types for the iframe window
 declare global {
@@ -104,6 +106,20 @@ function IframeApp({ config, theme, totalAmount, paymentUrl }: {
 function init() {
   let root: ReactDOM.Root | null = null;
 
+  function applyThemeCSSVars(theme: Required<ThemeConfig>) {
+    const rootEl = document.documentElement;
+    rootEl.style.setProperty('--primary-color', theme.primaryColor);
+    rootEl.style.setProperty('--secondary-color', theme.secondaryColor);
+    rootEl.style.setProperty('--background-color', theme.backgroundColor);
+    rootEl.style.setProperty('--text-color', theme.textColor);
+    // derived vars
+    rootEl.style.setProperty('--border-radius', getBorderRadius(theme.borderRadius));
+    rootEl.style.setProperty('--modal-border-radius', getModalBorderRadius(theme.borderRadius));
+    rootEl.style.setProperty('--font-family', theme.fontFamily);
+    rootEl.style.setProperty('--button-shadow', getButtonShadow(theme.buttonShadow));
+    rootEl.style.setProperty('--button-border', getButtonBorder(theme));
+  }
+
   // Add error handler
   window.addEventListener('error', (event) => {
     console.error('[IframeApp] Error:', event.error);
@@ -134,6 +150,8 @@ function init() {
       }
 
       try {
+        // Apply theme CSS variables before rendering
+        applyThemeCSSVars(message.theme);
         // Provide parent-provided wallets to window for consumers inside iframe
         if (Array.isArray((message as any).wallets)) {
           (window as any).__IFRAME_WALLETS__ = (message as any).wallets

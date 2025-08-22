@@ -27,8 +27,8 @@ export function FloatingCommerceButton() {
             description: 'Experience the Solana Commerce SDK'
           },
           theme: {
-            primaryColor: '#000',
-            secondaryColor: '#000000',
+            primaryColor: '#6366F1',
+            secondaryColor: '#2c5ae6',
             backgroundColor: '#ffffff',
             textColor: '#1f2937',
             borderRadius: 'full',

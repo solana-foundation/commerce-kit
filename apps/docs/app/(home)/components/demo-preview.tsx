@@ -94,7 +94,7 @@ export function DemoPreview({
           {/* Button Section */}
           <div className="flex-shrink-0 relative">
             {/* Button Preview Badge */}
-            <div className="absolute top-2 left-2 z-10 px-2 py-1 bg-zinc-100 rounded text-xs text-gray-600 font-medium border border-gray-200 dark:border-gray-700 flex items-center gap-1.5">
+            <div className="absolute top-2 left-2 z-10 px-2 py-1 bg-white rounded text-xs text-gray-600 font-medium border border-gray-200  flex items-center gap-1.5">
               <IconCursorarrowRays className="w-3 h-3 fill-gray-500" />
               <span className="text-xs font-mono">Button Preview</span>
             </div>
@@ -108,7 +108,7 @@ export function DemoPreview({
                 rgba(46, 77, 97, 0.08) 11px
               )`
             }}
-            className="flex flex-col items-center justify-center border border-gray-200 dark:border-gray-700 rounded-lg bg-zinc-100 p-6 py-12 text-center relative">
+            className="flex flex-col items-center justify-center border border-gray-200  rounded-lg bg-zinc-100 p-6 py-12 text-center relative">
               <SolanaCommerceClient
                 config={{
                   ...config,
@@ -131,17 +131,17 @@ export function DemoPreview({
                   alert('Payment failed. Check console for details.');
                 }}
               />
-              <p className="text-xs font-mono text-gray-500 dark:text-gray-400 mt-3 flex items-center gap-2 border border-gray-300 border-dashed dark:border-gray-700 rounded-lg px-2 py-1 bg-zinc-100">
+              <p className="text-xs font-mono text-gray-500 dark:text-gray-400 mt-3 flex items-center gap-2 border border-gray-300 border-dashed  rounded-lg px-2 py-1 bg-zinc-100">
                 <IconHandPointUpLeftFill className="w-3 h-3 fill-gray-500" /> Click to launch {selectedMode} experience
               </p>
 
               {/* Compact shadow selector using little squares */}
               <div
-                className="absolute bottom-2 left-2 z-40"
+                className="absolute bottom-2 right-[90px] "
                 onClick={(e) => e.stopPropagation()}
                 onMouseDown={(e) => e.stopPropagation()}
               >
-                <div className="flex items-center gap-2 h-7 px-2 rounded-md border border-gray-200 bg-zinc-100">
+                <div className="flex items-center gap-2 h-7 px-2 rounded-md border border-gray-200 bg-white">
                   <IconShadow className="w-3.5 h-3.5 opacity-60" />
                   <div className="flex items-center gap-1">
                     {(['none','sm','md','lg','xl'] as const).map(level => {
@@ -164,11 +164,11 @@ export function DemoPreview({
                 </div>
               </div>
               <div
-                className="absolute bottom-2 right-2 z-40"
+                className="absolute bottom-2 right-2 "
                 onClick={(e) => e.stopPropagation()}
                 onMouseDown={(e) => e.stopPropagation()}
               >
-                <div className="flex items-center gap-2 h-7 px-2 rounded-md border border-gray-200 bg-zinc-100">
+                <div className="flex items-center gap-2 h-7 px-2 rounded-md border border-gray-200 bg-white">
                   <IconApp className={(customizations.buttonBorder ?? 'black-10') === 'none' ? 'w-3.5 h-3.5 opacity-40' : 'w-3.5 h-3.5 opacity-100'} />
                   <Switch
                     checked={(customizations.buttonBorder ?? 'black-10') !== 'none'}
@@ -183,9 +183,9 @@ export function DemoPreview({
           
           {/* Modal Preview Section */}
           <div className="h-full">
-            <div className="h-[750px] overflow-hidden relative rounded-lg border border-gray-200 dark:border-gray-700">
+            <div className="h-[750px] overflow-hidden relative rounded-lg border border-gray-200 bg-zinc-100">
               {/* Modal Preview Badge */}
-              <div className="absolute top-2 left-2 z-30 px-2 py-1 bg-zinc-100 rounded text-xs text-gray-600 font-medium border border-gray-200 dark:border-gray-700 flex items-center gap-1.5">
+              <div className="absolute top-2 left-2 z-30 px-2 py-1 bg-white rounded text-xs text-gray-600 font-medium border border-gray-200  flex items-center gap-1.5">
                 <IconInsetFilledCenterRectangle className="w-3 h-3 fill-gray-400" />
                 <span className="text-xs font-mono">Modal Preview</span>
               </div>
@@ -200,7 +200,7 @@ export function DemoPreview({
       ) : (
         // Page Demo
         <div className="h-full overflow-auto">
-          <div className="border border-gray-200 dark:border-gray-700 rounded-lg bg-white p-4 h-full">
+          <div className="border border-gray-200 rounded-lg bg-white p-4 h-full">
             {selectedMode === 'tip' ? (
               <div className="text-center p-8">
                 <h3 className="text-lg font-medium text-gray-900 mb-2">

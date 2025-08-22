@@ -5,8 +5,7 @@
  * Production-ready e-commerce solution for Solana payments
  */
 
-// Re-export legacy components
-export { SolanaPayButton } from './solana-pay-button';
+// Re-export components
 export * from './components';
 export * from './hooks';
 
@@ -32,9 +31,7 @@ import {
   useTotalAmount,
   usePaymentUrl,
   validateWalletAddress,
-  createPaymentError,
-  getBorderRadius,
-  sanitizeString
+  createPaymentError
 } from './utils';
 import { TriggerButton, ProductList } from './components/ui';
 import type { SolanaCommerceSDKProps } from './types';

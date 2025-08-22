@@ -20,8 +20,8 @@ export function DesignControls({
   onSwapChange 
 }: DesignControlsProps) {
   return (
-    <div className="grid grid-cols-2 gap-4 overflow-hidden">
-      <div className="col-span-1 p-2">
+    <div className="grid grid-cols-2 gap-4 divide-x divide-gray-200 overflow-hidden">
+      <div className="col-span-1 px-2 p-0">
         <ColorPickerPopover
           customizations={customizations}
           onCustomizationChange={onCustomizationChange}
@@ -29,7 +29,7 @@ export function DesignControls({
           onSwapChange={onSwapChange}
         />
       </div>
-      <div className="col-span-1 p-2 border-l border-gray-200 pl-4">
+      <div className="col-span-1 px-2 p-0">
         <BorderRadiusPicker
           borderRadius={customizations.borderRadius}
           onBorderRadiusChange={(value: string) => onCustomizationChange('borderRadius', value)}

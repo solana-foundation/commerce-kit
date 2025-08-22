@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ConnectorClient } from '@solana-commerce/connector-kit';
 import type { SolanaCommerceConfig, ThemeConfig } from '../../types';
 import { IFRAME_BUNDLE } from '../../iframe-app/bundle';
+import { IFRAME_STYLES } from '../../iframe-app/bundle';
 
 interface SecureIframeShellProps {
   config: SolanaCommerceConfig;
@@ -35,23 +36,13 @@ export function SecureIframeShell({ config, theme, onPayment, onCancel }: Secure
 
   // Create the HTML document for the iframe with the bundled app
   const srcDoc = useMemo(() => {
-    // Minimal reset styles for the iframe document. All theming is handled by the content components.
-    const globalStyles = `
-      * { box-sizing: border-box; }
-      html, body {
-        margin: 0;
-        padding: 0;
-        background: transparent;
-      }
-    `;
-
     return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; base-uri 'none'; img-src data: blob: https:; style-src 'unsafe-inline'; font-src data:; connect-src https: wss:;">
-  <style>${globalStyles}</style>
+  <style>${IFRAME_STYLES || ''}</style>
 </head>
 <body>
   <div id="root"></div>
@@ -168,7 +159,12 @@ export function SecureIframeShell({ config, theme, onPayment, onCancel }: Secure
       width="100%"
       height={height}
       style={{
-        width: '420px',
+        width: '560px',
+        maxWidth: '560px',
+        minWidth: '560px',
+        backgroundColor: 'transparent',
+        border: 'none',
+        transition: 'height 300ms cubic-bezier(0.19, 1, 0.22, 1)',
       }}
       sandbox="allow-scripts allow-forms allow-popups"
       referrerPolicy="no-referrer"

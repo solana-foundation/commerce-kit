@@ -1,7 +1,3 @@
-import { createMDX } from 'fumadocs-mdx/next';
-
-const withMDX = createMDX();
-
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
@@ -21,11 +17,11 @@ const config = {
       'react': 'react',
       'react-dom': 'react-dom',
     },
-    resolveExtensions: ['.mdx', '.tsx', '.ts', '.jsx', '.js', '.json'],
+    resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
   },
   // Disable static generation for error pages to fix SSR context issue
   skipTrailingSlashRedirect: true,
   trailingSlash: false,
 };
 
-export default withMDX(config);
+export default config;

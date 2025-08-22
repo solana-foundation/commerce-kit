@@ -19,15 +19,13 @@ export const PaymentModalContent = memo<PaymentModalContentProps>(({
 }) => (
   <div style={{
     fontFamily: theme.fontFamily,
-    backgroundColor: theme.backgroundColor,
+    backgroundColor: 'transparent',
     padding: '2rem',
-    maxWidth: '420px',
-    minWidth: 'min(420px, 100vw)',
+    maxWidth: '560px',
+    minWidth: 'min(560px, 100vw)',
     width: '100%',
-    border: '1px solid #00000060',
+    boxSizing: 'border-box',
     borderRadius: getModalBorderRadius(theme.borderRadius),
-    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-    overflow: 'hidden'
   }}>
     {/* Header */}
     <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>

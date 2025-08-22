@@ -74,3 +74,4 @@ export interface DemoConfig {
   allowedMints: string[];
   products: OrderItem[];
 }
+

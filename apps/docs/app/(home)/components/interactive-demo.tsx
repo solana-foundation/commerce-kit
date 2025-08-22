@@ -1,9 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { TabsRoot, TabsList, TabsTab, TabsPanel } from '@solana-commerce/ui-primitives';
-import { HeroSection } from './hero-section';
-import { ModeSelector } from './mode-selector';
+
+import { UnifiedTabBar } from './unified-tab-bar';
 import { CustomizationPanel } from './customization-panel';
 import { DemoPreview } from './demo-preview';
 import { CodeExample } from './code-example';
@@ -142,19 +141,20 @@ export function InteractiveDemo() {
   };
 
   return (
-    <section className="h-[calc(100vh-100px)]">
-      <div className="max-w-7xl h-full mx-auto border-r border-l border-gray-200 dark:border-gray-800">
-        <HeroSection />
-
-        <div className="grid grid-cols-1 sm:grid-cols-12 divide-x divide-gray-200 dark:divide-gray-800 border-t border-gray-200 dark:border-gray-800">
-          {/* Left Column - Mode Selector & Customization Panel */}
-          <div className="space-y-4 col-span-5">
-            {/* Mode Selector Tabs */}
-            <ModeSelector 
-              selectedMode={selectedMode}
-              onModeChange={handleModeChange}
-            />
-
+    <section className="">
+      <div className="w-full h-full mx-auto border-r border-l border-gray-200">
+        {/* Unified Tab Bar */}
+        <UnifiedTabBar
+          selectedMode={selectedMode}
+          onModeChange={handleModeChange}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          checkoutStyle={checkoutStyle}
+        />
+        
+        <div className="grid grid-cols-1 sm:grid-cols-12 divide-x divide-gray-200 h-[calc(100vh-48px)]">
+          {/* Left Column - Scrollable Customization Panel */}
+          <div className="col-span-4 overflow-y-auto py-4">
             <CustomizationPanel
               customizations={customizations}
               selectedMode={selectedMode}
@@ -166,27 +166,11 @@ export function InteractiveDemo() {
               config={getConfigForMode()}
             />
           </div>
-          {/* Right Column - Demo and Code Tabs */}
-          <div 
-          className="space-y-4 col-span-7"
-          >
-            <TabsRoot value={activeTab} onValueChange={(value) => setActiveTab(value as 'demo' | 'code')} defaultValue="demo">
-              <TabsList className="flex bg-zinc-100/50 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-[57px]">
-                <TabsTab 
-                  value="demo"
-                  className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600 data-[state=active]:border-zinc-900 data-[state=active]:text-zinc-900 text-zinc-400 transition-colors cursor-pointer"
-                >
-                  {checkoutStyle === 'modal' ? 'Modal' : 'Page'}
-                </TabsTab>
-                <TabsTab 
-                  value="code"
-                  className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600 data-[state=active]:border-zinc-900 data-[state=active]:text-zinc-900 text-zinc-400 transition-colors cursor-pointer"
-                >
-                  Code
-                </TabsTab>
-              </TabsList>
-
-              <TabsPanel value="demo" className=" px-4 h-auto sticky top-[115px]">
+          
+          {/* Right Column - Fixed Content */}
+          <div className="col-span-8 overflow-hidden">
+            {activeTab === 'demo' ? (
+              <div className="p-4">
                 <DemoPreview
                   selectedMode={selectedMode}
                   checkoutStyle={checkoutStyle}
@@ -197,16 +181,16 @@ export function InteractiveDemo() {
                   onCheckoutStyleChange={setCheckoutStyle}
                   onCustomizationChange={updateCustomization}
                 />
-              </TabsPanel>
-              
-              <TabsPanel value="code" className="px-4 sticky top-[115px]">
+              </div>
+            ) : (
+              <div className="p-4">
                 <CodeExample
                   selectedMode={selectedMode}
                   checkoutStyle={checkoutStyle}
                   customizations={customizations}
                 />
-              </TabsPanel>
-            </TabsRoot>
+              </div>
+            )}
           </div>
         </div>
       </div>

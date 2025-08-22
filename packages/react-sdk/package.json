@@ -33,11 +33,14 @@
   "dependencies": {
     "@solana-commerce/headless-sdk": "workspace:*",
     "@solana-commerce/ui-primitives": "workspace:*",
-    "@solana-commerce/connector-kit": "workspace:*"
+    "@solana-commerce/connector-kit": "workspace:*",
+    "@solana-commerce/solana-pay": "workspace:*",
+    "bignumber.js": "4.0.4",
+    "gill": "^0.10.2"
   },
   "peerDependencies": {
-    "react": ">=16.8.0",
-    "react-dom": ">=16.8.0"
+    "react": ">=19.0.0",
+    "react-dom": ">=19.0.0"
   },
   "devDependencies": {
     "@types/react": "^19.1.9",

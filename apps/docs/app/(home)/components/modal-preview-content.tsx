@@ -4,6 +4,39 @@ import React, { useState, useCallback } from 'react';
 import type { DemoConfig, Mode } from './types';
 import { cn } from '../../../lib/utils';
 import { OrderItem } from '@solana-commerce/headless-sdk';
+import { TokenIcon } from '../../../../../packages/react-sdk/src/components/icons';
+import { getButtonBorder, getButtonShadow, getAccessibleTextColor } from '../../../../../packages/react-sdk/src/utils';
+import type { ThemeConfig } from '../../../../../packages/react-sdk/src/types';
+import {
+  DropdownRoot,
+  DropdownTrigger,
+  DropdownContent,
+  DropdownItem
+} from '../../../../../packages/ui-primitives/src/react';
+
+// Local border radius utilities to match the React SDK
+const BORDER_RADIUS_MAP = {
+  none: '0',
+  sm: '0.5rem',
+  md: '0.75rem', 
+  lg: '1rem',
+  xl: '1.2rem',
+  full: '1.5rem' // Cap at reasonable radius instead of fully rounded
+} as const;
+
+const MODAL_BORDER_RADIUS_MAP = {
+  ...BORDER_RADIUS_MAP,
+  full: '2.2rem' // Cap modal radius for UX
+} as const;
+
+type BorderRadius = keyof typeof BORDER_RADIUS_MAP;
+
+const getBorderRadius = (radius?: BorderRadius): string => 
+  BORDER_RADIUS_MAP[radius ?? 'md'];
+
+const getModalBorderRadius = (radius?: BorderRadius): string => 
+  MODAL_BORDER_RADIUS_MAP[radius ?? 'md'];
+
 
 interface ModalPreviewContentProps {
   config: DemoConfig;
@@ -24,37 +57,25 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState<'form' | 'payment'>('form');
+  const [isActionButtonHovered, setIsActionButtonHovered] = useState(false);
+  const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false);
 
   const theme = {
-    ...config.theme,
-    fontFamily: config.theme.fontFamily || 'system-ui, -apple-system, sans-serif'
+    primaryColor: config.theme.primaryColor,
+    secondaryColor: config.theme.secondaryColor,
+    backgroundColor: config.theme.backgroundColor,
+    textColor: config.theme.textColor,
+    borderRadius: config.theme.borderRadius,
+    fontFamily: config.theme.fontFamily || 'system-ui, -apple-system, sans-serif',
+    buttonShadow: config.theme.buttonShadow || 'md',
+    buttonBorder: config.theme.buttonBorder || 'black-10'
   };
 
-  const presetAmounts = [1, 5, 15, 25];
+  const presetAmounts = [1, 5, 15, 25, 50];
 
-  const getBorderRadiusClass = (radius: string) => {
-    const radiusMap = {
-      'none': 'rounded-none',
-      'sm': 'rounded-sm',
-      'md': 'rounded-md', 
-      'lg': 'rounded-lg',
-      'xl': 'rounded-xl',
-      'full': 'rounded-full'
-    };
-    return radiusMap[radius as keyof typeof radiusMap] || 'rounded-md';
-  };
 
-  const getModalBorderRadiusClass = (radius: string) => {
-    const modalRadiusMap = {
-      'none': 'rounded-none',
-      'sm': 'rounded-sm',
-      'md': 'rounded-md', 
-      'lg': 'rounded-lg',
-      'xl': 'rounded-xl',
-      'full': 'rounded-xl' // Cap modal radius for UX
-    };
-    return modalRadiusMap[radius as keyof typeof modalRadiusMap] || 'rounded-md';
-  };
+
+
 
   const sanitizeString = (str: string) => str;
 
@@ -72,17 +93,6 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
   const handleBack = useCallback(() => {
     setCurrentStep('form');
     setIsProcessing(false);
-  }, []);
-
-  const copyToClipboard = useCallback((text: string) => {
-    navigator.clipboard.writeText(text).catch(() => {
-      const textArea = document.createElement('textarea');
-      textArea.value = text;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-    });
   }, []);
 
   const allCurrencies = [
@@ -110,90 +120,127 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
   );
 
   const paymentMethods: Array<{ value: PaymentMethod; label: string; description: string; icon: React.ReactNode }> = [
-    { value: 'qr', label: 'Pay', description: 'QR code', icon: solanaPayIcon },
-    { value: 'wallet', label: 'Wallet', description: 'Browser wallet', icon: walletIcon }
+    { value: 'qr', label: 'Pay', description: 'Scan a QR code', icon: solanaPayIcon },
+    { value: 'wallet', label: 'Wallet', description: 'Connect your wallet', icon: walletIcon }
   ];
 
   if (selectedMode === 'tip') {
     return (
       <div 
-        className={cn(
-          "max-w-[525px] w-full shadow-2xl overflow-hidden",
-          getModalBorderRadiusClass(theme.borderRadius)
-        )}
         style={{
+          maxWidth: '560px',
+          width: '100%',
+          borderRadius: getModalBorderRadius(theme.borderRadius),
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          overflow: 'hidden',
           fontFamily: theme.fontFamily,
-          backgroundColor: theme.backgroundColor,
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.05)'
+          backgroundColor: theme.backgroundColor
         }}
       >
         {/* Header */}
-        <div 
-          className="flex justify-between items-center px-6 pt-6 pb-4 relative"
-          style={{
-            borderBottom: `1px solid ${theme.backgroundColor === '#ffffff' ? '#f3f4f6' : `${theme.textColor}10`}`
-          }}
-        >
-          {/* Left side - Back button or help button */}
-          <div className="w-8 flex justify-start">
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '1.5rem',
+          borderBottom: `1px solid ${theme.backgroundColor === '#ffffff' ? '#f3f4f6' : `${theme.textColor}10`}`,
+          position: 'relative'
+        }}>
+          {/* Left side - Back (in payment) + Avatar + Title */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
             {currentStep === 'payment' ? (
               <button
                 onClick={handleBack}
-                className="bg-transparent border-none text-xl cursor-pointer p-1 rounded-full w-8 h-8 flex items-center justify-center transition-all duration-200 hover:bg-opacity-10"
                 style={{
-                  color: `${theme.textColor}70`
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.25rem',
+                  color: `${theme.textColor}70`,
+                  cursor: 'pointer',
+                  padding: '0.25rem',
+                  borderRadius: '50%',
+                  width: '2rem',
+                  height: '2rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s'
                 }}
                 type="button"
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = `${theme.primaryColor}10`;
-                  e.currentTarget.style.color = theme.primaryColor;
+                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = `${theme.primaryColor}10`;
+                  (e.currentTarget as HTMLButtonElement).style.color = theme.primaryColor;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.color = `${theme.textColor}70`;
+                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent';
+                  (e.currentTarget as HTMLButtonElement).style.color = `${theme.textColor}70`;
                 }}
               >
-                ←
+                <svg width="16" height="17" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M15 8.5H1M1 8.5L8 15.5M1 8.5L8 1.5" stroke="currentColor" strokeOpacity="0.72" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </button>
-            ) : (
-              <button
-                onClick={() => {}}
-                className="bg-transparent border-none text-xl cursor-pointer p-1 rounded-full w-8 h-8 flex items-center justify-center transition-all duration-200"
+            ) : null}
+            {currentStep === 'form' && (
+              <div
                 style={{
-                  color: `${theme.textColor}70`
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  background: `linear-gradient(135deg, ${theme.primaryColor} 0%, ${theme.secondaryColor} 100%)`,
+                  flexShrink: 0
                 }}
-                type="button"
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = `${theme.primaryColor}10`;
-                  e.currentTarget.style.color = theme.primaryColor;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.color = `${theme.textColor}70`;
-                }}
-              >
-                ?
-              </button>
+              />
+            )}
+            {currentStep === 'form' && (
+              <h2 style={{
+                margin: 0,
+                fontSize: '24px',
+                fontWeight: '600',
+                color: theme.textColor,
+                textAlign: 'left',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}>
+                Support {sanitizeString(config.merchant.name)}
+              </h2>
             )}
           </div>
-          
-          {/* Center - Title */}
-          <h2 
-            className="absolute left-1/2 transform -translate-x-1/2 text-center m-0 text-xl font-semibold"
-            style={{ color: theme.textColor }}
-          >
-            {currentStep === 'form' 
-              ? `Support ${sanitizeString(config.merchant.name)}`
-              : selectedPaymentMethod === 'qr' 
-                ? `Scan to Pay`
-                : `Connect your wallet`
-            }
-          </h2>
-          
+
+          {currentStep === 'payment' && (
+            <h2 style={{
+              margin: 0,
+              fontSize: '24px',
+              fontWeight: '600',
+              color: theme.textColor,
+              position: 'absolute',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              textAlign: 'center'
+            }}>
+              {selectedPaymentMethod === 'qr' ? 'Scan to pay' : 'Connect Wallet'}
+            </h2>
+          )}
+
           {/* Right side - Close button */}
           <button
-            className="bg-transparent border-none text-2xl cursor-pointer p-1 rounded-full w-8 h-8 flex items-center justify-center transition-all duration-200"
-            style={{ color: `${theme.textColor}60` }}
+            style={{
+              background: 'none',
+              border: 'none',
+              fontSize: '1.5rem',
+              color: `${theme.textColor}60`,
+              cursor: 'pointer',
+              padding: '0.25rem',
+              borderRadius: '50%',
+              width: '2rem',
+              height: '2rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s'
+            }}
             type="button"
             onClick={() => console.log('Preview close')}
             onMouseEnter={(e) => {
@@ -205,85 +252,127 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
               e.currentTarget.style.color = `${theme.textColor}60`;
             }}
           >
-            ×
+            <svg width="14" height="15" viewBox="0 0 14 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M13.7071 2.20711C14.0976 1.81658 14.0976 1.18342 13.7071 0.792893C13.3166 0.402369 12.6834 0.402369 12.2929 0.792893L7 6.08579L1.70711 0.792893C1.31658 0.402369 0.683417 0.402369 0.292893 0.792893C-0.0976311 1.18342 -0.0976311 1.81658 0.292893 2.20711L5.58579 7.5L0.292893 12.7929C-0.0976311 13.1834 -0.0976311 13.8166 0.292893 14.2071C0.683417 14.5976 1.31658 14.5976 1.70711 14.2071L7 8.91421L12.2929 14.2071C12.6834 14.5976 13.3166 14.5976 13.7071 14.2071C14.0976 13.8166 14.0976 13.1834 13.7071 12.7929L8.41421 7.5L13.7071 2.20711Z" fill="currentColor" fillOpacity="0.72"/>
+            </svg>
           </button>
         </div>
 
         {/* Main Content */}
         {currentStep === 'form' ? (
-          <div className="p-6">
-            {/* Profile Section */}
-            <div className="flex items-center gap-3 mb-6">
-              <div
-                className="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center text-2xl text-white"
-                style={{
-                  background: `linear-gradient(135deg, ${theme.primaryColor} 0%, ${theme.secondaryColor} 100%)`
-                }}
-              >
-                {config.merchant.name.charAt(0).toUpperCase()}
-              </div>
-              <div className="flex-1 max-w-full text-left min-w-0">
-                <h3 
-                  className="m-0 text-lg font-semibold -mb-1"
-                  style={{ color: theme.textColor }}
-                >
-                  {sanitizeString(config.merchant.name)}
-                </h3>
-                <div className="flex items-center gap-2">
-                  <span 
-                    className="text-sm font-mono"
-                    style={{ color: `${theme.textColor}70` }}
-                  >
-                    {config.merchant.wallet.slice(0, 4)}...{config.merchant.wallet.slice(-4)}
-                  </span>
-                  <button
-                    onClick={() => copyToClipboard(config.merchant.wallet)}
-                    className={cn(
-                      "bg-transparent border-none cursor-pointer p-1 text-sm transition-all duration-200",
-                      getBorderRadiusClass('sm')
-                    )}
-                    style={{ color: theme.primaryColor }}
-                    type="button"
-                    title="Copy address"
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = `${theme.primaryColor}10`;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }}
-                  >
-                    📋
-                  </button>
-                </div>
-              </div>
-            </div>
-
+          <div style={{
+            padding: '1.5rem',
+            borderBottomLeftRadius: getModalBorderRadius(theme.borderRadius),
+            borderBottomRightRadius: getModalBorderRadius(theme.borderRadius)
+          }}>
             {/* Currency Selector */}
-            <div className="mb-6 text-left">
-              <label 
-                className="block text-xs font-normal mb-2"
-                style={{ color: `${theme.textColor}70` }}
-              >
+            <div style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '0.8rem',
+                fontWeight: '400',
+                color: `${theme.textColor}70`,
+                marginBottom: '0.5rem'
+              }}>
                 Select stablecoin
               </label>
-              <select
-                value={selectedCurrency}
-                onChange={(e) => setSelectedCurrency(e.target.value as Currency)}
-                className="w-full h-9 px-3 py-1 border border-gray-200 rounded-xl bg-white text-sm font-normal cursor-pointer outline-none appearance-none transition-all duration-200 shadow-sm focus:ring-2 focus:ring-gray-300 hover:border-gray-300"
-                style={{
-                  color: theme.textColor,
-                  backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%23666' d='M2 0L0 2h4zm0 5L0 3h4z'/></svg>")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 0.7rem center',
-                  backgroundSize: '0.65rem auto'
-                }}
+              
+              <DropdownRoot 
+                open={currencyDropdownOpen} 
+                onOpenChange={setCurrencyDropdownOpen}
               >
-                {currencies.map(currency => (
-                  <option key={currency.value} value={currency.value}>
-                    {currency.symbol}
-                  </option>
-                ))}
-              </select>
+                <DropdownTrigger asChild>
+                  <div
+                    style={{
+                      width: 'fit-content',
+                      minWidth: '120px',
+                      height: '2.25rem',
+                      padding: '0.25rem 0.45rem',
+                      border: '1px solid #EBEBEB',
+                      borderRadius: getBorderRadius(theme.borderRadius),
+                      backgroundColor: '#FFFFFF',
+                      color: theme.textColor,
+                      fontWeight: '400',
+                      cursor: 'pointer',
+                      outline: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      transition: 'all 200ms ease-in-out',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <TokenIcon symbol={selectedCurrency} size={24} />
+                      <span style={{ marginRight: '4px', fontWeight: '600', fontSize: '16px' }}>
+                        {currencies.find(c => c.value === selectedCurrency)?.symbol || selectedCurrency}
+                      </span>
+                    </div>  
+                    <svg 
+                      width="12" 
+                      height="12" 
+                      viewBox="0 0 24 25" 
+                      fill="none"
+                      style={{ 
+                        transform: currencyDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transition: 'transform 200ms ease-in-out'
+                      }}
+                    >
+                      <path 
+                        d="M6 9.5L12 15.5L18 9.5" 
+                        stroke="black" 
+                        strokeOpacity="0.72" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                </DropdownTrigger>
+                
+                <DropdownContent align="start">
+                  <div style={{
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #EBEBEB',
+                    borderRadius: getBorderRadius(theme.borderRadius),
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                    padding: '8px',
+                    minWidth: '200px'
+                  }}>
+                  {currencies.map(currency => (
+                    <DropdownItem
+                      key={currency.value}
+                      onSelect={() => setSelectedCurrency(currency.value as Currency)}
+                    >
+                      <div style={{
+                        fontSize: '0.875rem',
+                        fontWeight: '400',
+                        color: theme.textColor,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        backgroundColor: 'transparent',
+                        width: '100%'
+                      }}>
+                        <TokenIcon symbol={currency.value} size={16} />
+                        <span>{currency.symbol}</span>
+                        {selectedCurrency === currency.value && (
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ marginLeft: 'auto' }}>
+                            <path 
+                              d="M13.5 4.5L6 12L2.5 8.5" 
+                              stroke={theme.primaryColor} 
+                              strokeWidth="2" 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        )}
+                      </div>
+                    </DropdownItem>
+                  ))}
+                  </div>
+                </DropdownContent>
+              </DropdownRoot>
             </div>
 
             {/* Amount Selection */}
@@ -294,7 +383,11 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
               >
                 Select amount
               </label>
-              <div className="flex gap-4 flex-wrap justify-center">
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                gap: '1rem'
+              }}>
                 {presetAmounts.map(amount => (
                   <button
                     key={amount}
@@ -303,17 +396,33 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
                       setSelectedAmount(amount);
                       setShowCustomInput(false);
                     }}
-                    className={cn(
-                      "w-20 h-16 rounded-xl text-sm font-semibold cursor-pointer transition-all duration-200 flex items-center justify-center shadow-sm hover:scale-105",
-                      selectedAmount === amount && !showCustomInput 
-                        ? 'border-3 border-white bg-gray-50' 
-                        : 'border border-gray-300 bg-white'
-                    )}
+                    onMouseDown={(e) => {
+                      e.currentTarget.style.transform = 'scale(0.98)';
+                    }}
+                    onMouseUp={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
                     style={{
-                      color: selectedAmount === amount && !showCustomInput ? theme.primaryColor : theme.textColor,
+                      width: '100%',
+                      height: '68px',
+                      border: selectedAmount === amount && !showCustomInput ? `3px solid #ffffff` : '1px solid #e5e7eb',
+                      borderRadius: getBorderRadius(theme.borderRadius),
+                      backgroundColor: selectedAmount === amount && !showCustomInput ? `${theme.primaryColor}10` : '#ffffff',
+                      color: selectedAmount === amount && !showCustomInput ? 'rgba(0, 0, 0, 0.7)' : theme.textColor,
+                      fontSize: '19px',
+                      fontWeight: '400',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s, transform 0.1s ease',
+                      transform: 'scale(1)',
                       boxShadow: selectedAmount === amount && !showCustomInput 
-                        ? '0 0 0 2px rgba(143, 143, 143, 1)' 
-                        : undefined
+                        ? `0 0 0 2px ${theme.primaryColor}60` 
+                        : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}
                   >
                     ${amount}
@@ -322,17 +431,33 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
                 <button
                   type="button"
                   onClick={() => setShowCustomInput(true)}
-                  className={cn(
-                    "w-20 h-16 rounded-xl text-sm font-semibold cursor-pointer transition-all duration-200 flex items-center justify-center shadow-sm hover:scale-105",
-                    showCustomInput 
-                      ? 'border-3 border-white bg-gray-50' 
-                      : 'border border-gray-300 bg-white'
-                  )}
+                  onMouseDown={(e) => {
+                    e.currentTarget.style.transform = 'scale(0.98)';
+                  }}
+                  onMouseUp={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
                   style={{
-                    color: showCustomInput ? theme.primaryColor : theme.textColor,
+                    width: '100%',
+                    height: '68px',
+                    border: showCustomInput ? `3px solid #ffffff` : '1px solid #e5e7eb',
+                    borderRadius: getBorderRadius(theme.borderRadius),
+                    backgroundColor: showCustomInput ? `${theme.primaryColor}10` : '#ffffff',
+                    color: showCustomInput ? 'rgba(0, 0, 0, 0.8)' : theme.textColor,
+                    fontSize: '19px',
+                    fontWeight: '400',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s, transform 0.1s ease',
+                    transform: 'scale(1)',
                     boxShadow: showCustomInput 
-                      ? '0 0 0 2px rgba(143, 143, 143, 1)' 
-                      : undefined
+                      ? `0 0 0 2px ${theme.primaryColor}60` 
+                      : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}
                 >
                   Custom
@@ -342,62 +467,101 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
                 <input
                   type="number"
                   value={customAmount}
-                  onChange={(e) => setCustomAmount(Number(e.target.value))}
+                  onChange={(e) => setCustomAmount(parseFloat(e.target.value) || 0)}
                   placeholder="Enter amount"
-                  className="w-full h-11 px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-sm font-normal mt-3 outline-none transition-all duration-200 shadow-sm focus:ring-2 focus:ring-gray-300 hover:border-gray-300"
-                  style={{ color: theme.textColor }}
+                  style={{
+                    width: '100%',
+                    height: '2.75rem',
+                    padding: '0.75rem 1rem',
+                    border: '1px solid #EBEBEB',
+                    borderRadius: getBorderRadius(theme.borderRadius),
+                    backgroundColor: '#F5F5F5',
+                    color: theme.textColor,
+                    fontSize: '19px',
+                    fontWeight: '400',
+                    outline: 'none',
+                    marginTop: '0.75rem',
+                    transition: 'border-color 200ms ease-in, box-shadow 200ms ease-in',
+                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                  }}
                 />
               )}
             </div>
 
             {/* Payment Method */}
-            <div className="mb-6 text-left">
-              <label 
-                className="block text-xs font-normal mb-3"
-                style={{ color: `${theme.textColor}70` }}
-              >
+            <div style={{ 
+              marginBottom: '1.5rem', 
+              textAlign: 'left',        
+              borderBottom: `1px solid ${theme.backgroundColor === '#ffffff' ? '#f3f4f6' : `${theme.textColor}10`}`,
+              paddingBottom: '1.5rem'
+            }}>
+              <label style={{
+                display: 'block',
+                fontSize: '0.8rem',
+                fontWeight: '400',
+                color: `${theme.textColor}70`,
+                marginBottom: '0.75rem'
+              }}>
                 Payment method
               </label>
-              <div className="flex gap-4">
+              <div style={{ display: 'flex', gap: '1rem' }}>
                 {paymentMethods.map(method => (
                   <button
                     key={method.value}
                     type="button"
                     onClick={() => setSelectedPaymentMethod(method.value)}
-                    className={cn(
-                      "flex-1 p-4 cursor-pointer transition-all duration-200 text-left",
-                      getBorderRadiusClass('lg'),
-                      selectedPaymentMethod === method.value 
-                        ? 'border-3 border-white shadow-lg' 
-                        : 'border border-gray-300 shadow-sm'
-                    )}
+                    onMouseDown={(e) => {
+                      e.currentTarget.style.transform = 'scale(0.98)';
+                    }}
+                    onMouseUp={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
                     style={{
-                      backgroundColor: selectedPaymentMethod === method.value ? '#F5F5F5' : theme.backgroundColor,
-                      boxShadow: selectedPaymentMethod === method.value ? '0 0 0 2px rgba(143, 143, 143, 1)' : undefined
+                      flex: 1,
+                      padding: '1rem',
+                      border: `${selectedPaymentMethod === method.value ? '3px solid #ffffff' : '1px solid #e5e7eb'}`,
+                      borderRadius: getBorderRadius(theme.borderRadius),
+                      backgroundColor: selectedPaymentMethod === method.value ? `${theme.primaryColor}10` : theme.backgroundColor,
+                      cursor: 'pointer',
+                      boxShadow: selectedPaymentMethod === method.value ? `0 0 0 2px ${theme.primaryColor}60` : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                      transition: 'all 0.2s, transform 0.1s ease',
+                      transform: 'scale(1)',
+                      textAlign: 'left',
+                      width: '248px',
+                      height: '110px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'flex-end'
                     }}
                   >
-                    <div className="flex items-center gap-2 mb-1">
-                      <span 
-                        className="flex items-center"
-                        style={{ 
-                          color: selectedPaymentMethod === method.value ? theme.primaryColor : theme.textColor
-                        }}
-                      >
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      marginBottom: '0.25rem'
+                    }}>
+                      <span style={{ 
+                        display: 'flex', 
+                        alignItems: 'center',
+                        color: selectedPaymentMethod === method.value ? 'rgba(0, 0, 0, 0.8)' : theme.textColor
+                      }}>
                         {method.icon}
                       </span>
-                      <span 
-                        className="text-sm font-semibold"
-                        style={{
-                          color: selectedPaymentMethod === method.value ? theme.primaryColor : theme.textColor
-                        }}
-                      >
+                      <span style={{
+                        fontSize: '19px',
+                        fontWeight: '600',
+                        color: selectedPaymentMethod === method.value ? 'rgba(0, 0, 0, 0.8)' : theme.textColor
+                      }}>
                         {method.label}
                       </span>
                     </div>
-                    <div 
-                      className="text-xs"
-                      style={{ color: `${theme.textColor}60` }}
-                    >
+                    <div style={{
+                      fontSize: '12px',
+                      color: `${theme.textColor}60`
+                    }}>
                       {method.description}
                     </div>
                   </button>
@@ -408,37 +572,92 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
             {/* Action Button */}
             <button
               onClick={handleSubmit}
-              disabled={isProcessing || (showCustomInput && !customAmount)}
-              className={cn(
-                "w-full p-4 text-white border-none text-base font-semibold transition-all duration-200",
-                getBorderRadiusClass(theme.borderRadius),
-                (isProcessing || (showCustomInput && !customAmount)) ? 'cursor-not-allowed' : 'cursor-pointer'
-              )}
+              disabled={isProcessing || (showCustomInput && customAmount <= 0)}
               style={{
-                backgroundColor: isProcessing || (showCustomInput && !customAmount) ? '#9ca3af' : theme.primaryColor
+                width: '100%',
+                padding: '1rem',
+                backgroundColor: isProcessing || (showCustomInput && customAmount <= 0) 
+                  ? '#9ca3af' 
+                  : isActionButtonHovered 
+                    ? theme.secondaryColor 
+                    : theme.primaryColor,
+                color: isProcessing || (showCustomInput && !customAmount)
+                  ? 'white' 
+                  : getAccessibleTextColor(isActionButtonHovered ? theme.secondaryColor : theme.primaryColor),
+                border: isProcessing || (showCustomInput && !customAmount) 
+                  ? '1.5px solid transparent' 
+                  : (() => {
+                    const border = getButtonBorder(theme as Required<ThemeConfig>);
+                    return border === 'none' ? '1.5px solid transparent' : border;
+                  })(),
+                borderRadius: getBorderRadius(theme.borderRadius),
+                fontSize: '1rem',
+                fontWeight: '600',
+                cursor: isProcessing || (showCustomInput && !customAmount) ? 'not-allowed' : 'pointer',
+                transition: 'background-color 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease',
+                fontFamily: theme.fontFamily,
+                boxShadow: isProcessing || (showCustomInput && !customAmount)
+                  ? 'none'
+                  : isActionButtonHovered
+                    ? `${getButtonShadow(theme.buttonShadow || 'none')}, 0 0 0 4px rgba(202, 202, 202, 0.45)`
+                    : getButtonShadow(theme.buttonShadow || 'none'),
+                transform: 'scale(1)',
+                outlineOffset: 2
               }}
               type="button"
-              onMouseEnter={(e) => {
+              onMouseEnter={() => {
                 if (!isProcessing && !(showCustomInput && !customAmount)) {
-                  e.currentTarget.style.backgroundColor = theme.secondaryColor;
+                  setIsActionButtonHovered(true);
                 }
               }}
-              onMouseLeave={(e) => {
+              onMouseLeave={() => {
+                setIsActionButtonHovered(false);
+              }}
+              onMouseDown={(e) => {
                 if (!isProcessing && !(showCustomInput && !customAmount)) {
-                  e.currentTarget.style.backgroundColor = theme.primaryColor;
+                  e.currentTarget.style.transform = 'scale(0.97)';
+                }
+              }}
+              onMouseUp={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+              onFocus={(e) => { 
+                if (!isProcessing && !(showCustomInput && !customAmount)) {
+                  setIsActionButtonHovered(true);
+                  e.currentTarget.style.boxShadow = `${getButtonShadow(theme.buttonShadow || 'none')}, 0 0 0 4px rgba(202, 202, 202, 0.45)`; 
+                }
+              }}
+              onBlur={(e) => { 
+                setIsActionButtonHovered(false);
+                if (!isProcessing && !(showCustomInput && !customAmount)) {
+                  e.currentTarget.style.boxShadow = getButtonShadow(theme.buttonShadow || 'none'); 
                 }
               }}
             >
-              {isProcessing ? 'Processing...' : `Pay $${showCustomInput ? customAmount || '0' : selectedAmount}`}
+              <span style={{ fontSize: '19px', fontWeight: '600' }}>
+                {isProcessing
+                  ? 'Processing...'
+                  : `Pay ${showCustomInput ? (customAmount > 0 ? customAmount : '0') : selectedAmount}`}
+              </span>
             </button>
           </div>
         ) : (
           // Payment Step - Show simplified payment confirmation for preview
-          <div className="p-6 text-center">
-            <div className={cn(
-              "mb-8 p-8 bg-gray-50 border-2 border-dashed border-gray-200",
-              getBorderRadiusClass('lg')
-            )}>
+          <div style={{
+            padding: '1.5rem',
+            textAlign: 'center',
+            backgroundColor: selectedPaymentMethod === 'wallet' ? '#F5F5F5' : 'transparent',
+            borderBottomLeftRadius: getModalBorderRadius(theme.borderRadius),
+            borderBottomRightRadius: getModalBorderRadius(theme.borderRadius),
+            transition: 'background-color 150ms ease'
+          }}>
+            <div style={{
+              marginBottom: '2rem',
+              padding: '2rem',
+              backgroundColor: '#f9fafb',
+              border: '2px dashed #e5e7eb',
+              borderRadius: getBorderRadius('lg')
+            }}>
               <div className="text-5xl mb-4">
                 {selectedPaymentMethod === 'qr' ? '📱' : '👛'}
               </div>
@@ -461,11 +680,18 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
                 console.log('Preview payment completed');
                 alert(`Mock payment completed: $${showCustomInput ? customAmount : selectedAmount} ${selectedCurrency}`);
               }}
-              className={cn(
-                "w-full p-4 text-white border-none text-base font-semibold cursor-pointer transition-all duration-200",
-                getBorderRadiusClass(theme.borderRadius)
-              )}
-              style={{ backgroundColor: theme.primaryColor }}
+              style={{
+                width: '100%',
+                padding: '1rem',
+                backgroundColor: theme.primaryColor,
+                color: 'white',
+                border: 'none',
+                borderRadius: getBorderRadius(theme.borderRadius),
+                fontSize: '1rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
               type="button"
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = theme.secondaryColor;
@@ -485,14 +711,14 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
   // Buy Now/Cart Modal for non-tip modes
   return (
     <div 
-      className={cn(
-        "p-8 shadow-2xl min-w-[400px] max-w-[500px]",
-        getModalBorderRadiusClass(theme.borderRadius)
-      )}
       style={{
+        padding: '2rem',
+        borderRadius: getModalBorderRadius(theme.borderRadius),
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        minWidth: '400px',
+        maxWidth: '500px',
         fontFamily: theme.fontFamily,
-        backgroundColor: theme.backgroundColor,
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+        backgroundColor: theme.backgroundColor
       }}
     >
       {/* Header */}
@@ -529,10 +755,16 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
               index < demoProducts.length - 1 && "border-b border-gray-100"
             )}
           >
-            <div className={cn(
-              "w-10 h-10 bg-gray-100 mr-3 flex items-center justify-center",
-              getBorderRadiusClass('md')
-            )}>
+            <div style={{
+              width: '2.5rem',
+              height: '2.5rem',
+              backgroundColor: '#f3f4f6',
+              marginRight: '0.75rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: getBorderRadius('md')
+            }}>
               📦
             </div>
             <div className="flex-1">
@@ -573,11 +805,18 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
             console.log('Preview payment initiated');
             alert('Mock payment initiated');
           }}
-          className={cn(
-            "flex-1 py-3 px-6 text-white border-none cursor-pointer text-sm font-semibold transition-all duration-200",
-            getBorderRadiusClass(theme.borderRadius)
-          )}
-          style={{ backgroundColor: theme.primaryColor }}
+          style={{
+            flex: 1,
+            padding: '0.75rem 1.5rem',
+            backgroundColor: theme.primaryColor,
+            color: 'white',
+            border: 'none',
+            borderRadius: getBorderRadius(theme.borderRadius),
+            fontSize: '0.875rem',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = theme.secondaryColor;
           }}
@@ -589,13 +828,16 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
         </button>
         <button 
           onClick={() => console.log('Preview cancel')}
-          className={cn(
-            "py-3 px-6 bg-transparent cursor-pointer text-sm font-medium transition-all duration-200",
-            getBorderRadiusClass(theme.borderRadius)
-          )}
-          style={{ 
+          style={{
+            padding: '0.75rem 1.5rem',
+            backgroundColor: 'transparent',
+            border: `1px solid ${theme.textColor}30`,
+            borderRadius: getBorderRadius(theme.borderRadius),
             color: theme.textColor,
-            border: `1px solid ${theme.textColor}30`
+            fontSize: '0.875rem',
+            fontWeight: '500',
+            cursor: 'pointer',
+            transition: 'all 0.2s'
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = `${theme.textColor}10`;

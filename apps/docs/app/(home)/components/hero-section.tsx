@@ -17,7 +17,7 @@ export function HeroSection() {
       )`
     }}
     >
-      <div className="w-full space-y-2 bg-zinc-100 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div className="w-full space-y-2 bg-zinc-100 p-4 rounded-lg border border-gray-200 ">
         <h1 className="text-2xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">
           Solana Development Kit
         </h1>

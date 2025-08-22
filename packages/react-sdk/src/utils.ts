@@ -4,17 +4,17 @@
  */
 
 import { useMemo } from 'react';
-import type { ThemeConfig, BorderRadius, CommerceMode, MerchantConfig } from './types';
+import type { ThemeConfig, BorderRadius, CommerceMode, MerchantConfig, Currency } from './types';
 import { OrderItem, validateWalletAddress as coreValidateWalletAddress } from '@solana-commerce/headless-sdk';
 
 // Constants
 export const BORDER_RADIUS_MAP = {
   none: '0',
-  sm: '0.5rem',
-  md: '0.75rem', 
-  lg: '1rem',
-  xl: '1.2rem',
-  full: '9999px'
+  sm: '12px',
+  md: '16px',
+  lg: '20px',
+  xl: '24px',
+  full: '1.5rem' // Cap at reasonable radius instead of fully rounded for selection items
 } as const;
 
 export const MODAL_BORDER_RADIUS_MAP = {
@@ -32,7 +32,7 @@ export const DEFAULT_THEME: Required<ThemeConfig> = {
   secondaryColor: '#14F195', 
   backgroundColor: '#ffffff',
   textColor: '#111827',
-  borderRadius: 'md',
+  borderRadius: 'lg',
   fontFamily: 'system-ui, -apple-system, sans-serif',
   buttonShadow: 'md',
   buttonBorder: 'black-10'
@@ -40,13 +40,65 @@ export const DEFAULT_THEME: Required<ThemeConfig> = {
 
 // Utility functions
 export const getBorderRadius = (radius?: BorderRadius): string => 
-  BORDER_RADIUS_MAP[radius ?? 'md'];
+  BORDER_RADIUS_MAP[radius ?? 'lg'];
 
 export const getModalBorderRadius = (radius?: BorderRadius): string => 
-  MODAL_BORDER_RADIUS_MAP[radius ?? 'md'];
+  getRadius('modal', radius);
 
 export const getContainerBorderRadius = (radius?: BorderRadius): string => 
   CONTAINER_BORDER_RADIUS_MAP[radius ?? 'md'];
+
+// Component-category radius scales
+export type RadiusCategory = 'modal' | 'payment' | 'preset' | 'dropdown' | 'button';
+
+const CATEGORY_RADIUS_MAP: Record<RadiusCategory, Record<'sm' | 'lg' | 'full', string>> = {
+  // Modal shell corners
+  modal: {
+    sm: '16px',
+    lg: '20px',
+    full: '2.5rem'
+  },
+  // Payment method tiles (selection cards)
+  payment: {
+    sm: '12px',
+    lg: '20px',
+    full: '1rem'
+  },
+  // Preset amount tiles (and similar small selection buttons)
+  preset: {
+    sm: '12px',
+    lg: '16px',
+    full: '1rem'
+  },
+  // Dropdown trigger/content and text inputs
+  dropdown: {
+    sm: '8px',
+    lg: '10px',
+    full: '12px'
+  },
+  // Primary action buttons
+  button: {
+    sm: '12px',
+    lg: '16px',
+    full: '2rem'
+  }
+};
+
+function normalizeRadiusSize(radius?: BorderRadius): 'sm' | 'lg' | 'full' {
+  if (radius === 'full') return 'full';
+  if (radius === 'xl') return 'full';
+  if (radius === 'lg') return 'lg';
+  if (radius === 'md') return 'lg'; // md not used; closest is lg
+  if (radius === 'sm') return 'sm';
+  // Treat 'none' and undefined as sensible defaults per category elsewhere
+  return 'lg';
+}
+
+export function getRadius(category: RadiusCategory, radius?: BorderRadius): string {
+  if (radius === 'none') return '0';
+  const size = normalizeRadiusSize(radius);
+  return CATEGORY_RADIUS_MAP[category][size];
+}
 
 // Shadow map for buttons
 const BUTTON_SHADOW_MAP: Record<NonNullable<ThemeConfig['buttonShadow']>, string> = {
@@ -210,4 +262,84 @@ export const getButtonText = (mode: CommerceMode): string => {
     default:
       return 'Pay Now';
   }
+};
+
+// Get currency symbol for amount display
+export const getCurrencySymbol = (currency: Currency): string => {
+  // Always use $ symbol for all currencies
+  // Users see USD amounts, conversion happens behind the scenes
+  return '$';
+};
+
+// Price cache to avoid excessive API calls
+let priceCache: { price: number; timestamp: number } | null = null;
+const PRICE_CACHE_DURATION = 60000; // 1 minute cache
+
+// Fetch current SOL price from CoinGecko API with caching
+export const fetchSolPrice = async (): Promise<number> => {
+  console.log('🔍 fetchSolPrice called');
+  
+  // Check cache first
+  if (priceCache && (Date.now() - priceCache.timestamp) < PRICE_CACHE_DURATION) {
+    console.log('📋 Using cached SOL price:', priceCache.price);
+    return priceCache.price;
+  }
+
+  console.log('🌐 Making network call to CoinGecko API...');
+  
+  try {
+    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch SOL price: HTTP ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const price = data.solana?.usd;
+    
+    console.log('✅ Received SOL price from API:', price);
+    
+    if (typeof price !== 'number' || price <= 0) {
+      throw new Error('Invalid SOL price data received from API');
+    }
+    
+    // Update cache
+    priceCache = { price, timestamp: Date.now() };
+    
+    return price;
+  } catch (error) {
+    console.warn('Failed to fetch SOL price from API:', error);
+    
+    // If we have cached data, use it even if expired
+    if (priceCache) {
+      console.info('Using cached SOL price due to API failure');
+      return priceCache.price;
+    }
+    
+    // No fallback - throw error to be handled by UI
+    throw new Error('Unable to fetch SOL price. Please check your internet connection and try again.');
+  }
+};
+
+// Convert USD amount to SOL equivalent using real-time price
+export const convertUsdToSol = async (usdAmount: number): Promise<number> => {
+  console.log(`🔄 Converting $${usdAmount} USD to SOL`);
+  const solPriceUsd = await fetchSolPrice();
+  const solAmount = usdAmount / solPriceUsd;
+  console.log(`💰 $${usdAmount} = ${solAmount.toFixed(6)} SOL (at $${solPriceUsd}/SOL)`);
+  return solAmount;
+};
+
+// Convert USD amount to lamports for SOL payments
+export const convertUsdToLamports = async (usdAmount: number): Promise<number> => {
+  const solAmount = await convertUsdToSol(usdAmount);
+  return Math.round(solAmount * 1000000000); // Convert SOL to lamports
+};
+
+// Get cached SOL price (for debugging/display purposes)
+export const getCachedSolPrice = (): number | null => {
+  if (priceCache && (Date.now() - priceCache.timestamp) < PRICE_CACHE_DURATION) {
+    return priceCache.price;
+  }
+  return null;
 };

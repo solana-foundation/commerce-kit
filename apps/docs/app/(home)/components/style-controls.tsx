@@ -2,7 +2,7 @@
 
 import { DesignControls } from './design-controls';
 import { SupportedCurrencies } from './currency-selector';
-import { CheckoutStyleSelector } from './checkout-style-selector';
+// import { CheckoutStyleSelector } from './checkout-style-selector';
 import { ButtonVariantSelector } from './button-variant-selector';
 import { ConfigurationInputs } from './amount-controls';
 import { SectionSeparator } from './section-separator';
@@ -23,47 +23,15 @@ interface StyleControlsProps {
 export function StyleControls({ 
   customizations, 
   selectedMode, 
-  checkoutStyle, 
+  // checkoutStyle, 
   onCustomizationChange, 
-  onCheckoutStyleChange,
+  // onCheckoutStyleChange,
   isSwapped,
   onSwapChange,
   config
 }: StyleControlsProps) {
   return (
-    <div className="space-y-4 px-4 border-l border-gray-200 dark:border-gray-700">
-      {/* Button Variant Selection - Only show for modal */}
-        
-      <ButtonVariantSelector
-        value={customizations.buttonVariant}
-        onChange={(value) => onCustomizationChange('buttonVariant', value)}
-        config={config}
-      />
-    
-      <SectionSeparator />
-
-      {/* Design Controls - Colors & Border Radius */}
-      <DesignControls
-        customizations={customizations}
-        onCustomizationChange={onCustomizationChange}
-        isSwapped={isSwapped}
-        onSwapChange={onSwapChange}
-      />
-
-      {/* Button Style: Shadow & Border */}
-
-      <SectionSeparator />
-
-      {/* Checkout Style Selection */}
-      <CheckoutStyleSelector
-        value={checkoutStyle}
-        onChange={onCheckoutStyleChange}
-        mode={selectedMode}
-      />
-
-      <SectionSeparator />
-
-      {/* Configuration Inputs */}
+    <div className="space-y-4 px-6 py-2">
       <ConfigurationInputs
         mode={selectedMode}
         merchantName={customizations.merchantName}
@@ -82,7 +50,33 @@ export function StyleControls({
 
       <SectionSeparator />
 
-      {/* Supported Currencies */}
+              
+      <ButtonVariantSelector
+        value={customizations.buttonVariant}
+        onChange={(value) => onCustomizationChange('buttonVariant', value)}
+        config={config}
+      />
+    
+      <SectionSeparator />
+
+      {/* Design Controls - Colors & Border Radius */}
+      <DesignControls
+        customizations={customizations}
+        onCustomizationChange={onCustomizationChange}
+        isSwapped={isSwapped}
+        onSwapChange={onSwapChange}
+      />
+
+      {/* <CheckoutStyleSelector
+        value={checkoutStyle}
+        onChange={onCheckoutStyleChange}
+        mode={selectedMode}
+      /> */}
+
+
+
+      <SectionSeparator />
+
       <SupportedCurrencies
         supportedCurrencies={customizations.supportedCurrencies}
         onChange={(currencies) => onCustomizationChange('supportedCurrencies', currencies)}

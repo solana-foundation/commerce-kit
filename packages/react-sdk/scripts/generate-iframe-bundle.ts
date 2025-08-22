@@ -3,12 +3,17 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 
-// Read the built iframe bundle
+// Read the built iframe bundle and CSS
 const iframeBundlePath = join(process.cwd(), 'dist/iframe-app/index.global.js');
+const iframeCssPath = join(process.cwd(), 'dist/iframe-app/index.css');
 const outputPath = join(process.cwd(), 'src/iframe-app/bundle.ts');
 
 try {
   const bundleContent = readFileSync(iframeBundlePath, 'utf-8');
+  let cssContent = '';
+  try {
+    cssContent = readFileSync(iframeCssPath, 'utf-8');
+  } catch {}
   
   // Create the output directory if it doesn't exist
   mkdirSync(dirname(outputPath), { recursive: true });
@@ -18,6 +23,7 @@ try {
 // Generated from: dist/iframe-app/index.global.js
 
 export const IFRAME_BUNDLE = ${JSON.stringify(bundleContent)};
+export const IFRAME_STYLES = ${JSON.stringify(cssContent)};
 `;
   
   writeFileSync(outputPath, tsContent, 'utf-8');
