@@ -45,7 +45,8 @@ interface OutgoingMessage {
 
 // Helper to send messages to parent
 function sendToParent(message: OutgoingMessage) {
-  window.parent.postMessage(message, window.parentOrigin || '*');
+  const targetOrigin = (window as any).__IFRAME_PARENT_ORIGIN__ || '*';
+  window.parent.postMessage(message, targetOrigin);
 }
 
 // Main app component
@@ -139,7 +140,7 @@ function init() {
     if (message.type === 'init') {
       console.log('[IframeApp] Received init message', message);
       // Store parent origin for secure messaging
-      window.parentOrigin = event.origin;
+      (window as any).__IFRAME_PARENT_ORIGIN__ = event.origin || '*';
 
       // Mount the app
       const rootElement = document.getElementById('root');

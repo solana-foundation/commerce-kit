@@ -113,7 +113,6 @@ export function SecureIframeShell({ config, theme, onPayment, onCancel }: Secure
       }
     }
     window.addEventListener('message', onMessage);
-    window.addEventListener('message', onMessage);
     return () => {
       window.removeEventListener('message', onMessage);
     };
