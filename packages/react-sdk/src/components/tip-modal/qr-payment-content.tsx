@@ -2,7 +2,7 @@ import React, { memo, useEffect, useState, useRef } from 'react';
 import { getBorderRadius, getContainerBorderRadius, sanitizeString, DEFAULT_PROFILE_SVG } from '../../utils';
 import { type ThemeConfig, type MerchantConfig, type Currency, CurrencyMap} from '../../types';
 import { useSolanaPay } from '../../hooks/use-solana-pay';
-import { SPLToken } from '@solana-commerce/solana-pay';
+// import { SPLToken } from '@solana-commerce/solana-pay';
 import { createCommerceClient, verifyPayment, waitForConfirmation } from '@solana-commerce/headless-sdk';
 import { address } from 'gill';
 import { getAssociatedTokenAccountAddress, TOKEN_PROGRAM_ADDRESS, TOKEN_2022_PROGRAM_ADDRESS } from 'gill/programs/token';
@@ -169,34 +169,9 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
   // dev only logs could be added behind NODE_ENV checks if necessary
   
   return (
-    <>
-      <style>
-        {`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-          @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-          }
-          @keyframes slide {
-            0% { transform: translateY(-100%); }
-            100% { transform: translateY(100%); }
-          }
-        `}
-      </style>
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
+    <div className="ck-qr-container">
       {/* QR Code Container with Viewfinder */}
-      <div style={{
-        width: '283px',
-        height: '283px',
-        margin: '0 auto 0rem auto',
-        position: 'relative',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
+      <div className="ck-qr-viewfinder">
         {/* Viewfinder SVG Background */}
         <svg 
           width="283" 
@@ -204,102 +179,36 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
           viewBox="0 0 283 283" 
           fill="none" 
           xmlns="http://www.w3.org/2000/svg"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            zIndex: 1
-          }}
+          className="ck-qr-viewfinder-svg"
         >
           <path d="M3.5 264.06C3.5 272.587 10.4127 279.5 18.9399 279.5H32.8799C33.7083 279.5 34.3799 280.172 34.3799 281V281C34.3799 281.828 33.7083 282.5 32.8799 282.5H17.4399C8.08427 282.5 0.5 274.916 0.5 265.56V250.12C0.5 249.292 1.17157 248.62 2 248.62V248.62C2.82843 248.62 3.5 249.292 3.5 250.12V264.06ZM282.5 266.058C282.5 275.139 275.139 282.5 266.058 282.5H251.116C250.288 282.5 249.616 281.828 249.616 281V281C249.616 280.172 250.288 279.5 251.116 279.5H264.558C272.81 279.5 279.5 272.81 279.5 264.558V250.12C279.5 249.292 280.172 248.62 281 248.62V248.62C281.828 248.62 282.5 249.292 282.5 250.12V266.058ZM34.3799 2C34.3799 2.82843 33.7083 3.5 32.8799 3.5H18.9399C10.4127 3.5 3.5 10.4127 3.5 18.9399V32.8799C3.5 33.7083 2.82843 34.3799 2 34.3799V34.3799C1.17157 34.3799 0.5 33.7083 0.5 32.8799V17.4399C0.5 8.08427 8.08427 0.5 17.4399 0.5H32.8799C33.7083 0.5 34.3799 1.17157 34.3799 2V2ZM282.5 32.8799C282.5 33.7083 281.828 34.3799 281 34.3799V34.3799C280.172 34.3799 279.5 33.7083 279.5 32.8799V18.4419C279.5 10.1897 272.81 3.5 264.558 3.5H251.116C250.288 3.5 249.616 2.82843 249.616 2V2C249.616 1.17157 250.288 0.5 251.116 0.5H266.058C275.139 0.5 282.5 7.86129 282.5 16.9419V32.8799Z" fill={paymentStatus === 'error' ? '#FF0000' : '#2D2D2D'} fillOpacity={paymentStatus === 'error' ? '0.56' : '0.24'}/>
         </svg>
         
         {/* QR Code Content */}
-        <div style={{
-          position: 'relative',
-          zIndex: 2,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '100%',
-          height: '100%',
-          border: paymentStatus === 'error' ? '3px solid #ff00001c' : '3px solid #0000000d',
-          borderRadius: '18px'
-        }}>
+        <div className={`ck-qr-content ${paymentStatus === 'error' ? 'error' : ''}`}>
         {/* Gradient Background */}
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%) scale(0.90)',
-          width: '270px',
-          height: '270px',
-          background: paymentStatus === 'error' 
-            ? 'radial-gradient(circle at bottom center,rgba(255, 0, 0, 0.08) 0%,rgba(255, 68, 68, 0.15) 100%)' 
-            : 'radial-gradient(circle at bottom center, #00ff88 0%, #8B5CF6 100%)',
-          opacity: 0.25,
-          filter: 'blur(15px)',
-          zIndex: 5,
-          borderRadius: '14px',
-          pointerEvents: 'none',
-          overflow: 'hidden'
-        }}>
+        <div className={`ck-qr-gradient ${paymentStatus === 'error' ? 'error' : ''}`}>
           {/* Shine Effect - Only show when not in error state and payment is scanning */}
           {paymentStatus !== 'error' && paymentStatus === 'scanning' && (
-            <div style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%)',
-              animation: 'slide 2s infinite',
-              zIndex: 1,
-              pointerEvents: 'none'
-            }} />
+            <div className="ck-qr-shine" />
           )}
         </div>
         {(() => {
           if (loading) {
             return (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexDirection: 'column',
-                gap: '1rem',
-                color: `${theme.textColor}70`,
-                position: 'relative',
-                zIndex: 3
-              }}>
-                <div style={{ fontSize: '1rem' }}>Loading QR code...</div>
+              <div className="ck-qr-state-container">
+                <div className="ck-qr-loading-text">Loading QR code...</div>
               </div>
             );
             }
             
           if (!paymentRequest) {
             return (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexDirection: 'column',
-                gap: '1rem',
-                color: `${theme.textColor}70`,
-                position: 'relative',
-                zIndex: 3
-              }}>
-                <div style={{ fontSize: '1rem' }}>Failed to generate QR code</div>
+              <div className="ck-qr-state-container">
+                <div className="ck-qr-loading-text">Failed to generate QR code</div>
                 <button
                   onClick={() => window.location.reload()}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    backgroundColor: theme.primaryColor,
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: getBorderRadius(theme.borderRadius),
-                    cursor: 'pointer'
-                  }}
+                  className="ck-qr-retry-button"
                 >
                   Retry
                 </button>
@@ -309,21 +218,12 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
 
           if (paymentStatus === 'success') {
             return (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexDirection: 'column',
-                gap: '1rem',
-                color: theme.primaryColor,
-                position: 'relative',
-                zIndex: 3
-              }}>
+              <div className="ck-qr-state-container ck-qr-success-container">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                   <polyline points="22,4 12,14.01 9,11.01"></polyline>
                 </svg>
-                <div style={{ fontSize: '1.2rem', fontWeight: '600' }}>Payment Confirmed!</div>
+                <div className="ck-qr-success-text">Payment Confirmed!</div>
               </div>
             );
             }
@@ -614,8 +514,7 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
           </button>
         </div>
       )}
-      </div>
-    </>
+    </div>
   );
 });
 

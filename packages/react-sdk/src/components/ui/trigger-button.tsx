@@ -18,16 +18,12 @@ export const TriggerButton = memo<TriggerButtonProps>(({ theme, mode, className,
     </svg>
   );
 
-  const buttonStyles: React.CSSProperties = useMemo(() => {
-    const borderStyle = (() => {
-      const b = getButtonBorder(theme);
-      return b === 'none' ? '1.5px solid transparent' : b;
-    })();
-    return ({
+  // Direct inline styles like the working modal-preview-content.tsx - reliable for package components
+  const buttonStyles: React.CSSProperties = {
     padding: isIconOnly ? '0.75rem' : '0.75rem 1.5rem',
     backgroundColor: isHovered ? theme.secondaryColor : theme.primaryColor,
     color: getAccessibleTextColor(isHovered ? theme.secondaryColor : theme.primaryColor),
-      border: borderStyle,
+    border: getButtonBorder(theme),
     borderRadius: getBorderRadius(theme.borderRadius),
     fontSize: '1rem',
     fontWeight: '600',
@@ -39,11 +35,13 @@ export const TriggerButton = memo<TriggerButtonProps>(({ theme, mode, className,
     boxShadow: isHovered 
       ? `${getButtonShadow(theme.buttonShadow)}, 0 0 0 4px rgba(202, 202, 202, 0.45)` 
       : getButtonShadow(theme.buttonShadow),
-    transform: isPressed ? 'scale(0.97)' : isHovered ? 'scale(1)' : 'scale(1)',
-    outlineOffset: 2,
+    transform: isPressed ? 'scale(0.97)' : 'scale(1)',
+    outline: 'none',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     ...style
-    });
-  }, [theme, isHovered, isPressed, style, isIconOnly]);
+  };
 
   return (
     <button
@@ -57,14 +55,8 @@ export const TriggerButton = memo<TriggerButtonProps>(({ theme, mode, className,
       }}
       onMouseDown={() => setIsPressed(true)}
       onMouseUp={() => setIsPressed(false)}
-      onFocus={(e) => { 
-        setIsHovered(true);
-        e.currentTarget.style.boxShadow = `${getButtonShadow(theme.buttonShadow)}, 0 0 0 4px rgba(202, 202, 202, 0.45)`; 
-      }}
-      onBlur={(e) => { 
-        setIsHovered(false);
-        e.currentTarget.style.boxShadow = getButtonShadow(theme.buttonShadow); 
-      }}
+      onFocus={() => setIsHovered(true)}
+      onBlur={() => setIsHovered(false)}
       type="button"
       aria-label={isIconOnly ? buttonText : undefined}
     >

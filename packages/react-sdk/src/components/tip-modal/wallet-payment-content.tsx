@@ -1,6 +1,6 @@
 import React, { memo, useState } from 'react';
 import { ConnectorProvider, useConnector, injectArcConnectorGlobalStyles, Spinner } from '@solana-commerce/connector-kit';
-import { getBorderRadius, sanitizeString, DEFAULT_PROFILE_SVG } from '../../utils';
+import { sanitizeString, DEFAULT_PROFILE_SVG } from '../../utils';
 import type { ThemeConfig, MerchantConfig, Currency } from '../../types';
 
 interface WalletPaymentContentProps {
@@ -29,7 +29,7 @@ export const WalletPaymentContent = memo<WalletPaymentContentProps>(({
   }
 
   return (
-    <div style={{ padding: '1.5rem', textAlign: 'center' }}>
+    <div className="ck-wallet-container">
       <ConnectorProvider config={{ autoConnect: false, storage: { getItem: () => null, setItem: () => {}, removeItem: () => {} } }}>
         <WalletFlow
           theme={theme}
@@ -67,38 +67,29 @@ function WalletConnectList({ theme, onIframeConnected }: { theme: Required<Theme
   return (
     <div>
       {error ? (
-        <div style={{ marginBottom: 12, padding: '8px 12px', borderRadius: 8, background: '#fef2f2', color: '#991b1b', fontSize: 12 }}>
+        <div className="ck-wallet-error">
           {error}
         </div>
       ) : null}
 
       {(sourceWallets ?? []).length === 0 ? (
-        <div style={{ textAlign: 'center', color: '#6b7280', padding: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#6b7280' }}>No wallets detected</div>
-          <div style={{ fontSize: 12, marginTop: 6 }}>Install a Solana wallet to get started</div>
+        <div className="ck-wallet-no-wallets">
+          <div className="ck-wallet-no-wallets-title">No wallets detected</div>
+          <div className="ck-wallet-no-wallets-subtitle">Install a Solana wallet to get started</div>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="ck-wallet-list">
           {sourceWallets.map((w: any, index: number) => (
             <div
               key={`${w.name}-${index}`}
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '8px 12px',
-                border: '1px solid #e5e7eb',
-                borderRadius: getBorderRadius(theme.borderRadius ?? 'md'),
-                backgroundColor: '#ffffff',
-                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-              }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = '#d1d5db' }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = '#e5e7eb' }}
+              className="ck-wallet-item"
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div className="ck-wallet-info">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={w.icon} alt={w.name} width={40} height={40} style={{ borderRadius: getBorderRadius(theme.borderRadius ?? 'md') }} />
+                <img src={w.icon} alt={w.name} className="ck-wallet-icon" />
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: 14, color: '#111827' }}>{w.name}</div>
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>
+                  <div className="ck-wallet-name">{w.name}</div>
+                  <div className="ck-wallet-status">
                     {(w as any).installed ? 'Ready to connect' : 'Not installed'}
                   </div>
                 </div>
@@ -127,16 +118,7 @@ function WalletConnectList({ theme, onIframeConnected }: { theme: Required<Theme
                     }
                   }}
                   disabled={Boolean(connecting)}
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: getBorderRadius(theme.borderRadius ?? 'md'),
-                    border: '1px solid rgba(255,255,255,0.5)',
-                    background: '#0a0a0a',
-                    color: '#fff',
-                    cursor: connecting ? 'not-allowed' : 'pointer',
-                    display: 'inline-flex', alignItems: 'center', gap: 8,
-                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-                  }}
+                  className="ck-wallet-connect-button"
                 >
                   {connecting ? <Spinner size={16} /> : null}
                   {connecting ? 'Connecting…' : 'Connect'}
@@ -147,14 +129,7 @@ function WalletConnectList({ theme, onIframeConnected }: { theme: Required<Theme
                     const url = getInstallUrl(w.name)
                     try { window.open(url, '_blank') } catch {}
                   }}
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: getBorderRadius(theme.borderRadius ?? 'md'),
-                    border: '1px solid #e5e7eb',
-                    background: '#ffffff',
-                    color: '#374151',
-                    cursor: 'pointer',
-                  }}
+                  className="ck-wallet-install-button"
                 >
                   Install
                 </button>
@@ -247,97 +222,45 @@ function WalletFlow({ theme, onPaymentComplete, walletIcon, config, selectedAmou
         : 'Preparing transaction…';
 
     return (
-      <div style={{ textAlign: 'center' }}>
+      <div className="ck-wallet-loading-container">
         {/* Send Amount and Profile Pill */}
-        <div style={{ marginBottom: '2rem' }}>
-          <h2 style={{
-            margin: '0 0 1.5rem 0',
-            fontSize: '24px',
-            fontWeight: '600',
-            marginTop: '20px',
-            color: theme.textColor
-          }}>
-            <span style={{ opacity: 0.7 }}>Send</span> ${displayAmount} {selectedCurrency}
+        <div className="ck-wallet-payment-section">
+          <h2 className="ck-payment-title">
+            <span className="ck-payment-amount-dim">Send</span> ${displayAmount} {selectedCurrency}
           </h2>
           
           {/* Profile Picture and Name Pill - Shows address on hover */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            marginBottom: '2rem'
-          }}>
+          <div className="ck-merchant-container">
             <div 
               onClick={handleCopyAddress}
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
-              style={{
-                backgroundColor: 'white',
-                border: `1px solid #00000030`,
-                borderRadius: '50px',
-                padding: '0.5rem 1rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                fontSize: '0.875rem',
-                color: '#2D2D2D',
-                fontWeight: '500',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                maxWidth: '320px'
-              }}
+              className="ck-merchant-pill"
             >
               <img
                 src={config.merchant.logo || DEFAULT_PROFILE_SVG}
                 alt={sanitizeString(config.merchant.name)}
+                className="ck-merchant-avatar"
                 style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  objectFit: 'cover',
-                  background: config.merchant.logo ? 'transparent' : `linear-gradient(135deg, ${theme.primaryColor} 0%, ${theme.secondaryColor} 100%)`,
-                  flexShrink: 0
+                  background: config.merchant.logo ? 'transparent' : `linear-gradient(135deg, ${theme.primaryColor} 0%, ${theme.secondaryColor} 100%)`
                 }}
               />
               
               {copied ? (
-                <span style={{
-                  fontSize: '0.875rem',
-                  fontWeight: '600',
-                  color: '#22c55e',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>
+                <span className="ck-merchant-copied">
                   Copied to clipboard
                 </span>
               ) : isHovered ? (
-                <div style={{ 
-                  fontSize: '0.75rem', 
-                  fontFamily: 'monospace',
-                  color: '#666666',
-                  overflow: 'hidden',
-                  whiteSpace: 'nowrap'
-                }}>
+                <div className="ck-merchant-address">
                   {config.merchant.wallet.slice(0, 4)}...{config.merchant.wallet.slice(-4)}
                 </div>
               ) : (
-                <span style={{
-                  fontSize: '0.875rem',
-                  fontWeight: '600',
-                  color: theme.textColor,
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>
+                <span className="ck-merchant-name">
                   {sanitizeString(config.merchant.name)}
                 </span>
               )}
               
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                marginLeft: '0.25rem'
-              }}>
+              <div className="ck-merchant-copy-icon">
                 {copied ? (
                   <svg width="16" height="11" viewBox="0 0 16 11" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path fillRule="evenodd" clipRule="evenodd" d="M15.2559 0.41107C15.5814 0.736507 15.5814 1.26414 15.2559 1.58958L6.08926 10.7562C5.76382 11.0817 5.23618 11.0817 4.91074 10.7562L0.744078 6.58958C0.418641 6.26414 0.418641 5.73651 0.744078 5.41107C1.06951 5.08563 1.59715 5.08563 1.92259 5.41107L5.5 8.98848L14.0774 0.41107C14.4028 0.0856329 14.9305 0.0856329 15.2559 0.41107Z" fill="#22c55e"/>
@@ -353,18 +276,8 @@ function WalletFlow({ theme, onPaymentComplete, walletIcon, config, selectedAmou
         </div>
 
         {/* Wallet Connection Status */}
-        <div style={{
-          backgroundColor:'#ffffff',
-          borderRadius: '16px',
-          padding: '2rem',
-          textAlign: 'center',
-          minHeight: '200px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+        <div className="ck-wallet-status-container">
+          <div className="ck-wallet-status-content">
             {devOutcome === 'success' ? (
               <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path opacity="0.12" d="M15.9998 29.3332C23.3636 29.3332 29.3332 23.3636 29.3332 15.9998C29.3332 8.63604 23.3636 2.6665 15.9998 2.6665C8.63604 2.6665 2.6665 8.63604 2.6665 15.9998C2.6665 23.3636 8.63604 29.3332 15.9998 29.3332Z" fill="#23C456"/>
@@ -378,34 +291,29 @@ function WalletFlow({ theme, onPaymentComplete, walletIcon, config, selectedAmou
             ) : (
               <Spinner size={32} color={theme.primaryColor} />
             )}
-            <div style={{ 
-              fontSize: '1rem', 
-              fontWeight: '600',
-              color: theme.textColor,
-              marginBottom: '1rem'
-            }}>
+            <div className="ck-wallet-status-message">
               {message}
             </div>
             {isDev ? (
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <div className="ck-wallet-dev-buttons">
                 <button
                   type="button"
                   onClick={async () => { try { await disconnect(); } catch {} setDevOutcome('idle'); emittedRef.current = false; setIframeConnected(false); setIframeAccount(null); }}
-                  style={{ padding: '6px 10px', border: '1px solid #e5e7eb', borderRadius: 8, background: '#fff', cursor: 'pointer', fontSize: 12 }}
+                  className="ck-wallet-dev-button"
                 >
                   Disconnect
                 </button>
                 <button
                   type="button"
                   onClick={() => setDevOutcome('declined')}
-                  style={{ padding: '6px 10px', border: '1px solid #e5e7eb', borderRadius: 8, background: '#fff', cursor: 'pointer', fontSize: 12 }}
+                  className="ck-wallet-dev-button"
                 >
                   Simulate Decline
                 </button>
                 <button
                   type="button"
                   onClick={() => { onPaymentComplete(); setDevOutcome('success'); }}
-                  style={{ padding: '6px 10px', border: '1px solid #e5e7eb', borderRadius: 8, background: '#fff', cursor: 'pointer', fontSize: 12 }}
+                  className="ck-wallet-dev-button"
                 >
                   Simulate Success
                 </button>
@@ -417,7 +325,7 @@ function WalletFlow({ theme, onPaymentComplete, walletIcon, config, selectedAmou
     );
   }
   return (
-    <div style={{ marginBottom: '2rem', textAlign: 'left' }}>
+    <div className="ck-wallet-flow-container">
       <WalletConnectList
         theme={theme}
         onIframeConnected={(accounts?: Array<{ address?: string }>) => {
@@ -426,32 +334,32 @@ function WalletFlow({ theme, onPaymentComplete, walletIcon, config, selectedAmou
           setIframeConnected(true);
         }}
       />
-      <div style={{ marginTop: 12, display: 'flex', gap: 8, justifyContent: 'center' }}>
+      <div className="ck-wallet-flow-dev-section">
         <button
           type="button"
           onClick={() => { setIframeConnected(true); setDevOutcome('idle'); }}
-          style={{ padding: '6px 10px', border: '1px solid #e5e7eb', borderRadius: 8, background: '#fff', cursor: 'pointer', fontSize: 12 }}
+          className="ck-wallet-dev-button"
         >
           Dev: Show Loading
         </button>
         <button
           type="button"
           onClick={() => { setIframeConnected(true); setDevOutcome('declined'); }}
-          style={{ padding: '6px 10px', border: '1px solid #e5e7eb', borderRadius: 8, background: '#fff', cursor: 'pointer', fontSize: 12 }}
+          className="ck-wallet-dev-button"
         >
           Dev: Sad Path
         </button>
         <button
           type="button"
           onClick={() => { setIframeConnected(true); setDevOutcome('success'); }}
-          style={{ padding: '6px 10px', border: '1px solid #e5e7eb', borderRadius: 8, background: '#fff', cursor: 'pointer', fontSize: 12 }}
+          className="ck-wallet-dev-button"
         >
           Dev: Happy Path
         </button>
         <button
           type="button"
           onClick={() => { setIframeConnected(false); setDevOutcome('idle'); setIframeAccount(null); }}
-          style={{ padding: '6px 10px', border: '1px solid #e5e7eb', borderRadius: 8, background: '#fff', cursor: 'pointer', fontSize: 12 }}
+          className="ck-wallet-dev-button"
         >
           Dev: Reset
         </button>

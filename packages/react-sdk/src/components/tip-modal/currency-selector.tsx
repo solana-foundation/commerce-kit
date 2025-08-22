@@ -41,82 +41,52 @@ export const CurrencySelector = memo<CurrencySelectorProps>(({
   const selectedCurrencyInfo = currencies.find(c => c.value === selectedCurrency);
 
   return (
-    <div style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
-      <label style={{
-        display: 'block',
-        fontSize: '0.8rem',
-        fontWeight: '400',
-        color: `${theme.textColor}70`,
-        marginBottom: '0.5rem'
-      }}>
+    <div className="ck-form-section">
+      <label className="ck-form-label ck-currency-label">
         Select stablecoin
       </label>
       
       <DropdownRoot open={isOpen} onOpenChange={onOpenChange}>
         <DropdownTrigger asChild>
           <div
+            className="ck-currency-container"
             style={{
-              width: 'fit-content',
-              minWidth: '120px',
-              height: '2.25rem',
-              padding: '0.25rem 0.45rem',
-              border: '1px solid #EBEBEB',
-              borderRadius: getRadius('dropdown', theme.borderRadius),
-              backgroundColor: '#FFFFFF',
-              color: theme.textColor,
-              fontWeight: '400',
-              cursor: 'pointer',
-              outline: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              transition: 'all 200ms ease-in-out',
-              boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-            }}
+              '--dropdown-radius': getRadius('dropdown', theme.borderRadius),
+              '--text-color': theme.textColor
+            } as React.CSSProperties}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div className="ck-currency-selected">
               <TokenIcon symbol={selectedCurrency} size={24} />
-              <span style={{ marginRight: '4px', fontWeight: '600', fontSize: '16px' }}>
+              <span className="ck-currency-symbol">
                 {selectedCurrencyInfo?.symbol || selectedCurrency}
               </span>
             </div>  
-            <div style={{
-              transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-              transition: 'transform 200ms ease-in-out'
-            }}>
+            <div className={`ck-currency-chevron ${isOpen ? 'open' : ''}`}>
               {CHEVRON_DOWN_ICON}
             </div>
           </div>
         </DropdownTrigger>
         
         <DropdownContent align="start">
-          <div style={{
-            backgroundColor: '#FFFFFF',
-            border: '1px solid #EBEBEB',
-            borderRadius: getRadius('dropdown', theme.borderRadius),
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-            padding: '8px',
-            minWidth: '200px'
-          }}>
+          <div 
+            className="ck-dropdown-content"
+            style={{
+              '--dropdown-radius': getRadius('dropdown', theme.borderRadius)
+            } as React.CSSProperties}
+          >
           {currencies.map(currency => (
             <DropdownItem
               key={currency.value}
               onSelect={() => onSelect(currency.value as Currency)}
             >
-              <div style={{
-                fontSize: '0.875rem',
-                fontWeight: '400',
-                color: theme.textColor,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                backgroundColor: 'transparent',
-                width: '100%'
-              }}>
+              <div className="ck-dropdown-item">
                 <TokenIcon symbol={currency.value} size={16} />
                 <span>{currency.symbol}</span>
                 {selectedCurrency === currency.value && (
-                  <div style={{ marginLeft: 'auto', color: theme.primaryColor }}>
+                  <div 
+                    className="ck-dropdown-check"
+                    style={{ '--primary-color': theme.primaryColor } as React.CSSProperties}
+                  >
                     {CHECK_ICON}
                   </div>
                 )}

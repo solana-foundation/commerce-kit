@@ -4,7 +4,7 @@
  */
 
 import React, { memo } from 'react';
-import { useButtonStyles } from '../../hooks/use-button-styles';
+import { getBorderRadius, getButtonShadow, getButtonBorder, getAccessibleTextColor } from '../../utils';
 import type { ThemeConfig } from '../../types';
 
 interface ActionButtonProps {
@@ -23,21 +23,24 @@ export const ActionButton = memo<ActionButtonProps>(({
   children
 }) => {
   const disabled = isDisabled || isProcessing;
-  const { styles, handlers } = useButtonStyles({ 
-    theme, 
-    isDisabled: disabled,
-    variant: 'action' 
-  });
 
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      style={styles}
+      className="ck-action-button"
+      style={{
+        // Set CSS custom properties for dynamic theming
+        '--primary-color': theme.primaryColor,
+        '--secondary-color': theme.secondaryColor,
+        '--button-border': getButtonBorder(theme),
+        '--border-radius': getBorderRadius(theme.borderRadius),
+        '--font-family': theme.fontFamily,
+        '--button-shadow': getButtonShadow(theme.buttonShadow)
+      } as React.CSSProperties}
       type="button"
-      {...handlers}
     >
-      <span style={{ fontSize: '19px', fontWeight: '600' }}>
+      <span className="ck-action-button-text">
         {children}
       </span>
     </button>

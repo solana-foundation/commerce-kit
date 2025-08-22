@@ -6,7 +6,6 @@
 import React, { memo } from 'react';
 import { getRadius } from '../../utils';
 import { PAYMENT_METHODS } from '../../constants/tip-modal';
-import { useButtonStyles } from '../../hooks/use-button-styles';
 import type { ThemeConfig, PaymentMethod } from '../../types';
 
 interface PaymentMethodSelectorProps {
@@ -21,23 +20,17 @@ export const PaymentMethodSelector = memo<PaymentMethodSelectorProps>(({
   onSelect
 }) => {
   return (
-    <div style={{ 
-      marginBottom: '1.5rem', 
-      textAlign: 'left',        
-      borderBottom: `1px solid ${theme.backgroundColor === '#ffffff' ? '#f3f4f6' : `${theme.textColor}10`}`,
-      paddingBottom: '1.5rem'
-    }}>
-      <label style={{
-        display: 'block',
-        fontSize: '0.8rem',
-        fontWeight: '400',
-        color: `${theme.textColor}70`,
-        marginBottom: '0.75rem'
-      }}>
+    <div 
+      className="ck-form-section with-border"
+      style={{
+        '--section-border-color': theme.backgroundColor === '#ffffff' ? '#f3f4f6' : `${theme.textColor}10`
+      } as React.CSSProperties}
+    >
+      <label className="ck-form-label">
         Payment method
       </label>
       
-      <div style={{ display: 'flex', gap: '1rem' }}>
+      <div className="ck-payment-methods-grid">
         {PAYMENT_METHODS.map(method => (
           <PaymentMethodButton
             key={method.value}
@@ -66,64 +59,30 @@ const PaymentMethodButton = memo<PaymentMethodButtonProps>(({
   isSelected, 
   onClick 
 }) => {
-  const styles: React.CSSProperties = {
-    flex: 1,
-    padding: '1rem',
-    border: `${isSelected ? `3px solid #ffffff` : '1px solid #e5e7eb'}`,
-    borderRadius: getRadius('payment', theme.borderRadius),
-    backgroundColor: isSelected ? `${theme.primaryColor}10` : theme.backgroundColor,
-    cursor: 'pointer',
-    boxShadow: isSelected ? `0 0 0 2px ${theme.primaryColor}60` : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-    transition: 'all 0.2s, transform 0.1s ease',
-    transform: 'scale(1)',
-    textAlign: 'left',
-    width: '248px',
-    height: '110px',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'flex-end'
-  };
-
   return (
     <button
       type="button"
       onClick={onClick}
-      style={styles}
-      onMouseDown={(e) => {
-        e.currentTarget.style.transform = 'scale(0.98)';
-      }}
-      onMouseUp={(e) => {
-        e.currentTarget.style.transform = 'scale(1)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'scale(1)';
-      }}
+      className={`ck-payment-method ${isSelected ? 'selected' : ''}`}
+      style={{
+        // Set CSS custom properties for dynamic theming
+        '--background-color': theme.backgroundColor,
+        '--border-radius': getRadius('payment', theme.borderRadius),
+        '--primary-color-10': `${theme.primaryColor}10`,
+        '--primary-color-60': `${theme.primaryColor}60`,
+        '--text-color': theme.textColor,
+        '--text-color-60': `${theme.textColor}60`
+      } as React.CSSProperties}
     >
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        marginBottom: '0.25rem'
-      }}>
-        <span style={{ 
-          display: 'flex', 
-          alignItems: 'center',
-          color: isSelected ? 'rgba(0, 0, 0, 0.7)' : theme.textColor
-        }}>
+      <div className="ck-payment-method-header">
+        <span className="ck-payment-method-icon">
           {method.icon}
         </span>
-        <span style={{
-          fontSize: '19px',
-          fontWeight: '600',
-          color: isSelected ? 'rgba(0, 0, 0, 0.7)' : theme.textColor
-        }}>
+        <span className="ck-payment-method-label">
           {method.label}
         </span>
       </div>
-      <div style={{
-        fontSize: '12px',
-        color: `${theme.textColor}60`
-      }}>
+      <div className="ck-payment-method-description">
         {method.description}
       </div>
     </button>

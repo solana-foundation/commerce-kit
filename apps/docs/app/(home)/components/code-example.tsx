@@ -56,7 +56,7 @@ function App() {
         backgroundColor: '${customizations.backgroundColor}',
         textColor: '${customizations.textColor}',
         borderRadius: '${customizations.borderRadius}',
-        fontFamily: 'system-ui, -apple-system, sans-serif'
+        fontFamily: 'system-ui, -apple-system, sans-serif'${customizations.buttonShadow ? `,\n        buttonShadow: '${customizations.buttonShadow}'` : ''}${customizations.buttonBorder ? `,\n        buttonBorder: '${customizations.buttonBorder}'` : ''}
       }}
       allowedMints={${JSON.stringify(customizations.supportedCurrencies)}}
       defaultCurrency="${customizations.supportedCurrencies[0]}"
@@ -92,7 +92,7 @@ function App() {
         backgroundColor: '${customizations.backgroundColor}',
         textColor: '${customizations.textColor}',
         borderRadius: '${customizations.borderRadius}',
-        fontFamily: 'system-ui, -apple-system, sans-serif'
+        fontFamily: 'system-ui, -apple-system, sans-serif'${customizations.buttonShadow ? `,\n        buttonShadow: '${customizations.buttonShadow}'` : ''}${customizations.buttonBorder ? `,\n        buttonBorder: '${customizations.buttonBorder}'` : ''}
       }}
       allowedMints={${JSON.stringify(customizations.supportedCurrencies)}}
       defaultCurrency="${customizations.supportedCurrencies[0]}"
@@ -153,7 +153,7 @@ function App() {
           backgroundColor: '${customizations.backgroundColor}',
           textColor: '${customizations.textColor}',
           borderRadius: '${customizations.borderRadius}',
-          fontFamily: 'system-ui, -apple-system, sans-serif'
+          fontFamily: 'system-ui, -apple-system, sans-serif'${customizations.buttonShadow ? `,\n          buttonShadow: '${customizations.buttonShadow}'` : ''}${customizations.buttonBorder ? `,\n          buttonBorder: '${customizations.buttonBorder}'` : ''}
         },
         products: ${JSON.stringify(products, null, 8).replace(/\n/g, '\n        ')},
         allowedMints: ${JSON.stringify(customizations.supportedCurrencies)},

@@ -6,6 +6,7 @@ import { cn } from '../../../lib/utils';
 import { OrderItem } from '@solana-commerce/headless-sdk';
 import { TokenIcon } from '../../../../../packages/react-sdk/src/components/icons';
 import { getButtonBorder, getButtonShadow, getAccessibleTextColor } from '../../../../../packages/react-sdk/src/utils';
+import type { ThemeConfig } from '../../../../../packages/react-sdk/src/types';
 import {
   DropdownRoot,
   DropdownTrigger,
@@ -60,8 +61,14 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
   const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false);
 
   const theme = {
-    ...config.theme,
-    fontFamily: config.theme.fontFamily || 'system-ui, -apple-system, sans-serif'
+    primaryColor: config.theme.primaryColor,
+    secondaryColor: config.theme.secondaryColor,
+    backgroundColor: config.theme.backgroundColor,
+    textColor: config.theme.textColor,
+    borderRadius: config.theme.borderRadius,
+    fontFamily: config.theme.fontFamily || 'system-ui, -apple-system, sans-serif',
+    buttonShadow: config.theme.buttonShadow || 'md',
+    buttonBorder: config.theme.buttonBorder || 'black-10'
   };
 
   const presetAmounts = [1, 5, 15, 25, 50];
@@ -580,7 +587,7 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
                 border: isProcessing || (showCustomInput && !customAmount) 
                   ? '1.5px solid transparent' 
                   : (() => {
-                    const border = getButtonBorder({...theme, buttonBorder: theme.buttonBorder || 'none', buttonShadow: theme.buttonShadow || 'none'});
+                    const border = getButtonBorder(theme as Required<ThemeConfig>);
                     return border === 'none' ? '1.5px solid transparent' : border;
                   })(),
                 borderRadius: getBorderRadius(theme.borderRadius),

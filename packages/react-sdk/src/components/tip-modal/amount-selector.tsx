@@ -1,12 +1,11 @@
 /**
  * Amount Selector Component
- * Handles preset amounts and custom input
+ * Handles preset amounts and custom input - Now using CSS classes instead of inline styles
  */
 
 import React, { memo } from 'react';
-import { getRadius } from '../../utils';
+import { getBorderRadius } from '../../utils';
 import { PRESET_AMOUNTS } from '../../constants/tip-modal';
-import { useButtonStyles } from '../../hooks/use-button-styles';
 import type { ThemeConfig } from '../../types';
 
 interface AmountSelectorProps {
@@ -29,22 +28,12 @@ export const AmountSelector = memo<AmountSelectorProps>(({
   onCustomAmountChange
 }) => {
   return (
-    <div style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
-      <label style={{
-        display: 'block',
-        fontSize: '0.8rem',
-        fontWeight: '400',
-        color: `${theme.textColor}70`,
-        marginBottom: '0.75rem'
-      }}>
+    <div className="ck-form-section">
+      <label className="ck-form-label">
         Select amount
       </label>
       
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-        gap: '1rem'
-      }}>
+      <div className="ck-amounts-grid">
         {PRESET_AMOUNTS.map(amount => (
           <AmountButton
             key={amount}
@@ -72,21 +61,14 @@ export const AmountSelector = memo<AmountSelectorProps>(({
           value={customAmount}
           onChange={(e) => onCustomAmountChange(e.target.value)}
           placeholder="Enter amount"
+          className="ck-input"
           style={{
-            width: '100%',
-            height: '2.75rem',
-            padding: '0.75rem 1rem',
-            border: '1px solid #EBEBEB',
-            borderRadius: getRadius('dropdown', theme.borderRadius),
-            backgroundColor: '#F5F5F5',
-            color: theme.textColor,
-            fontSize: '19px',
-            fontWeight: '400',
-            outline: 'none',
-            marginTop: '0.75rem',
-            transition: 'border-color 200ms ease-in, box-shadow 200ms ease-in',
-            boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
-          }}
+            // Set CSS custom properties for dynamic theming
+            '--border-radius': getBorderRadius(theme.borderRadius),
+            '--text-color': theme.textColor,
+            '--font-family': theme.fontFamily,
+            '--primary-color': theme.primaryColor
+          } as React.CSSProperties}
         />
       )}
     </div>
@@ -102,22 +84,18 @@ interface AmountButtonProps {
 }
 
 const AmountButton = memo<AmountButtonProps>(({ theme, amount, isSelected, onClick }) => {
-  const { styles, handlers } = useButtonStyles({ 
-    theme, 
-    variant: 'selection',
-    isSelected 
-  });
-
   return (
     <button
       type="button"
       onClick={onClick}
+      className={`ck-amount-button ${isSelected ? 'selected' : ''}`}
       style={{
-        ...styles,
-        width: '100%',
-        height: '68px',
-      }}
-      {...handlers}
+        // Set CSS custom properties for dynamic theming
+        '--text-color': theme.textColor,
+        '--border-radius': getBorderRadius(theme.borderRadius),
+        '--primary-color-10': `${theme.primaryColor}10`,
+        '--primary-color-60': `${theme.primaryColor}60`
+      } as React.CSSProperties}
     >
       {typeof amount === 'number' ? `$${amount}` : amount}
     </button>

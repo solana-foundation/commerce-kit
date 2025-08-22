@@ -39,18 +39,21 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
 
 
   return (
-    <div className="sc-tip-modal-anim" style={{
-      fontFamily: theme.fontFamily,
-      backgroundColor: theme.backgroundColor,
-      padding: '0',
-      height: 'auto',
-      width: '100%',
-      maxWidth: '560px',
-      minWidth: '560px',
-      borderRadius: getModalBorderRadius(theme.borderRadius),
-      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-      overflow: 'hidden'
-    }}>
+    <div
+      className="sc-tip-modal-anim"
+      style={{
+        '--font-family': theme.fontFamily,
+        '--background-color': theme.backgroundColor,
+        '--text-color': theme.textColor,
+        '--text-color-70': `${theme.textColor}70`,
+        '--text-color-60': `${theme.textColor}60`,
+        '--primary-color': theme.primaryColor,
+        '--primary-color-10': `${theme.primaryColor}10`,
+        '--primary-color-60': `${theme.primaryColor}60`,
+        '--secondary-color': theme.secondaryColor,
+        '--modal-border-radius': getModalBorderRadius(theme.borderRadius),
+      } as React.CSSProperties}
+    >
       {/* Header */}
       <TipModalHeader
         theme={theme}
@@ -62,23 +65,10 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
       />
 
       {/* Main Content - Scale + Fade transition */}
-      <div style={{ position: 'relative' }}>
+      <div className="sc-body">
         {/* Form step */}
-        <div 
-          style={{
-            position: state.currentStep === 'form' ? 'relative' : 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            opacity: state.currentStep === 'form' ? 1 : 0,
-            transform: state.currentStep === 'form' ? 'scale(1)' : 'scale(0.95)',
-            transition: 'opacity 300ms cubic-bezier(0.19, 1, 0.22, 1), transform 300ms cubic-bezier(0.19, 1, 0.22, 1)',
-            pointerEvents: state.currentStep === 'form' ? 'auto' : 'none',
-            borderBottomLeftRadius: state.currentStep === 'form' ? getModalBorderRadius(theme.borderRadius) : undefined,
-            borderBottomRightRadius: state.currentStep === 'form' ? getModalBorderRadius(theme.borderRadius) : undefined,
-          }}
-        >
-          <div style={{ padding: '1.5rem' }}>
+        <div className={`sc-step ${state.currentStep === 'form' ? 'active' : ''}`}>
+          <div className="sc-content">
             <CurrencySelector
               theme={theme}
               selectedCurrency={state.selectedCurrency}
@@ -116,20 +106,8 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
         </div>
 
         {/* Payment step */}
-        <div 
-          style={{
-            position: state.currentStep === 'payment' ? 'relative' : 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            opacity: state.currentStep === 'payment' ? 1 : 0,
-            transform: state.currentStep === 'payment' ? 'scale(1)' : 'scale(0.95)',
-            transition: 'opacity 300ms cubic-bezier(0.19, 1, 0.22, 1), transform 300ms cubic-bezier(0.19, 1, 0.22, 1)',
-            pointerEvents: state.currentStep === 'payment' ? 'auto' : 'none',
-            backgroundColor: state.selectedPaymentMethod === 'wallet' && state.currentStep === 'payment' ? '#F5F5F5' : 'transparent',
-            borderBottomLeftRadius: state.currentStep === 'payment' ? getModalBorderRadius(theme.borderRadius) : undefined,
-            borderBottomRightRadius: state.currentStep === 'payment' ? getModalBorderRadius(theme.borderRadius) : undefined,
-          }}
+        <div
+          className={`sc-step payment ${state.currentStep === 'payment' ? 'active' : ''} ${state.selectedPaymentMethod === 'wallet' ? 'wallet-bg' : ''}`}
         >
           {state.selectedPaymentMethod === 'qr' ? (
             <QRPaymentContent 

@@ -31,9 +31,7 @@ import {
   useTotalAmount,
   usePaymentUrl,
   validateWalletAddress,
-  createPaymentError,
-  getBorderRadius,
-  sanitizeString
+  createPaymentError
 } from './utils';
 import { TriggerButton, ProductList } from './components/ui';
 import type { SolanaCommerceSDKProps } from './types';
