@@ -262,8 +262,8 @@ export async function assertGetOrCreateMerchantOperatorConfig({
     expectedOperator: operatorPda,
     expectedOperatorFee: operatorFee,
     expectedCurrentOrderId: currentOrderId,
-    expectedNumPolicies: policies.length,
-    expectedNumAcceptedCurrencies: acceptedCurrencies.length,
+    expectedPolicies: policies,
+    expectedAcceptedCurrencies: acceptedCurrencies,
   });
 
   return [merchantOperatorConfigPda, merchantOperatorConfigBump];

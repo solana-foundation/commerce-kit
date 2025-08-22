@@ -124,8 +124,8 @@ describe("Initialize Merchant Operator Config", () => {
         expectedOperator: operatorPda,
         expectedOperatorFee: operatorFee,
         expectedCurrentOrderId: currentOrderId,
-        expectedNumPolicies: 2,
-        expectedNumAcceptedCurrencies: 2,
+        expectedPolicies: policies,
+        expectedAcceptedCurrencies: acceptedCurrencies,
       });
     }, 10_000);
 

@@ -1,4 +1,4 @@
-use commerce_program_client::COMMERCE_PROGRAM_ID as PROGRAM_ID;
+use commerce_program_client::{COMMERCE_PROGRAM_ID as PROGRAM_ID, CommerceProgramError};
 use litesvm::{types::TransactionMetadata, LiteSVM};
 use solana_program::pubkey;
 use solana_program_pack::Pack;
@@ -8,7 +8,7 @@ use solana_sdk::{
     program_option::COption,
     pubkey::Pubkey,
     signature::{Keypair, Signer},
-    transaction::Transaction,
+    transaction::Transaction
 };
 use spl_token::{
     state::{Account as TokenAccount, Mint},
@@ -28,26 +28,26 @@ pub const ATA_PROGRAM_ID: Pubkey = pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTN
 pub const USDC_MINT: Pubkey = pubkey!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
 pub const USDT_MINT: Pubkey = pubkey!("Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB");
 
-// Commerce Program Error Codes
-pub const INVALID_MINT_ERROR: u32 = 0;
-pub const INVALID_PAYMENT_STATUS_ERROR: u32 = 1;
-pub const INSUFFICIENT_SETTLEMENT_AMOUNT_ERROR: u32 = 2;
-pub const SETTLEMENT_TOO_EARLY_ERROR: u32 = 3;
-pub const REFUND_AMOUNT_EXCEEDS_POLICY_LIMIT_ERROR: u32 = 4;
-pub const REFUND_WINDOW_EXPIRED_ERROR: u32 = 5;
-pub const INVALID_EVENT_AUTHORITY_ERROR: u32 = 6;
-pub const INVALID_ATA_ERROR: u32 = 7;
-pub const PAYMENT_CANNOT_BE_CLOSED_ERROR: u32 = 8;
-pub const MERCHANT_OWNER_MISMATCH_ERROR: u32 = 9;
-pub const MERCHANT_INVALID_PDA_ERROR: u32 = 10;
-pub const OPERATOR_OWNER_MISMATCH_ERROR: u32 = 11;
-pub const OPERATOR_INVALID_PDA_ERROR: u32 = 12;
-pub const OPERATOR_MISMATCH_ERROR: u32 = 13;
-pub const MERCHANT_MISMATCH_ERROR: u32 = 14;
-pub const ORDER_ID_INVALID_ERROR: u32 = 15;
-pub const MERCHANT_OPERATOR_CONFIG_INVALID_PDA_ERROR: u32 = 16;
-pub const ACCEPTED_CURRENCIES_EMPTY_ERROR: u32 = 17;
-pub const DUPLICATE_MINT_ERROR: u32 = 18;
+// Commerce Program Error Codes (using generated error enum)
+pub const INVALID_MINT_ERROR: u32 = CommerceProgramError::InvalidMint as u32;
+pub const INVALID_PAYMENT_STATUS_ERROR: u32 = CommerceProgramError::InvalidPaymentStatus as u32;
+pub const INSUFFICIENT_SETTLEMENT_AMOUNT_ERROR: u32 = CommerceProgramError::InsufficientSettlementAmount as u32;
+pub const SETTLEMENT_TOO_EARLY_ERROR: u32 = CommerceProgramError::SettlementTooEarly as u32;
+pub const REFUND_AMOUNT_EXCEEDS_POLICY_LIMIT_ERROR: u32 = CommerceProgramError::RefundAmountExceedsPolicyLimit as u32;
+pub const REFUND_WINDOW_EXPIRED_ERROR: u32 = CommerceProgramError::RefundWindowExpired as u32;
+pub const INVALID_EVENT_AUTHORITY_ERROR: u32 = CommerceProgramError::InvalidEventAuthority as u32;
+pub const INVALID_ATA_ERROR: u32 = CommerceProgramError::InvalidAta as u32;
+pub const PAYMENT_CANNOT_BE_CLOSED_ERROR: u32 = CommerceProgramError::PaymentCloseWindowNotReached as u32;
+pub const MERCHANT_OWNER_MISMATCH_ERROR: u32 = CommerceProgramError::MerchantOwnerMismatch as u32;
+pub const MERCHANT_INVALID_PDA_ERROR: u32 = CommerceProgramError::MerchantInvalidPda as u32;
+pub const OPERATOR_OWNER_MISMATCH_ERROR: u32 = CommerceProgramError::OperatorOwnerMismatch as u32;
+pub const OPERATOR_INVALID_PDA_ERROR: u32 = CommerceProgramError::OperatorInvalidPda as u32;
+pub const OPERATOR_MISMATCH_ERROR: u32 = CommerceProgramError::OperatorMismatch as u32;
+pub const MERCHANT_MISMATCH_ERROR: u32 = CommerceProgramError::MerchantMismatch as u32;
+pub const ORDER_ID_INVALID_ERROR: u32 = CommerceProgramError::OrderIdInvalid as u32;
+pub const MERCHANT_OPERATOR_CONFIG_INVALID_PDA_ERROR: u32 = CommerceProgramError::MerchantOperatorConfigInvalidPda as u32;
+pub const ACCEPTED_CURRENCIES_EMPTY_ERROR: u32 = CommerceProgramError::AcceptedCurrenciesEmpty as u32;
+pub const DUPLICATE_MINT_ERROR: u32 = CommerceProgramError::DuplicateMint as u32;
 
 // Standard Solana Program Error Codes
 pub const INVALID_ARGUMENT_ERROR: u32 = 5; // ProgramError::InvalidArgument

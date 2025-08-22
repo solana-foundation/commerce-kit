@@ -19,6 +19,8 @@ num-traits = { workspace = true }
 
 solana-client = { workspace = true, optional = true }
 solana-account = { workspace = true, optional = true }
+solana-program-error = { workspace = true }
+thiserror = { workspace = true }
 
 [features]
 default = []
