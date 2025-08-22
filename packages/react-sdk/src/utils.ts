@@ -266,16 +266,80 @@ export const getButtonText = (mode: CommerceMode): string => {
 
 // Get currency symbol for amount display
 export const getCurrencySymbol = (currency: Currency): string => {
-  // Use $ prefix for USD-based stablecoins
-  if (currency === 'USDC' || currency === 'USDT' || currency === 'USDC_DEVNET' || currency === 'USDT_DEVNET') {
-    return '$';
-  }
-  
-  // Use ◎ symbol for SOL
-  if (currency === 'SOL' || currency === 'SOL_DEVNET') {
-    return '◎';
-  }
-  
-  // Fallback to dollar sign for unknown currencies
+  // Always use $ symbol for all currencies
+  // Users see USD amounts, conversion happens behind the scenes
   return '$';
+};
+
+// Price cache to avoid excessive API calls
+let priceCache: { price: number; timestamp: number } | null = null;
+const PRICE_CACHE_DURATION = 60000; // 1 minute cache
+
+// Fetch current SOL price from CoinGecko API with caching
+export const fetchSolPrice = async (): Promise<number> => {
+  console.log('🔍 fetchSolPrice called');
+  
+  // Check cache first
+  if (priceCache && (Date.now() - priceCache.timestamp) < PRICE_CACHE_DURATION) {
+    console.log('📋 Using cached SOL price:', priceCache.price);
+    return priceCache.price;
+  }
+
+  console.log('🌐 Making network call to CoinGecko API...');
+  
+  try {
+    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch SOL price: HTTP ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const price = data.solana?.usd;
+    
+    console.log('✅ Received SOL price from API:', price);
+    
+    if (typeof price !== 'number' || price <= 0) {
+      throw new Error('Invalid SOL price data received from API');
+    }
+    
+    // Update cache
+    priceCache = { price, timestamp: Date.now() };
+    
+    return price;
+  } catch (error) {
+    console.warn('Failed to fetch SOL price from API:', error);
+    
+    // If we have cached data, use it even if expired
+    if (priceCache) {
+      console.info('Using cached SOL price due to API failure');
+      return priceCache.price;
+    }
+    
+    // No fallback - throw error to be handled by UI
+    throw new Error('Unable to fetch SOL price. Please check your internet connection and try again.');
+  }
+};
+
+// Convert USD amount to SOL equivalent using real-time price
+export const convertUsdToSol = async (usdAmount: number): Promise<number> => {
+  console.log(`🔄 Converting $${usdAmount} USD to SOL`);
+  const solPriceUsd = await fetchSolPrice();
+  const solAmount = usdAmount / solPriceUsd;
+  console.log(`💰 $${usdAmount} = ${solAmount.toFixed(6)} SOL (at $${solPriceUsd}/SOL)`);
+  return solAmount;
+};
+
+// Convert USD amount to lamports for SOL payments
+export const convertUsdToLamports = async (usdAmount: number): Promise<number> => {
+  const solAmount = await convertUsdToSol(usdAmount);
+  return Math.round(solAmount * 1000000000); // Convert SOL to lamports
+};
+
+// Get cached SOL price (for debugging/display purposes)
+export const getCachedSolPrice = (): number | null => {
+  if (priceCache && (Date.now() - priceCache.timestamp) < PRICE_CACHE_DURATION) {
+    return priceCache.price;
+  }
+  return null;
 };

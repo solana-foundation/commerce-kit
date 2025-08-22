@@ -116,14 +116,11 @@ export const MultiItemCart = memo<MultiItemCartProps>(({
     return { subtotal, transactionFee, total };
   }, [cartItems, showTransactionFee, transactionFeePercent]);
 
-  // Format currency amounts
+  // Format currency amounts - always show as USD
   const formatAmount = useCallback((amount: number, currency: string) => {
-    if (currency === 'SOL') {
-      return `${(amount / 1_000_000_000).toFixed(2)}`;
-    } else if (currency === 'USDC') {
-      return `$${(amount / 1_000_000).toFixed(2)}`;
-    }
-    return amount.toString();
+    // For all currencies, treat amount as USD cents and display with $ symbol
+    // Conversion to actual token amounts happens during payment processing
+    return `$${(amount / 100).toFixed(2)}`;
   }, []);
 
   // Handle quantity change
@@ -354,8 +351,8 @@ export const MultiItemCart = memo<MultiItemCartProps>(({
               }}
             >
               {allowedMints.includes('USDC') && <option value="USDC">💵 USDC</option>}
-              {allowedMints.includes('SOL') && <option value="SOL">◎ SOL</option>}
-              {allowedMints.includes('USDT') && <option value="USDT">💰 USDT</option>}
+              {allowedMints.includes('SOL') && <option value="SOL">💵 SOL</option>}
+              {allowedMints.includes('USDT') && <option value="USDT">💵 USDT</option>}
             </select>
           </div>
 
@@ -567,7 +564,7 @@ export const MultiItemCart = memo<MultiItemCartProps>(({
                     marginRight: '0.5rem',
                     fontSize: '1.25rem'
                   }}>
-                    {selectedCurrency === 'USDC' ? '💵' : selectedCurrency === 'SOL' ? '◎' : '💰'}
+                    💵
                   </span>
                   {formatAmount(totals.total, selectedCurrency)}
                 </div>

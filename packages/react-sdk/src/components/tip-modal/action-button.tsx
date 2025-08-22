@@ -13,6 +13,7 @@ interface ActionButtonProps {
   isProcessing?: boolean;
   onClick: () => void;
   children: React.ReactNode;
+  solEquivalent?: string; // Optional SOL amount to display (e.g., "0.026 SOL")
 }
 
 export const ActionButton = memo<ActionButtonProps>(({
@@ -20,7 +21,8 @@ export const ActionButton = memo<ActionButtonProps>(({
   isDisabled = false,
   isProcessing = false,
   onClick,
-  children
+  children,
+  solEquivalent
 }) => {
   const disabled = isDisabled || isProcessing;
 
@@ -42,6 +44,19 @@ export const ActionButton = memo<ActionButtonProps>(({
     >
       <span className="ck-action-button-text">
         {children}
+        {solEquivalent && (
+          <span 
+            className="ck-action-button-sol-equivalent"
+            style={{
+              marginLeft: '0.5rem',
+              opacity: 0.6,
+              fontSize: '0.875em',
+              fontWeight: 400
+            }}
+          >
+            ({solEquivalent})
+          </span>
+        )}
       </span>
     </button>
   );

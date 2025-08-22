@@ -6,6 +6,7 @@
 import { useReducer, useCallback, useMemo } from 'react';
 import type { Currency, PaymentMethod, SolanaCommerceConfig } from '../types';
 import { ALL_CURRENCIES } from '../constants/tip-modal';
+import { convertUsdToLamports } from '../utils';
 
 // Form state type
 interface TipFormState {
@@ -17,10 +18,11 @@ interface TipFormState {
   isProcessing: boolean;
   currentStep: 'form' | 'payment';
   currencyDropdownOpen: boolean;
+  priceError: string | null;
 }
 
 // Action types
-type TipFormAction =
+type TipFormAction = 
   | { type: 'SET_AMOUNT'; amount: number }
   | { type: 'SET_CURRENCY'; currency: Currency }
   | { type: 'SET_PAYMENT_METHOD'; method: PaymentMethod }
@@ -29,6 +31,7 @@ type TipFormAction =
   | { type: 'SET_PROCESSING'; processing: boolean }
   | { type: 'SET_STEP'; step: 'form' | 'payment' }
   | { type: 'SET_CURRENCY_DROPDOWN'; open: boolean }
+  | { type: 'SET_PRICE_ERROR'; error: string | null }
   | { type: 'RESET_TO_FORM' };
 
 // Initial state factory
@@ -41,6 +44,7 @@ const createInitialState = (config: SolanaCommerceConfig): TipFormState => ({
   isProcessing: false,
   currentStep: 'form',
   currencyDropdownOpen: false,
+  priceError: null
 });
 
 // Reducer
@@ -62,8 +66,10 @@ function tipFormReducer(state: TipFormState, action: TipFormAction): TipFormStat
       return { ...state, currentStep: action.step };
     case 'SET_CURRENCY_DROPDOWN':
       return { ...state, currencyDropdownOpen: action.open };
+    case 'SET_PRICE_ERROR':
+      return { ...state, priceError: action.error };
     case 'RESET_TO_FORM':
-      return { ...state, currentStep: 'form', isProcessing: false };
+      return { ...state, currentStep: 'form', isProcessing: false, priceError: null };
     default:
       return state;
   }
@@ -89,6 +95,7 @@ export function useTipForm(config: SolanaCommerceConfig) {
     setProcessing: (processing: boolean) => dispatch({ type: 'SET_PROCESSING', processing }),
     setStep: (step: 'form' | 'payment') => dispatch({ type: 'SET_STEP', step }),
     setCurrencyDropdown: (open: boolean) => dispatch({ type: 'SET_CURRENCY_DROPDOWN', open }),
+    setPriceError: (error: string | null) => dispatch({ type: 'SET_PRICE_ERROR', error }),
     resetToForm: () => dispatch({ type: 'RESET_TO_FORM' }),
   }), []);
 
@@ -113,21 +120,41 @@ export function useTipForm(config: SolanaCommerceConfig) {
     handlePaymentComplete: useCallback((onPayment: (amount: number, currency: string, method: PaymentMethod) => void) => {
       return async () => {
         try {
+          actions.setPriceError(null); // Clear any previous errors
+          
           if (!isFinite(computed.finalAmount) || computed.finalAmount <= 0) {
             console.error('Invalid payment amount:', computed.finalAmount);
             return;
           }
           
-          const lamports = state.selectedCurrency === 'USDC' 
-            ? Math.round(computed.finalAmount * 1000000) // USDC has 6 decimals
-            : Math.round(computed.finalAmount * 1000000000); // SOL has 9 decimals
+          let lamports: number;
+          
+          // For stablecoins (USDC/USDT), use direct conversion since they're already USD-based
+          if (state.selectedCurrency === 'USDC' || state.selectedCurrency === 'USDC_DEVNET') {
+            lamports = Math.round(computed.finalAmount * 1000000); // USDC has 6 decimals
+          } else if (state.selectedCurrency === 'USDT' || state.selectedCurrency === 'USDT_DEVNET') {
+            lamports = Math.round(computed.finalAmount * 1000000); // USDT has 6 decimals
+          } else if (state.selectedCurrency === 'SOL' || state.selectedCurrency === 'SOL_DEVNET') {
+            // For SOL, convert USD amount to equivalent SOL lamports
+            lamports = await convertUsdToLamports(computed.finalAmount);
+          } else {
+            // Fallback for unknown currencies
+            lamports = Math.round(computed.finalAmount * 1000000000);
+          }
           
           onPayment(lamports, state.selectedCurrency, state.selectedPaymentMethod);
         } catch (error) {
           console.error('Payment failed:', error);
+          
+          // Handle price API errors specifically
+          if (error instanceof Error && error.message.includes('SOL price')) {
+            actions.setPriceError(error.message);
+            actions.setProcessing(false);
+            actions.setStep('form'); // Go back to form to show error
+          }
         }
       };
-    }, [state.selectedCurrency, state.selectedPaymentMethod, computed.finalAmount]),
+    }, [state.selectedCurrency, state.selectedPaymentMethod, computed.finalAmount, actions]),
   };
 
   return {

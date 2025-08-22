@@ -1,5 +1,5 @@
-import React, { memo } from 'react';
-import { getModalBorderRadius, getCurrencySymbol } from '../../utils';
+import React, { memo, useMemo } from 'react';
+import { getModalBorderRadius, getCurrencySymbol, getBorderRadius, convertUsdToSol } from '../../utils';
 import { QRPaymentContent } from './iframe-qr-payment';
 import { WalletPaymentContent } from './iframe-wallet-payment';
 import { WALLET_ICON } from '../../constants/tip-modal';
@@ -20,18 +20,9 @@ function formatPayLabel(currency: Currency, amount: number): string {
   
   const formattedAmount = amount.toString();
   
-  // Use $ prefix for USD-based stablecoins
-  if (currency === 'USDC' || currency === 'USDT' || currency === 'USDC_DEVNET' || currency === 'USDT_DEVNET') {
-    return `$${formattedAmount}`;
-  }
-  
-  // Use ◎ symbol for SOL
-  if (currency === 'SOL' || currency === 'SOL_DEVNET') {
-    return `◎${formattedAmount}`;
-  }
-  
-  // Fallback to currency symbol suffix
-  return `${formattedAmount} ${currency}`;
+  // Always use $ prefix - users see USD amounts regardless of underlying currency
+  // Conversion to actual SOL amounts happens in payment processing
+  return `$${formattedAmount}`;
 }
 
 // Optimized iframe-safe version of TipModalContent
@@ -55,6 +46,33 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
 
   // Handlers
   const handlePaymentComplete = handlers.handlePaymentComplete(onPayment);
+
+  // Calculate SOL equivalent for display when SOL is selected
+  const [solEquivalent, setSolEquivalent] = React.useState<string | null>(null);
+  
+  React.useEffect(() => {
+    console.log('🎯 useEffect triggered:', {
+      selectedCurrency: state.selectedCurrency,
+      finalAmount: computed.finalAmount,
+      isSOL: state.selectedCurrency === 'SOL' || state.selectedCurrency === 'SOL_DEVNET'
+    });
+    
+    if ((state.selectedCurrency === 'SOL' || state.selectedCurrency === 'SOL_DEVNET') && computed.finalAmount && computed.finalAmount > 0) {
+      console.log('🚀 Calculating SOL equivalent for amount:', computed.finalAmount);
+      convertUsdToSol(computed.finalAmount)
+        .then(solAmount => {
+          const solText = `${solAmount.toFixed(4)} SOL`;
+          console.log('✅ SOL equivalent calculated:', solText);
+          setSolEquivalent(solText);
+        })
+        .catch((error) => {
+          console.error('❌ Failed to calculate SOL equivalent:', error);
+          setSolEquivalent(null); // Don't show if price fetch fails
+        });
+    } else {
+      setSolEquivalent(null);
+    }
+  }, [state.selectedCurrency, computed.finalAmount]);
 
 
 
@@ -115,11 +133,34 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
               onSelect={actions.setPaymentMethod}
             />
 
+            {/* Price Error Display */}
+            {state.priceError && (
+              <div 
+                className="ck-error-message"
+                style={{
+                  '--text-color': theme.textColor,
+                  '--error-color': '#ef4444',
+                  '--border-radius': getBorderRadius(theme.borderRadius),
+                  padding: '0.75rem',
+                  marginBottom: '1rem',
+                  backgroundColor: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  borderRadius: 'var(--border-radius)',
+                  color: 'var(--error-color)',
+                  fontSize: '0.875rem',
+                  fontFamily: theme.fontFamily
+                } as React.CSSProperties}
+              >
+                ⚠️ {state.priceError}
+              </div>
+            )}
+
             <ActionButton
               theme={theme}
-              isDisabled={!computed.isFormValid}
+              isDisabled={!computed.isFormValid || !!state.priceError}
               isProcessing={state.isProcessing}
               onClick={handlers.handleSubmit}
+              solEquivalent={solEquivalent || undefined}
             >
               {state.isProcessing ? 'Processing...' : `Pay ${formatPayLabel(state.selectedCurrency, computed.finalAmount || 0)}`}
             </ActionButton>
