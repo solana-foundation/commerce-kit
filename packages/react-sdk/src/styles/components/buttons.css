@@ -1,0 +1,253 @@
+/* Button Component Styles */
+
+/* Base Button Class */
+.ck-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all 0.2s ease, transform 0.05s ease;
+  outline: none;
+  border: var(--button-border, 1.5px solid transparent);
+  border-radius: var(--border-radius, 1rem);
+  font-family: var(--font-family);
+  box-shadow: var(--button-shadow);
+}
+
+/* Button Variants */
+.ck-button--primary {
+  background-color: var(--primary-color, var(--color-primary));
+  color: white;
+}
+
+.ck-button--primary:hover {
+  background-color: var(--secondary-color, var(--color-secondary));
+  transform: scale(1.02);
+}
+
+.ck-button--primary:active {
+  transform: scale(0.97);
+}
+
+.ck-button--primary:focus {
+  background-color: var(--secondary-color, var(--color-secondary));
+  box-shadow: var(--button-shadow), var(--focus-shadow);
+}
+
+.ck-button--primary:disabled {
+  background-color: var(--color-disabled) !important;
+  color: white !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  border: 1.5px solid transparent !important;
+  transform: none !important;
+}
+
+/* Trigger Button */
+.ck-trigger-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease;
+  outline: none;
+  background-color: var(--primary-color, var(--color-primary));
+  color: white;
+  border: var(--button-border, 1.5px solid transparent);
+  border-radius: var(--border-radius, 1rem);
+  font-family: var(--font-family);
+  box-shadow: var(--button-shadow);
+  min-width: var(--min-width, auto);
+  aspect-ratio: var(--aspect-ratio, auto);
+  padding: var(--padding-button);
+}
+
+.ck-trigger-button:hover {
+  background-color: var(--secondary-color, var(--color-secondary));
+  transform: scale(1.02);
+}
+
+.ck-trigger-button:active {
+  transform: scale(0.97);
+}
+
+.ck-trigger-button:focus {
+  background-color: var(--secondary-color, var(--color-secondary));
+  box-shadow: var(--button-shadow), var(--focus-shadow);
+}
+
+.ck-trigger-button-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-sm);
+}
+
+/* Icon-only variant has no gap */
+.ck-trigger-button[style*="--aspect-ratio: 1"] .ck-trigger-button-content {
+  gap: 0;
+}
+
+/* Action Button */
+.ck-action-button {
+  width: 100%;
+  padding: var(--space-lg);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.05s ease;
+  outline: none;
+  background-color: var(--primary-color, var(--color-primary));
+  color: white;
+  border: var(--button-border, 1.5px solid transparent);
+  border-radius: var(--border-radius, 1rem);
+  font-family: var(--font-family);
+  box-shadow: var(--button-shadow);
+}
+
+.ck-action-button:hover {
+  background-color: var(--secondary-color, var(--color-secondary));
+}
+
+.ck-action-button:active {
+  transform: scale(0.97);
+}
+
+.ck-action-button:focus {
+  background-color: var(--secondary-color, var(--color-secondary));
+  box-shadow: var(--button-shadow), var(--focus-shadow);
+}
+
+.ck-action-button:disabled {
+  background-color: var(--color-disabled) !important;
+  color: white !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  border: 1.5px solid transparent !important;
+}
+
+.ck-action-button:disabled:hover {
+  background-color: var(--color-disabled) !important;
+  transform: none !important;
+}
+
+.ck-action-button-text {
+  font-size: var(--font-size-amount);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Amount Button */
+.ck-amount-button {
+  width: 100%;
+  height: var(--height-button-amount);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-amount);
+  font-weight: var(--font-weight-normal);
+  cursor: pointer;
+  transition: all 0.2s ease, transform 0.1s ease;
+  transform: scale(1);
+  border: 1px solid var(--color-border);
+  background-color: var(--background-color, var(--color-background));
+  color: var(--text-color, var(--color-text));
+  border-radius: var(--border-radius, 1rem);
+  box-shadow: var(--shadow-sm);
+}
+
+.ck-amount-button:active {
+  transform: scale(0.98);
+}
+
+.ck-amount-button.selected {
+  border: 3px solid #ffffff;
+  background-color: var(--primary-color-10, var(--color-primary-10));
+  color: rgba(0, 0, 0, 0.7);
+  box-shadow: 0 0 0 2px var(--primary-color-60, var(--color-primary-60));
+}
+
+/* Dev/Test Buttons */
+.ck-dev-test-container {
+  margin-top: var(--space-lg);
+}
+
+.ck-dev-test-button,
+.ck-dev-button {
+  padding: var(--padding-button-sm);
+  background-color: var(--color-secondary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius, 1rem);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.ck-wallet-dev-button {
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-background);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+}
+
+/* Wallet Specific Buttons */
+.ck-wallet-connect-button {
+  padding: 6px 12px;
+  border-radius: var(--border-radius, 1rem);
+  border: 1px solid rgba(255,255,255,0.5);
+  background: #0a0a0a;
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--shadow-sm);
+}
+
+.ck-wallet-connect-button:disabled {
+  cursor: not-allowed;
+}
+
+.ck-wallet-install-button {
+  padding: 6px 12px;
+  border-radius: var(--border-radius, 1rem);
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  color: #374151;
+  cursor: pointer;
+}
+
+/* QR Specific Buttons */
+.ck-qr-retry-button {
+  padding: var(--padding-button-sm);
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius, 1rem);
+  cursor: pointer;
+}
+
+.ck-qr-try-again-button,
+.ck-qr-error-button {
+  padding: 0.75rem 1.25rem;
+  background-color: var(--color-surface);
+  color: var(--color-merchant-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius, 1rem);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  transition: all 0.2s ease;
+}
+
+.ck-qr-try-again-button:hover,
+.ck-qr-error-button:hover {
+  background-color: var(--color-border);
+}

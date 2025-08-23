@@ -1,0 +1,46 @@
+/* Input Component Styles */
+
+.ck-input {
+  width: 100%;
+  height: var(--height-button-standard);
+  padding: var(--padding-input);
+  border: 1px solid var(--color-border-input);
+  background-color: var(--color-surface);
+  outline: none;
+  margin-top: var(--space-md);
+  transition: border-color 200ms ease-in, box-shadow 200ms ease-in;
+  box-shadow: var(--shadow-sm);
+  border-radius: var(--border-radius, 1rem);
+  font-family: var(--font-family);
+  color: var(--text-color, var(--color-text));
+  font-size: var(--font-size-input);
+  font-weight: var(--font-weight-normal);
+}
+
+.ck-input:focus {
+  border-color: var(--primary-color, var(--color-primary));
+  box-shadow: var(--focus-ring);
+}
+
+/* Form Components */
+.ck-form-section {
+  margin-bottom: var(--space-xl);
+  text-align: left;
+}
+
+.ck-form-section.with-border {
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding-bottom: var(--space-xl);
+}
+
+.ck-form-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-70);
+  margin-bottom: var(--space-md);
+}
+
+.ck-currency-label {
+  margin-bottom: var(--gap-sm);
+}

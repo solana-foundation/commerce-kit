@@ -1,0 +1,52 @@
+/* Modal Component Styles */
+
+/* Modal Container */
+.sc-tip-modal-anim {
+  padding: 0;
+  height: auto;
+  width: 100%;
+  max-width: var(--modal-max-width);
+  min-width: var(--modal-min-width);
+  overflow: hidden;
+  font-family: var(--font-family);
+  background-color: var(--color-background);
+  border-radius: var(--modal-border-radius, 1.5rem);
+  box-shadow: var(--modal-shadow);
+  animation: modal-enter 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+  transform-origin: center;
+  will-change: transform, opacity, filter;
+}
+
+/* Modal Body */
+.sc-body {
+  position: relative;
+}
+
+.sc-content {
+  padding: var(--padding-modal);
+}
+
+/* Modal Steps */
+.sc-step {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 300ms cubic-bezier(0.19, 1, 0.22, 1), transform 300ms cubic-bezier(0.19, 1, 0.22, 1);
+  pointer-events: none;
+  border-bottom-left-radius: var(--modal-border-radius, 1.5rem);
+  border-bottom-right-radius: var(--modal-border-radius, 1.5rem);
+}
+
+.sc-step.active {
+  position: relative;
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+.sc-step.payment.wallet-bg.active {
+  background-color: var(--color-surface);
+}

@@ -1,0 +1,10 @@
+/* Base Reset */
+* { 
+  box-sizing: border-box; 
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}

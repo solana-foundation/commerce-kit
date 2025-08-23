@@ -1,0 +1,35 @@
+/* Color Design Tokens */
+:root {
+  /* Brand Colors */
+  --color-primary: #9945FF;
+  --color-secondary: #14F195;
+  --color-primary-10: rgba(153, 69, 255, 0.1);
+  --color-primary-20: rgba(153, 69, 255, 0.2);
+  --color-primary-60: rgba(153, 69, 255, 0.6);
+  
+  /* Semantic Colors */
+  --color-success: #22c55e;
+  --color-error: #ef4444;
+  --color-warning: #f59e0b;
+  
+  /* Neutral Colors */
+  --color-text: #111827;
+  --color-text-60: rgba(17, 24, 39, 0.6);
+  --color-text-70: rgba(17, 24, 39, 0.7);
+  --color-background: #ffffff;
+  --color-surface: #f5f5f5;
+  --color-border: #e5e7eb;
+  --color-border-subtle: #f3f4f6;
+  --color-border-input: #EBEBEB;
+  
+  /* Component Specific */
+  --color-disabled: #9ca3af;
+  --color-merchant-text: #2D2D2D;
+  --color-merchant-address: #666666;
+  
+  /* QR Code Colors */
+  --qr-border-color: #0000000d;
+  --qr-border-error: #ff00001c;
+  --qr-gradient: radial-gradient(circle at bottom center, #00ff88 0%, #8B5CF6 100%);
+  --qr-gradient-error: radial-gradient(circle at bottom center, rgba(255, 0, 0, 0.08) 0%, rgba(255, 68, 68, 0.15) 100%);
+}

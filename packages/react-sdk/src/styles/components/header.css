@@ -1,0 +1,92 @@
+/* Header Component Styles */
+
+.ck-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--padding-modal);
+  border-bottom: 1px solid var(--color-border-subtle);
+  position: relative;
+}
+
+.ck-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  min-width: 0;
+}
+
+/* Header Buttons */
+.ck-header-back-button {
+  background: none;
+  border: none;
+  font-size: var(--font-size-xl);
+  color: var(--color-text-70);
+  cursor: pointer;
+  padding: var(--space-xs);
+  border-radius: 50%;
+  width: var(--height-button-icon);
+  height: var(--height-button-icon);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.ck-header-back-button:hover {
+  background-color: var(--color-primary-10);
+  color: var(--color-primary);
+}
+
+.ck-header-close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--color-text-60);
+  cursor: pointer;
+  padding: var(--space-xs);
+  border-radius: 50%;
+  width: var(--height-button-icon);
+  height: var(--height-button-icon);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.ck-header-close-button:hover {
+  background-color: var(--color-primary-10);
+  color: var(--color-primary);
+}
+
+/* Header Avatar */
+.ck-header-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+/* Header Titles */
+.ck-header-title {
+  margin: 0;
+  font-size: var(--font-size-header);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ck-header-payment-title {
+  margin: 0;
+  font-size: var(--font-size-header);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}

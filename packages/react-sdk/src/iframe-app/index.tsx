@@ -13,7 +13,7 @@ if (typeof window !== 'undefined') {
 // Now import the iframe-safe modal components
 import { IframeTipModalContent } from '../components/iframe/iframe-tip-modal';
 import { PaymentModalContent } from '../components/ui/payment-modal-content';
-import './styles.css';
+import '../styles/index.css';
 import { getBorderRadius, getModalBorderRadius, getButtonShadow, getButtonBorder } from '../utils';
 
 // Global types for the iframe window

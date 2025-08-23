@@ -7,3 +7,4 @@ export { CurrencySelector } from './currency-selector';
 export { AmountSelector } from './amount-selector';
 export { PaymentMethodSelector } from './payment-method-selector';
 export { ActionButton } from './action-button';
+export { MerchantAddressPill } from './merchant-address-pill';
