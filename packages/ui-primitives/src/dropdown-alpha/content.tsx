@@ -31,8 +31,11 @@ export function DropdownContent({ children, className, align = 'end' }: { childr
       if (align === 'center') left = triggerRect.left + (triggerRect.width / 2) - (menuRect.width / 2)
       if (align === 'end') left = triggerRect.right - menuRect.width
       const top = triggerRect.bottom + 8
-      const maxLeft = Math.max(8, Math.min(left, (window.innerWidth - menuRect.width - 8)))
-      const maxTop = Math.max(8, Math.min(top, (window.innerHeight - menuRect.height - 8)))
+      // Use document.documentElement dimensions for better iframe compatibility
+      const viewportWidth = document.documentElement.clientWidth || window.innerWidth
+      const viewportHeight = document.documentElement.clientHeight || window.innerHeight
+      const maxLeft = Math.max(8, Math.min(left, (viewportWidth - menuRect.width - 8)))
+      const maxTop = Math.max(8, Math.min(top, (viewportHeight - menuRect.height - 8)))
       setStyles({ position: 'fixed', top: Math.round(maxTop), left: Math.round(maxLeft), zIndex: 50 })
     }
     // Initial position

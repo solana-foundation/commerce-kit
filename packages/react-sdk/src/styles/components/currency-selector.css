@@ -46,7 +46,17 @@
   border-radius: var(--dropdown-radius, 8px);
   box-shadow: var(--dropdown-shadow);
   padding: 8px;
-  min-width: 200px;
+  min-width: min(200px, calc(100vw - 2rem));
+  max-width: calc(100vw - 2rem);
+  max-height: calc(100vh - 4rem);
+  /* Hide scrollbars but allow scrolling */
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.ck-dropdown-content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
 }
 
 .ck-dropdown-item {
@@ -64,3 +74,5 @@
   margin-left: auto;
   color: var(--color-primary);
 }
+
+/* Let dropdown handle positioning naturally - no overrides needed */

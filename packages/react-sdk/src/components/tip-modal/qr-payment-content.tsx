@@ -2,6 +2,8 @@ import React, { memo, useEffect, useState, useRef } from 'react';
 import { getBorderRadius, getContainerBorderRadius } from '../../utils';
 import { type ThemeConfig, type MerchantConfig, type Currency, CurrencyMap} from '../../types';
 import { useSolanaPay } from '../../hooks/use-solana-pay';
+import { useTimer } from '../../hooks/use-timer';
+import { usePaymentStatus } from '../../hooks/use-payment-status';
 import { MerchantAddressPill } from './merchant-address-pill';
 // import { SPLToken } from '@solana-commerce/solana-pay';
 import { createCommerceClient, verifyPayment, waitForConfirmation } from '@solana-commerce/headless-sdk';
@@ -30,16 +32,37 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
   onPaymentError
 }) => {
   const displayAmount = showCustomInput ? customAmount || '0' : selectedAmount.toString();
-  const [paymentStatus, setPaymentStatus] = useState<'scanning' | 'processing' | 'success' | 'error'>('scanning');
   const [pollingMessage, setPollingMessage] = useState('Waiting for payment...');
-  const [timeRemaining, setTimeRemaining] = useState(120); // 60 polls * 2 seconds = 120 seconds
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Enhanced payment status management
+  const paymentStatus = usePaymentStatus();
+
+  // Enhanced timer for payment timeout (2 minutes)
+  const paymentTimer = useTimer({
+    duration: 120, // 2 minutes
+    autoStart: false,
+    onComplete: () => {
+      paymentStatus.handleTimeout();
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    },
+    onTick: (remaining) => {
+      if (remaining <= 30) {
+        setPollingMessage(`Payment expires in ${remaining}s...`);
+      }
+    }
+  });
 
   const { paymentRequest, loading } = useSolanaPay(config.merchant.wallet, selectedAmount, CurrencyMap[selectedCurrency]);
 
   // Start polling when QR code is generated and user might have scanned it
   useEffect(() => {
-    if (paymentRequest && paymentStatus === 'scanning') {
+    if (paymentRequest && paymentStatus.status === 'idle') {
+      paymentStatus.setStatus('scanning');
+      paymentTimer.start();
       setTimeout(() => {
         startPolling(paymentRequest.memo);
       }, 2000);
@@ -50,8 +73,9 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
       }
+      paymentTimer.stop();
     };
-  }, [paymentRequest, paymentStatus]);
+  }, [paymentRequest, paymentStatus.status, paymentTimer, paymentStatus]);
 
   const startPolling = (memo: string) => {
     if (pollingIntervalRef.current) {
@@ -68,11 +92,8 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
     const maxPolls = 60;
 
     setPollingMessage('Waiting for payment...');
-    setTimeRemaining(118); // Account for 2-second delay before polling starts
     pollingIntervalRef.current = setInterval(async () => {
       pollCount++;
-      const remaining = Math.max(0, (maxPolls - pollCount) * 2); // 2 seconds per poll
-      setTimeRemaining(remaining);
       
       if (pollCount >= maxPolls) {
         if (pollingIntervalRef.current) {
@@ -80,7 +101,7 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
           pollingIntervalRef.current = null;
         }
         
-        setPaymentStatus('error');
+        paymentStatus.handleTimeout();
         setPollingMessage('Payment timeout - please try again');
         onPaymentError?.(new Error('Payment polling timeout'));
         return;
@@ -116,7 +137,7 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
           }
         }
 
-        if (paymentStatus === 'scanning') {
+        if (paymentStatus.status === 'scanning') {
           setPollingMessage(`Scan QR code to pay (${pollCount}/${maxPolls})`);
         }
         
@@ -133,7 +154,8 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
       pollingIntervalRef.current = null;
     }
     
-    setPaymentStatus('success');
+    paymentTimer.stop();
+    paymentStatus.handleSuccess();
     setPollingMessage('Payment confirmed!');
     onPaymentComplete?.();
   };
@@ -155,15 +177,15 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
           xmlns="http://www.w3.org/2000/svg"
           className="ck-qr-viewfinder-svg"
         >
-          <path d="M3.5 264.06C3.5 272.587 10.4127 279.5 18.9399 279.5H32.8799C33.7083 279.5 34.3799 280.172 34.3799 281V281C34.3799 281.828 33.7083 282.5 32.8799 282.5H17.4399C8.08427 282.5 0.5 274.916 0.5 265.56V250.12C0.5 249.292 1.17157 248.62 2 248.62V248.62C2.82843 248.62 3.5 249.292 3.5 250.12V264.06ZM282.5 266.058C282.5 275.139 275.139 282.5 266.058 282.5H251.116C250.288 282.5 249.616 281.828 249.616 281V281C249.616 280.172 250.288 279.5 251.116 279.5H264.558C272.81 279.5 279.5 272.81 279.5 264.558V250.12C279.5 249.292 280.172 248.62 281 248.62V248.62C281.828 248.62 282.5 249.292 282.5 250.12V266.058ZM34.3799 2C34.3799 2.82843 33.7083 3.5 32.8799 3.5H18.9399C10.4127 3.5 3.5 10.4127 3.5 18.9399V32.8799C3.5 33.7083 2.82843 34.3799 2 34.3799V34.3799C1.17157 34.3799 0.5 33.7083 0.5 32.8799V17.4399C0.5 8.08427 8.08427 0.5 17.4399 0.5H32.8799C33.7083 0.5 34.3799 1.17157 34.3799 2V2ZM282.5 32.8799C282.5 33.7083 281.828 34.3799 281 34.3799V34.3799C280.172 34.3799 279.5 33.7083 279.5 32.8799V18.4419C279.5 10.1897 272.81 3.5 264.558 3.5H251.116C250.288 3.5 249.616 2.82843 249.616 2V2C249.616 1.17157 250.288 0.5 251.116 0.5H266.058C275.139 0.5 282.5 7.86129 282.5 16.9419V32.8799Z" fill={paymentStatus === 'error' ? '#FF0000' : '#2D2D2D'} fillOpacity={paymentStatus === 'error' ? '0.56' : '0.24'}/>
+          <path d="M3.5 264.06C3.5 272.587 10.4127 279.5 18.9399 279.5H32.8799C33.7083 279.5 34.3799 280.172 34.3799 281V281C34.3799 281.828 33.7083 282.5 32.8799 282.5H17.4399C8.08427 282.5 0.5 274.916 0.5 265.56V250.12C0.5 249.292 1.17157 248.62 2 248.62V248.62C2.82843 248.62 3.5 249.292 3.5 250.12V264.06ZM282.5 266.058C282.5 275.139 275.139 282.5 266.058 282.5H251.116C250.288 282.5 249.616 281.828 249.616 281V281C249.616 280.172 250.288 279.5 251.116 279.5H264.558C272.81 279.5 279.5 272.81 279.5 264.558V250.12C279.5 249.292 280.172 248.62 281 248.62V248.62C281.828 248.62 282.5 249.292 282.5 250.12V266.058ZM34.3799 2C34.3799 2.82843 33.7083 3.5 32.8799 3.5H18.9399C10.4127 3.5 3.5 10.4127 3.5 18.9399V32.8799C3.5 33.7083 2.82843 34.3799 2 34.3799V34.3799C1.17157 34.3799 0.5 33.7083 0.5 32.8799V17.4399C0.5 8.08427 8.08427 0.5 17.4399 0.5H32.8799C33.7083 0.5 34.3799 1.17157 34.3799 2V2ZM282.5 32.8799C282.5 33.7083 281.828 34.3799 281 34.3799V34.3799C280.172 34.3799 279.5 33.7083 279.5 32.8799V18.4419C279.5 10.1897 272.81 3.5 264.558 3.5H251.116C250.288 3.5 249.616 2.82843 249.616 2V2C249.616 1.17157 250.288 0.5 251.116 0.5H266.058C275.139 0.5 282.5 7.86129 282.5 16.9419V32.8799Z" fill={paymentStatus.status === 'error' ? '#FF0000' : '#2D2D2D'} fillOpacity={paymentStatus.status === 'error' ? '0.56' : '0.24'}/>
         </svg>
         
         {/* QR Code Content */}
-        <div className={`ck-qr-content ${paymentStatus === 'error' ? 'error' : ''}`}>
+        <div className={`ck-qr-content ${paymentStatus.status === 'error' ? 'error' : ''}`}>
         {/* Gradient Background */}
-        <div className={`ck-qr-gradient ${paymentStatus === 'error' ? 'error' : ''}`}>
+        <div className={`ck-qr-gradient ${paymentStatus.status === 'error' ? 'error' : ''}`}>
           {/* Shine Effect - Only show when not in error state and payment is scanning */}
-          {paymentStatus !== 'error' && paymentStatus === 'scanning' && (
+          {paymentStatus.status !== 'error' && paymentStatus.status === 'scanning' && (
             <div className="ck-qr-shine" />
           )}
         </div>
@@ -190,7 +212,7 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
             );
             }
 
-          if (paymentStatus === 'success') {
+          if (paymentStatus.status === 'success') {
             return (
               <div className="ck-qr-state-container ck-qr-success-container">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -202,7 +224,7 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
             );
             }
 
-          if (paymentStatus === 'error') {
+          if (paymentStatus.status === 'error' || paymentStatus.status === 'timeout') {
             return (
               <div className="ck-qr-error-container">
                 <svg width="48" height="49" viewBox="0 0 28 29" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -213,9 +235,9 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
                 </div>
                 <button
                   onClick={() => {
-                    setPaymentStatus('scanning');
+                    paymentStatus.reset();
+                    paymentTimer.reset();
                     setPollingMessage('Waiting for payment...');
-                    setTimeRemaining(120);
                   }}
                   className="ck-qr-error-button"
                   style={{ borderRadius: getBorderRadius(theme.borderRadius) }}
@@ -233,9 +255,9 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
             <div className="ck-qr-code-container">
               <div 
                 dangerouslySetInnerHTML={{ __html: paymentRequest.qr }}
-                className={`ck-qr-code ${paymentStatus === 'processing' ? 'processing' : ''}`}
+                className={`ck-qr-code ${paymentStatus.status === 'processing' ? 'processing' : ''}`}
               />
-                {paymentStatus === 'processing' && (
+                {paymentStatus.status === 'processing' && (
                   <div 
                     className="ck-qr-processing-overlay"
                     style={{ border: `2px solid ${theme.primaryColor}20` }}
@@ -268,22 +290,19 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
       </div>
 
       {/* Timer Pill - Always show when not in success state */}
-      {paymentStatus !== 'success' && (
+      {paymentStatus.status !== 'success' && (
         <div className="ck-timer-container">
           <div className="ck-timer-pill">
             <div className="ck-timer-dot" />
             <span>
-              {pollingIntervalRef.current 
-                ? `${Math.floor(timeRemaining / 60)}:${String(timeRemaining % 60).padStart(2, '0')}`
-                : '2:00'
-              }
+              {paymentTimer.formatTime()}
             </span>
           </div>
         </div>
       )}
 
       {/* Simple Payment Info - Matching Demo Layout */}
-      {paymentStatus !== 'success' && (
+      {paymentStatus.status !== 'success' && (
         <>
           <h2 className="ck-payment-info" style={{ color: theme.textColor }}>
             <span className="ck-payment-amount-dim">Send</span> ${displayAmount} {selectedCurrency}
@@ -301,7 +320,7 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
 
 
       {/* Test button for development - remove in production */}
-      {process.env.NODE_ENV === 'development' && paymentStatus === 'processing' && (
+      {process.env.NODE_ENV === 'development' && paymentStatus.status === 'processing' && (
         <div className="ck-dev-test-container">
           <button
             onClick={handlePaymentSuccess}

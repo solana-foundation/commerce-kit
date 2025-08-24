@@ -3,16 +3,17 @@
  * Handles currency selection dropdown
  */
 
-import React, { memo } from 'react';
-import { getRadius } from '../../utils';
+import React, { memo, useRef } from 'react';
+import { useDropdown } from '../../hooks/use-dropdown';
+import { useThemeStyles } from '../../hooks/use-theme-styles';
 import { CHEVRON_DOWN_ICON, CHECK_ICON } from '../../constants/tip-modal';
 import { TokenIcon } from '../icons';
 import {
   DropdownRoot,
   DropdownTrigger,
   DropdownContent,
-  DropdownItem
-} from '../../../../ui-primitives/src/react';
+  DropdownItem,
+} from '../../../../ui-primitives/src/dropdown-alpha';
 import type { ThemeConfig, Currency } from '../../types';
 
 interface CurrencyInfo {
@@ -39,25 +40,45 @@ export const CurrencySelector = memo<CurrencySelectorProps>(({
   onSelect
 }) => {
   const selectedCurrencyInfo = currencies.find(c => c.value === selectedCurrency);
+  
+  // Enhanced dropdown state management
+  const dropdown = useDropdown({
+    initialOpen: isOpen,
+    closeOnSelect: true,
+    closeOnClickOutside: true
+  });
+
+  // Use combined state - prefer external props but fall back to internal state
+  const currentIsOpen = isOpen !== undefined ? isOpen : dropdown.isOpen;
+  const handleOpenChange = (open: boolean) => {
+    if (onOpenChange) onOpenChange(open);
+    if (open) dropdown.open();
+    else dropdown.close();
+  };
+
+  const handleSelect = (currency: Currency) => {
+    onSelect(currency);
+    dropdown.select(currency);
+  };
+
+  // Theme styles for dropdown
+  const dropdownThemeStyles = useThemeStyles({ theme, variant: 'dropdown' });
 
   return (
-    <div className="ck-form-section">
+    <div className="ck-form-section" ref={dropdown.ref as any}>
       <label className="ck-form-label ck-currency-label">
         Select stablecoin
       </label>
       
-      <DropdownRoot open={isOpen} onOpenChange={onOpenChange}>
+      <DropdownRoot open={currentIsOpen} onOpenChange={handleOpenChange}>
         <DropdownTrigger asChild>
           <button
             type="button"
             className="ck-currency-container"
             aria-haspopup="listbox"
-            aria-expanded={isOpen}
+            aria-expanded={currentIsOpen}
             aria-label="Select currency"
-            style={{
-              '--dropdown-radius': getRadius('dropdown', theme.borderRadius),
-              '--text-color': theme.textColor
-            } as React.CSSProperties}
+            style={dropdownThemeStyles}
           >
             <div className="ck-currency-selected">
               <TokenIcon symbol={selectedCurrency} size={24} />
@@ -65,7 +86,7 @@ export const CurrencySelector = memo<CurrencySelectorProps>(({
                 {selectedCurrencyInfo?.symbol || selectedCurrency}
               </span>
             </div>  
-            <div className={`ck-currency-chevron ${isOpen ? 'open' : ''}`}>
+            <div className={`ck-currency-chevron ${currentIsOpen ? 'open' : ''}`}>
               {CHEVRON_DOWN_ICON}
             </div>
           </button>
@@ -74,14 +95,12 @@ export const CurrencySelector = memo<CurrencySelectorProps>(({
         <DropdownContent align="start">
           <div 
             className="ck-dropdown-content"
-            style={{
-              '--dropdown-radius': getRadius('dropdown', theme.borderRadius)
-            } as React.CSSProperties}
+            style={dropdownThemeStyles}
           >
           {currencies.map(currency => (
             <DropdownItem
               key={currency.value}
-              onSelect={() => onSelect(currency.value as Currency)}
+              onSelect={() => handleSelect(currency.value as Currency)}
             >
               <div className="ck-dropdown-item">
                 <TokenIcon symbol={currency.value} size={16} />

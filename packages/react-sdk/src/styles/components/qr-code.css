@@ -46,8 +46,8 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%) scale(0.90);
-  width: 270px;
-  height: 270px;
+  width: min(270px, calc(100vw - 6rem));
+  height: min(270px, calc(100vw - 6rem));
   background: var(--qr-gradient);
   opacity: 0.25;
   filter: blur(15px);
@@ -147,7 +147,7 @@
   border-radius: 12px;
   box-shadow: var(--shadow-lg);
   text-align: center;
-  min-width: 200px;
+  min-width: min(200px, calc(100vw - 4rem));
   border: 2px solid var(--color-primary-20);
   z-index: 4;
 }
@@ -225,6 +225,7 @@
   font-weight: var(--font-weight-semibold);
   margin-top: 20px;
   color: var(--color-text);
+  text-align: center;
 }
 
 .ck-payment-amount-dim {

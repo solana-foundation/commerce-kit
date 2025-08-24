@@ -27,3 +27,14 @@
 
 /* Theme */
 @import './themes/default.css';
+
+/* Global Scrollbar Hiding - Applied Last to Override Everything */
+/* Hide scrollbars globally while preserving scroll functionality */
+* {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* Internet Explorer 10+ */
+}
+
+*::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Edge */
+}

@@ -1,4 +1,4 @@
-/* Base Reset */
+/* Base Reset - Absolutely No Scrollbars */
 * { 
   box-sizing: border-box; 
 }
@@ -7,4 +7,41 @@ html, body {
   margin: 0;
   padding: 0;
   background: transparent;
+  width: 100%;
+  height: 100%;
+  /* Hide scrollbars but allow scrolling */
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+/* Hide scrollbars for WebKit browsers (Chrome, Safari, Edge) */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}
+
+/* Prevent horizontal scrolling on any element */
+* {
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+/* Ensure all Commerce Kit components handle overflow properly */
+[class*="ck-"], 
+[class*="sc-"] {
+  max-width: 100%;
+}
+
+/* Global scrollbar hiding for any Commerce Kit component that scrolls */
+[class*="ck-"][class*="scroll"],
+[class*="ck-"].scrollable {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+[class*="ck-"][class*="scroll"]::-webkit-scrollbar,
+[class*="ck-"].scrollable::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
 }

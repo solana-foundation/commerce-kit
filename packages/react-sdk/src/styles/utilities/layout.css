@@ -1,50 +1,92 @@
-/* Layout Utilities */
+/* Layout Utilities - Scrollbar Prevention */
+
+/* Global Container Constraints */
+.ck-container {
+  max-width: 100vw;
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
 
 /* Flexbox Utilities */
-.flex { display: flex; }
-.inline-flex { display: inline-flex; }
-.flex-col { flex-direction: column; }
-.flex-row { flex-direction: row; }
-.items-center { align-items: center; }
-.items-start { align-items: flex-start; }
-.items-end { align-items: flex-end; }
-.justify-center { justify-content: center; }
-.justify-between { justify-content: space-between; }
-.justify-end { justify-content: flex-end; }
-.flex-1 { flex: 1; }
+.ck-flex { display: flex; }
+.ck-inline-flex { display: inline-flex; }
+.ck-flex-col { flex-direction: column; }
+.ck-flex-row { flex-direction: row; }
+.ck-items-center { align-items: center; }
+.ck-items-start { align-items: flex-start; }
+.ck-items-end { align-items: flex-end; }
+.ck-justify-center { justify-content: center; }
+.ck-justify-between { justify-content: space-between; }
+.ck-justify-end { justify-content: flex-end; }
+.ck-flex-1 { flex: 1; }
 
 /* Grid Utilities */
-.grid { display: grid; }
-.grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ck-grid { display: grid; }
+.ck-grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 /* Layout Containers */
 .ck-payment-methods-grid {
   display: flex;
   gap: var(--gap-md);
+  width: 100%;
+  max-width: 100%;
+  flex-wrap: wrap;
 }
 
 .ck-amounts-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--gap-grid);
+  width: 100%;
+  max-width: 100%;
 }
 
 /* Text Alignment */
-.text-left { text-align: left; }
-.text-center { text-align: center; }
-.text-right { text-align: right; }
+.ck-text-left { text-align: left; }
+.ck-text-center { text-align: center; }
+.ck-text-right { text-align: right; }
 
 /* Positioning */
-.relative { position: relative; }
-.absolute { position: absolute; }
-.fixed { position: fixed; }
+.ck-relative { position: relative; }
+.ck-absolute { position: absolute; }
+.ck-fixed { position: fixed; }
 
-/* Overflow */
-.overflow-hidden { overflow: hidden; }
-.whitespace-nowrap { white-space: nowrap; }
-.text-ellipsis { text-overflow: ellipsis; }
+/* Overflow - Hide Scrollbars While Allowing Scroll */
+.ck-overflow-hidden-scrollbar {
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.ck-overflow-hidden-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
+
+.ck-overflow-x-hidden-scrollbar {
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.ck-overflow-x-hidden-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
+
+.ck-overflow-auto-hidden-scrollbar {
+  overflow: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.ck-overflow-auto-hidden-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
+
+.ck-whitespace-nowrap { white-space: nowrap; }
+.ck-text-ellipsis { text-overflow: ellipsis; }
 
 /* Width/Height */
-.w-full { width: 100%; }
-.h-full { height: 100%; }
-.min-w-0 { min-width: 0; }
+.ck-w-full { width: 100%; }
+.ck-h-full { height: 100%; }
+.ck-min-w-0 { min-width: 0; }

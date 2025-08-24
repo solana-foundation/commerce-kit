@@ -52,7 +52,13 @@
 }
 
 .ck-wallet-item:hover {
-  border-color: #d1d5db;
+  border-color: var(--color-disabled);
+}
+
+.ck-wallet-item:focus-visible {
+  outline: none;
+  border-color: var(--color-disabled);
+  box-shadow: var(--shadow-sm), var(--focus-ring);
 }
 
 .ck-wallet-info {

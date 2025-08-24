@@ -22,9 +22,9 @@
   --gap-lg: 1.5rem;
   --gap-grid: 1rem;
   
-  /* Modal Dimensions */
-  --modal-max-width: 560px;
-  --modal-min-width: 560px;
+  /* Modal Dimensions - Responsive */
+  --modal-max-width: min(560px, calc(100vw - 2rem));
+  --modal-min-width: min(320px, calc(100vw - 2rem));
   
   /* Component Heights */
   --height-button-amount: 68px;
@@ -33,9 +33,9 @@
   --height-currency: 2.25rem;
   --height-payment-method: 110px;
   
-  /* Component Widths */
-  --width-payment-method: 248px;
-  --width-qr-viewfinder: 283px;
-  --width-merchant-pill-max: 320px;
-  --width-currency-min: 120px;
+  /* Component Widths - Responsive */
+  --width-payment-method: min(248px, calc(100vw - 4rem));
+  --width-qr-viewfinder: min(283px, calc(100vw - 4rem));
+  --width-merchant-pill-max: min(320px, calc(100vw - 2rem));
+  --width-currency-min: min(120px, calc(50vw - 1rem));
 }

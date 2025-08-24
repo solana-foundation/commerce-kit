@@ -60,9 +60,15 @@
   border-radius: var(--border-radius, 1rem);
   font-family: var(--font-family);
   box-shadow: var(--button-shadow);
-  min-width: var(--min-width, auto);
-  aspect-ratio: var(--aspect-ratio, auto);
-  padding: var(--padding-button);
+  /* Default: icon + text padding */
+  padding: 0.75rem 1.5rem;
+}
+
+/* Icon-only variant */
+.ck-trigger-button--icon-only {
+  padding: 0.75rem;
+  min-width: 44px;
+  aspect-ratio: 1;
 }
 
 .ck-trigger-button:hover {
@@ -83,11 +89,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--gap-sm);
+  gap: 0.5rem;
 }
 
-/* Icon-only variant has no gap */
-.ck-trigger-button[style*="--aspect-ratio: 1"] .ck-trigger-button-content {
+/* Icon-only has no gap */
+.ck-trigger-button--icon-only .ck-trigger-button-content {
   gap: 0;
 }
 
@@ -137,6 +143,13 @@
 .ck-action-button-text {
   font-size: var(--font-size-amount);
   font-weight: var(--font-weight-semibold);
+}
+
+.ck-action-button-sol-equivalent {
+  margin-left: 0.5rem;
+  opacity: 0.6;
+  font-size: 0.875em;
+  font-weight: 400;
 }
 
 /* Amount Button */

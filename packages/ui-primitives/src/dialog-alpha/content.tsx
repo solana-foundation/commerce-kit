@@ -45,6 +45,7 @@ export function DialogContent({ children, className, style, labelledById, descri
         willChange: 'transform, opacity',
         padding: '0px',
         height: 'auto',
+        width: '528px',
         transition: 'height 200ms ease-in',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
         zIndex: 50,
@@ -52,6 +53,7 @@ export function DialogContent({ children, className, style, labelledById, descri
         // maxHeight: '90vh',
         overflow: 'auto',
         pointerEvents: 'auto',
+        backgroundColor: 'var(--color-background)',
         ...style,
       }}
       role="dialog"

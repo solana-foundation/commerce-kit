@@ -11,12 +11,14 @@ if (typeof window !== 'undefined') {
   (window as any).__IFRAME_WALLET_CONNECT__ = async function (walletName: string) {
     return new Promise((resolve) => {
       const listener = (event: MessageEvent) => {
-        // Validate message origin - allow parent window or same origin  
-        const parentOrigin = (window as any).__IFRAME_PARENT_ORIGIN__;
-        const isValidOrigin = event.origin === parentOrigin || 
-                             event.origin === window.location.origin || 
-                             parentOrigin === '*';
-        
+        // Validate source and origin: must be from the parent, and origin must match known parent or same-origin.
+        const parentOrigin: unknown = (window as any).__IFRAME_PARENT_ORIGIN__;
+        const knownParentOrigin = typeof parentOrigin === 'string' && parentOrigin !== '*' ? parentOrigin : null;
+        const sourceIsParent = event.source === window.parent;
+        const isValidOrigin =
+          sourceIsParent &&
+          (event.origin === knownParentOrigin || event.origin === window.location.origin);
+
         if (!isValidOrigin) {
           console.warn('[IframeWalletConnect] Rejected message from invalid origin:', event.origin, 'Expected:', parentOrigin);
           return;

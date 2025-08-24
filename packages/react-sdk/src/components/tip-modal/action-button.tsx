@@ -4,7 +4,7 @@
  */
 
 import React, { memo } from 'react';
-import { getBorderRadius, getButtonShadow, getButtonBorder, getAccessibleTextColor } from '../../utils';
+import { useThemeStyles } from '../../hooks/use-theme-styles';
 import type { ThemeConfig } from '../../types';
 
 interface ActionButtonProps {
@@ -25,35 +25,22 @@ export const ActionButton = memo<ActionButtonProps>(({
   solEquivalent
 }) => {
   const disabled = isDisabled || isProcessing;
+  
+  // Generate CSS custom properties for dynamic theming
+  const themeStyles = useThemeStyles({ theme, variant: 'button' });
 
   return (
     <button
       onClick={onClick}
       disabled={disabled}
       className="ck-action-button"
-      style={{
-        // Set CSS custom properties for dynamic theming
-        '--primary-color': theme.primaryColor,
-        '--secondary-color': theme.secondaryColor,
-        '--button-border': getButtonBorder(theme),
-        '--border-radius': getBorderRadius(theme.borderRadius),
-        '--font-family': theme.fontFamily,
-        '--button-shadow': getButtonShadow(theme.buttonShadow)
-      } as React.CSSProperties}
+      style={themeStyles}
       type="button"
     >
       <span className="ck-action-button-text">
         {children}
         {solEquivalent && (
-          <span 
-            className="ck-action-button-sol-equivalent"
-            style={{
-              marginLeft: '0.5rem',
-              opacity: 0.6,
-              fontSize: '0.875em',
-              fontWeight: 400
-            }}
-          >
+          <span className="ck-action-button-sol-equivalent">
             ({solEquivalent})
           </span>
         )}
