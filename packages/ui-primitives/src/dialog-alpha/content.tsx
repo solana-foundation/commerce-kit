@@ -18,6 +18,9 @@ export function DialogContent({ children, className, style, labelledById, descri
   const context = useDialog();
   const ref = useRef<HTMLDivElement | null>(null);
   
+  // Detect if we're in an iframe context
+  const isInIframe = typeof window !== 'undefined' && window !== window.parent;
+  
   // Only render if dialog is open or if we don't have context (for SSR safety)
   if (context && !context.isOpen) {
     return null;
@@ -32,11 +35,26 @@ export function DialogContent({ children, className, style, labelledById, descri
     }
   }, [context?.isOpen, autoFocus]);
 
-  return (
-    <div
-      ref={ref}
-      className={className ? `${className} sc-dialog-anim` : 'sc-dialog-anim'}
-      style={{
+  // Context-aware styling
+  const contextStyles: React.CSSProperties = isInIframe
+    ? {
+        // Iframe-friendly styling - let the parent handle modal positioning
+        width: '528px',
+        maxWidth: '90vw',
+        maxHeight: '90vh',
+        height: 'auto',
+        padding: '0px',
+        backgroundColor: 'var(--color-background)',
+        borderRadius: 'var(--modal-border-radius)',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        overflow: 'auto',
+        pointerEvents: 'auto',
+        transition: 'height 200ms ease-in',
+        willChange: 'transform, opacity',
+        zIndex: 50,
+      }
+    : {
+        // Normal fixed positioning for regular context
         position: 'fixed',
         top: '50%',
         left: '50%',
@@ -49,11 +67,19 @@ export function DialogContent({ children, className, style, labelledById, descri
         transition: 'height 200ms ease-in',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
         zIndex: 50,
-        // maxWidth: '90vw',
-        // maxHeight: '90vh',
+        maxWidth: '90vw',
+        maxHeight: '90vh',
         overflow: 'auto',
         pointerEvents: 'auto',
         backgroundColor: 'var(--color-background)',
+      };
+
+  return (
+    <div
+      ref={ref}
+      className={className ? `${className} sc-dialog-anim` : 'sc-dialog-anim'}
+      style={{
+        ...contextStyles,
         ...style,
       }}
       role="dialog"

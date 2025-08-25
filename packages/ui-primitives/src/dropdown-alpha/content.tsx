@@ -4,7 +4,17 @@ import { useDropdownContext } from './context'
 export function DropdownContent({ children, className, align = 'end' }: { children: React.ReactNode; className?: string; align?: 'start' | 'center' | 'end' }) {
   const { open, onOpenChange, modal, triggerEl } = useDropdownContext()
   const ref = useRef<HTMLDivElement | null>(null)
-  const [styles, setStyles] = useState<React.CSSProperties>({ position: 'fixed', top: 0, left: 0 })
+  
+  // Detect if we're in an iframe context
+  const isInIframe = typeof window !== 'undefined' && window !== window.parent
+  
+  // Auto-detect iframe context for positioning
+  
+  const [styles, setStyles] = useState<React.CSSProperties>(() => 
+    isInIframe 
+      ? { position: 'absolute', top: '100%', left: 0, marginTop: '4px' }
+      : { position: 'fixed', top: 0, left: 0 }
+  )
 
   // Click outside to close. Ignore clicks on trigger.
   useEffect(() => {
@@ -19,9 +29,25 @@ export function DropdownContent({ children, className, align = 'end' }: { childr
     return () => document.removeEventListener('mousedown', onDocMouseDown, true)
   }, [open, onOpenChange, triggerEl])
 
-  // Positioning relative to viewport (fixed) to avoid offset parent issues
+  // Positioning strategy based on context
   useLayoutEffect(() => {
     if (!open || !triggerEl || !ref.current) return
+    
+    if (isInIframe) {
+      // Use simple static positioning that we know works in iframes
+      const iframeStyles: React.CSSProperties = {
+        position: 'absolute', // This worked before!
+        display: 'block',
+        marginTop: '4px',
+        zIndex: 9999,
+      }
+      
+      console.log('[Dropdown] Setting iframe styles (static):', iframeStyles)
+      setStyles(iframeStyles)
+      return
+    }
+    
+    // Normal viewport positioning for non-iframe context
     const update = () => {
       if (!triggerEl || !ref.current) return
       const triggerRect = triggerEl.getBoundingClientRect()
@@ -47,9 +73,10 @@ export function DropdownContent({ children, className, align = 'end' }: { childr
       window.removeEventListener('resize', update)
       window.removeEventListener('scroll', update, true)
     }
-  }, [open, triggerEl, align])
+  }, [open, triggerEl, align, isInIframe])
 
   if (!open) return null
+  
   return (
     <div
       role={modal ? 'dialog' : 'menu'}
