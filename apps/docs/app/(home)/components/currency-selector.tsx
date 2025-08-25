@@ -1,12 +1,6 @@
 'use client';
 
 import { cn } from '../../../lib/utils';
-import {
-  DropdownRoot,
-  DropdownTrigger,
-  DropdownContent,
-  DropdownItem
-} from '../../../../../packages/ui-primitives/src/react';
 
 interface SupportedCurrenciesProps {
   supportedCurrencies: string[];

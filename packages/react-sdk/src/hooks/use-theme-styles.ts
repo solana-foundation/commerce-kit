@@ -4,7 +4,7 @@
  */
 
 import { useMemo } from 'react';
-import { getBorderRadius, getButtonShadow, getButtonBorder } from '../utils';
+import { getBorderRadius, getButtonShadow, getButtonBorder, getRadius } from '../utils';
 import type { ThemeConfig } from '../types';
 
 interface UseThemeStylesOptions {
@@ -30,14 +30,23 @@ export function useThemeStyles({ theme, variant = 'button' }: UseThemeStylesOpti
       case 'button':
         return {
           ...baseStyles,
+          '--border-radius': getRadius('button', theme.borderRadius), // ✅ Use category map
           '--button-border': getButtonBorder(theme),
           '--button-shadow': getButtonShadow(theme.buttonShadow),
         };
       
       case 'payment-method':
+        return {
+          ...baseStyles,
+          '--border-radius': getRadius('payment', theme.borderRadius), // ✅ Use category map
+          '--primary-color-10': `${theme.primaryColor}10`,
+          '--primary-color-60': `${theme.primaryColor}60`,
+        };
+      
       case 'amount':
         return {
           ...baseStyles,
+          '--border-radius': getRadius('preset', theme.borderRadius), // ✅ Use category map
           '--primary-color-10': `${theme.primaryColor}10`,
           '--primary-color-60': `${theme.primaryColor}60`,
         };
@@ -45,13 +54,13 @@ export function useThemeStyles({ theme, variant = 'button' }: UseThemeStylesOpti
       case 'modal':
         return {
           ...baseStyles,
-          '--modal-border-radius': getBorderRadius(theme.borderRadius),
+          '--modal-border-radius': getRadius('modal', theme.borderRadius), // ✅ Use category map
         };
       
       case 'dropdown':
         return {
           ...baseStyles,
-          '--dropdown-radius': getBorderRadius(theme.borderRadius),
+          '--dropdown-radius': getRadius('dropdown', theme.borderRadius), // ✅ Use category map
         };
       
       default:

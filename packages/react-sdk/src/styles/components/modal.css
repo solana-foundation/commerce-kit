@@ -11,7 +11,6 @@
   font-family: var(--font-family);
   background-color: var(--color-background);
   border-radius: var(--modal-border-radius, 1.5rem);
-  box-shadow: var(--modal-shadow);
   animation: modal-enter 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards;
   transform-origin: center;
   will-change: transform, opacity, filter;
@@ -28,23 +27,23 @@
 
 /* Modal Steps */
 .sc-step {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  position: relative; /* ✅ Always relative - no switching */
   opacity: 0;
   transform: scale(0.95);
   transition: opacity 300ms cubic-bezier(0.19, 1, 0.22, 1), transform 300ms cubic-bezier(0.19, 1, 0.22, 1);
   pointer-events: none;
+  height: 0;         /* ✅ Hidden steps don't take space */
+  overflow: hidden;
   border-bottom-left-radius: var(--modal-border-radius, 1.5rem);
   border-bottom-right-radius: var(--modal-border-radius, 1.5rem);
 }
 
 .sc-step.active {
-  position: relative;
+  /* position: relative; - REMOVE: already set above */
   opacity: 1;
   transform: scale(1);
   pointer-events: auto;
+  height: auto;      /* ✅ Active step shows normally */
 }
 
 .sc-step.payment.wallet-bg.active {

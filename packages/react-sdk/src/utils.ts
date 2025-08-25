@@ -61,20 +61,20 @@ const CATEGORY_RADIUS_MAP: Record<RadiusCategory, Record<'sm' | 'lg' | 'full', s
   // Payment method tiles (selection cards)
   payment: {
     sm: '12px',
-    lg: '20px',
-    full: '1rem'
+    lg: '16px',
+    full: '16px'
   },
   // Preset amount tiles (and similar small selection buttons)
   preset: {
     sm: '12px',
     lg: '16px',
-    full: '1rem'
+    full: '20px'
   },
   // Dropdown trigger/content and text inputs
   dropdown: {
     sm: '8px',
-    lg: '10px',
-    full: '12px'
+    lg: '8px',
+    full: '8px'
   },
   // Primary action buttons
   button: {

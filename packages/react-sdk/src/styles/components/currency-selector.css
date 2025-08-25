@@ -27,7 +27,7 @@
 
 .ck-currency-symbol {
   margin-right: 4px;
-  font-weight: var(--font-weight-semibold);
+  /* font-weight: var(--font-weight-semibold); */
   font-size: var(--font-size-currency);
 }
 
