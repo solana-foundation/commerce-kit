@@ -8,11 +8,6 @@
     "start": "next start"
   },
   "dependencies": {
-    "@solana-commerce/connector-kit": "workspace:*",
-    "@solana-commerce/headless-sdk": "workspace:*",
-    "@solana-commerce/react-sdk": "workspace:*",
-    "@solana-commerce/ui-primitives": "workspace:*",
-    "@solana-commerce/solana-pay": "workspace:*",
     "@number-flow/react": "^0.5.10",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
@@ -39,7 +34,13 @@
     "@radix-ui/react-toast": "^1.2.14",
     "@radix-ui/react-tooltip": "^1.2.7",
     "@radix-ui/react-visually-hidden": "^1.1.12",
-    "@tanstack/react-query": "^5.79.2",
+    "@solana-commerce/connector-kit": "workspace:*",
+    "@solana-commerce/headless-sdk": "workspace:*",
+    "@solana-commerce/react-sdk": "workspace:*",
+    "@solana-commerce/solana-hooks": "workspace:*",
+    "@solana-commerce/solana-pay": "workspace:*",
+    "@solana-commerce/ui-primitives": "workspace:*",
+    "@tanstack/react-query": "^5.85.3",
     "@types/react-syntax-highlighter": "^15.5.13",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -54,14 +55,14 @@
     "vaul": "^1.1.2"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.11",
     "@types/node": "24.1.0",
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
-    "typescript": "^5.8.3",
-    "@tailwindcss/postcss": "^4.1.11",
-    "tailwindcss": "^4.1.11",
-    "postcss": "^8.5.6",
     "eslint": "^8",
-    "eslint-config-next": "15.4.4"
+    "eslint-config-next": "15.4.4",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.11",
+    "typescript": "^5.8.3"
   }
 }
