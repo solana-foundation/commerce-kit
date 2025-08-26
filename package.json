@@ -19,5 +19,8 @@
   "devDependencies": {
     "typescript": "^5",
     "turbo": "latest"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.85.5"
   }
 }
