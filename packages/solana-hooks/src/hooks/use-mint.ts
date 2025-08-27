@@ -85,7 +85,7 @@ export function useMint(options: UseMintOptions = {}): UseMintReturn {
             send: () => transport.request({ method: 'getAccountInfo', params: [addr, opts] })
           })
         } as any
-        const mintData = await fetchMint(rpcShim, address(mintAddress))
+        const mintData = await fetchMint(rpcShim, address(mintAddress) as any)
         
         return mintData.data as MintAccount
       } catch (error) {

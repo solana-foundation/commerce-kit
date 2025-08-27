@@ -74,11 +74,11 @@ export function useTokenBalance(options: UseTokenBalanceOptions): UseTokenBalanc
       let tokenAccountAddress: Address
       
       if (explicitTokenAccount) {
-        tokenAccountAddress = address(explicitTokenAccount)
+        tokenAccountAddress = address(explicitTokenAccount) as any
       } else {
         const [ata] = await findAssociatedTokenPda({
-          mint: address(mint),
-          owner: address(targetOwner),
+          mint: address(mint) as any,
+          owner: address(targetOwner) as any,
           tokenProgram: TOKEN_PROGRAM_ADDRESS,
         })
         tokenAccountAddress = ata

@@ -9,7 +9,7 @@ import {
   WalletStandardKitSigner,
   type StandardWalletInfo,
 } from '../hooks/use-standard-wallets'
-import type { ConnectorClient, ConnectorState } from '@arc/connector-kit'
+import type { ConnectorClient, ConnectorState } from '@solana-commerce/connector-kit'
 
 // Connector is the single source of truth; no Arc-managed persistence
 
@@ -136,7 +136,7 @@ export class ArcWebClient {
       // Prefer externally provided connector (from app-level provider) when available
       const providedConnector = this.state.config.connector
       if (!providedConnector) {
-        throw new Error('ArcProvider requires @arc/connector-kit AppProvider. Wrap your app with AppProvider and ensure connector is passed to Arc.')
+        throw new Error('ArcProvider requires @solana-commerce/connector-kit AppProvider. Wrap your app with AppProvider and ensure connector is passed to Arc.')
       }
       this.connector = providedConnector
 

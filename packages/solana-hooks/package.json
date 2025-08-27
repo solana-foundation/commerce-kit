@@ -67,10 +67,18 @@
   "dependencies": {
     "@solana-commerce/connector-kit": "workspace:*",
     "@solana/kit": "^2.0.0",
+    "@solana/keys": "^2.0.0",
+    "@solana/rpc-types": "^2.0.0",
+    "@solana/web3.js": "2.0.0-preview.4",
+    "@solana-program/compute-budget": "^0.4.0",
+    "@solana-program/system": "^0.4.0",
+    "@solana-program/token": "^0.4.0",
+    "@solana/transactions": "^2.0.0",
     "@wallet-standard/app": "^1.0.0",
     "@wallet-standard/base": "^1.0.0",
     "@wallet-standard/features": "^1.0.0",
     "bs58": "^6.0.0",
+    "ws": "^8.18.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {

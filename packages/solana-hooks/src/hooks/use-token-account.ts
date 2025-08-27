@@ -122,8 +122,8 @@ export function useTokenAccount<T = TokenAccountInfo>(options: UseTokenAccountOp
       if (!targetOwner || !findAssociated) return null
       
       const [ata] = await findAssociatedTokenPda({
-        mint: address(mint),
-        owner: address(targetOwner),
+        mint: address(mint) as any,
+        owner: address(targetOwner) as any,
         tokenProgram: TOKEN_PROGRAM_ADDRESS,
       })
       return ata

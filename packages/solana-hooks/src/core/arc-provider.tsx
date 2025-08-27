@@ -3,7 +3,7 @@
 import React from 'react'
 import type { ReactNode } from 'react'
 import { ArcClientProvider, useArcClient } from './arc-client-provider'
-import { useConnectorClient } from '@arc/connector-kit'
+import { useConnectorClient } from '@solana-commerce/connector-kit'
 import type { ArcWebClientConfig } from './arc-web-client'
 import type { SolanaConfig } from '../config/create-config'
 import type { QueryClient } from '@tanstack/react-query'
