@@ -22,17 +22,21 @@ export default defineConfig({
     subscriptions: 'src/subscriptions.ts'
   },
   format: ['cjs', 'esm'],
-  dts: false,
+  dts: false, // Temporarily disabled due to Solana Web3.js v2 Address type conflicts
   splitting: false,
   sourcemap: true,
   clean: true,
   external: externals,
   treeshake: {
-    preset: 'recommended'
+    preset: 'recommended',
+    moduleSideEffects: false
   },
   esbuildOptions: (options) => {
     // Better tree-shaking configuration
     options.treeShaking = true
     options.ignoreAnnotations = false
+    // More aggressive tree-shaking
+    options.pure = ['React.createElement', 'React.Fragment']
+    options.dropLabels = ['DEV']
   }
 })

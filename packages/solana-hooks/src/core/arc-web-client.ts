@@ -135,12 +135,24 @@ export class ArcWebClient {
     try {
       // Prefer externally provided connector (from app-level provider) when available
       const providedConnector = this.state.config.connector
+      console.log('[ArcWebClient] Initializing with connector:', {
+        hasConnector: !!providedConnector,
+        connectorConnected: providedConnector?.getSnapshot?.()?.connected,
+        hasSubscribeMethod: typeof providedConnector?.subscribe === 'function',
+        connectorType: providedConnector?.constructor?.name
+      });
       if (!providedConnector) {
         throw new Error('ArcProvider requires @solana-commerce/connector-kit AppProvider. Wrap your app with AppProvider and ensure connector is passed to Arc.')
       }
       this.connector = providedConnector
 
       const syncFromConnector = (s: ConnectorState) => {
+        console.log('[ArcWebClient] Syncing from connector state:', {
+          connected: s.connected,
+          selectedWallet: s.selectedWallet?.name,
+          selectedAccount: s.selectedAccount,
+          accountsCount: s.accounts?.length
+        });
         const selectedWallet = s.selectedWallet
         const connected = s.connected
         const connecting = s.connecting
@@ -184,12 +196,23 @@ export class ArcWebClient {
             })),
           },
         }
+        console.log('[ArcWebClient] State updated, notifying listeners:', {
+          connected: this.state.wallet.connected,
+          listenersCount: this.listeners.size
+        });
         this.notify()
         }
 
       // Initial sync and subscribe
+      console.log('[ArcWebClient] Initial sync and subscribe to connector');
       syncFromConnector(this.connector.getSnapshot())
-      this.walletUnsubscribers.push(this.connector.subscribe(syncFromConnector))
+      
+      const unsubscribe = this.connector.subscribe((state: any) => {
+        console.log('[ArcWebClient] Connector state changed, calling syncFromConnector');
+        syncFromConnector(state);
+      });
+      this.walletUnsubscribers.push(unsubscribe);
+      console.log('[ArcWebClient] Subscribed to connector changes');
     } catch (error) {
       console.warn('Failed to initialize connector:', error)
     }
@@ -316,6 +339,7 @@ export class ArcWebClient {
   }
 
   private notify(): void {
+    console.log('[ArcWebClient] notify() called, calling', this.listeners.size, 'listeners');
     this.listeners.forEach((listener) => listener(this.state))
   }
 

@@ -34,6 +34,7 @@
     "@solana-commerce/headless-sdk": "workspace:*",
     "@solana-commerce/ui-primitives": "workspace:*",
     "@solana-commerce/connector-kit": "workspace:*",
+    "@solana-commerce/solana-hooks": "workspace:*",
     "@solana-commerce/solana-pay": "workspace:*",
     "bignumber.js": "4.0.4",
     "gill": "^0.10.2"

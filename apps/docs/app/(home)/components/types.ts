@@ -1,4 +1,4 @@
-import { OrderItem } from "@solana-commerce/headless-sdk";
+// Note: OrderItem removed as we're focusing on tip flow MVP
 
 export interface QRCustomizations {
   size: number;
@@ -37,7 +37,7 @@ export interface Customizations {
   qrCustomizations?: QRCustomizations;
 }
 
-export type Mode = 'tip' | 'buyNow' | 'cart' | 'qrCustomization';
+export type Mode = 'tip' | 'qrCustomization';
 export type CheckoutStyle = 'modal' | 'page';
 
 export interface ColorPreset {
@@ -72,6 +72,6 @@ export interface DemoConfig {
   showMerchantInfo: boolean;
   position: 'overlay' | 'inline';
   allowedMints: string[];
-  products: OrderItem[];
+  // Note: products removed for tip flow MVP
 }
 

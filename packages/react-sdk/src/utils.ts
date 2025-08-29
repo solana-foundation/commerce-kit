@@ -5,7 +5,7 @@
 
 import { useMemo } from 'react';
 import type { ThemeConfig, BorderRadius, CommerceMode, MerchantConfig, Currency } from './types';
-import { OrderItem, validateWalletAddress as coreValidateWalletAddress } from '@solana-commerce/headless-sdk';
+import { validateWalletAddress as coreValidateWalletAddress } from '@solana-commerce/headless-sdk';
 
 // Constants
 export const BORDER_RADIUS_MAP = {
@@ -201,13 +201,11 @@ export const sanitizeString = (str: string): string => {
 export const useTheme = (theme?: ThemeConfig) => 
   useMemo(() => ({ ...DEFAULT_THEME, ...theme }), [theme]);
 
-export const useTotalAmount = (mode: CommerceMode, products?: readonly OrderItem[]) => 
+export const useTotalAmount = (mode: CommerceMode) => 
   useMemo(() => {
-    if (!products?.length) return 0;
-    return mode === 'cart' 
-      ? products.reduce((sum, product) => sum + product.price, 0)
-      : products[0]?.price ?? 0;
-  }, [mode, products]);
+    // For tip mode, amount is determined by user input, not products
+    return 0;
+  }, [mode]);
 
 export const usePaymentUrl = (merchant: MerchantConfig, amount: number, mode: CommerceMode) => 
   useMemo(() => {

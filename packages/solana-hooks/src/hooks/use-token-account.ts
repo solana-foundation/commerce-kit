@@ -126,7 +126,7 @@ export function useTokenAccount<T = TokenAccountInfo>(options: UseTokenAccountOp
         owner: address(targetOwner) as any,
         tokenProgram: TOKEN_PROGRAM_ADDRESS,
       })
-      return ata
+      return address(ata.toString())
     },
     enabled: enabled && !!targetOwner && !!mint && findAssociated,
     staleTime: 5 * 60 * 1000, // ATA addresses don't change - cache for 5 minutes

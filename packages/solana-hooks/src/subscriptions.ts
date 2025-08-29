@@ -1,17 +1,16 @@
 // Enhanced subscription helpers built on pooled websockets; opt-in
 
 import { useEffect, useRef, useState } from 'react'
-import { useArcClient } from './core/arc-client-provider'
 import { getSharedWebSocket } from './core/rpc-manager'
 import { address } from '@solana/kit'
 
 export interface UseAccountSubscribeOptions {
   address: string | null | undefined
   commitment?: 'processed' | 'confirmed' | 'finalized'
+  rpcUrl: string
 }
 
 export function useAccountSubscribe(opts: UseAccountSubscribeOptions) {
-  const { network } = useArcClient()
   const [data, setData] = useState<any | null>(null)
   const [error, setError] = useState<Error | null>(null)
   const [connecting, setConnecting] = useState(false)
@@ -27,7 +26,7 @@ export function useAccountSubscribe(opts: UseAccountSubscribeOptions) {
     async function start() {
       setConnecting(true)
       try {
-        const ws = getSharedWebSocket(network.rpcUrl, commit)
+        const ws = getSharedWebSocket(opts.rpcUrl, commit)
         abortRef.current?.abort()
         abortRef.current = new AbortController()
         const sub = await ws
@@ -53,9 +52,16 @@ export function useAccountSubscribe(opts: UseAccountSubscribeOptions) {
       cancelled = true
       abortRef.current?.abort()
     }
-  }, [opts.address, opts.commitment, network.rpcUrl])
+  }, [opts.address, opts.commitment, opts.rpcUrl])
 
   return { data, error, connecting }
+}
+
+// Hook that uses React context for backwards compatibility
+export function useAccountSubscribeWithContext(opts: Omit<UseAccountSubscribeOptions, 'rpcUrl'>) {
+  const { useArcClient } = require('./core/arc-client-provider')
+  const { network } = useArcClient()
+  return useAccountSubscribe({ ...opts, rpcUrl: network.rpcUrl })
 }
 
 

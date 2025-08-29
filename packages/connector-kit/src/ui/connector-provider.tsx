@@ -26,19 +26,35 @@ export interface MobileWalletAdapterConfig {
 	onWalletNotFound?: (wallet: any) => Promise<void>
 }
 
-export function ConnectorProvider({ children, config, mobile }: { children: ReactNode; config?: ConnectorConfig; mobile?: MobileWalletAdapterConfig }) {
-	const ref = useRef<ConnectorClient | null>(null)
-	if (!ref.current) ref.current = new ConnectorClient(config)
+// Global singleton to persist across component mount/unmount cycles
+let globalConnectorClient: ConnectorClient | null = null;
 
-	React.useEffect(() => {
-		return () => {
-			// Cleanup on unmount if client has destroy method
-			if (ref.current && typeof ref.current.destroy === 'function') {
-				ref.current.destroy()
-				ref.current = null
-			}
-		}
-	}, [])
+function getOrCreateConnectorClient(config?: ConnectorConfig): ConnectorClient {
+	if (!globalConnectorClient) {
+		console.log('[ConnectorProvider] Creating singleton ConnectorClient');
+		globalConnectorClient = new ConnectorClient(config);
+	}
+	return globalConnectorClient;
+}
+
+export function ConnectorProvider({ children, config, mobile }: { children: ReactNode; config?: ConnectorConfig; mobile?: MobileWalletAdapterConfig }) {
+	const client = getOrCreateConnectorClient(config);
+	
+	console.log('[ConnectorProvider] Using singleton ConnectorClient:', {
+		hasClient: !!client,
+		connected: client?.getSnapshot?.()?.connected
+	});
+
+	// Don't destroy the singleton client on unmount - let it persist
+	// React.useEffect(() => {
+	//   return () => {
+	//     // Cleanup on unmount if client has destroy method
+	//     if (ref.current && typeof ref.current.destroy === 'function') {
+	//       ref.current.destroy()
+	//       ref.current = null
+	//     }
+	//   }
+	// }, [])
 
 	// Optionally register Mobile Wallet Adapter on the client
 	React.useEffect(() => {
@@ -74,7 +90,7 @@ export function ConnectorProvider({ children, config, mobile }: { children: Reac
 		}
 	}, [mobile])
 
-	return <ConnectorContext.Provider value={ref.current}>{children}</ConnectorContext.Provider>
+	return <ConnectorContext.Provider value={client}>{children}</ConnectorContext.Provider>
 }
 
 export function useConnector(): ConnectorSnapshot {

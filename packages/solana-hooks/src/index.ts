@@ -26,7 +26,8 @@ export { createClient } from './client'
 export { 
   ArcProvider,
   useBalance,
-  useTransferSOL, 
+  useTransferSOL,
+  useTransferToken, 
   useAirdrop,
   useWalletAddress,
   useWallet,
@@ -41,7 +42,7 @@ export {
 } from './react'
 
 // Export commonly used types
-export type { CustomCodec, MintAccount, Schema, ValidationResult } from './react'
+export type { CustomCodec, MintAccount, Schema, ValidationResult, UseTransferTokenReturn, TransferTokenOptions, TransferTokenResult } from './react'
 
 // ===== ESSENTIAL TYPES ONLY =====
 // Keep the public API surface minimal

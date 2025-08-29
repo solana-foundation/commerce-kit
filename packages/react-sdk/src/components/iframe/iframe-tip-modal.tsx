@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, useCallback } from 'react';
 import { getModalBorderRadius, getCurrencySymbol, getBorderRadius, convertUsdToSol } from '../../utils';
 import { QRPaymentContent } from './iframe-qr-payment';
 import { WalletPaymentContent } from './iframe-wallet-payment';
@@ -46,6 +46,52 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
 
   // Handlers
   const handlePaymentComplete = handlers.handlePaymentComplete(onPayment);
+  
+  // Ref to prevent multiple wallet completion calls
+  const walletCompletionRef = React.useRef(false);
+  
+  // Wallet payment completion handler (calls onPayment once then closes)  
+  const handleWalletPaymentComplete = useCallback(() => {
+    console.log('[IframeTipModal] handleWalletPaymentComplete called - payment successful');
+    
+    if (walletCompletionRef.current) {
+      console.log('[IframeTipModal] Wallet completion already called, skipping');
+      return;
+    }
+    walletCompletionRef.current = true;
+
+    try {
+      actions.setProcessing(false);
+      
+      // Calculate amount in the correct format for the callback
+      let amount: number;
+      const finalAmount = computed.finalAmount;
+      
+      if (state.selectedCurrency === 'USDC' || state.selectedCurrency === 'USDC_DEVNET') {
+        amount = Math.round(finalAmount * 1000000); // USDC has 6 decimals
+      } else if (state.selectedCurrency === 'USDT' || state.selectedCurrency === 'USDT_DEVNET') {
+        amount = Math.round(finalAmount * 1000000); // USDT has 6 decimals  
+      } else if (state.selectedCurrency === 'SOL' || state.selectedCurrency === 'SOL_DEVNET') {
+        amount = Math.round(finalAmount * 1000000000); // SOL has 9 decimals (lamports)
+      } else {
+        amount = Math.round(finalAmount * 1000000000); // Default to 9 decimals
+      }
+      
+      console.log('[IframeTipModal] Calling onPayment with:', { amount, currency: state.selectedCurrency });
+      
+      // Call the payment callback once
+      onPayment?.(amount, state.selectedCurrency, state.selectedPaymentMethod);
+      
+      // Close the modal
+      setTimeout(() => {
+        onCancel?.();
+      }, 100);
+    } catch (error) {
+      console.error('Wallet payment completion error:', error);
+      actions.setProcessing(false);
+      walletCompletionRef.current = false; // Reset on error to allow retry
+    }
+  }, [actions, computed.finalAmount, state.selectedCurrency, state.selectedPaymentMethod, onPayment, onCancel]);
 
   // Calculate SOL equivalent for display when SOL is selected
   const [solEquivalent, setSolEquivalent] = React.useState<string | null>(null);
@@ -192,7 +238,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
               selectedCurrency={state.selectedCurrency}
               customAmount={state.customAmount}
               showCustomInput={state.showCustomInput}
-              onPaymentComplete={handlePaymentComplete}
+              onPaymentComplete={handleWalletPaymentComplete}
               walletIcon={WALLET_ICON}
             />
           )}

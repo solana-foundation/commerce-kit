@@ -11,7 +11,7 @@ interface CheckoutStyleSelectorProps {
 
 export function CheckoutStyleSelector({ value, onChange, mode }: CheckoutStyleSelectorProps) {
   const isPageDisabled = mode === 'tip';
-  const isModalDisabled = mode === 'buyNow' || mode === 'cart';
+  const isModalDisabled = false; // Note: buyNow and cart modes removed for tip flow MVP
   return (
     <div className="space-y-4 p-2">
       <div>

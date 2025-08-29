@@ -13,7 +13,9 @@
     "strict": true,
     "skipLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@solana-commerce/ui-primitives": ["../ui-primitives/dist/index.d.ts"]
+    }
   },
   "include": ["src"]
 }

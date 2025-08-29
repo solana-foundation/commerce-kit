@@ -88,6 +88,9 @@ export function useTransferToken(
   const { wallet, network, config } = useArcClient()
   const queryClient = useQueryClient()
   
+  // Capture transport at component level to avoid calling useArcClient in async functions
+  const transport = config.transport as Transport
+  
   const [mintInput, setMintInput] = useState(initialMintInput)
   const [toInput, setToInput] = useState(initialToInput)
   const [amountInput, setAmountInput] = useState(initialAmountInput)
@@ -133,7 +136,7 @@ export function useTransferToken(
       
       
       const rpc = getSharedRpc(network.rpcUrl)
-      const transport = (useArcClient() as any).config.transport as Transport
+      // Use the transport captured at component level
       
       const [fromTokenAccount] = await findAssociatedTokenPda({
         mint: address(mint),
@@ -148,6 +151,14 @@ export function useTransferToken(
       })
       
       
+      
+      const fromAccountInfo: any = await transport.request(
+        { method: 'getAccountInfo', params: [fromTokenAccount] }
+      )
+      
+      if (!fromAccountInfo.value) {
+        throw new Error(`Sender does not have a ${mint} token account. Please ensure you have this token in your wallet.`)
+      }
       
       const toAccountInfo: any = await transport.request(
         { method: 'getAccountInfo', params: [toTokenAccount] }

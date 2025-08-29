@@ -20,19 +20,14 @@ interface ConfigurationInputsProps {
 }
 
 export function ConfigurationInputs({ 
-  mode,
   merchantName,
   walletAddress,
   imageUrl,
-  productName,
-  productDescription,
-  productPrice,
+
   onMerchantNameChange,
   onWalletAddressChange,
   onImageUrlChange,
-  onProductNameChange,
-  onProductDescriptionChange,
-  onProductPriceChange
+
 }: ConfigurationInputsProps) {
   return (
     <div className="space-y-4 mb-8">
@@ -64,40 +59,7 @@ export function ConfigurationInputs({
         />
       </div>
 
-      {/* Product inputs for buyNow and cart modes */}
-      {(mode === 'buyNow' || mode === 'cart') && (
-        <>
-          <div>
-            <label className="block text-sm font-medium mb-2">Product Name</label>
-            <Input
-              value={productName}
-              onChange={(e) => onProductNameChange(e.target.value)}
-              placeholder="Your product name"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Product Description</label>
-            <Input
-              value={productDescription}
-              onChange={(e) => onProductDescriptionChange(e.target.value)}
-              placeholder="Brief description of your product"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Product Price</label>
-            <Input
-              type="number"
-              step="0.01"
-              min="0"
-              value={productPrice}
-              onChange={(e) => onProductPriceChange(e.target.value)}
-              placeholder="0.00"
-            />
-          </div>
-        </>
-      )}
+      {/* Note: Product inputs removed for tip flow MVP */}
     </div>
   );
 }

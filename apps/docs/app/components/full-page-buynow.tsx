@@ -26,23 +26,16 @@ export function FullPageBuyNow({ rpcUrl }: FullPageBuyNowProps = {}) {
         borderRadius: 'lg',
         fontFamily: 'system-ui, -apple-system, sans-serif'
       },
-      products: [
-        {
-          id: '1',
-          name: 'Product 1',
-          price: 100,
-          currency: 'SOL'
-        }
-      ],
+
       allowedMints: ["SOL","USDC","USDT","USDC_DEVNET","SOL_DEVNET","USDT_DEVNET"],
       network: 'mainnet-beta',
       showQR: true,
       enableWalletConnect: true,
-      showProductDetails: false,
+
       showMerchantInfo: true
     }}
-    onPayment={(amount, currency, products) => {
-      console.log('Payment:', { amount, currency, products });
+    onPayment={(amount, currency) => {
+      console.log('Payment:', { amount, currency });
     }}
     onPaymentSuccess={(signature) => {
       console.log('Payment successful:', { signature });
@@ -76,23 +69,16 @@ export function FullPageBuyNow2() {
         borderRadius: 'lg',
         fontFamily: 'system-ui, -apple-system, sans-serif'
       },
-      products: [
-        {
-          id: '1',
-          name: 'Product 1',
-          price: 100,
-          currency: 'SOL'
-        }
-      ],
+
       allowedMints: ["SOL","USDC","USDT","USDC_DEVNET","SOL_DEVNET","USDT_DEVNET"],
       network: 'mainnet-beta',
       showQR: true,
       enableWalletConnect: true,
-      showProductDetails: false,
+
       showMerchantInfo: true
     }}
-    onPayment={(amount, currency, products) => {
-      console.log('Payment:', { amount, currency, products });
+    onPayment={(amount, currency) => {
+      console.log('Payment:', { amount, currency });
     }}
     onPaymentSuccess={(signature) => {
       console.log('Payment successful:', { signature });

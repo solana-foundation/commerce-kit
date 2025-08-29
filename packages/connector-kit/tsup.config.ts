@@ -10,5 +10,5 @@ export default defineConfig({
   clean: true,
   treeshake: true,
   minify: false,
-  external: ['react'],
+  external: ['react', '@solana-commerce/ui-primitives'],
 })

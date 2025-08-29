@@ -56,7 +56,7 @@ export interface UseProgramAccountReturn<T> {
 
 const BUILT_IN_CODECS: Record<BuiltInProgram, CustomCodec<any>> = {
   mint: async (rpc, addr) => {
-    const mintData = await fetchMint(rpc, addr)
+    const mintData = await fetchMint(rpc, addr as any)
     return mintData.data
   },
   
