@@ -274,6 +274,9 @@ importers:
       '@types/react':
         specifier: ^19.1.9
         version: 19.1.11
+      '@types/react-dom':
+        specifier: ^19.1.8
+        version: 19.1.8(@types/react@19.1.11)
       esbuild:
         specifier: ^0.25.9
         version: 0.25.9

@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import type { SolanaCommerceConfig, ThemeConfig } from '../types';
-import { ArcProvider } from '@solana-commerce/solana-hooks';
 
 // No shim system needed - use real components directly
 // Import iframe-safe modal components
