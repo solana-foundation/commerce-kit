@@ -26,6 +26,7 @@ import {
   getCreateAssociatedTokenInstruction
 } from '@solana-program/token'
 import { createInvalidator } from '../utils/invalidate'
+import { validateAndNormalizeAmount } from '../utils/schema-validation'
 
 export class BlockhashExpirationError extends Error {
   constructor(message: string, public originalError?: Error) {
@@ -150,7 +151,7 @@ export function useTransferToken(
     }
   }, [network.rpcUrl])
   
-  const mutation = useMutation({
+  const mutation = useMutation<TransferTokenResult, Error, TransferTokenOptions>({
     mutationFn: async (options: TransferTokenOptions): Promise<TransferTokenResult> => {
       const { 
         mint, 
@@ -423,16 +424,25 @@ export function useTransferToken(
     }
     
     try {
-      // Parse amount as BigInt (assume token has standard decimals handling)
-      const amountBigInt = BigInt(amountInput)
+      // Validate and normalize the amount input with proper decimal handling
+      const validatedAmount = validateAndNormalizeAmount(amountInput, {
+        decimals: 9, // Default to 9 decimals for standard SPL tokens
+        allowDecimals: true
+      })
       
       return await mutation.mutateAsync({
         mint: mintInput,
         to: toInput,
-        amount: amountBigInt,
+        amount: validatedAmount.amount,
         createAccountIfNeeded: true, // Default to auto-create
       })
-    } catch (error) { throw error }
+    } catch (error) {
+      // Re-throw validation errors with user-friendly messages
+      if (error instanceof Error) {
+        throw new Error(`Invalid amount: ${error.message}`)
+      }
+      throw error
+    }
   }, [mintInput, toInput, amountInput, mutation.mutateAsync])
   
   const handleSubmit = useCallback(async (event?: { preventDefault?: () => void }) => {
@@ -441,7 +451,7 @@ export function useTransferToken(
   }, [mintInput, toInput, amountInput, transferFromInputs])
 
   return {
-    transferToken: mutation.mutateAsync,
+    transferToken: (options: TransferTokenOptions) => mutation.mutateAsync(options),
     isLoading: mutation.isPending,
     error: mutation.error,
     data: mutation.data || null,

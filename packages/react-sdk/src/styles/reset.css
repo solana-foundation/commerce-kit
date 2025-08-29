@@ -1,5 +1,5 @@
-/* Base Reset - Absolutely No Scrollbars */
-* { 
+/* Base Reset */
+*, *::before, *::after { 
   box-sizing: border-box; 
 }
 
@@ -8,23 +8,32 @@ html, body {
   padding: 0;
   width: 100%;
   height: 100%;
-  /* Hide scrollbars but allow scrolling */
-  overflow-y: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
 }
 
-/* Hide scrollbars for WebKit browsers (Chrome, Safari, Edge) */
-html::-webkit-scrollbar,
-body::-webkit-scrollbar {
-  display: none;
-}
-
-/* Prevent horizontal scrolling on any element */
-* {
+/* Apply responsive constraints only to replaced elements and text containers */
+img, picture, video, iframe, embed, object, svg, canvas {
   max-width: 100%;
+  height: auto;
+}
+
+/* Apply text wrapping only to text containers where long strings may occur */
+p, li, div:not([class*="grid"]):not([class*="flex"]):not([class*="table"]):not([role="grid"]):not([role="table"]), 
+span, h1, h2, h3, h4, h5, h6, blockquote, article, section {
   overflow-wrap: break-word;
   word-wrap: break-word;
+}
+
+/* Code blocks should preserve whitespace and enable horizontal scrolling */
+code, pre, kbd, samp {
+  white-space: pre;
+  overflow: auto;
+  overflow-wrap: normal;
+  word-wrap: normal;
+}
+
+/* Inline code should allow breaking but preserve formatting */
+code:not(pre code) {
+  white-space: pre-wrap;
 }
 
 /* Ensure all Commerce Kit components handle overflow properly */

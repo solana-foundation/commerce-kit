@@ -10,7 +10,7 @@ export default defineConfig({
   },
   test: {
     // Environment configuration
-    environment: 'node', // Changed from 'node' to support React JSX in tests
+    environment: 'node', // Use Node environment for server-side testing
     
     // Setup files for React
     setupFiles: [],
@@ -22,13 +22,13 @@ export default defineConfig({
     // Prevent hanging processes
     teardownTimeout: 3000,
     
-    // Handle unhandled promises gracefully
-    dangerouslyIgnoreUnhandledErrors: true,
+    // Ensure unhandled errors are properly surfaced
+    dangerouslyIgnoreUnhandledErrors: false,
     
     // Global setup
     globals: true,
     
-    // Coverage (optional)
+    // Coverage configuration
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -45,7 +45,7 @@ export default defineConfig({
     exclude: ['node_modules/', 'dist/', '.git/'],
     
     // Reporter configuration
-    reporter: ['verbose', 'json'],
+    reporters: ['verbose', 'json'],
     
     // Retry configuration for flaky network tests
     retry: 1,

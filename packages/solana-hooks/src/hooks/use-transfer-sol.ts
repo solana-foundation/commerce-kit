@@ -13,6 +13,53 @@ import {
 } from '@solana/kit'
 import { createInvalidator } from '../utils/invalidate'
 
+/**
+ * Converts SOL amount string to lamports with precise string-based arithmetic
+ * Avoids floating-point precision issues by handling decimal conversion manually
+ */
+function convertSOLToLamports(solAmount: string): bigint {
+  // Validation: empty or whitespace
+  if (!solAmount || !solAmount.trim()) {
+    throw new Error('Amount cannot be empty')
+  }
+  
+  const trimmed = solAmount.trim()
+  
+  // Check for negative sign and reject it
+  if (trimmed.startsWith('-')) {
+    throw new Error('Amount cannot be negative')
+  }
+  
+  // Validate it's a valid number format (digits, optional decimal point, more digits)
+  if (!/^\d*\.?\d*$/.test(trimmed)) {
+    throw new Error('Invalid number format')
+  }
+  
+  // Split on decimal point
+  const [integerPart = '0', fractionalPart = ''] = trimmed.split('.')
+  
+  // Validate we have at least one digit somewhere
+  if ((integerPart === '' || integerPart === '0') && fractionalPart === '') {
+    throw new Error('Amount must be greater than zero')
+  }
+  
+  // Handle fractional part: pad to 9 digits (right-pad with zeros) or truncate extra digits
+  const paddedFractional = fractionalPart.padEnd(9, '0').slice(0, 9)
+  
+  // Convert to BigInt - integer part shifted left by 9 decimal places (1e9 lamports = 1 SOL)
+  const integerLamports = BigInt(integerPart || '0') * 1_000_000_000n
+  const fractionalLamports = BigInt(paddedFractional || '0')
+  
+  const totalLamports = integerLamports + fractionalLamports
+  
+  // Final validation
+  if (totalLamports <= 0n) {
+    throw new Error('Amount must be greater than zero')
+  }
+  
+  return totalLamports
+}
+
 export interface TransferSOLOptions {
   to: string | Address
   amount: bigint  
@@ -82,9 +129,14 @@ export function useTransferSOL(
     }
   }, [network.rpcUrl])
   
-  const mutation = useMutation({
+  const mutation = useMutation<TransferSOLResult, Error, TransferSOLOptions>({
     mutationFn: async (options: TransferSOLOptions): Promise<TransferSOLResult> => {
       const { to, amount, from: optionsFrom } = options
+      
+      // Verify wallet and signer are available before accessing properties
+      if (!wallet || !wallet.signer) {
+        throw new Error('Wallet not connected or no signer available')
+      }
       
       const fromAddress = optionsFrom || wallet.address
       
@@ -92,9 +144,8 @@ export function useTransferSOL(
         throw new Error('No sender address provided and no wallet connected')
       }
       
-      if (!wallet.signer) {
-        throw new Error('Wallet not connected or no signer available')
-      }
+      // After null checks, signer is guaranteed to be defined
+      const signer: TransactionSigner = wallet.signer
       
       // Ensure latest blockhash retrieval uses transport via builder context
       const transactionBuilder = createTransactionBuilder(
@@ -102,7 +153,7 @@ export function useTransferSOL(
       )
       
       // Use shared SOL transfer implementation
-      return await transactionBuilder.transferSOL(to, amount, wallet.signer as TransactionSigner)
+      return await transactionBuilder.transferSOL(to, amount, signer)
     },
     onSuccess: async (result) => {
       // Invalidate cache for both sender and recipient
@@ -130,7 +181,7 @@ export function useTransferSOL(
     }
     
     try {
-      const amountInLamports = BigInt(Math.floor(parseFloat(amountInput) * 1_000_000_000))
+      const amountInLamports = convertSOLToLamports(amountInput)
       
       return await mutation.mutateAsync({
         to: toInput,
@@ -145,7 +196,7 @@ export function useTransferSOL(
   }, [toInput, amountInput, transferFromInputs])
 
   return {
-    transferSOL: mutation.mutateAsync,
+    transferSOL: (options: TransferSOLOptions) => mutation.mutateAsync(options),
     isLoading: mutation.isPending,
     error: mutation.error,
     data: mutation.data ?? null,

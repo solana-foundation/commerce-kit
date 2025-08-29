@@ -27,15 +27,21 @@ export function ArcProvider({ children, config, queryClient }: ArcProviderProps)
   const passedConnector = (config as ArcWebClientConfig).connector
   const connector = passedConnector || contextConnector
   
+  if (!connector) {
+    throw new Error('ArcProvider: connector is required - provide config.connector or ensure useConnectorClient() supplies one')
+  }
+  
   const providerId = useMemo(() => 'arc-provider-' + Math.random().toString(36).substr(2, 5), []);
   
-  console.log(`[ArcProvider:${providerId}] Connector selection:`, {
-    hasPassedConnector: !!passedConnector,
-    hasContextConnector: !!contextConnector,
-    usingConnector: connector === passedConnector ? 'passed' : 'context',
-    connectorConnected: connector?.getSnapshot?.()?.connected,
-    connectorSame: passedConnector === contextConnector
-  });
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[ArcProvider:${providerId}] Connector selection:`, {
+      hasPassedConnector: !!passedConnector,
+      hasContextConnector: !!contextConnector,
+      usingConnector: connector === passedConnector ? 'passed' : 'context',
+      connectorConnected: connector?.getSnapshot?.()?.connected,
+      connectorSame: passedConnector === contextConnector
+    });
+  }
   
   const merged: ArcWebClientConfig = { ...config, connector } as ArcWebClientConfig
   return (

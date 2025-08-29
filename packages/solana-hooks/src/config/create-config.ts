@@ -7,6 +7,13 @@ export interface StorageAdapter {
   removeItem: (key: string) => void
 }
 
+// Noop storage adapter for server-side rendering or when localStorage is not available
+const noopStorage: StorageAdapter = {
+  getItem: () => null,
+  setItem: () => {},
+  removeItem: () => {},
+}
+
 export interface SolanaConfigInit {
   transport?: Transport
   rpcUrl?: string
@@ -34,7 +41,7 @@ export function createSolanaConfig(init: SolanaConfigInit = {}): SolanaConfig {
     transport,
     rpcUrl,
     network: init.network ?? 'devnet',
-    storage: init.storage ?? (typeof window !== 'undefined' ? window.localStorage : undefined as any),
+    storage: init.storage ?? (typeof window !== 'undefined' ? window.localStorage : noopStorage),
     autoConnect: init.autoConnect ?? false,
     debug: init.debug ?? false,
   }

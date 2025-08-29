@@ -4,6 +4,7 @@
  */
 
 import { useState, useCallback, useMemo } from 'react';
+import type { ChangeEvent } from 'react';
 
 interface Validation {
   required?: boolean;
@@ -34,7 +35,7 @@ interface UseFormFieldReturn {
   focus: () => void;
   fieldProps: {
     value: string;
-    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+    onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
     onBlur: () => void;
     onFocus: () => void;
   };
@@ -64,11 +65,11 @@ export function useFormField({
     }
 
     // Length validations
-    if (validation.minLength && inputValue.length < validation.minLength) {
+    if (Number.isFinite(validation.minLength) && inputValue.length < validation.minLength!) {
       return `Must be at least ${validation.minLength} characters`;
     }
 
-    if (validation.maxLength && inputValue.length > validation.maxLength) {
+    if (Number.isFinite(validation.maxLength) && inputValue.length > validation.maxLength!) {
       return `Must be no more than ${validation.maxLength} characters`;
     }
 
@@ -91,10 +92,8 @@ export function useFormField({
     setValue(formattedValue);
     
     // Clear error if user is typing and field becomes valid
-    if (error && !validateField(formattedValue)) {
-      setError(null);
-    }
-  }, [formatValue, error, validateField]);
+    setError(prev => (prev && !validateField(formattedValue) ? null : prev));
+  }, [formatValue, validateField]);
 
   const validate = useCallback((): boolean => {
     const validationError = validateField(value);
@@ -119,12 +118,11 @@ export function useFormField({
     setIsFocused(true);
   }, []);
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = useCallback((e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     handleValueChange(e.target.value);
   }, [handleValueChange]);
-
   // Computed properties
-  const isValid = useMemo(() => !error && (!validation?.required || value.trim().length > 0), [error, validation, value]);
+  const isValid = useMemo(() => validateField(value) === null, [value, validateField]);
   const isEmpty = useMemo(() => value.trim().length === 0, [value]);
 
   return {

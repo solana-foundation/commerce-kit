@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useDialog } from './context';
 import type { DialogContentProps } from './types';
+import { Z_INDEX } from '../constants';
 
 // Inject keyframes for a CSS-only spring-like slide-up animation as early as possible (client only)
 if (typeof document !== 'undefined') {
@@ -51,7 +52,7 @@ export function DialogContent({ children, className, style, labelledById, descri
         pointerEvents: 'auto',
         transition: 'height 200ms ease-in',
         willChange: 'transform, opacity',
-        zIndex: 50,
+        zIndex: Z_INDEX.OVERLAY_CONTENT,
       }
     : {
         // Normal fixed positioning for regular context
@@ -66,7 +67,7 @@ export function DialogContent({ children, className, style, labelledById, descri
         width: '528px',
         transition: 'height 200ms ease-in',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        zIndex: 50,
+        zIndex: Z_INDEX.OVERLAY_CONTENT,
         maxWidth: '90vw',
         maxHeight: '90vh',
         overflow: 'auto',

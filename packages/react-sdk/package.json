@@ -31,11 +31,11 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@solana-commerce/headless-sdk": "workspace:*",
-    "@solana-commerce/ui-primitives": "workspace:*",
     "@solana-commerce/connector-kit": "workspace:*",
+    "@solana-commerce/headless-sdk": "workspace:*",
     "@solana-commerce/solana-hooks": "workspace:*",
     "@solana-commerce/solana-pay": "workspace:*",
+    "@solana-commerce/ui-primitives": "workspace:*",
     "bignumber.js": "4.0.4",
     "gill": "^0.10.2"
   },
@@ -45,6 +45,7 @@
   },
   "devDependencies": {
     "@types/react": "^19.1.9",
+    "esbuild": "^0.25.9",
     "tsup": "^8.0.0",
     "tsx": "^4.19.2"
   },

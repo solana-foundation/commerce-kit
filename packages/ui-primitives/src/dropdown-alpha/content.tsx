@@ -1,5 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useDropdownContext } from './context'
+import { Z_INDEX } from '../constants'
 
 export function DropdownContent({ children, className, align = 'end' }: { children: React.ReactNode; className?: string; align?: 'start' | 'center' | 'end' }) {
   const { open, onOpenChange, modal, triggerEl } = useDropdownContext()
@@ -39,10 +40,9 @@ export function DropdownContent({ children, className, align = 'end' }: { childr
         position: 'absolute', // This worked before!
         display: 'block',
         marginTop: '4px',
-        zIndex: 9999,
+        zIndex: Z_INDEX.OVERLAY_CONTENT,
       }
       
-      console.log('[Dropdown] Setting iframe styles (static):', iframeStyles)
       setStyles(iframeStyles)
       return
     }
@@ -62,7 +62,7 @@ export function DropdownContent({ children, className, align = 'end' }: { childr
       const viewportHeight = document.documentElement.clientHeight || window.innerHeight
       const maxLeft = Math.max(8, Math.min(left, (viewportWidth - menuRect.width - 8)))
       const maxTop = Math.max(8, Math.min(top, (viewportHeight - menuRect.height - 8)))
-      setStyles({ position: 'fixed', top: Math.round(maxTop), left: Math.round(maxLeft), zIndex: 50 })
+      setStyles({ position: 'fixed', top: Math.round(maxTop), left: Math.round(maxLeft), zIndex: Z_INDEX.OVERLAY_CONTENT })
     }
     // Initial position
     update()

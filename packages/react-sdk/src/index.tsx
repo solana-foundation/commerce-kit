@@ -22,6 +22,9 @@ export type {
   Network
 } from './types';
 
+// Re-export payment configuration types
+export type { PaymentConfig, Product } from './components/ui/secure-iframe-shell';
+
 import React, { useState, useCallback, useMemo, memo, useEffect } from 'react';
 import { DialogTrigger } from '../../ui-primitives/src/react';
 import { ModalShell } from './components/ui/modal-shell';
@@ -52,10 +55,11 @@ export const SolanaCommerceSDK = memo<SolanaCommerceSDKProps>(function SolanaCom
   onPaymentStart,
   onPaymentSuccess,
   onPaymentError,
-  onCancel
+  onCancel,
+  paymentConfig
 }) {
   const theme = useTheme(config.theme);
-  const totalAmount = useTotalAmount(config.mode);
+  const totalAmount = useTotalAmount(config.mode, paymentConfig);
   const paymentUrl = usePaymentUrl(config.merchant, totalAmount, config.mode);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
@@ -181,6 +185,7 @@ export const SolanaCommerceSDK = memo<SolanaCommerceSDKProps>(function SolanaCom
               }
             }}
             onCancel={handleCancel}
+            paymentConfig={paymentConfig}
           />
         ) : (
           // Server-side placeholder
@@ -228,6 +233,7 @@ export const SolanaCommerceSDK = memo<SolanaCommerceSDKProps>(function SolanaCom
               }
             }}
             onCancel={handleCancel}
+            paymentConfig={paymentConfig}
           />
         ) : (
           // Server-side placeholder for modal content

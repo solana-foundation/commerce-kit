@@ -83,6 +83,16 @@ export const CHECK_ICON = React.createElement(
   })
 );
 
+// Currency Decimal Constants
+export const CURRENCY_DECIMALS = {
+  USDC: 6,
+  USDC_DEVNET: 6,
+  USDT: 6,
+  USDT_DEVNET: 6,
+  SOL: 9,
+  SOL_DEVNET: 9
+} as const;
+
 // Static Data
 export const PRESET_AMOUNTS = [1, 5, 15, 25, 50] as const;
 

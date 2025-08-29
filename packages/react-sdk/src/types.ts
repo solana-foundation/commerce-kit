@@ -70,6 +70,8 @@ export interface SolanaCommerceSDKProps {
   readonly onPaymentSuccess?: PaymentCallbacks['onPaymentSuccess'];
   readonly onPaymentError?: PaymentCallbacks['onPaymentError'];
   readonly onCancel?: PaymentCallbacks['onCancel'];
+  /** Optional payment configuration for price and decimal overrides */
+  readonly paymentConfig?: import('./components/ui/secure-iframe-shell').PaymentConfig;
 }
 
 // Internal component props

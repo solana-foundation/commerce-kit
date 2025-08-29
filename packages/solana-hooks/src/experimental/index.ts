@@ -239,7 +239,7 @@ export async function createOptimizedTransaction(config: {
   if (enableMevProtection) {
     const mevResult = await getMevProtectedFee(rpcUrl, transactionValue, transactionType as any)
     feeRecommendation = {
-      microLamports: mevResult.priorityFee,
+      microLamports: mevResult.priorityFeePerCU,
       estimatedConfirmationTime: 15,
       confidence: 0.9,
       strategy: 'mev-protected',

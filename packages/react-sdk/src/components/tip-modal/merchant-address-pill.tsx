@@ -3,6 +3,58 @@ import { sanitizeString, DEFAULT_PROFILE_SVG } from '../../utils';
 import { useCopyToClipboard } from '../../hooks/use-copy-to-clipboard';
 import type { ThemeConfig, MerchantConfig } from '../../types';
 
+/**
+ * Validates and sanitizes a color value to prevent CSS injection attacks.
+ * Accepts only safe hex formats (#RGB, #RRGGBB) or known CSS color names.
+ * @param color - The color value to validate
+ * @returns The sanitized color value or null if invalid
+ */
+function validateColor(color: string | undefined): string | null {
+  if (!color || typeof color !== 'string') {
+    return null;
+  }
+  
+  const trimmedColor = color.trim().toLowerCase();
+  
+  // Validate hex colors (#RGB or #RRGGBB)
+  const hexColorRegex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+  if (hexColorRegex.test(trimmedColor)) {
+    return trimmedColor;
+  }
+  
+  // Known safe CSS color names
+  const safeColorNames = new Set([
+    'transparent', 'black', 'white', 'red', 'green', 'blue', 'yellow', 'orange',
+    'purple', 'pink', 'brown', 'gray', 'grey', 'cyan', 'magenta', 'lime', 'indigo',
+    'violet', 'navy', 'maroon', 'olive', 'teal', 'silver', 'gold'
+  ]);
+  
+  if (safeColorNames.has(trimmedColor)) {
+    return trimmedColor;
+  }
+  
+  return null;
+}
+
+/**
+ * Creates a safe linear gradient background or returns a fallback value.
+ * @param primaryColor - Primary color for the gradient
+ * @param secondaryColor - Secondary color for the gradient
+ * @returns Safe CSS background value
+ */
+function createSafeGradient(primaryColor: string | undefined, secondaryColor: string | undefined): string {
+  const validPrimary = validateColor(primaryColor);
+  const validSecondary = validateColor(secondaryColor);
+  
+  // Only create gradient if both colors are valid
+  if (validPrimary && validSecondary) {
+    return `linear-gradient(135deg, ${validPrimary} 0%, ${validSecondary} 100%)`;
+  }
+  
+  // Fallback to a safe default gradient
+  return 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)';
+}
+
 interface MerchantAddressPillProps {
   theme: Required<ThemeConfig>;
   config: { merchant: MerchantConfig };
@@ -29,7 +81,7 @@ export const MerchantAddressPill = memo<MerchantAddressPillProps>(({
           alt={sanitizeString(config.merchant.name)}
           className={`ck-merchant-avatar ${copied ? 'copied' : ''}`}
           style={{
-            background: config.merchant.logo ? 'transparent' : `linear-gradient(135deg, ${theme.primaryColor} 0%, ${theme.secondaryColor} 100%)`
+            background: config.merchant.logo ? 'transparent' : createSafeGradient(theme.primaryColor, theme.secondaryColor)
           }}
         />
         
@@ -38,7 +90,7 @@ export const MerchantAddressPill = memo<MerchantAddressPillProps>(({
           {/* Default Text - Merchant Name */}
           <span 
             className={`ck-merchant-name ${!isHovered && !copied ? '' : 'hidden'}`}
-            style={{ color: theme.textColor }}
+            style={{ color: validateColor(theme.textColor) || '#374151' }}
           >
             {sanitizeString(config.merchant.name)}
           </span>

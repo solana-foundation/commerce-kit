@@ -34,8 +34,8 @@ export interface Provider {
 
 export function createProvider(config: Partial<Provider>): Provider {
   return {
-    swap: config.swap || [],
-    ...config
+    ...config,
+    swap: config.swap || []
   }
 }
 

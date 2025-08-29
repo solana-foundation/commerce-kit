@@ -64,7 +64,11 @@ export function useWalletAdapters(options: UseWalletAdaptersOptions): UseWalletA
     adapter,
     name: adapter.name,
     icon: adapter.icon,
-    installed: isClient ? adapter.detect() : false, // Always false during SSR
+    installed: isClient 
+      ? (typeof adapter.detect === 'function' 
+          ? adapter.detect() 
+          : false) 
+      : false, // Always false during SSR
     connected: adapter.connected,
     connecting: adapter.connecting,
     status: adapter.status
@@ -123,27 +127,6 @@ export function useWalletAdapters(options: UseWalletAdaptersOptions): UseWalletA
       localStorage.removeItem(STORAGE_KEY)
     }
   }, [adapters])
-  
-  useEffect(() => {
-    if (!autoConnect || connecting || connected) return
-    
-    const targetAdapterName = preferredAdapter || selectedAdapterName
-    if (!targetAdapterName) return
-    
-    const targetAdapter = adapters.find(adapter => adapter.name === targetAdapterName)
-    if (!targetAdapter?.detect()) return
-    
-    console.log(`🔄 [WalletAdapters] Auto-connecting to ${targetAdapterName}...`)
-    
-    // Use a small delay to ensure components are ready
-    const timeoutId = setTimeout(() => {
-      select(targetAdapterName).catch(error => {
-        console.warn(`Failed to auto-connect to ${targetAdapterName}:`, error)
-      })
-    }, 100)
-    
-    return () => clearTimeout(timeoutId)
-  }, [autoConnect, preferredAdapter, selectedAdapterName, adapters, connecting, connected])
   
   // Save wallet preference to localStorage
   const saveWalletPreference = useCallback((adapterName: string) => {
@@ -207,6 +190,28 @@ export function useWalletAdapters(options: UseWalletAdaptersOptions): UseWalletA
     }
   }, [adapters, connecting, connectedAdapter, saveWalletPreference])
   
+  // Auto-connect effect
+  useEffect(() => {
+    if (!autoConnect || connecting || connected) return
+    
+    const targetAdapterName = preferredAdapter || selectedAdapterName
+    if (!targetAdapterName) return
+    
+    const targetAdapter = adapters.find(adapter => adapter.name === targetAdapterName)
+    if (!targetAdapter?.detect()) return
+    
+    console.log(`🔄 [WalletAdapters] Auto-connecting to ${targetAdapterName}...`)
+    
+    // Use a small delay to ensure components are ready
+    const timeoutId = setTimeout(() => {
+      select(targetAdapterName).catch(error => {
+        console.warn(`Failed to auto-connect to ${targetAdapterName}:`, error)
+      })
+    }, 100)
+    
+    return () => clearTimeout(timeoutId)
+  }, [autoConnect, preferredAdapter, selectedAdapterName, adapters, connecting, connected, select])
+  
   const disconnect = useCallback(async () => {
     if (!connectedAdapter) {
       console.log('⚠️ [WalletAdapters] No adapter connected to disconnect from')
@@ -236,7 +241,9 @@ export function useWalletAdapters(options: UseWalletAdaptersOptions): UseWalletA
     return () => {
       adapters.forEach(adapter => {
         try {
-          adapter.destroy()
+          if (typeof adapter.destroy === 'function') {
+            adapter.destroy()
+          }
         } catch (error) {
           console.warn(`Warning: Failed to destroy adapter ${adapter.name}:`, error)
         }

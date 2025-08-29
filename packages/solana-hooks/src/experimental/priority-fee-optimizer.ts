@@ -189,6 +189,10 @@ export class PriorityFeeOptimizer {
    * 
    * Analyzes transaction for MEV risks and recommends
    * appropriate protection strategies.
+   * 
+   * @param transactionValue - Transaction value in lamports
+   * @param transactionType - Type of transaction being analyzed
+   * @returns MEV analysis with risk level and protection recommendations
    */
   analyzeMevRisk(
     transactionValue: number,
@@ -512,12 +516,25 @@ export class PriorityFeeOptimizer {
     return baseSlippage[riskLevel as keyof typeof baseSlippage] || 0.01
   }
 
-  private calculateJitoTip(value: number, riskLevel: string): number {
+  /**
+   * Calculate Jito tip amount in lamports
+   * @param transactionValueLamports - Transaction value in lamports
+   * @param riskLevel - Risk level determining tip percentage
+   * @returns Tip amount in lamports
+   */
+  private calculateJitoTip(transactionValueLamports: number, riskLevel: string): number {
     if (riskLevel === 'low' || riskLevel === 'medium') return 0
+    
+    const LAMPORTS_PER_SOL = 1_000_000_000
     
     // Calculate tip based on value (0.01% to 0.1% of transaction value)
     const tipPercentage = riskLevel === 'extreme' ? 0.001 : 0.0001
-    return Math.min(Math.max(value * tipPercentage, 1000), 100000) // Min 0.001 SOL, max 0.1 SOL
+    const tip = transactionValueLamports * tipPercentage
+    
+    const min = 0.001 * LAMPORTS_PER_SOL  // 0.001 SOL in lamports
+    const max = 0.1 * LAMPORTS_PER_SOL    // 0.1 SOL in lamports
+    
+    return Math.min(Math.max(tip, min), max)
   }
 
   private calculateTimeMultiplier(
@@ -533,8 +550,11 @@ export class PriorityFeeOptimizer {
     
     const baseMultiplier = conditionMultipliers[condition as keyof typeof conditionMultipliers] || 1.0
     
+    // Guard against divide by zero - use minimum safe value
+    const safeTargetTime = targetTime <= 0 ? 60 : targetTime
+    
     // Faster target time = higher multiplier
-    const timeMultiplier = Math.max(0.5, 60 / targetTime)
+    const timeMultiplier = Math.max(0.5, 60 / safeTargetTime)
     
     return baseMultiplier * timeMultiplier
   }
@@ -592,15 +612,22 @@ export async function getQuickFeeRecommendation(
 
 /**
  * MEV-protected fee calculation
+ * 
+ * @param rpcUrl - RPC endpoint URL
+ * @param transactionValue - Transaction value in lamports
+ * @param transactionType - Type of transaction being processed
+ * @param computeUnitBudget - Compute unit budget for the transaction
+ * @returns MEV-protected fee configuration with priority fee and protection settings
  */
 export async function getMevProtectedFee(
   rpcUrl: string,
   transactionValue: number,
-  transactionType: 'swap' | 'transfer' | 'defi' | 'nft' | 'other' = 'other'
+  transactionType: 'swap' | 'transfer' | 'defi' | 'nft' | 'other' = 'other',
+  computeUnitBudget: number = 200_000 // Default compute unit budget
 ): Promise<{
-  priorityFee: number
+  priorityFeePerCU: number // microLamports per compute unit
   mevProtection: MevProtectionConfig
-  totalCost: number
+  totalCostLamports: number // total cost in lamports
 }> {
   const optimizer = createPriorityFeeOptimizer(rpcUrl)
   
@@ -617,12 +644,15 @@ export async function getMevProtectedFee(
     mevProtection: true
   })
   
+  // Convert priority fee from microLamports-per-CU to lamports
+  const priorityFeeLamports = (feeRecommendation.microLamports * computeUnitBudget) / 1_000_000
+  
   const jitoTip = mevAnalysis.recommendedProtection.jitoTips?.tipAmount || 0
-  const totalCost = feeRecommendation.microLamports + jitoTip
+  const totalCostLamports = priorityFeeLamports + jitoTip
   
   return {
-    priorityFee: feeRecommendation.microLamports,
+    priorityFeePerCU: feeRecommendation.microLamports,
     mevProtection: mevAnalysis.recommendedProtection,
-    totalCost
+    totalCostLamports
   }
 }

@@ -82,19 +82,37 @@ export class WalletStandardKitSigner {
             // Read signature count as short-u16 (variable length 1-3 bytes)
             let signatureCount = 0
             let byteCount = 0
-            while (++byteCount) {
+            const MAX_VARINT_BYTES = 10 // Safety limit for varint decoding
+            let parseSuccessful = false
+            
+            while (++byteCount <= MAX_VARINT_BYTES) {
               const byteIndex = byteCount - 1
+              
+              // Bounds check: ensure we don't read beyond array bounds
+              if (offset + byteIndex >= signedTransactionBytes.length) {
+                throw new Error('Invalid transaction format: signature count extends beyond transaction bytes')
+              }
+              
               const currentByte = signedTransactionBytes[offset + byteIndex]
               if (currentByte === undefined) {
-                break
+                throw new Error('Invalid transaction format: unexpected undefined byte in signature count')
               }
+              
               const nextSevenBits = 0b1111111 & currentByte
               signatureCount |= nextSevenBits << (byteIndex * 7)
+              
               if ((currentByte & 0b10000000) === 0) {
                 // No continuation bit, we're done
+                parseSuccessful = true
                 break
               }
             }
+            
+            if (!parseSuccessful) {
+              throw new Error('Invalid transaction format: signature count varint exceeded maximum length or failed to parse')
+            }
+            
+            // Only advance offset after successful parse
             offset += byteCount
             
             // Extract the first signature (64 bytes)

@@ -18,9 +18,19 @@ import {
   type TransactionSigner
 } from '@solana/kit'
 import { 
+  address,
+  type Address
+} from '@solana/kit'
+
+// ===== PROGRAM ADDRESS CONSTANTS =====
+
+const STAKE_PROGRAM_ADDRESS = 'Stake11111111111111111111111111111111111112' as Address<'Stake11111111111111111111111111111111111112'>
+
+import { 
   getSetComputeUnitLimitInstruction,
   getSetComputeUnitPriceInstruction 
 } from '@solana-program/compute-budget'
+import { TOKEN_PROGRAM_ADDRESS, ASSOCIATED_TOKEN_PROGRAM_ADDRESS } from '@solana-program/token'
 import { getTransactionDecoder, getBase64EncodedWireTransaction } from '@solana/transactions'
 import type { UseTransactionOptions } from '../types'
 
@@ -199,19 +209,40 @@ export function useTransaction(options: UseTransactionOptions = {}): UseTransact
         } catch (sendErr) {
           // Fallback: poll signature status to recover successful confirmations
           const timeoutMs = 60_000
+          const baseIntervalMs = 1_000
+          const maxRetries = Math.max(1, Math.floor(timeoutMs / baseIntervalMs))
           const start = Date.now()
+          let attempts = 0
+          let delayMs = baseIntervalMs
           // eslint-disable-next-line no-constant-condition
           while (true) {
-            const { value }: any = await (rpc as any).getSignatureStatuses([signature]).send()
-            const status = value?.[0]
-            const conf = status?.confirmationStatus
-            if (conf === 'finalized' || (conf === 'confirmed' && targetCommitment === 'confirmed')) {
-              break
+            try {
+              const res: any = await (rpc as any).getSignatureStatuses([signature]).send()
+              const value = res?.value
+              if (!Array.isArray(value)) {
+                throw new Error('Unexpected RPC response shape for getSignatureStatuses')
+              }
+              const status = value[0]
+              const conf = status?.confirmationStatus
+              if (status?.err) {
+                throw new TransactionConfirmationError(`Transaction failed: ${JSON.stringify(status.err)}`)
+              }
+              if (conf === 'finalized' || (conf === 'confirmed' && targetCommitment === 'confirmed')) {
+                break
+              }
+            } catch (rpcError) {
+              attempts++
+              if (attempts > maxRetries || Date.now() - start > timeoutMs) {
+                throw new TransactionConfirmationError('Failed to confirm transaction via RPC polling', (rpcError as Error) ?? (sendErr as Error))
+              }
+              delayMs = Math.min(Math.floor(delayMs * 1.5), 5000)
+              await new Promise((r) => setTimeout(r, delayMs))
+              continue
             }
             if (Date.now() - start > timeoutMs) {
               throw new TransactionConfirmationError('Timed out waiting for confirmation', sendErr as Error)
             }
-            await new Promise((r) => setTimeout(r, 1000))
+            await new Promise((r) => setTimeout(r, delayMs))
           }
         }
         
@@ -249,8 +280,8 @@ export function useTransaction(options: UseTransactionOptions = {}): UseTransact
       queryClient.invalidateQueries({ queryKey: ['account'] })
       
       const hasTokenInstructions = variables.instructions.some(ix => 
-        ix.programAddress === 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' || // Token Program
-        ix.programAddress === 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'   // ATA Program
+        ix.programAddress === TOKEN_PROGRAM_ADDRESS ||
+        ix.programAddress === ASSOCIATED_TOKEN_PROGRAM_ADDRESS
       )
       
       if (hasTokenInstructions) {
@@ -260,7 +291,7 @@ export function useTransaction(options: UseTransactionOptions = {}): UseTransact
       }
       
       const hasStakeInstructions = variables.instructions.some(ix =>
-        ix.programAddress === 'Stake11111111111111111111111111111111111112'
+        ix.programAddress === STAKE_PROGRAM_ADDRESS
       )
       
       if (hasStakeInstructions) {
@@ -320,7 +351,9 @@ export function useTransaction(options: UseTransactionOptions = {}): UseTransact
             sub.unsubscribe?.()
             sub.abort?.()
             sub.close?.()
-          } catch {}
+          } catch (cleanupError) {
+            console.debug('[Arc] Cleanup error (non-critical):', cleanupError)
+          }
         }
         
         // Race between subscription and timeout
@@ -391,7 +424,10 @@ export function useTransaction(options: UseTransactionOptions = {}): UseTransact
         queryClient.invalidateQueries({ queryKey: ['tokenAccount'] })
         queryClient.invalidateQueries({ queryKey: ['tokenBalance'] })
         queryClient.invalidateQueries({ queryKey: ['mint'] })
-      } catch {}
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('[Arc/useTransaction] Query invalidation failed after confirmation:', err)
+      }
 
       return { signature: sentSignature, confirmed: true }
     } catch (error) {

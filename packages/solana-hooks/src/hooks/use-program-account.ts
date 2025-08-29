@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useMemo } from 'react'
 import { useArcClient } from '../core/arc-client-provider'
 import { releaseRpcConnection } from '../core/rpc-manager'
 import type { Transport } from '../transports/types'
@@ -18,6 +18,11 @@ import {
   MintAccountSchema
 } from '../utils/schema-validation'
 import { queryKeys } from '../utils/query-keys'
+
+// ===== PROGRAM ADDRESS CONSTANTS =====
+
+const STAKE_PROGRAM_ADDRESS = 'Stake11111111111111111111111111111111111112' as Address<'Stake11111111111111111111111111111111111112'>
+const VOTE_PROGRAM_ADDRESS = 'Vote111111111111111111111111111111111111112' as Address<'Vote111111111111111111111111111111111111112'>
 
 // ===== TYPES =====
 
@@ -68,7 +73,7 @@ const BUILT_IN_CODECS: Record<BuiltInProgram, CustomCodec<any>> = {
     
     const account = accountInfo.value
     
-    if (account.owner !== 'Stake11111111111111111111111111111111111112') {
+    if (account.owner !== STAKE_PROGRAM_ADDRESS) {
       throw new Error('Account is not owned by the Stake program')
     }
     
@@ -102,7 +107,7 @@ const BUILT_IN_CODECS: Record<BuiltInProgram, CustomCodec<any>> = {
     
     const account = accountInfo.value
     
-    if (account.owner !== 'Vote111111111111111111111111111111111111112') {
+    if (account.owner !== VOTE_PROGRAM_ADDRESS) {
       throw new Error('Account is not owned by the Vote program')
     }
     
@@ -145,7 +150,7 @@ const BUILT_IN_CODECS: Record<BuiltInProgram, CustomCodec<any>> = {
  * ```tsx
  * // 🔥 Built-in codec registry
  * const { data: stakeAccount } = useProgramAccount<StakeAccount>(
- *   { address: 'Stake11111111111111111111111111111111111112', program: 'stake' }
+ *   { address: STAKE_PROGRAM_ADDRESS, program: 'stake' }
  * )
  * 
  * // 🚀 Custom codec for any program
@@ -163,8 +168,15 @@ const BUILT_IN_CODECS: Record<BuiltInProgram, CustomCodec<any>> = {
 export function useProgramAccount<T>(
   options: UseProgramAccountOptions<T>
 ): UseProgramAccountReturn<T> {
-  const { network } = useArcClient()
+  const arcClient = useArcClient()
+  const { network } = arcClient
   const queryClient = useQueryClient()
+  
+  // Extract transport outside the query to avoid hooks rule violation
+  const transport = useMemo(() => 
+    (arcClient as any).config.transport as Transport, 
+    [arcClient]
+  )
   
   useEffect(() => {
     return () => {
@@ -213,7 +225,6 @@ export function useProgramAccount<T>(
         throw new Error('Either program or codec must be provided')
       }
       
-      const transport = (useArcClient() as any).config.transport as Transport
       const rpcShim = {
         getAccountInfo: (addr: any, opts?: any) => ({
           send: () => transport.request({ method: 'getAccountInfo', params: [addr, opts] })

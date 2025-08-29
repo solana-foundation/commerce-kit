@@ -1,6 +1,7 @@
 import React from 'react';
 import { useDialog } from './context';
 import type { DialogBackdropProps } from './types';
+import { Z_INDEX } from '../constants';
 
 export function DialogBackdrop({ className, style, onClick }: DialogBackdropProps) {
   const context = useDialog();
@@ -23,7 +24,7 @@ export function DialogBackdrop({ className, style, onClick }: DialogBackdropProp
         inset: 0,
         backgroundColor: 'rgba(0, 0, 0, 0.25)',
         backdropFilter: 'blur(3px)',
-        zIndex: 40,
+        zIndex: Z_INDEX.BACKDROP,
         cursor: 'pointer',
         ...style,
       }}
