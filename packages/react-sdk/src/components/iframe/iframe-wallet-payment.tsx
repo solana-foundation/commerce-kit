@@ -26,6 +26,8 @@ export const WalletPaymentContent = ({
   const [wallets, setWallets] = React.useState<IFrameWalletInfo[]>([])
   const [connecting, setConnecting] = React.useState<string | null>(null)
   const [error, setError] = React.useState<string | null>(null)
+  const [paymentSuccess, setPaymentSuccess] = React.useState(false)
+  const [paymentSignature, setPaymentSignature] = React.useState<string | null>(null)
   const mountedRef = React.useRef(false)
 
   React.useEffect(() => {
@@ -51,8 +53,10 @@ export const WalletPaymentContent = ({
         if (!mountedRef.current) return
         setConnecting(null)
         setError(null)
-        // Payment successful - signal completion to modal
-        onPaymentComplete()
+        setPaymentSuccess(true)
+        setPaymentSignature(data.signature || null)
+        
+        // Keep modal open, just show success state
       } else if (data.type === 'paymentError') {
         if (!mountedRef.current) return
         setConnecting(null)
@@ -85,6 +89,86 @@ export const WalletPaymentContent = ({
   }
 
   const showEmptyState = wallets.length === 0
+
+  // Show success state if payment succeeded
+  if (paymentSuccess) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        gap: 16,
+        padding: '40px 20px',
+        textAlign: 'center'
+      }}>
+        {/* Success Checkmark */}
+        <div style={{
+          width: 64,
+          height: 64,
+          borderRadius: '50%',
+          background: '#10B981',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transform: paymentSuccess ? 'scale(1)' : 'scale(0)',
+          transition: 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+        }}>
+          <svg 
+            width="32" 
+            height="32" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="white" 
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="20,6 9,17 4,12"></polyline>
+          </svg>
+        </div>
+        
+        {/* Success Text */}
+        <div>
+          <div style={{ 
+            fontSize: 20, 
+            fontWeight: 600, 
+            color: theme.textColor,
+            marginBottom: 8,
+            opacity: paymentSuccess ? 1 : 0,
+            transform: paymentSuccess ? 'translateY(0)' : 'translateY(10px)',
+            transition: 'all 0.3s ease-out 0.2s'
+          }}>
+            Payment Confirmed!
+          </div>
+          <div style={{ 
+            fontSize: 14, 
+            color: `${theme.textColor}80`,
+            lineHeight: 1.4,
+            opacity: paymentSuccess ? 1 : 0,
+            transform: paymentSuccess ? 'translateY(0)' : 'translateY(10px)',
+            transition: 'all 0.3s ease-out 0.3s'
+          }}>
+            Your transaction was successful
+          </div>
+          {paymentSignature && (
+            <div style={{ 
+              fontSize: 11, 
+              color: `${theme.textColor}60`,
+              fontFamily: 'monospace',
+              marginTop: 8,
+              wordBreak: 'break-all' as const,
+              opacity: paymentSuccess ? 1 : 0,
+              transform: paymentSuccess ? 'translateY(0)' : 'translateY(10px)',
+              transition: 'all 0.3s ease-out 0.4s'
+            }}>
+              {paymentSignature.substring(0, 8)}...{paymentSignature.substring(paymentSignature.length - 8)}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

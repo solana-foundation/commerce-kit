@@ -79,8 +79,8 @@ export type { UseTokenBalanceOptions, UseTokenBalanceReturn } from '../hooks/use
 export { useTokenAccountsByOwner } from '../hooks/use-token-accounts-by-owner'
 export type { UseTokenAccountsByOwnerOptions, UseTokenAccountsByOwnerReturn, TokenAccount } from '../hooks/use-token-accounts-by-owner'
 
-export { useTransferToken } from '../hooks/use-transfer-token'
-export type { UseTransferTokenReturn, TransferTokenOptions, TransferTokenResult } from '../hooks/use-transfer-token'
+export { useTransferToken, BlockhashExpirationError } from '../hooks/use-transfer-token'
+export type { UseTransferTokenReturn, TransferTokenOptions, TransferTokenResult, TransferRetryConfig } from '../hooks/use-transfer-token'
 
 export { useCreateToken } from '../hooks/use-create-token'
 export type { UseCreateTokenReturn } from '../hooks/use-create-token'

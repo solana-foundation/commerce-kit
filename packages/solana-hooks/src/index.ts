@@ -41,6 +41,12 @@ export {
   useArcClient
 } from './react'
 
+// Export transaction-specific types and errors
+export { 
+  BlockhashExpirationError,
+  type TransferRetryConfig 
+} from './hooks/use-transfer-token'
+
 // Export commonly used types
 export type { CustomCodec, MintAccount, Schema, ValidationResult, UseTransferTokenReturn, TransferTokenOptions, TransferTokenResult } from './react'
 

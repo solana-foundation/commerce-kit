@@ -34,10 +34,9 @@ const TOKEN_MINTS = {
  */
 export function SecureIframeShell({ config, theme, onPayment, onCancel }: SecureIframeShellProps) {
   const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
-  const rpcUrl = config.rpcUrl || (isLocalhost 
-    ? 'https://api.devnet.solana.com'  
-    : 'https://solana-api.projectserum.com');
-  const network = isLocalhost ? 'devnet' : 'mainnet';
+  // Force mainnet for testing with real USDC
+  const rpcUrl = config.rpcUrl || 'https://api.mainnet-beta.solana.com';
+  const network = 'mainnet';
   
   // Get the connector from AppProvider context
   const connectorClient = useConnectorClient();
@@ -219,10 +218,12 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel }: SecureIf
       console.error('[SecureIframeShell] Payment failed:', error);
       
       let errorMessage = 'Payment failed';
-      if (error.message.includes('User rejected') || error.message.includes('cancelled')) {
+      if (error.message?.includes('User rejected') || error.message?.includes('cancelled')) {
         errorMessage = 'Payment cancelled by user';
-      } else if (error.message.includes('insufficient funds')) {
-        errorMessage = 'Insufficient funds for payment';
+      } else if (error.message?.includes('insufficient funds')) {
+        errorMessage = 'Insufficient funds for payment';  
+      } else if (error.name === 'BlockhashExpirationError') {
+        errorMessage = 'Transaction failed due to network congestion. Please try again.';
       } else {
         errorMessage = error.message || 'Unknown payment error';
       }

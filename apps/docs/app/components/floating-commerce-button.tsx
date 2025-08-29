@@ -8,7 +8,7 @@ export function FloatingCommerceButton() {
     <div className="fixed bottom-6 right-6 z-50">
       <SolanaCommerceSDK
         config={{
-          rpcUrl: process.env.NEXT_PUBLIC_RPC_URL,
+          rpcUrl: process.env.NEXT_PUBLIC_SOLANA_RPC_URL,
           mode: 'tip',
           position: 'overlay',
           merchant: {

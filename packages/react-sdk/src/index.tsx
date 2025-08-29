@@ -146,10 +146,9 @@ export const SolanaCommerceSDK = memo<SolanaCommerceSDKProps>(function SolanaCom
 
   // Determine network and RPC for the global ArcProvider
   const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
-  const rpcUrl = config.rpcUrl || (isLocalhost 
-    ? 'https://api.devnet.solana.com'  
-    : 'https://solana-api.projectserum.com');
-  const network = isLocalhost ? 'devnet' : 'mainnet';
+  // Force mainnet for testing with real USDC - change back to devnet logic later if needed
+  const rpcUrl = config.rpcUrl || 'https://api.mainnet-beta.solana.com';
+  const network = 'mainnet';
 
   // Single AppProvider + ArcProvider for the entire component
   return (

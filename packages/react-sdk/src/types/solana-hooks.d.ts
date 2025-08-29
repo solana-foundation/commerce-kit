@@ -71,4 +71,24 @@ declare module '@solana-commerce/solana-hooks' {
     isLoading: boolean;
     error: Error | null;
   };
+
+  export function useBalance(options?: {
+    address?: string;
+    mint?: any;
+    refreshInterval?: number;
+    enabled?: boolean;
+    onUpdate?: (balance: bigint) => void;
+  }): {
+    balance: bigint | null;
+    balanceSOL: number;
+    formattedBalance: string;
+    address: string | null;
+    isLoading: boolean;
+    error: any;
+    refetch: () => void;
+    refresh: () => void;
+    clear: () => void;
+  };
+
+  export function address(addressString: string): any;
 }
