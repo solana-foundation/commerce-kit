@@ -27,8 +27,11 @@
     "build:sdk": "tsup src/index.tsx --format cjs,esm --dts --splitting --clean --external react --external react-dom",
     "build:iframe": "tsup --config tsup.iframe.config.ts",
     "generate:iframe-bundle": "tsx scripts/generate-iframe-bundle.ts",
-    "dev": "tsup src/index.tsx --format cjs,esm --dts --splitting --watch --external react --external react-dom",
-    "type-check": "tsc --noEmit"
+    "dev": "pnpm run dev:sdk & pnpm run dev:iframe",
+    "type-check": "tsc --noEmit",
+    "serve:iframe": "node examples/serve-iframe.js",
+    "dev:sdk": "tsup src/index.tsx --format cjs,esm --dts --splitting --watch --external react --external react-dom",
+    "dev:iframe": "pnpm run build:iframe && pnpm run serve:iframe"
   },
   "dependencies": {
     "@solana-commerce/headless-sdk": "workspace:*",

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commerce Kit Iframe Host</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .iframe-container {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #666;
+        }
+        code {
+            background: #e9ecef;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Commerce Kit Iframe</h1>
+        
+        <div class="iframe-container">
+            <iframe id="commerce-iframe"></iframe>
+        </div>
+        
+        <div class="info">
+            <h3>Query Parameters:</h3>
+            <ul>
+                <li><code>?mint=&lt;token_address&gt;</code> - Set the payment token</li>
+                <li><code>?amount=&lt;number&gt;</code> - Set default tip amount</li>
+                <li><code>?wallet=&lt;wallet_address&gt;</code> - Set destination wallet</li>
+            </ul>
+            <p>Example: <code>?mint=SOL&amount=5&wallet=YourWallet123</code></p>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const config = {
+            mode: 'tip',
+            merchant: {
+                name: 'Your Business',
+                wallet: 'YourDefaultWalletAddress' // This can be overridden by query params
+            },
+            allowedMints: ['SOL'], // SOL by default
+            tipPresets: [1, 5, 10, 20, 50],
+            tipDefaultAmount: 5
+        };
+
+        const theme = {
+            primaryColor: '#0066FF',
+            secondaryColor: '#F0F4FF',
+            backgroundColor: '#FFFFFF',
+            textColor: '#1A1A1A',
+            borderRadius: 'medium',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            buttonShadow: true
+        };
+
+        // Get iframe element
+        const iframe = document.getElementById('commerce-iframe');
+        
+        // Build iframe URL with current query parameters
+        const currentParams = new URLSearchParams(window.location.search);
+        const iframeUrl = `/iframe-app/index.html${currentParams.toString() ? '?' + currentParams.toString() : ''}`;
+        
+        // For production, this would be your deployed iframe bundle URL
+        // e.g., 'https://your-domain.com/commerce-iframe.html'
+        iframe.src = iframeUrl;
+
+        // Handle messages from iframe
+        window.addEventListener('message', (event) => {
+            // In production, validate event.origin
+            // if (event.origin !== 'https://your-iframe-domain.com') return;
+            
+            const data = event.data;
+            
+            switch (data.type) {
+                case 'ready':
+                    console.log('Iframe is ready');
+                    // Send initialization data
+                    iframe.contentWindow.postMessage({
+                        type: 'init',
+                        config: config,
+                        theme: theme
+                    }, '*'); // Use specific origin in production
+                    break;
+                    
+                case 'payment':
+                    console.log('Payment initiated:', data);
+                    // Handle payment logic here
+                    alert(`Payment of ${data.amount} ${data.currency} initiated!`);
+                    break;
+                    
+                case 'close':
+                    console.log('Modal closed');
+                    // Handle close logic
+                    break;
+                    
+                case 'resize':
+                    console.log('Iframe height:', data.height);
+                    // Optionally adjust container height
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>

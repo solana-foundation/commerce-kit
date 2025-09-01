@@ -3,6 +3,17 @@ html, body {
   margin: 0;
   padding: 0;
   background: transparent;
+  width: 100%;
+  height: 100%;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
 }
 
 /* Component styles for iframe context */

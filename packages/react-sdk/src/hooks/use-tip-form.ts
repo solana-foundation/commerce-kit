@@ -36,7 +36,7 @@ type TipFormAction =
 
 // Initial state factory
 const createInitialState = (config: SolanaCommerceConfig): TipFormState => ({
-  selectedAmount: 5,
+  selectedAmount: (config as any).tipDefaultAmount || 5,
   selectedCurrency: (config.allowedMints?.[0] as Currency) || 'USDC',
   selectedPaymentMethod: 'qr',
   customAmount: '',
@@ -83,6 +83,12 @@ export function useTipForm(config: SolanaCommerceConfig) {
   const availableCurrencies = useMemo(() => 
     ALL_CURRENCIES.filter(c => config.allowedMints?.includes(c.value)), 
     [config.allowedMints]
+  );
+
+  // Tip presets from config
+  const tipPresets = useMemo(() => 
+    (config as any).tipPresets || [1, 5, 15, 25, 50],
+    [config]
   );
 
   // Actions
@@ -163,5 +169,6 @@ export function useTipForm(config: SolanaCommerceConfig) {
     computed,
     handlers,
     availableCurrencies,
+    tipPresets,
   };
 }

@@ -1,0 +1,34 @@
+{
+  "buildCommand": "pnpm build:iframe",
+  "outputDirectory": "dist/iframe-app",
+  "installCommand": "pnpm install",
+  "rewrites": [
+    {
+      "source": "/ck",
+      "destination": "/ck.html"
+    },
+    {
+      "source": "/cktip",
+      "destination": "/cktip.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type"
+        }
+      ]
+    }
+  ]
+}

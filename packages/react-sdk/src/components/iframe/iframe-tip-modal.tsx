@@ -42,6 +42,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
     computed,
     handlers,
     availableCurrencies,
+    tipPresets,
   } = useTipForm(config);
 
   // Handlers
@@ -122,6 +123,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
               showCustomInput={state.showCustomInput}
               customAmount={state.customAmount}
               currencySymbol={getCurrencySymbol(state.selectedCurrency)}
+              presetAmounts={tipPresets}
               onAmountSelect={actions.setAmount}
               onCustomToggle={actions.toggleCustomInput}
               onCustomAmountChange={actions.setCustomAmount}

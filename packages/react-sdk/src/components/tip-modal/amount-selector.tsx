@@ -14,6 +14,7 @@ interface AmountSelectorProps {
   showCustomInput: boolean;
   customAmount: string;
   currencySymbol?: string;
+  presetAmounts?: readonly number[];
   onAmountSelect: (amount: number) => void;
   onCustomToggle: (show: boolean) => void;
   onCustomAmountChange: (amount: string) => void;
@@ -25,6 +26,7 @@ export const AmountSelector = memo<AmountSelectorProps>(({
   showCustomInput,
   customAmount,
   currencySymbol = '$',
+  presetAmounts = PRESET_AMOUNTS,
   onAmountSelect,
   onCustomToggle,
   onCustomAmountChange
@@ -36,7 +38,7 @@ export const AmountSelector = memo<AmountSelectorProps>(({
       </label>
       
       <div className="ck-amounts-grid">
-        {PRESET_AMOUNTS.map(amount => (
+        {presetAmounts.map(amount => (
           <AmountButton
             key={amount}
             theme={theme}
