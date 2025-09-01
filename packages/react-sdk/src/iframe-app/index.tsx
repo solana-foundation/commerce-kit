@@ -13,6 +13,7 @@ if (typeof window !== 'undefined') {
 // Now import the iframe-safe modal components
 import { IframeTipModalContent } from '../components/iframe/iframe-tip-modal';
 import { PaymentModalContent } from '../components/ui/payment-modal-content';
+import { TriggerButton } from '../components/ui/trigger-button';
 import './styles.css';
 import { getBorderRadius, getModalBorderRadius, getButtonShadow, getButtonBorder } from '../utils';
 
@@ -49,12 +50,15 @@ function sendToParent(message: OutgoingMessage) {
 }
 
 // Main app component
-function IframeApp({ config, theme, totalAmount, paymentUrl }: { 
+function IframeApp({ config, theme, totalAmount, paymentUrl, showButton = false, buttonText = 'Tip with Crypto' }: { 
   config: SolanaCommerceConfig; 
   theme: Required<ThemeConfig>;
   totalAmount?: number;
   paymentUrl?: string;
+  showButton?: boolean;
+  buttonText?: string;
 }) {
+  const [isModalOpen, setIsModalOpen] = React.useState(!showButton);
   // Handlers that communicate with parent
   const handlePayment = React.useCallback((amount: number, currency: string, products?: any[]) => {
     sendToParent({ 
@@ -75,8 +79,35 @@ function IframeApp({ config, theme, totalAmount, paymentUrl }: {
   }, []);
 
   const handleCancel = React.useCallback(() => {
-    sendToParent({ type: 'close' });
+    if (showButton) {
+      setIsModalOpen(false);
+    } else {
+      sendToParent({ type: 'close' });
+    }
+  }, [showButton]);
+
+  const handleButtonClick = React.useCallback(() => {
+    setIsModalOpen(true);
   }, []);
+
+  // Show button if requested
+  if (showButton && !isModalOpen) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        minHeight: '100vh',
+        padding: '20px'
+      }}>
+        <TriggerButton
+          theme={theme}
+          mode={config.mode}
+          onClick={handleButtonClick}
+        />
+      </div>
+    );
+  }
 
   // Render appropriate modal content
   if (config.mode === 'tip') {
@@ -119,6 +150,10 @@ function parseQueryParams() {
     // Tip specific
     amount: params.has('amount') ? parseFloat(params.get('amount')!) : undefined,
     tipPresets: params.get('tipPresets')?.split(',').map(Number).filter(n => !isNaN(n)) || undefined,
+    
+    // Modal state
+    open: params.get('open') === 'true',
+    text: params.get('text') || 'Tip with Crypto',
     
     
     // Theme parameters
@@ -248,6 +283,8 @@ function init() {
                 theme={message.theme}
                 totalAmount={message.totalAmount}
                 paymentUrl={message.paymentUrl}
+                showButton={!queryParams.open}
+                buttonText={queryParams.text}
               />
             </DialogShim.DialogProvider>
           </React.StrictMode>

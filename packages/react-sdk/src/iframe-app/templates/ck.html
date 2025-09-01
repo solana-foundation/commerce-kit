@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commerce Kit</title>
+  <link rel="stylesheet" href="./index.css">
+  <script>
+    // Parse all query parameters from URL
+    function parseQueryParams() {
+      const params = new URLSearchParams(window.location.search);
+      
+      return {
+        // Core parameters
+        mode: params.get('mode') || 'tip',
+        wallet: params.get('wallet') || undefined,
+        merchantName: params.get('merchantName') || undefined,
+        merchantLogo: params.get('merchantLogo') || undefined,
+        
+        // Modal state
+        open: params.get('open') === 'true',
+        
+        // Multiple currencies support (comma-separated)
+        currencies: params.get('currencies')?.split(',').filter(Boolean) || undefined,
+        
+        // Tip specific
+        amount: params.has('amount') ? parseFloat(params.get('amount')) : undefined,
+        tipPresets: params.get('tipPresets')?.split(',').map(Number).filter(n => !isNaN(n)) || undefined,
+        
+        // Theme parameters
+        primaryColor: params.get('primaryColor') || undefined,
+        secondaryColor: params.get('secondaryColor') || undefined,
+        backgroundColor: params.get('backgroundColor') || undefined,
+        textColor: params.get('textColor') || undefined,
+        borderRadius: params.get('borderRadius') || undefined,
+        fontFamily: params.get('fontFamily') || undefined,
+        buttonShadow: params.get('buttonShadow') || undefined,
+        buttonBorder: params.get('buttonBorder') || undefined,
+        
+        // Button text for closed state
+        text: params.get('text') || 'Tip with Crypto',
+      };
+    }
+
+    // Check if we're in standalone mode (no parent frame)
+    function isStandalone() {
+      try {
+        return window.self === window.top;
+      } catch (e) {
+        // If we can't access window.top due to cross-origin, we're in an iframe
+        return false;
+      }
+    }
+
+    // Apply query parameters and auto-initialize if standalone
+    window.addEventListener('DOMContentLoaded', function() {
+      const queryParams = parseQueryParams();
+      const standalone = isStandalone();
+      
+      if (standalone) {
+        // Auto-initialize with query params
+        const config = {
+          mode: queryParams.mode || 'tip',
+          merchant: {
+            name: queryParams.merchantName || 'Commerce Kit',
+            wallet: queryParams.wallet || '11111111111111111111111111111111',
+            logo: queryParams.merchantLogo
+          },
+          allowedMints: queryParams.currencies || ['USDC'],
+          tipPresets: queryParams.tipPresets || [1, 5, 15, 25, 50],
+          tipDefaultAmount: queryParams.amount || 5,
+          initialOpen: queryParams.open
+        };
+
+        const theme = {
+          primaryColor: queryParams.primaryColor || '#0066FF',
+          secondaryColor: queryParams.secondaryColor || '#F0F4FF',
+          backgroundColor: queryParams.backgroundColor || '#FFFFFF',
+          textColor: queryParams.textColor || '#1A1A1A',
+          borderRadius: queryParams.borderRadius || 'medium',
+          fontFamily: queryParams.fontFamily || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          buttonShadow: queryParams.buttonShadow !== 'false',
+          buttonBorder: queryParams.buttonBorder || 'none'
+        };
+
+        // Auto-initialize
+        window.postMessage({
+          type: 'init',
+          config: config,
+          theme: theme,
+          showButton: !queryParams.open,
+          buttonText: queryParams.text
+        }, '*');
+      }
+    });
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="./index.global.js"></script>
+</body>
+</html>
