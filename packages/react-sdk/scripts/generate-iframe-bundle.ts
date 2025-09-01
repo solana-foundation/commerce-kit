@@ -36,7 +36,7 @@ export const IFRAME_STYLES = ${JSON.stringify(cssContent)};
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Commerce Kit</title>
-  <link rel="stylesheet" href="/index.css">
+  <link rel="stylesheet" href="./index.css">
   <script>
     // Parse all query parameters from URL
     function parseQueryParams() {
@@ -120,7 +120,7 @@ export const IFRAME_STYLES = ${JSON.stringify(cssContent)};
 </head>
 <body>
   <div id="root"></div>
-  <script src="/index.global.js"></script>
+  <script src="./index.global.js"></script>
 </body>
 </html>`;
 
