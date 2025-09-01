@@ -1,6 +1,6 @@
 {
-  "buildCommand": "pnpm build:iframe",
-  "outputDirectory": "dist/iframe-app",
+  "buildCommand": "pnpm build:iframe && pnpm generate:iframe-bundle",
+  "outputDirectory": "dist/iframe",
   "installCommand": "pnpm install",
   "rewrites": [
     {

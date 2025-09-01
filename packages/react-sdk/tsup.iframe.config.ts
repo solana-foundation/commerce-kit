@@ -30,7 +30,7 @@ const replaceUiPrimitivesPlugin: Plugin = {
 export default defineConfig({
   entry: ['src/iframe-app/index.tsx'],
   format: ['iife'],
-  outDir: 'dist/iframe-app',
+  outDir: 'dist/iframe',
   clean: true,
   minify: true,
   noExternal: [/.*/], // Bundle everything including React
