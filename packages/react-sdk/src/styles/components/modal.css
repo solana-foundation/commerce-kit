@@ -9,6 +9,7 @@
   min-width: var(--modal-min-width);
   overflow: hidden;
   font-family: var(--font-family);
+  box-shadow: var(--modal-shadow);
   background-color: var(--color-background);
   border-radius: var(--modal-border-radius, 1.5rem);
   animation: modal-enter 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards;

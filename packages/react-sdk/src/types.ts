@@ -59,7 +59,7 @@ export interface PaymentCallbacks {
 }
 
 // Main SDK props
-export interface SolanaCommerceSDKProps {
+export interface PaymentButtonProps {
   readonly config: SolanaCommerceConfig;
   readonly children?: React.ReactNode;
   readonly className?: string;

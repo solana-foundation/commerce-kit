@@ -15,7 +15,7 @@ export type {
   ThemeConfig,
   SolanaCommerceConfig,
   PaymentCallbacks,
-  SolanaCommerceSDKProps,
+  PaymentButtonProps,
   CommerceMode,
   Position,
   BorderRadius,
@@ -40,12 +40,12 @@ import {
   getBorderRadius
 } from './utils';
 import { TriggerButton } from './components/ui';
-import type { SolanaCommerceSDKProps } from './types';
+import type { PaymentButtonProps } from './types';
 
 /**
  * Main Solana Commerce SDK Component
  */
-export const SolanaCommerceSDK = memo<SolanaCommerceSDKProps>(function SolanaCommerceSDK({
+export const PaymentButton = memo<PaymentButtonProps>(function PaymentButton({
   config,
   children,
   className,
@@ -247,4 +247,7 @@ export const SolanaCommerceSDK = memo<SolanaCommerceSDKProps>(function SolanaCom
   }
 });
 
-SolanaCommerceSDK.displayName = 'SolanaCommerceSDK';
+PaymentButton.displayName = 'PaymentButton';
+
+// Deprecated alias for backward compatibility
+export const SolanaCommerceSDK = PaymentButton;

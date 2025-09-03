@@ -4,7 +4,7 @@ A comprehensive, production-ready Solana e-commerce SDK with full theming, multi
 
 ## 🎯 Current Status: Production Ready
 
-✅ **Complete E-commerce Solution** - SolanaCommerceSDK with tip/buyNow/cart modes  
+✅ **Complete E-commerce Solution** - PaymentButton with tip/buyNow/cart modes  
 ✅ **Comprehensive Theming System** - Colors, borders, fonts, custom styling  
 ✅ **Stablecoin Support** - USDC, USDT, and SPL token integration  
 ✅ **SSR-Safe Architecture** - Dialog-alpha system, no hydration issues  
@@ -27,9 +27,9 @@ open http://localhost:3000
 ### Simple Integration
 
 ```tsx
-import { SolanaCommerceSDK } from '@solana-commerce/react-sdk';
+import { PaymentButton } from '@solana-commerce/react-sdk';
 
-<SolanaCommerceSDK
+<PaymentButton
   config={{
     mode: 'cart',
     merchant: {
@@ -59,7 +59,7 @@ import { SolanaCommerceSDK } from '@solana-commerce/react-sdk';
 ```
 @solana-commerce/
 ├── headless-sdk/     # Core payment logic, stablecoin support, utilities
-├── react-sdk/        # SolanaCommerceSDK, SolanaPayButton, examples
+├── react-sdk/        # PaymentButton, SolanaPayButton, examples
 ├── ui-primitives/    # Dialog-alpha system (SSR-safe, accessible)
 └── docs/            # Complete documentation with interactive demos
 ```
@@ -67,7 +67,7 @@ import { SolanaCommerceSDK } from '@solana-commerce/react-sdk';
 ### Current Feature Set
 
 **✅ Complete E-commerce Components:**
-- SolanaCommerceSDK with multiple modes (tip/buyNow/cart)
+- PaymentButton with multiple modes (tip/buyNow/cart)
 - Product management with metadata support
 - Merchant configuration and branding
 - Custom trigger elements and positioning
@@ -101,7 +101,7 @@ packages/
 │   ├── payment-verification.ts     # Transaction validation
 │   └── transaction-builder.ts      # Payment URL generation
 ├── react-sdk/src/
-│   ├── index.tsx                   # SolanaCommerceSDK (main component)
+│   ├── index.tsx                   # PaymentButton (main component)
 │   ├── solana-pay-button.tsx       # Simple tip button
 │   └── examples.tsx                # Usage examples for all modes
 ├── ui-primitives/src/
@@ -115,7 +115,7 @@ packages/
 └── apps/docs/
     ├── app/(home)/                 # Interactive demo homepage
     ├── content/docs/               # Comprehensive MDX guides
-    └── components/interactive-demo.tsx # Live SolanaCommerceSDK demo
+    └── components/interactive-demo.tsx # Live PaymentButton demo
 ```
 
 ### Key Commands
@@ -174,7 +174,7 @@ interface ThemeConfig {
 ### Payment Flow Integration
 ```typescript
 // Complete payment lifecycle events
-<SolanaCommerceSDK
+<PaymentButton
   onPaymentStart={() => {/* Show loading */}}
   onPayment={(amount, currency, products) => {/* Track analytics */}}
   onPaymentSuccess={(signature) => {/* Clear cart, redirect */}}
@@ -186,7 +186,7 @@ interface ThemeConfig {
 ## 🎨 Current Demo
 
 Visit `http://localhost:3000` to see:
-- **Interactive SolanaCommerceSDK Demo** - Switch between tip/buyNow/cart modes
+- **Interactive PaymentButton Demo** - Switch between tip/buyNow/cart modes
 - **Live Theming Controls** - Customize colors, borders, positioning
 - **Complete Documentation** - API references, guides, examples
 - **Working Payment Flows** - Real Solana Pay URL generation
@@ -206,7 +206,7 @@ Visit `http://localhost:3000` to see:
 
 ### Tip/Donation Widget
 ```tsx
-<SolanaCommerceSDK
+<PaymentButton
   config={{
     mode: 'tip',
     merchant: { name: 'Creator', wallet: 'ADDRESS' },
@@ -218,7 +218,7 @@ Visit `http://localhost:3000` to see:
 
 ### Digital Product Sales
 ```tsx
-<SolanaCommerceSDK
+<PaymentButton
   config={{
     mode: 'buyNow',
     merchant: { name: 'Digital Store', wallet: 'ADDRESS' },
@@ -236,7 +236,7 @@ Visit `http://localhost:3000` to see:
 
 ### Multi-Product Cart
 ```tsx
-<SolanaCommerceSDK
+<PaymentButton
   config={{
     mode: 'cart',
     merchant: { name: 'E-commerce Store', wallet: 'ADDRESS' },
@@ -252,7 +252,7 @@ Visit `http://localhost:3000` to see:
 
 ### Stablecoin Subscriptions
 ```tsx
-<SolanaCommerceSDK
+<PaymentButton
   config={{
     mode: 'buyNow',
     merchant: { name: 'SaaS Platform', wallet: 'ADDRESS' },
@@ -278,7 +278,7 @@ Visit `http://localhost:3000` to see:
 ### Common Tasks
 ```bash
 # Add new payment mode
-packages/react-sdk/src/index.tsx  # Update SolanaCommerceSDK
+packages/react-sdk/src/index.tsx  # Update PaymentButton
 
 # Add new stablecoin support
 packages/headless-sdk/src/index.ts  # Update STABLECOINS config

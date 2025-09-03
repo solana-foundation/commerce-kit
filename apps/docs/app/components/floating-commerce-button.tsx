@@ -1,12 +1,12 @@
 'use client';
 
-import { SolanaCommerceSDK } from '@solana-commerce/react-sdk';
+import { PaymentButton } from '@solana-commerce/react-sdk';
 // Note: OrderItem removed for tip flow MVP
 
 export function FloatingCommerceButton() {
   return (
     <div className="fixed bottom-6 right-6 z-50">
-      <SolanaCommerceSDK
+      <PaymentButton
         config={{
           rpcUrl: process.env.NEXT_PUBLIC_SOLANA_RPC_URL,
           mode: 'tip',

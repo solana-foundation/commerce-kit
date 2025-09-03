@@ -1,6 +1,6 @@
 'use client';
 
-import { SolanaCommerceSDK } from '@solana-commerce/react-sdk';
+import { PaymentButton } from '@solana-commerce/react-sdk';
 
 interface FullPageBuyNowProps {
   rpcUrl?: string;
@@ -8,7 +8,7 @@ interface FullPageBuyNowProps {
 
 export function FullPageBuyNow({ rpcUrl }: FullPageBuyNowProps = {}) {
   return (
-    <SolanaCommerceSDK
+    <PaymentButton
     config={{
       rpcUrl,
       mode: 'buyNow',
@@ -52,7 +52,7 @@ export function FullPageBuyNow({ rpcUrl }: FullPageBuyNowProps = {}) {
 
 export function FullPageBuyNow2() {
   return (
-    <SolanaCommerceSDK
+    <PaymentButton
     config={{
       mode: 'cart',
       position: 'overlay',
