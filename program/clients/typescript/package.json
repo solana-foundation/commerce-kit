@@ -6,8 +6,7 @@
   "type": "module",
   "types": "dist/index.d.ts",
   "scripts": {
-    "generate": "cd ../.. && pnpm run generate-clients",
-    "build": "pnpm run generate && tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json",
     "test": "jest",
     "test:unit": "jest tests/unit",
     "test:unit:instructions": "jest tests/unit/instructions",
@@ -37,6 +36,7 @@
     "prettier": "^3.6.2",
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "@solana-commerce/commerce-program": "workspace:*"
   }
 }
