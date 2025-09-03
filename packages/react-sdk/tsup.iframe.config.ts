@@ -72,7 +72,7 @@ const replaceUiPrimitivesPlugin: Plugin = {
 export default defineConfig({
   entry: ['src/iframe-app/index.tsx'],
   format: ['iife'],
-  outDir: 'dist/iframe-app',
+  outDir: 'dist/iframe',
   clean: true,
   // Enable readable errors locally by building dev React when IFRAME_DEV=true
   minify: process.env.IFRAME_DEV === 'true' ? false : true,

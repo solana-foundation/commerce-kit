@@ -4,8 +4,8 @@ import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 
 // Read the built iframe bundle and CSS
-const iframeBundlePath = join(process.cwd(), 'dist/iframe-app/index.global.js');
-const iframeCssPath = join(process.cwd(), 'dist/iframe-app/index.css');
+const iframeBundlePath = join(process.cwd(), 'dist/iframe/index.global.js');
+const iframeCssPath = join(process.cwd(), 'dist/iframe/index.css');
 const outputPath = join(process.cwd(), 'src/iframe-app/bundle.ts');
 
 try {
@@ -20,7 +20,7 @@ try {
   
   // Generate TypeScript file with the bundle as a constant
   const tsContent = `// This file is auto-generated. Do not edit manually.
-// Generated from: dist/iframe-app/index.global.js
+// Generated from: dist/iframe/index.global.js
 
 export const IFRAME_BUNDLE = ${JSON.stringify(bundleContent)};
 export const IFRAME_STYLES = ${JSON.stringify(cssContent)};

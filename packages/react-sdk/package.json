@@ -24,7 +24,7 @@
   },
   "scripts": {
     "build": "pnpm run build:iframe && pnpm run generate:iframe-bundle && pnpm run build:sdk",
-    "build:sdk": "tsup src/index.tsx --format cjs,esm --dts --splitting --clean --external react --external react-dom",
+    "build:sdk": "tsup src/index.tsx --format cjs,esm --dts --splitting --external react --external react-dom",
     "build:iframe": "tsup --config tsup.iframe.config.ts",
     "generate:iframe-bundle": "tsx scripts/generate-iframe-bundle.ts",
     "dev": "tsup src/index.tsx --format cjs,esm --dts --splitting --watch --external react --external react-dom",
