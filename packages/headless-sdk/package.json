@@ -7,8 +7,7 @@
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts --clean",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
-    "lint": "echo 'Linting headless-sdk...'",
-    "clean": "rm -rf .turbo dist node_modules"
+    "clean": "rm -rf dist"
   },
   "dependencies": {
     "@solana-commerce/solana-pay": "workspace:*",
