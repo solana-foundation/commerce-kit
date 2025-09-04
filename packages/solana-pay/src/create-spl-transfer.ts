@@ -110,7 +110,7 @@ export async function createSplTransfer(
     const refs = Array.isArray(reference) ? reference : [reference];
     for (const ref of refs) {
       transferInstruction.accounts.push({
-        address: ref,
+        address: ref as Address<string>,
         role: AccountRole.READONLY,
       });
     }
