@@ -8,7 +8,7 @@ export type Amount = BigNumber;
 
 export type SPLToken = Address;
 
-export type Reference = Address;
+export type Reference = Address<string>;
 
 export type References = Reference | Reference[];
 
