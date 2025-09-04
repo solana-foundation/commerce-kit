@@ -3,7 +3,7 @@ import { TEN } from './constants';
 import BigNumber from 'bignumber.js';
 import {
   address,
-  Address,
+  type Address,
   Rpc,
   SolanaRpcApi,
   TransactionSigner,
@@ -110,7 +110,7 @@ export async function createSplTransfer(
     const refs = Array.isArray(reference) ? reference : [reference];
     for (const ref of refs) {
       transferInstruction.accounts.push({
-        address: ref as Address<string>,
+        address: address(ref),
         role: AccountRole.READONLY,
       });
     }
