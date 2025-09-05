@@ -13,7 +13,7 @@
     },
     "dependencies": {
         "@codama/nodes-from-anchor": "^1.2.3",
-        "@codama/renderers": "1.0.29",
+        "@codama/renderers": "1.0.32",
         "@codama/renderers-js": "^1.3.2",
         "@codama/renderers-rust": "^1.2.0",
         "@solana/kit": "^2.3.0",
