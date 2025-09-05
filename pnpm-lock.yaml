@@ -192,7 +192,7 @@ importers:
         version: link:../ui-primitives
       '@solana-mobile/wallet-standard-mobile':
         specifier: ^0.3.0
-        version: 0.3.0(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)))(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))(react-native@0.81.0(@babel/core@7.28.3)(@react-native/metro-config@0.81.1(@babel/core@7.28.3)(bufferutil@4.0.9)(utf-8-validate@5.0.10))(@types/react@19.1.11)(bufferutil@4.0.9)(react@19.1.1)(utf-8-validate@5.0.10))(react@19.1.1)
+        version: 0.3.0(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))))(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))(react-native@0.81.0(@babel/core@7.28.3)(@react-native/metro-config@0.81.1(@babel/core@7.28.3)(bufferutil@4.0.9)(utf-8-validate@5.0.10))(@types/react@19.1.11)(bufferutil@4.0.9)(react@19.1.1)(utf-8-validate@5.0.10))(react@19.1.1)
       '@wallet-standard/app':
         specifier: ^1.0.0
         version: 1.1.0
@@ -293,13 +293,13 @@ importers:
         specifier: workspace:*
         version: link:../connector-kit
       '@solana-program/compute-budget':
-        specifier: ^0.5.0
-        version: 0.5.4(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))
+        specifier: ^0.8.0
+        version: 0.8.0(@solana/kit@2.3.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))
       '@solana-program/system':
-        specifier: ^0.5.0
-        version: 0.5.4(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))
+        specifier: ^0.7.0
+        version: 0.7.0(@solana/kit@2.3.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))
       '@solana-program/token':
-        specifier: ^0.5.0
+        specifier: ^0.5.1
         version: 0.5.1(@solana/kit@2.3.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))
       '@solana/keys':
         specifier: ^2.3.0
@@ -313,9 +313,6 @@ importers:
       '@solana/transactions':
         specifier: ^2.3.0
         version: 2.3.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)
-      '@solana/web3.js':
-        specifier: 2.0.0-rc.1
-        version: 2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))
       '@tanstack/react-query':
         specifier: '>=5.0.0'
         version: 5.85.5(react@18.3.1)
@@ -2542,20 +2539,10 @@ packages:
     peerDependencies:
       '@solana/kit': ^2.1.0
 
-  '@solana-program/compute-budget@0.5.4':
-    resolution: {integrity: sha512-xGj4w9jX66vHYfP/kkPkpfPorQGgFO75co9QVjxo+h9Bo222VYHc6hDi+kstKq17nuQYaF/3OM0cFDtOBh+c1Q==}
-    peerDependencies:
-      '@solana/web3.js': 2.0.0-rc.1
-
   '@solana-program/compute-budget@0.8.0':
     resolution: {integrity: sha512-qPKxdxaEsFxebZ4K5RPuy7VQIm/tfJLa1+Nlt3KNA8EYQkz9Xm8htdoEaXVrer9kpgzzp9R3I3Bh6omwCM06tQ==}
     peerDependencies:
       '@solana/kit': ^2.1.0
-
-  '@solana-program/system@0.5.4':
-    resolution: {integrity: sha512-l8xjUxKagzPL/bTqCrdcsPh+AcnsER/lV+sJrJa+D3jV2VgNu1m2At4pd4k63Hmm+lMWe6OKOa0itbPfMNhgXw==}
-    peerDependencies:
-      '@solana/web3.js': 2.0.0-rc.1
 
   '@solana-program/system@0.7.0':
     resolution: {integrity: sha512-FKTBsKHpvHHNc1ATRm7SlC5nF/VdJtOSjldhcyfMN9R7xo712Mo2jHIzvBgn8zQO5Kg0DcWuKB7268Kv1ocicw==}
@@ -9025,9 +9012,9 @@ snapshots:
     dependencies:
       '@sinonjs/commons': 3.0.1
 
-  '@solana-mobile/mobile-wallet-adapter-protocol@2.2.3(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)))(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))(bs58@5.0.0)(react-native@0.81.0(@babel/core@7.28.3)(@react-native/metro-config@0.81.1(@babel/core@7.28.3)(bufferutil@4.0.9)(utf-8-validate@5.0.10))(@types/react@19.1.11)(bufferutil@4.0.9)(react@19.1.1)(utf-8-validate@5.0.10))(react@19.1.1)':
+  '@solana-mobile/mobile-wallet-adapter-protocol@2.2.3(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))))(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))(bs58@5.0.0)(react-native@0.81.0(@babel/core@7.28.3)(@react-native/metro-config@0.81.1(@babel/core@7.28.3)(bufferutil@4.0.9)(utf-8-validate@5.0.10))(@types/react@19.1.11)(bufferutil@4.0.9)(react@19.1.1)(utf-8-validate@5.0.10))(react@19.1.1)':
     dependencies:
-      '@solana/wallet-standard': 1.1.4(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)))(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))(bs58@5.0.0)(react@19.1.1)
+      '@solana/wallet-standard': 1.1.4(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))))(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))(bs58@5.0.0)(react@19.1.1)
       '@solana/wallet-standard-util': 1.1.2
       '@wallet-standard/core': 1.1.1
       js-base64: 3.7.8
@@ -9038,9 +9025,9 @@ snapshots:
       - bs58
       - react
 
-  '@solana-mobile/wallet-standard-mobile@0.3.0(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)))(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))(react-native@0.81.0(@babel/core@7.28.3)(@react-native/metro-config@0.81.1(@babel/core@7.28.3)(bufferutil@4.0.9)(utf-8-validate@5.0.10))(@types/react@19.1.11)(bufferutil@4.0.9)(react@19.1.1)(utf-8-validate@5.0.10))(react@19.1.1)':
+  '@solana-mobile/wallet-standard-mobile@0.3.0(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))))(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))(react-native@0.81.0(@babel/core@7.28.3)(@react-native/metro-config@0.81.1(@babel/core@7.28.3)(bufferutil@4.0.9)(utf-8-validate@5.0.10))(@types/react@19.1.11)(bufferutil@4.0.9)(react@19.1.1)(utf-8-validate@5.0.10))(react@19.1.1)':
     dependencies:
-      '@solana-mobile/mobile-wallet-adapter-protocol': 2.2.3(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)))(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))(bs58@5.0.0)(react-native@0.81.0(@babel/core@7.28.3)(@react-native/metro-config@0.81.1(@babel/core@7.28.3)(bufferutil@4.0.9)(utf-8-validate@5.0.10))(@types/react@19.1.11)(bufferutil@4.0.9)(react@19.1.1)(utf-8-validate@5.0.10))(react@19.1.1)
+      '@solana-mobile/mobile-wallet-adapter-protocol': 2.2.3(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))))(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))(bs58@5.0.0)(react-native@0.81.0(@babel/core@7.28.3)(@react-native/metro-config@0.81.1(@babel/core@7.28.3)(bufferutil@4.0.9)(utf-8-validate@5.0.10))(@types/react@19.1.11)(bufferutil@4.0.9)(react@19.1.1)(utf-8-validate@5.0.10))(react@19.1.1)
       '@solana/wallet-standard-chains': 1.1.1
       '@solana/wallet-standard-features': 1.3.0
       '@wallet-standard/base': 1.1.0
@@ -9058,19 +9045,11 @@ snapshots:
     dependencies:
       '@solana/kit': 2.3.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))
 
-  '@solana-program/compute-budget@0.5.4(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))':
-    dependencies:
-      '@solana/web3.js': 2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))
-
-  '@solana-program/compute-budget@0.8.0(@solana/kit@2.3.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))':
+  '@solana-program/compute-budget@0.8.0(@solana/kit@2.3.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))':
     dependencies:
       '@solana/kit': 2.3.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))
 
-  '@solana-program/system@0.5.4(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))':
-    dependencies:
-      '@solana/web3.js': 2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))
-
-  '@solana-program/system@0.7.0(@solana/kit@2.3.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))':
+  '@solana-program/system@0.7.0(@solana/kit@2.3.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))':
     dependencies:
       '@solana/kit': 2.3.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))
 
@@ -9762,7 +9741,7 @@ snapshots:
     transitivePeerDependencies:
       - fastestsmallesttextencoderdecoder
 
-  '@solana/wallet-adapter-base@0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))':
+  '@solana/wallet-adapter-base@0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))':
     dependencies:
       '@solana/wallet-standard-features': 1.3.0
       '@solana/web3.js': 2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))
@@ -9791,9 +9770,9 @@ snapshots:
       '@solana/wallet-standard-chains': 1.1.1
       '@solana/wallet-standard-features': 1.3.0
 
-  '@solana/wallet-standard-wallet-adapter-base@1.1.4(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))(bs58@5.0.0)':
+  '@solana/wallet-standard-wallet-adapter-base@1.1.4(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))(bs58@5.0.0)':
     dependencies:
-      '@solana/wallet-adapter-base': 0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))
+      '@solana/wallet-adapter-base': 0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))
       '@solana/wallet-standard-chains': 1.1.1
       '@solana/wallet-standard-features': 1.3.0
       '@solana/wallet-standard-util': 1.1.2
@@ -9804,10 +9783,10 @@ snapshots:
       '@wallet-standard/wallet': 1.1.0
       bs58: 5.0.0
 
-  '@solana/wallet-standard-wallet-adapter-react@1.1.4(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)))(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))(bs58@5.0.0)(react@19.1.1)':
+  '@solana/wallet-standard-wallet-adapter-react@1.1.4(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))))(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))(bs58@5.0.0)(react@19.1.1)':
     dependencies:
-      '@solana/wallet-adapter-base': 0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))
-      '@solana/wallet-standard-wallet-adapter-base': 1.1.4(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))(bs58@5.0.0)
+      '@solana/wallet-adapter-base': 0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))
+      '@solana/wallet-standard-wallet-adapter-base': 1.1.4(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))(bs58@5.0.0)
       '@wallet-standard/app': 1.1.0
       '@wallet-standard/base': 1.1.0
       react: 19.1.1
@@ -9815,20 +9794,20 @@ snapshots:
       - '@solana/web3.js'
       - bs58
 
-  '@solana/wallet-standard-wallet-adapter@1.1.4(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)))(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))(bs58@5.0.0)(react@19.1.1)':
+  '@solana/wallet-standard-wallet-adapter@1.1.4(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))))(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))(bs58@5.0.0)(react@19.1.1)':
     dependencies:
-      '@solana/wallet-standard-wallet-adapter-base': 1.1.4(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))(bs58@5.0.0)
-      '@solana/wallet-standard-wallet-adapter-react': 1.1.4(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)))(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))(bs58@5.0.0)(react@19.1.1)
+      '@solana/wallet-standard-wallet-adapter-base': 1.1.4(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))(bs58@5.0.0)
+      '@solana/wallet-standard-wallet-adapter-react': 1.1.4(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))))(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))(bs58@5.0.0)(react@19.1.1)
     transitivePeerDependencies:
       - '@solana/wallet-adapter-base'
       - '@solana/web3.js'
       - bs58
       - react
 
-  '@solana/wallet-standard@1.1.4(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)))(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))(bs58@5.0.0)(react@19.1.1)':
+  '@solana/wallet-standard@1.1.4(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))))(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))(bs58@5.0.0)(react@19.1.1)':
     dependencies:
       '@solana/wallet-standard-core': 1.1.2
-      '@solana/wallet-standard-wallet-adapter': 1.1.4(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)))(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))(bs58@5.0.0)(react@19.1.1)
+      '@solana/wallet-standard-wallet-adapter': 1.1.4(@solana/wallet-adapter-base@0.9.27(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))))(@solana/web3.js@2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))(bs58@5.0.0)(react@19.1.1)
     transitivePeerDependencies:
       - '@solana/wallet-adapter-base'
       - '@solana/web3.js'
@@ -11185,8 +11164,8 @@ snapshots:
       '@typescript-eslint/parser': 8.41.0(eslint@8.57.1)(typescript@5.9.2)
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.9
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.41.0(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1))(eslint@8.57.1)
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.41.0(eslint@8.57.1)(typescript@5.9.2))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.41.0(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@8.57.1)
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.41.0(eslint@8.57.1)(typescript@5.9.2))(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1)
       eslint-plugin-jsx-a11y: 6.10.2(eslint@8.57.1)
       eslint-plugin-react: 7.37.5(eslint@8.57.1)
       eslint-plugin-react-hooks: 5.2.0(eslint@8.57.1)
@@ -11205,7 +11184,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.41.0(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1))(eslint@8.57.1):
+  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@8.57.1):
     dependencies:
       '@nolyfill/is-core-module': 1.0.39
       debug: 4.4.1(supports-color@8.1.1)
@@ -11216,22 +11195,22 @@ snapshots:
       tinyglobby: 0.2.14
       unrs-resolver: 1.11.1
     optionalDependencies:
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.41.0(eslint@8.57.1)(typescript@5.9.2))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.41.0(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.41.0(eslint@8.57.1)(typescript@5.9.2))(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1)
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.41.0(eslint@8.57.1)(typescript@5.9.2))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.41.0(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1):
+  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.41.0(eslint@8.57.1)(typescript@5.9.2))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
       '@typescript-eslint/parser': 8.41.0(eslint@8.57.1)(typescript@5.9.2)
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.9
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.41.0(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1))(eslint@8.57.1)
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@8.57.1)
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.41.0(eslint@8.57.1)(typescript@5.9.2))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.41.0(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1):
+  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.41.0(eslint@8.57.1)(typescript@5.9.2))(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.1.9
@@ -11242,7 +11221,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.41.0(eslint@8.57.1)(typescript@5.9.2))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.41.0(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
+      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.41.0(eslint@8.57.1)(typescript@5.9.2))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1)
       hasown: 2.0.2
       is-core-module: 2.16.1
       is-glob: 4.0.3
@@ -11599,8 +11578,8 @@ snapshots:
   gill@0.10.3(@solana/sysvars@2.3.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2):
     dependencies:
       '@solana-program/address-lookup-table': 0.7.0(@solana/kit@2.3.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))
-      '@solana-program/compute-budget': 0.8.0(@solana/kit@2.3.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))
-      '@solana-program/system': 0.7.0(@solana/kit@2.3.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))
+      '@solana-program/compute-budget': 0.8.0(@solana/kit@2.3.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))
+      '@solana-program/system': 0.7.0(@solana/kit@2.3.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)))
       '@solana-program/token-2022': 0.4.2(@solana/kit@2.3.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))(@solana/sysvars@2.3.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))
       '@solana/assertions': 2.3.0(typescript@5.9.2)
       '@solana/codecs': 2.3.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)
