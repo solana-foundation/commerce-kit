@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --clean --external gill --external ws --external node-fetch",
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean --external gill --external ws --external node-fetch",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch --external gill --external ws --external node-fetch",
     "clean": "rm -rf dist"
   },
