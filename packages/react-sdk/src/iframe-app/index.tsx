@@ -2,18 +2,11 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import type { SolanaCommerceConfig, ThemeConfig } from '../types';
 
-// Import and setup dialog shims before importing modal components
-import * as DialogShim from './dialog-shim';
-
-// Monkey patch the module system to intercept ui-primitives imports
-if (typeof window !== 'undefined') {
-  (window as any).__UI_PRIMITIVES_SHIM__ = DialogShim;
-}
-
-// Now import the iframe-safe modal components
+// No shim system needed - use real components directly
+// Import iframe-safe modal components
 import { IframeTipModalContent } from '../components/iframe/iframe-tip-modal';
 import { PaymentModalContent } from '../components/ui/payment-modal-content';
-import './styles.css';
+import '../styles/index.css';
 import { getBorderRadius, getModalBorderRadius, getButtonShadow, getButtonBorder } from '../utils';
 
 // Global types for the iframe window
@@ -21,6 +14,15 @@ declare global {
   interface Window {
     parentOrigin?: string;
   }
+}
+
+// Queue for messages sent before parent origin is established
+const messageQueue: OutgoingMessage[] = [];
+
+// Helper to get parent origin safely
+export function getParentOrigin(): string | null {
+  const origin = (window as any).__IFRAME_PARENT_ORIGIN__;
+  return (typeof origin === 'string' && origin !== '*') ? origin : null;
 }
 
 // Message types
@@ -45,7 +47,29 @@ interface OutgoingMessage {
 
 // Helper to send messages to parent
 function sendToParent(message: OutgoingMessage) {
-  window.parent.postMessage(message, window.parentOrigin || '*');
+  const targetOrigin = getParentOrigin();
+  
+  if (targetOrigin === null) {
+    console.warn('[IframeApp] Parent origin not established, queueing message:', message);
+    messageQueue.push(message);
+    return;
+  }
+  
+  window.parent.postMessage(message, targetOrigin);
+}
+
+// Helper to flush queued messages once origin is established
+function flushQueuedMessages() {
+  const targetOrigin = getParentOrigin();
+  if (targetOrigin === null) return;
+  
+  while (messageQueue.length > 0) {
+    const message = messageQueue.shift();
+    if (message) {
+      console.log('[IframeApp] Flushing queued message:', message);
+      window.parent.postMessage(message, targetOrigin);
+    }
+  }
 }
 
 // Main app component
@@ -138,8 +162,15 @@ function init() {
     
     if (message.type === 'init') {
       console.log('[IframeApp] Received init message', message);
-      // Store parent origin for secure messaging
-      window.parentOrigin = event.origin;
+      // Store parent origin for secure messaging (only if not '*')
+      const parentOrigin = event.origin;
+      if (parentOrigin && parentOrigin !== '*') {
+        (window as any).__IFRAME_PARENT_ORIGIN__ = parentOrigin;
+        // Flush any queued messages now that we have a valid origin
+        flushQueuedMessages();
+      } else {
+        console.warn('[IframeApp] Invalid or missing parent origin in init message');
+      }
 
       // Mount the app
       const rootElement = document.getElementById('root');
@@ -158,14 +189,12 @@ function init() {
         }
         root.render(
           <React.StrictMode>
-            <DialogShim.DialogProvider>
-              <IframeApp 
-                config={message.config}
-                theme={message.theme}
-                totalAmount={message.totalAmount}
-                paymentUrl={message.paymentUrl}
-              />
-            </DialogShim.DialogProvider>
+            <IframeApp 
+              config={message.config}
+              theme={message.theme}
+              totalAmount={message.totalAmount}
+              paymentUrl={message.paymentUrl}
+            />
           </React.StrictMode>
         );
       } catch (error) {
@@ -206,7 +235,8 @@ function init() {
     }
   });
 
-  // Signal ready to parent
+  // Signal ready to parent - this is the only case where '*' is used
+  // since we don't have the parent origin established yet during initial handshake
   window.parent.postMessage({ type: 'ready' }, '*');
 }
 

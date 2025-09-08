@@ -1,0 +1,150 @@
+/**
+ * useFormField Hook
+ * Standardized form field state management with validation
+ */
+
+import { useState, useCallback, useMemo } from 'react';
+
+interface Validation {
+  required?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  pattern?: RegExp;
+  custom?: (value: string) => string | null;
+}
+
+interface UseFormFieldOptions {
+  initialValue?: string;
+  validation?: Validation;
+  formatValue?: (value: string) => string;
+}
+
+interface UseFormFieldReturn {
+  value: string;
+  error: string | null;
+  isValid: boolean;
+  isEmpty: boolean;
+  isTouched: boolean;
+  isFocused: boolean;
+  setValue: (value: string) => void;
+  setError: (error: string | null) => void;
+  validate: () => boolean;
+  clear: () => void;
+  blur: () => void;
+  focus: () => void;
+  fieldProps: {
+    value: string;
+    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+    onBlur: () => void;
+    onFocus: () => void;
+  };
+}
+
+export function useFormField({
+  initialValue = '',
+  validation,
+  formatValue
+}: UseFormFieldOptions = {}): UseFormFieldReturn {
+  const [value, setValue] = useState(initialValue);
+  const [error, setError] = useState<string | null>(null);
+  const [isTouched, setIsTouched] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+
+  const validateField = useCallback((inputValue: string): string | null => {
+    if (!validation) return null;
+
+    // Required validation
+    if (validation.required && !inputValue.trim()) {
+      return 'This field is required';
+    }
+
+    // Skip other validations if empty and not required
+    if (!inputValue.trim() && !validation.required) {
+      return null;
+    }
+
+    // Length validations
+    if (validation.minLength && inputValue.length < validation.minLength) {
+      return `Must be at least ${validation.minLength} characters`;
+    }
+
+    if (validation.maxLength && inputValue.length > validation.maxLength) {
+      return `Must be no more than ${validation.maxLength} characters`;
+    }
+
+    // Pattern validation
+    if (validation.pattern && !validation.pattern.test(inputValue)) {
+      return 'Invalid format';
+    }
+
+    // Custom validation
+    if (validation.custom) {
+      return validation.custom(inputValue);
+    }
+
+    return null;
+  }, [validation]);
+
+  const handleValueChange = useCallback((newValue: string) => {
+    // Apply formatting if provided
+    const formattedValue = formatValue ? formatValue(newValue) : newValue;
+    setValue(formattedValue);
+    
+    // Clear error if user is typing and field becomes valid
+    if (error && !validateField(formattedValue)) {
+      setError(null);
+    }
+  }, [formatValue, error, validateField]);
+
+  const validate = useCallback((): boolean => {
+    const validationError = validateField(value);
+    setError(validationError);
+    setIsTouched(true);
+    return validationError === null;
+  }, [value, validateField]);
+
+  const clear = useCallback(() => {
+    setValue(initialValue);
+    setError(null);
+    setIsTouched(false);
+  }, [initialValue]);
+
+  const blur = useCallback(() => {
+    setIsFocused(false);
+    setIsTouched(true);
+    validate();
+  }, [validate]);
+
+  const focus = useCallback(() => {
+    setIsFocused(true);
+  }, []);
+
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    handleValueChange(e.target.value);
+  }, [handleValueChange]);
+
+  // Computed properties
+  const isValid = useMemo(() => !error && (!validation?.required || value.trim().length > 0), [error, validation, value]);
+  const isEmpty = useMemo(() => value.trim().length === 0, [value]);
+
+  return {
+    value,
+    error,
+    isValid,
+    isEmpty,
+    isTouched,
+    isFocused,
+    setValue: handleValueChange,
+    setError,
+    validate,
+    clear,
+    blur,
+    focus,
+    fieldProps: {
+      value,
+      onChange: handleChange,
+      onBlur: blur,
+      onFocus: focus,
+    },
+  };
+}

@@ -1,0 +1,78 @@
+/* Currency Selector Component Styles */
+
+.ck-currency-container {
+  width: fit-content;
+  min-width: var(--width-currency-min);
+  height: var(--height-currency);
+  padding: var(--space-xs) 0.45rem;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--dropdown-radius, 8px);
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-weight: var(--font-weight-normal);
+  cursor: pointer;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 200ms ease-in-out;
+  box-shadow: var(--shadow-sm);
+}
+
+.ck-currency-selected {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+}
+
+.ck-currency-symbol {
+  margin-right: 4px;
+  /* font-weight: var(--font-weight-semibold); */
+  font-size: var(--font-size-currency);
+}
+
+.ck-currency-chevron {
+  transition: transform 200ms ease-in-out;
+}
+
+.ck-currency-chevron.open {
+  transform: rotate(180deg);
+}
+
+/* Dropdown Content */
+.ck-dropdown-content {
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--dropdown-radius, 8px);
+  box-shadow: var(--dropdown-shadow);
+  padding: 8px;
+  min-width: min(200px, calc(100vw - 2rem));
+  max-width: calc(100vw - 2rem);
+  max-height: calc(100vh - 4rem);
+  /* Hide scrollbars but allow scrolling */
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.ck-dropdown-content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
+
+.ck-dropdown-item {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: transparent;
+  width: 100%;
+}
+
+.ck-dropdown-check {
+  margin-left: auto;
+  color: var(--color-primary);
+}
+
+/* Let dropdown handle positioning naturally - no overrides needed */

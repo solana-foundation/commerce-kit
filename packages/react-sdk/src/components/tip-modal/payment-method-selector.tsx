@@ -5,6 +5,7 @@
 
 import React, { memo } from 'react';
 import { getRadius } from '../../utils';
+import { useHover } from '../../hooks/use-hover';
 import { PAYMENT_METHODS } from '../../constants/tip-modal';
 import type { ThemeConfig, PaymentMethod } from '../../types';
 
@@ -61,6 +62,8 @@ const PaymentMethodButton = memo<PaymentMethodButtonProps>(({
   isSelected, 
   onClick 
 }) => {
+  const { isHovered, isPressed, hoverHandlers } = useHover();
+
   return (
     <button
       type="button"
@@ -68,7 +71,8 @@ const PaymentMethodButton = memo<PaymentMethodButtonProps>(({
       aria-checked={isSelected}
       aria-label={`${method.label}: ${method.description}`}
       onClick={onClick}
-      className={`ck-payment-method ${isSelected ? 'selected' : ''}`}
+      {...hoverHandlers}
+      className={`ck-payment-method ${isSelected ? 'selected' : ''} ${isHovered ? 'hovered' : ''} ${isPressed ? 'pressed' : ''}`}
       style={{
         // Set CSS custom properties for dynamic theming
         '--background-color': theme.backgroundColor,

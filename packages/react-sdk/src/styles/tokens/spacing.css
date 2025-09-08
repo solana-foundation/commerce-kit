@@ -1,0 +1,41 @@
+/* Spacing Design Tokens */
+:root {
+  /* Spacing Scale */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 0.75rem;
+  --space-lg: 1rem;
+  --space-xl: 1.5rem;
+  --space-2xl: 2rem;
+  
+  /* Component Spacing */
+  --padding-button: 0.75rem 1.5rem;
+  --padding-button-sm: 0.5rem 1rem;
+  --padding-button-lg: 1rem 1.5rem;
+  --padding-input: 0.75rem 1rem;
+  --padding-modal: 1.5rem;
+  --padding-pill: 0.5rem 1rem;
+  
+  /* Layout Spacing */
+  --gap-sm: 0.5rem;
+  --gap-md: 1rem;
+  --gap-lg: 1.5rem;
+  --gap-grid: 1rem;
+  
+  /* Modal Dimensions - Responsive */
+  --modal-max-width: min(560px, calc(100vw - 2rem));
+  --modal-min-width: min(320px, calc(100vw - 2rem));
+  
+  /* Component Heights */
+  --height-button-amount: 68px;
+  --height-button-standard: 2.75rem;
+  --height-button-icon: 2rem;
+  --height-currency: 2.25rem;
+  --height-payment-method: 110px;
+  
+  /* Component Widths - Responsive */
+  --width-payment-method: min(248px, calc(100vw - 4rem));
+  --width-qr-viewfinder: min(283px, calc(100vw - 4rem));
+  --width-merchant-pill-max: min(320px, calc(100vw - 2rem));
+  --width-currency-min: min(120px, calc(50vw - 1rem));
+}

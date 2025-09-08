@@ -656,43 +656,281 @@ html, body {
   flex-shrink: 0;
 }
 
-.ck-merchant-name {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-color, #111827);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 
-.ck-merchant-address {
-  font-size: 0.75rem;
-  font-family: monospace;
-  color: #666666;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.ck-merchant-copied {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #22c55e;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.ck-merchant-copy-icon {
-  display: flex;
-  align-items: center;
-  margin-left: 0.25rem;
-}
 
 .ck-dev-test-button {
   margin-top: 1rem;
 }
 
 .ck-dev-button {
+  padding: 0.5rem 1rem;
+  background-color: var(--secondary-color, #14F195);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius, 1rem);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+/* QR Payment Error State */
+.ck-qr-error-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1.5rem;
+  color: #2D2D2D;
+  position: relative;
+  z-index: 3;
+}
+
+.ck-qr-error-title {
+  font-size: 21px;
+  text-align: center;
+  font-weight: 600;
+  color: #2D2D2D;
+}
+
+.ck-qr-error-button {
+  padding: 0.75rem 1.25rem;
+  background-color: #f5f5f5;
+  color: #2D2D2D;
+  border: 1px solid #e5e7eb;
+  border-radius: var(--border-radius, 1rem);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.ck-qr-error-button:hover {
+  background-color: #e5e7eb;
+}
+
+/* QR Code Display */
+.ck-qr-code-container {
+  position: relative;
+  z-index: 3;
+}
+
+.ck-qr-code {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transform: scale(0.85);
+  position: relative;
+  z-index: 3;
+}
+
+.ck-qr-code.processing {
+  opacity: 0.6;
+}
+
+/* QR Processing Overlay */
+.ck-qr-processing-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  min-width: 200px;
+  border: 2px solid var(--primary-color-20, rgba(153, 69, 255, 0.2));
+  z-index: 4;
+}
+
+.ck-qr-processing-spinner {
+  width: 32px;
+  height: 32px;
+  border: 4px solid var(--primary-color-20, rgba(153, 69, 255, 0.2));
+  border-top: 4px solid var(--primary-color, #9945FF);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+.ck-qr-processing-title {
+  font-size: 1rem;
+  color: var(--text-color, #111827);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.ck-qr-processing-message {
+  font-size: 0.875rem;
+  color: var(--text-color-70, rgba(17, 24, 39, 0.7));
+}
+
+/* Payment Info Section */
+.ck-payment-info {
+  margin: 0 0 1.5rem 0;
+  font-size: 24px;
+  font-weight: 600;
+  margin-top: 20px;
+  color: var(--text-color, #111827);
+}
+
+.ck-payment-amount-dim {
+  opacity: 0.7;
+}
+
+/* Animated Merchant Profile Badge */
+.ck-merchant-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.ck-merchant-pill {
+  background-color: white;
+  border: 1px solid #00000020;
+  border-radius: 50px;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: #2D2D2D;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 300ms cubic-bezier(0.19, 1, 0.22, 1);
+  max-width: 320px;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.05);
+}
+
+.ck-merchant-pill:hover:not(.copied) {
+  transform: scale(1.02);
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.12);
+}
+
+.ck-merchant-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  transition: transform 300ms cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.ck-merchant-avatar.copied {
+  transform: scale(0.9);
+}
+
+/* Merchant Text Content Container */
+.ck-merchant-content {
+  position: relative;
+  flex: 1;
+  display: grid;
+  align-items: center;
+  min-height: 20px;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+/* Merchant Text States - All Grid Positioned (Same Cell, Dynamic Width) */
+.ck-merchant-name {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-color, #111827);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 300ms cubic-bezier(0.19, 1, 0.22, 1), transform 300ms cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.ck-merchant-name.hidden {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.ck-merchant-address {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: 0.75rem;
+  font-family: monospace;
+  color: #666666;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(5px) scale(0.95);
+  transition: opacity 300ms cubic-bezier(0.19, 1, 0.22, 1), transform 300ms cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.ck-merchant-address.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.ck-merchant-copied {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #22c55e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transform: translateY(8px) scale(0.8);
+  transition: opacity 300ms cubic-bezier(0.19, 1, 0.22, 1), transform 300ms cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.ck-merchant-copied.show {
+  opacity: 1;
+  transform: translateY(0) scale(1.05);
+}
+
+/* Merchant Copy Icon Container */
+.ck-merchant-icon-container {
+  display: flex;
+  align-items: center;
+  margin-left: 0.25rem;
+  position: relative;
+  width: 16px;
+  height: 16px;
+}
+
+.ck-merchant-copy-icon {
+  position: absolute;
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+  transition: opacity 300ms cubic-bezier(0.19, 1, 0.22, 1), transform 300ms cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.ck-merchant-copy-icon.hidden {
+  opacity: 0;
+  transform: scale(0.6) rotate(-20deg);
+}
+
+.ck-merchant-check-icon {
+  position: absolute;
+  opacity: 0;
+  transform: scale(0.6) rotate(20deg);
+  transition: opacity 300ms cubic-bezier(0.19, 1, 0.22, 1), transform 300ms cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.ck-merchant-check-icon.show {
+  opacity: 1;
+  transform: scale(1.1) rotate(0deg);
+}
+
+/* Dev Test Button */
+.ck-dev-test-container {
+  margin-top: 1rem;
+}
+
+.ck-dev-test-button {
   padding: 0.5rem 1rem;
   background-color: var(--secondary-color, #14F195);
   color: white;

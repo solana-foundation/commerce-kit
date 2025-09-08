@@ -5,6 +5,7 @@
 
 import React, { memo } from 'react';
 import { sanitizeString } from '../../utils';
+import { useHover } from '../../hooks/use-hover';
 import { BACK_ARROW_ICON, CLOSE_ICON } from '../../constants/tip-modal';
 import type { ThemeConfig, SolanaCommerceConfig, PaymentMethod } from '../../types';
 
@@ -25,6 +26,8 @@ export const TipModalHeader = memo<TipModalHeaderProps>(({
   onBack,
   onClose
 }) => {
+  const backButtonHover = useHover();
+  const closeButtonHover = useHover();
   return (
     <div 
       className="ck-header"
@@ -37,7 +40,8 @@ export const TipModalHeader = memo<TipModalHeaderProps>(({
         {currentStep === 'payment' && (
           <button
             onClick={onBack}
-            className="ck-header-back-button"
+            {...backButtonHover.hoverHandlers}
+            className={`ck-header-back-button ${backButtonHover.isHovered ? 'hovered' : ''} ${backButtonHover.isPressed ? 'pressed' : ''}`}
             type="button"
           >
             {BACK_ARROW_ICON}
@@ -77,7 +81,8 @@ export const TipModalHeader = memo<TipModalHeaderProps>(({
 
       {/* Right side - Close button */}
       <button
-        className="ck-header-close-button"
+        {...closeButtonHover.hoverHandlers}
+        className={`ck-header-close-button ${closeButtonHover.isHovered ? 'hovered' : ''} ${closeButtonHover.isPressed ? 'pressed' : ''}`}
         type="button"
         onClick={onClose}
       >

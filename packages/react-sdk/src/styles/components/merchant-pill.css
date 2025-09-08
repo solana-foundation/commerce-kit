@@ -1,0 +1,149 @@
+/* Merchant Pill Component Styles */
+
+.ck-merchant-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-2xl);
+}
+
+.ck-merchant-pill {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 50px;
+  padding: var(--padding-pill);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: var(--font-size-sm);
+  color: var(--color-merchant-text);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background-color 300ms cubic-bezier(0.19, 1, 0.22, 1), border-color 300ms cubic-bezier(0.19, 1, 0.22, 1), box-shadow 300ms cubic-bezier(0.19, 1, 0.22, 1), color 300ms cubic-bezier(0.19, 1, 0.22, 1), transform 300ms cubic-bezier(0.19, 1, 0.22, 1);
+  max-width: var(--width-merchant-pill-max);
+  box-shadow: var(--pill-shadow);
+}
+
+.ck-merchant-pill:focus-visible {
+  outline: none;
+  box-shadow: var(--pill-shadow), var(--focus-ring);
+}
+
+.ck-merchant-pill:hover:not(.copied) {
+  transform: scale(1.02);
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.12);
+}
+
+.ck-merchant-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  transition: transform 300ms cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.ck-merchant-avatar.copied {
+  transform: scale(0.9);
+}
+
+/* Merchant Text Content Container */
+.ck-merchant-content {
+  position: relative;
+  flex: 1;
+  display: grid;
+  align-items: center;
+  min-height: 20px;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+/* Merchant Text States - All Grid Positioned (Same Cell, Dynamic Width) */
+.ck-merchant-name {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 300ms cubic-bezier(0.19, 1, 0.22, 1), transform 300ms cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.ck-merchant-name.hidden {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.ck-merchant-address {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: var(--font-size-xs);
+  font-family: var(--font-family-mono);
+  color: var(--color-merchant-address);
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(5px) scale(0.95);
+  transition: opacity 300ms cubic-bezier(0.19, 1, 0.22, 1), transform 300ms cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.ck-merchant-address.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.ck-merchant-copied {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-success);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transform: translateY(8px) scale(0.8);
+  transition: opacity 300ms cubic-bezier(0.19, 1, 0.22, 1), transform 300ms cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.ck-merchant-copied.show {
+  opacity: 1;
+  transform: translateY(0) scale(1.05);
+}
+
+/* Merchant Copy Icon Container */
+.ck-merchant-icon-container {
+  display: flex;
+  align-items: center;
+  margin-left: var(--space-xs);
+  position: relative;
+  width: 16px;
+  height: 16px;
+}
+
+.ck-merchant-copy-icon {
+  position: absolute;
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+  transition: opacity 300ms cubic-bezier(0.19, 1, 0.22, 1), transform 300ms cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.ck-merchant-copy-icon.hidden {
+  opacity: 0;
+  transform: scale(0.6) rotate(-20deg);
+}
+
+.ck-merchant-check-icon {
+  position: absolute;
+  opacity: 0;
+  transform: scale(0.6) rotate(20deg);
+  transition: opacity 300ms cubic-bezier(0.19, 1, 0.22, 1), transform 300ms cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.ck-merchant-check-icon.show {
+  opacity: 1;
+  transform: scale(1.1) rotate(0deg);
+}

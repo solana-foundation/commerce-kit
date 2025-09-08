@@ -1,0 +1,150 @@
+/* Wallet Component Styles */
+
+.ck-wallet-container {
+  padding: var(--padding-modal);
+  text-align: center;
+}
+
+/* Wallet Error States */
+.ck-wallet-error {
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: var(--font-size-xs);
+}
+
+.ck-wallet-no-wallets {
+  text-align: center;
+  color: #6b7280;
+  padding: 16px;
+}
+
+.ck-wallet-no-wallets-title {
+  font-size: 13px;
+  font-weight: var(--font-weight-semibold);
+  color: #6b7280;
+}
+
+.ck-wallet-no-wallets-subtitle {
+  font-size: var(--font-size-xs);
+  margin-top: 6px;
+}
+
+/* Wallet List */
+.ck-wallet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ck-wallet-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius, 1rem);
+  background-color: var(--color-background);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s ease;
+}
+
+.ck-wallet-item:hover {
+  border-color: var(--color-disabled);
+}
+
+.ck-wallet-item:focus-visible {
+  outline: none;
+  border-color: var(--color-disabled);
+  box-shadow: var(--shadow-sm), var(--focus-ring);
+}
+
+.ck-wallet-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ck-wallet-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--border-radius, 1rem);
+}
+
+.ck-wallet-name {
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+
+.ck-wallet-status {
+  font-size: var(--font-size-xs);
+  color: #6b7280;
+}
+
+/* Wallet Loading */
+.ck-wallet-loading-container {
+  text-align: center;
+}
+
+/* Wallet Payment Section */
+.ck-wallet-payment-section {
+  margin-bottom: var(--space-2xl);
+}
+
+.ck-wallet-status-container {
+  background-color: var(--color-background);
+  border-radius: 16px;
+  padding: var(--space-2xl);
+  text-align: center;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.ck-wallet-status-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.ck-wallet-status-message {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin-bottom: var(--space-lg);
+}
+
+/* Wallet Dev Buttons */
+.ck-wallet-dev-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.ck-wallet-dev-button {
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-background);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+}
+
+.ck-wallet-flow-container {
+  margin-bottom: var(--space-2xl);
+  text-align: left;
+}
+
+.ck-wallet-flow-dev-section {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}

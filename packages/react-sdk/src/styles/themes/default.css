@@ -1,0 +1,33 @@
+/* Default Theme */
+
+:root {
+  /* Theme-specific overrides for default theme */
+  /* Can be used to provide fallbacks or theme-specific customizations */
+  
+  /* Border Radius */
+  --border-radius: 1rem;
+  --modal-border-radius: 1.5rem;
+  --dropdown-radius: 8px;
+  
+  /* Specific Component Overrides */
+  --header-border-color: var(--color-border-subtle);
+  --section-border-color: var(--color-border-subtle);
+  
+  /* Custom Properties that can be overridden by consumers */
+  --primary-color: var(--color-primary);
+  --secondary-color: var(--color-secondary);
+  --background-color: var(--color-background);
+  --text-color: var(--color-text);
+  --text-color-60: var(--color-text-60);
+  --text-color-70: var(--color-text-70);
+  --font-family: var(--font-family);
+  
+  /* Button specific fallbacks */
+  --button-border: 1.5px solid transparent;
+  --button-shadow: var(--shadow-md);
+  --button-padding: var(--padding-button);
+  
+  /* Sizing fallbacks */
+  --min-width: auto;
+  --aspect-ratio: auto;
+}
