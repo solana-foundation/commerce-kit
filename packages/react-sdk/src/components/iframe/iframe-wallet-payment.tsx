@@ -1,5 +1,8 @@
 import React from 'react'
 import type { ThemeConfig, MerchantConfig, Currency } from '../../types'
+import { MerchantAddressPill } from '../tip-modal/merchant-address-pill'
+import { TokenIcon, SuccessIcon, ErrorIcon } from '../icons'
+import { Spinner } from '../../../../connector-kit/src/ui/spinner'
 
 interface WalletPaymentContentProps {
   theme: Required<ThemeConfig>
@@ -121,6 +124,7 @@ function validateAndSanitizeWallets(rawWallets: unknown): IFrameWalletInfo[] {
 
 export const WalletPaymentContent = ({
   theme,
+  config,
   selectedAmount,
   selectedCurrency,
   customAmount,
@@ -130,11 +134,15 @@ export const WalletPaymentContent = ({
 }: WalletPaymentContentProps) => {
   const [wallets, setWallets] = React.useState<IFrameWalletInfo[]>([])
   const [connecting, setConnecting] = React.useState<string | null>(null)
+  const [processingPayment, setProcessingPayment] = React.useState<string | null>(null)
   const [error, setError] = React.useState<string | null>(null)
   const [paymentSuccess, setPaymentSuccess] = React.useState(false)
+  const [paymentError, setPaymentError] = React.useState(false)
   const [paymentSignature, setPaymentSignature] = React.useState<string | null>(null)
   const [parentOrigin, setParentOrigin] = React.useState<string | null>(null)
   const mountedRef = React.useRef(false)
+
+  const displayAmount = showCustomInput ? customAmount || '0' : selectedAmount.toString()
 
   // Automatically detect parent origin - no manual configuration needed
 
@@ -214,16 +222,20 @@ export const WalletPaymentContent = ({
         if (!mountedRef.current) return
         if (data.success) {
           setConnecting(null)
+          setProcessingPayment(data.walletName || 'wallet')
           setError(null)
           // Don't call onPaymentComplete yet - wait for actual payment result
         } else {
           setConnecting(null)
+          setProcessingPayment(null)
           setError(data.error || 'Failed to connect wallet')
         }
       } else if (data.type === 'paymentSuccess') {
         if (!mountedRef.current) return
         setConnecting(null)
+        setProcessingPayment(null)
         setError(null)
+        setPaymentError(false)
         setPaymentSuccess(true)
         setPaymentSignature(data.signature || null)
         
@@ -231,7 +243,10 @@ export const WalletPaymentContent = ({
       } else if (data.type === 'paymentError') {
         if (!mountedRef.current) return
         setConnecting(null)
-        setError(data.error || 'Payment failed')
+        setProcessingPayment(null)
+        setError(null)
+        setPaymentError(true)
+        setPaymentSuccess(false)
       }
     }
     window.addEventListener('message', onMessage)
@@ -280,80 +295,82 @@ export const WalletPaymentContent = ({
 
   const showEmptyState = wallets.length === 0
 
-  // Show success state if payment succeeded
-  if (paymentSuccess) {
+  // Show failure state if payment failed
+  if (paymentError) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        gap: 16,
-        padding: '40px 20px',
-        textAlign: 'center'
-      }}>
-        {/* Success Checkmark */}
-        <div style={{
-          width: 64,
-          height: 64,
-          borderRadius: '50%',
-          background: '#10B981',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transform: paymentSuccess ? 'scale(1)' : 'scale(0)',
-          transition: 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-        }}>
-          <svg 
-            width="32" 
-            height="32" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="white" 
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="20,6 9,17 4,12"></polyline>
-          </svg>
+      <div className="ck-wallet-state-container">
+        {/* Error Icon */}
+        <div className="ck-wallet-state-icon error">
+          <ErrorIcon size={32} />
         </div>
         
-        {/* Success Text */}
-        <div>
-          <div style={{ 
-            fontSize: 20, 
-            fontWeight: 600, 
-            color: theme.textColor,
-            marginBottom: 8,
-            opacity: paymentSuccess ? 1 : 0,
-            transform: paymentSuccess ? 'translateY(0)' : 'translateY(10px)',
-            transition: 'all 0.3s ease-out 0.2s'
-          }}>
-            Payment Confirmed!
-          </div>
-          <div style={{ 
-            fontSize: 14, 
-            color: `${theme.textColor}80`,
-            lineHeight: 1.4,
-            opacity: paymentSuccess ? 1 : 0,
-            transform: paymentSuccess ? 'translateY(0)' : 'translateY(10px)',
-            transition: 'all 0.3s ease-out 0.3s'
-          }}>
-            Your transaction was successful
-          </div>
-          {paymentSignature && (
-            <div style={{ 
-              fontSize: 11, 
-              color: `${theme.textColor}60`,
-              fontFamily: 'monospace',
-              marginTop: 8,
-              wordBreak: 'break-all' as const,
-              opacity: paymentSuccess ? 1 : 0,
-              transform: paymentSuccess ? 'translateY(0)' : 'translateY(10px)',
-              transition: 'all 0.3s ease-out 0.4s'
-            }}>
-              {paymentSignature.substring(0, 8)}...{paymentSignature.substring(paymentSignature.length - 8)}
+        {/* Error Message with Token */}
+        <div className="ck-wallet-state-content">
+          <div className="ck-wallet-state-message" style={{ color: theme.textColor }}>
+            Failed to send 
+            <div className="ck-wallet-state-token-info">
+              <TokenIcon symbol={selectedCurrency} size={20} />
+              {displayAmount} {selectedCurrency}
             </div>
+            to {config.merchant.name || 'Merchant'}
+          </div>
+          
+          <button
+            onClick={() => {
+              setPaymentError(false)
+              setProcessingPayment(null)
+              setError(null)
+            }}
+            className="ck-wallet-try-again-button"
+            style={{ color: theme.textColor }}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Show success state if payment succeeded
+  if (paymentSuccess) {
+    const explorerUrl = `https://explorer.solana.com/tx/${paymentSignature}${config.rpcUrl?.includes('devnet') ? '?cluster=devnet' : ''}`
+    
+    return (
+      <div className="ck-wallet-state-container">
+        {/* Success Checkmark */}
+        <div className="ck-wallet-state-icon success">
+          <SuccessIcon size={32} />
+        </div>
+        
+        {/* Success Message with Token */}
+        <div className="ck-wallet-state-content">
+          <div className="ck-wallet-state-message" style={{ color: theme.textColor }}>
+            {config.merchant.name || 'Merchant'} has received your 
+            <div className="ck-wallet-state-token-info">
+              <TokenIcon symbol={selectedCurrency} size={20} />
+              {displayAmount} {selectedCurrency}
+            </div>
+          </div>
+          
+          {paymentSignature && (
+            <a
+              href={explorerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ck-wallet-explorer-link"
+              style={{
+                color: theme.primaryColor || '#6366F1',
+                borderColor: theme.primaryColor || '#6366F1'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = theme.primaryColor || '#6366F1'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent'
+              }}
+            >
+              View Transaction on Solana Explorer
+            </a>
           )}
         </div>
       </div>
@@ -361,18 +378,32 @@ export const WalletPaymentContent = ({
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ fontSize: 18, color: theme.textColor, fontWeight: 600 }}>Connect Your Wallet</div>
-      <div style={{ marginBottom: 8, fontSize: 12, color: `${theme.textColor}90` }}>Select one of your available wallets.</div>
+    <div className="ck-wallet-container">
+      {/* Payment Info - Same as QR Payment */}
+      <h2 className="ck-payment-info" style={{ color: theme.textColor }}>
+        <span className="ck-payment-amount-dim">Send</span> ${displayAmount} {selectedCurrency}
+      </h2>
+      
+      {/* Merchant Address Pill */}
+      <MerchantAddressPill
+        theme={theme}
+        config={config}
+        copiedText="Address Copied!"
+      />
+
+      {/* Wallet selection instruction */}
+      <div className="ck-wallet-instruction-text" style={{ color: `${theme.textColor}90` }}>
+        Select one of your available wallets to complete the payment
+      </div>
 
       {error ? (
-        <div style={{ marginBottom: 8, padding: '8px 12px', borderRadius: 8, background: '#fef2f2', color: '#991b1b', fontSize: 12 }}>{error}</div>
+        <div className="ck-wallet-error">{error}</div>
       ) : null}
 
       {showEmptyState ? (
-        <div style={{ textAlign: 'left', color: `${theme.textColor}90`, padding: 12, border: '1px dashed #e5e7eb', borderRadius: 8 }}>
-          <div style={{ fontSize: 13, fontWeight: 600 }}>No wallets detected</div>
-          <div style={{ fontSize: 12, marginTop: 4 }}>Install a Solana wallet (e.g., Phantom, Backpack) and try again.</div>
+        <div className="ck-wallet-no-wallets">
+          <div className="ck-wallet-no-wallets-title">No wallets detected</div>
+          <div className="ck-wallet-no-wallets-subtitle">Install a Solana wallet (e.g., Phantom, Backpack) and try again.</div>
         </div>
       ) : (
         <div className="ck-wallet-list">
@@ -391,20 +422,27 @@ export const WalletPaymentContent = ({
                 <div>
                   <div className="ck-wallet-name">{w.name}</div>
                   <div className="ck-wallet-status">
-                    {connecting === w.name ? 'Connecting…' : (w.installed ? 'Installed' : 'Not installed')}
+                    {connecting === w.name ? 'Connecting…' : 
+                     processingPayment === w.name ? '' : 
+                     (w.installed ? 'Installed' : 'Not installed')}
                   </div>
                 </div>
               </div>
 
               <button
                 onClick={() => requestConnect(w.name)}
-                disabled={Boolean(connecting) || w.connectable === false}
+                disabled={Boolean(connecting) || Boolean(processingPayment) || w.connectable === false}
                 className="ck-wallet-connect-button"
                 style={{
-                  opacity: connecting && connecting !== w.name ? 0.7 : 1,
+                  opacity: (connecting && connecting !== w.name) || (processingPayment && processingPayment !== w.name) ? 0.7 : 1,
                 }}
               >
-                {connecting === w.name ? 'Connecting…' : 'Connect'}
+                {connecting === w.name ? 'Connecting…' : 
+                 processingPayment === w.name ? 
+                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                     <Spinner size={16} color="currentColor" />
+                   </div> : 
+                 'Connect'}
               </button>
             </div>
           ))}
