@@ -35,3 +35,4 @@ export const ErrorIcon: React.FC<ErrorIconProps> = ({
     </svg>
   );
 };
+

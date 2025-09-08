@@ -33,3 +33,4 @@ export const SuccessIcon: React.FC<SuccessIconProps> = ({
     </svg>
   );
 };
+
