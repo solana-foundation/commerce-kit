@@ -13,18 +13,6 @@ export type ConnectorSnapshot = ReturnType<ConnectorClient['getSnapshot']> & {
 export const ConnectorContext = createContext<ConnectorClient | null>(null)
 ConnectorContext.displayName = 'ConnectorContext'
 
-export interface MobileWalletAdapterConfig {
-	appIdentity: {
-		name: string
-		uri?: string
-		icon?: string
-	}
-	remoteHostAuthority?: string
-	chains?: readonly string[]
-	authorizationCache?: any
-	chainSelector?: any
-	onWalletNotFound?: (wallet: any) => Promise<void>
-}
 
 // Global singleton to persist across component mount/unmount cycles
 let globalConnectorClient: ConnectorClient | null = null;
@@ -71,7 +59,7 @@ function releaseConnectorClient(): void {
 	}
 }
 
-export function ConnectorProvider({ children, config, mobile }: { children: ReactNode; config?: ConnectorConfig; mobile?: MobileWalletAdapterConfig }) {
+export function ConnectorProvider({ children, config }: { children: ReactNode; config?: ConnectorConfig }) {
 	const client = getOrCreateConnectorClient(config);
 	
 	if (process.env.NODE_ENV !== 'production') {
@@ -88,39 +76,6 @@ export function ConnectorProvider({ children, config, mobile }: { children: Reac
 		}
 	}, [])
 
-	// Optionally register Mobile Wallet Adapter on the client
-	React.useEffect(() => {
-		if (!mobile) return
-		let cancelled = false
-		;(async () => {
-			try {
-				const mod = await import('@solana-mobile/wallet-standard-mobile')
-				if (cancelled) return
-				const {
-					registerMwa,
-					createDefaultAuthorizationCache,
-					createDefaultChainSelector,
-					createDefaultWalletNotFoundHandler,
-					MWA_SOLANA_CHAINS,
-				} = mod as any
-				registerMwa({
-					appIdentity: mobile.appIdentity,
-					authorizationCache: mobile.authorizationCache ?? createDefaultAuthorizationCache(),
-					chains: (mobile.chains ?? MWA_SOLANA_CHAINS) as any,
-					chainSelector: mobile.chainSelector ?? createDefaultChainSelector(),
-					remoteHostAuthority: mobile.remoteHostAuthority,
-					onWalletNotFound: mobile.onWalletNotFound ?? createDefaultWalletNotFoundHandler(),
-				})
-			} catch (e) {
-				if (process.env.NODE_ENV !== 'production') {
-					console.warn('[ConnectorKit] Failed to register Mobile Wallet Adapter', e)
-				}
-			}
-		})()
-		return () => {
-			cancelled = true
-		}
-	}, [mobile])
 
 	return <ConnectorContext.Provider value={client}>{children}</ConnectorContext.Provider>
 }

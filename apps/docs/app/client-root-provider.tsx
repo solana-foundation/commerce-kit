@@ -2,7 +2,7 @@
 
 import React, { type ReactNode, useMemo, useState } from 'react'
 import { QueryClient } from '@tanstack/react-query'
-import { AppProvider, type MobileWalletAdapterConfig } from '@solana-commerce/connector-kit'
+import { AppProvider } from '@solana-commerce/connector-kit'
 import { ArcProvider } from '@solana-commerce/solana-hooks/react'
 import { createProvider } from '@solana-commerce/solana-hooks'
 import { FloatingCommerceButton } from './components/floating-commerce-button'
@@ -39,13 +39,6 @@ export function ClientRootProvider({ children }: { children: ReactNode }) {
     ],
   }), [])
 
-  const mobile: MobileWalletAdapterConfig = {
-    appIdentity: {
-      name: 'Commerce Docs',
-      uri: process.env.NEXT_PUBLIC_SITE_URL,
-    },
-    remoteHostAuthority: process.env.NEXT_PUBLIC_MWA_REMOTE_HOST,
-  }
 
   return (
     <AppProvider 
@@ -53,7 +46,6 @@ export function ClientRootProvider({ children }: { children: ReactNode }) {
         autoConnect: false, 
         debug: process.env.NODE_ENV !== 'production' 
       }} 
-      mobile={mobile}
     >
       <ArcProvider config={arcConfig} queryClient={queryClient}>
         <>
