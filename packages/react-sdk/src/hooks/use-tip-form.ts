@@ -6,7 +6,7 @@
 import { useReducer, useCallback, useMemo } from 'react';
 import type { Currency, PaymentMethod, SolanaCommerceConfig } from '../types';
 import { ALL_CURRENCIES } from '../constants/tip-modal';
-import { convertUsdToLamports } from '../utils';
+import { convertUsdToLamports, getDecimals } from '../utils';
 
 // Form state type
 interface TipFormState {
@@ -129,17 +129,13 @@ export function useTipForm(config: SolanaCommerceConfig) {
           
           let lamports: number;
           
-          // For stablecoins (USDC/USDT), use direct conversion since they're already USD-based
-          if (state.selectedCurrency === 'USDC' || state.selectedCurrency === 'USDC_DEVNET') {
-            lamports = Math.round(computed.finalAmount * 1000000); // USDC has 6 decimals
-          } else if (state.selectedCurrency === 'USDT' || state.selectedCurrency === 'USDT_DEVNET') {
-            lamports = Math.round(computed.finalAmount * 1000000); // USDT has 6 decimals
-          } else if (state.selectedCurrency === 'SOL' || state.selectedCurrency === 'SOL_DEVNET') {
-            // For SOL, convert USD amount to equivalent SOL lamports
+          // For SOL currencies, convert USD amount to equivalent SOL lamports using current price
+          if (state.selectedCurrency === 'SOL' || state.selectedCurrency === 'SOL_DEVNET') {
             lamports = await convertUsdToLamports(computed.finalAmount);
           } else {
-            // Fallback for unknown currencies
-            lamports = Math.round(computed.finalAmount * 1000000000);
+            // For stablecoins and other currencies, use direct conversion with proper decimals
+            const decimals = getDecimals(state.selectedCurrency);
+            lamports = Math.round(computed.finalAmount * 10 ** decimals);
           }
           
           onPayment(lamports, state.selectedCurrency, state.selectedPaymentMethod);

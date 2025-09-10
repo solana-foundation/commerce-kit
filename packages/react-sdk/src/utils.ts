@@ -5,7 +5,8 @@
 
 import { useMemo } from 'react';
 import type { ThemeConfig, BorderRadius, CommerceMode, MerchantConfig, Currency } from './types';
-import { OrderItem, validateWalletAddress as coreValidateWalletAddress } from '@solana-commerce/headless-sdk';
+import { validateWalletAddress as coreValidateWalletAddress } from '@solana-commerce/headless-sdk';
+import { CURRENCY_DECIMALS } from './constants/tip-modal';
 
 // Constants
 export const BORDER_RADIUS_MAP = {
@@ -37,6 +38,11 @@ export const DEFAULT_THEME: Required<ThemeConfig> = {
   buttonShadow: 'md',
   buttonBorder: 'black-10'
 } as const;
+
+// Currency utility functions
+export const getDecimals = (currency: Currency): number => {
+  return CURRENCY_DECIMALS[currency] ?? 9; // Default to 9 decimals for SOL-like tokens
+};
 
 // Utility functions
 export const getBorderRadius = (radius?: BorderRadius): string => 
@@ -201,13 +207,30 @@ export const sanitizeString = (str: string): string => {
 export const useTheme = (theme?: ThemeConfig) => 
   useMemo(() => ({ ...DEFAULT_THEME, ...theme }), [theme]);
 
-export const useTotalAmount = (mode: CommerceMode, products?: readonly OrderItem[]) => 
+export const useTotalAmount = (mode: CommerceMode, paymentConfig?: import('./components/ui/secure-iframe-shell').PaymentConfig) => 
   useMemo(() => {
-    if (!products?.length) return 0;
-    return mode === 'cart' 
-      ? products.reduce((sum, product) => sum + product.price, 0)
-      : products[0]?.price ?? 0;
-  }, [mode, products]);
+    // For tip mode, amount is determined by user input, not products
+    if (mode === 'tip') {
+      return 0;
+    }
+    
+    // Calculate total from products for cart and buyNow modes
+    if (paymentConfig?.products && paymentConfig.products.length > 0) {
+      return paymentConfig.products.reduce((total, product) => {
+        // Defensively handle missing or invalid prices/quantities
+        const price = product.price ?? product.unitAmount ?? 0;
+        const quantity = product.quantity ?? 0;
+        
+        // Ensure values are finite numbers
+        const safePrice = (typeof price === 'number' && isFinite(price) && price >= 0) ? price : 0;
+        const safeQuantity = (typeof quantity === 'number' && isFinite(quantity) && quantity >= 0) ? quantity : 0;
+        
+        return total + (safePrice * safeQuantity);
+      }, 0);
+    }
+    
+    return 0;
+  }, [mode, paymentConfig?.products]);
 
 export const usePaymentUrl = (merchant: MerchantConfig, amount: number, mode: CommerceMode) => 
   useMemo(() => {
@@ -239,12 +262,14 @@ export const createPaymentError = (message: string, cause?: unknown): Error => {
 
 // Amount formatting
 export const formatSolAmount = (lamports: number, decimals: number = 3): string => {
-  return (lamports / 1000000000).toFixed(decimals);
+  const solDecimals = getDecimals('SOL');
+  return (lamports / 10 ** solDecimals).toFixed(decimals);
 };
 
 export const parseSolAmount = (solAmount: string): number => {
   const parsed = parseFloat(solAmount);
-  return isNaN(parsed) ? 0 : Math.round(parsed * 1000000000);
+  const solDecimals = getDecimals('SOL');
+  return isNaN(parsed) ? 0 : Math.round(parsed * 10 ** solDecimals);
 };
 
 // Default profile SVG for merchants without a logo
@@ -333,7 +358,8 @@ export const convertUsdToSol = async (usdAmount: number): Promise<number> => {
 // Convert USD amount to lamports for SOL payments
 export const convertUsdToLamports = async (usdAmount: number): Promise<number> => {
   const solAmount = await convertUsdToSol(usdAmount);
-  return Math.round(solAmount * 1000000000); // Convert SOL to lamports
+  const solDecimals = getDecimals('SOL');
+  return Math.round(solAmount * 10 ** solDecimals); // Convert SOL to lamports
 };
 
 // Get cached SOL price (for debugging/display purposes)

@@ -176,9 +176,9 @@
 }
 
 .ck-amount-button.selected {
-  border: 3px solid #ffffff;
+  border: 3px solid var(--color-surface, #ffffff);
   background-color: var(--primary-color-10, var(--color-primary-10));
-  color: rgba(0, 0, 0, 0.7);
+  color: var(--text-color-selected, rgba(0, 0, 0, 0.7));
   box-shadow: 0 0 0 2px var(--primary-color-60, var(--color-primary-60));
 }
 
@@ -211,9 +211,9 @@
 .ck-wallet-connect-button {
   padding: 6px 12px;
   border-radius: var(--border-radius, 1rem);
-  border: 1px solid rgba(255,255,255,0.5);
-  background: #0a0a0a;
-  color: #fff;
+  border: 1px solid var(--color-border-light, rgba(255,255,255,0.5));
+  background: var(--color-wallet-bg, #0a0a0a);
+  color: var(--color-wallet-text, #fff);
   cursor: pointer;
   display: inline-flex;
   align-items: center;

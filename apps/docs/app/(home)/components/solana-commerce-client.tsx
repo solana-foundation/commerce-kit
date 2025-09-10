@@ -1,12 +1,12 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { SolanaCommerceSDK, type SolanaCommerceConfig } from '@solana-commerce/react-sdk';
+import { PaymentButton, type SolanaCommerceConfig } from '@solana-commerce/react-sdk';
 import { OrderItem } from '@solana-commerce/headless-sdk';
 
 // Create a client-only version to avoid SSR issues
 const ClientOnlyCommerceSDK = dynamic(
-  () => Promise.resolve(SolanaCommerceSDK),
+  () => Promise.resolve(PaymentButton),
   { 
     ssr: false,
     loading: () => <div>Loading...</div>

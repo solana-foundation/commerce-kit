@@ -7,7 +7,7 @@ import { CustomizationPanel } from './customization-panel';
 import { DemoPreview } from './demo-preview';
 import { CodeExample } from './code-example';
 import type { Mode, CheckoutStyle, Customizations } from './types';
-import { OrderItem } from '@solana-commerce/headless-sdk';
+// Note: OrderItem removed for tip flow MVP
 
 export function InteractiveDemo() {
   const [selectedMode, setSelectedMode] = useState<Mode>('tip');
@@ -40,23 +40,7 @@ export function InteractiveDemo() {
     buttonBorder: 'black-10',
   });
 
-  // Demo products
-  const demoProducts: OrderItem[] = [
-    {
-      id: 'course-1',
-      name: customizations.productName,
-      description: customizations.productDescription,
-      price: Math.round(parseFloat(customizations.productPrice || '0.1') * 1000000000), // Convert to lamports
-      // currency: customizations.supportedCurrencies[0] as 'SOL' | 'USDC' | 'USDT'
-    },
-    {
-      id: 'nft-1',
-      name: 'Premium NFT Collection',
-      description: 'Exclusive digital art piece',
-      price: 500000000, // 0.5 SOL  
-      // currency: customizations.supportedCurrencies[0] as 'SOL' | 'USDC' | 'USDT'
-    }
-  ];
+  // Note: Demo products removed for tip flow MVP
 
   const merchantConfig = {
     name: customizations.merchantName,
@@ -92,33 +76,20 @@ export function InteractiveDemo() {
         return {
           mode: 'tip' as const,
           ...baseConfig,
-          // Empty products array - enhanced tip modal handles amount input
-          products: [],
           showProductDetails: false
         };
-      case 'buyNow':
-        return {
-          mode: 'buyNow' as const,
-          ...baseConfig,
-          products: [demoProducts[0]]
-        };
-      case 'cart':
-        return {
-          mode: 'cart' as const,
-          ...baseConfig,
-          products: demoProducts
-        };
+      // Note: buyNow and cart modes removed for tip flow MVP
       case 'qrCustomization':
         return {
           mode: 'qrCustomization' as const,
           ...baseConfig,
-          products: [] // No products needed for QR customization
+          // Note: No products needed for QR customization
         };
       default:
         return {
           mode: 'tip' as const,
           ...baseConfig,
-          products: []
+          // Note: Products removed for tip flow MVP
         };
     }
   };
@@ -175,8 +146,6 @@ export function InteractiveDemo() {
                   selectedMode={selectedMode}
                   checkoutStyle={checkoutStyle}
                   customizations={customizations}
-                  demoProducts={demoProducts}
-                  merchantConfig={merchantConfig}
                   config={getConfigForMode()}
                   onCheckoutStyleChange={setCheckoutStyle}
                   onCustomizationChange={updateCustomization}

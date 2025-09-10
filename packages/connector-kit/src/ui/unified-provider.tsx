@@ -3,13 +3,11 @@
 import React from 'react'
 import type { ReactNode, ComponentType } from 'react'
 import { ConnectorProvider } from './connector-provider'
-import type { MobileWalletAdapterConfig } from './connector-provider'
 import type { ConnectorConfig } from '../lib/connector-client'
 
 export interface UnifiedProviderProps {
   children: ReactNode
   connectorConfig?: ConnectorConfig
-  mobile?: MobileWalletAdapterConfig
   // Optional additional providers to wrap around children
   providers?: Array<{
     component: ComponentType<any>
@@ -20,12 +18,11 @@ export interface UnifiedProviderProps {
 export function UnifiedProvider({
   children,
   connectorConfig,
-  mobile,
   providers = [],
 }: UnifiedProviderProps) {
   // Start with connector provider as the base
   let content = (
-    <ConnectorProvider config={connectorConfig} mobile={mobile}>
+    <ConnectorProvider config={connectorConfig}>
       {children}
     </ConnectorProvider>
   )

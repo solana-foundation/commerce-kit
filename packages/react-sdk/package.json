@@ -24,17 +24,18 @@
   },
   "scripts": {
     "build": "pnpm run build:iframe && pnpm run generate:iframe-bundle && pnpm run build:sdk",
-    "build:sdk": "tsup src/index.tsx --format cjs,esm --dts --splitting --clean --external react --external react-dom",
+    "build:sdk": "tsup src/index.tsx --format cjs,esm --dts --splitting --external react --external react-dom",
     "build:iframe": "tsup --config tsup.iframe.config.ts",
     "generate:iframe-bundle": "tsx scripts/generate-iframe-bundle.ts",
     "dev": "tsup src/index.tsx --format cjs,esm --dts --splitting --watch --external react --external react-dom",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@solana-commerce/headless-sdk": "workspace:*",
-    "@solana-commerce/ui-primitives": "workspace:*",
     "@solana-commerce/connector-kit": "workspace:*",
+    "@solana-commerce/headless-sdk": "workspace:*",
+    "@solana-commerce/solana-hooks": "workspace:*",
     "@solana-commerce/solana-pay": "workspace:*",
+    "@solana-commerce/ui-primitives": "workspace:*",
     "bignumber.js": "4.0.4",
     "gill": "^0.10.2"
   },
@@ -44,6 +45,8 @@
   },
   "devDependencies": {
     "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.8",
+    "esbuild": "^0.25.9",
     "tsup": "^8.0.0",
     "tsx": "^4.19.2"
   },

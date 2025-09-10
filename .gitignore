@@ -34,10 +34,14 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # Finder (MacOS) folder config
 .DS_Store
 
-
-# references
-/porto-main/
-
 # generated files
 packages/react-sdk/src/iframe-app/bundle.ts
 worktrees/
+
+#references
+/kit-main/
+/kite-main/
+/solana-docs/
+/wallet-standard-master/
+/mobile-wallet-adapter-main/
+/porto-main/

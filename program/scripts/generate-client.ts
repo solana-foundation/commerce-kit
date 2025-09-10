@@ -1,5 +1,5 @@
 import path from "path";
-import * as renderers from "@codama/renderers";
+import { renderVisitor } from "@codama/renderers-js";
 import { preserveConfigFiles } from './lib/utils';
 import { createCommerceCodamaBuilder } from './lib/commerce-codama-builder';
 import { renderVisitor as renderRustVisitor } from '@codama/renderers-rust';
@@ -38,7 +38,7 @@ commerceCodama.accept(
 
 // Generate TypeScript client
 commerceCodama.accept(
-  renderers.renderJavaScriptVisitor(
+  renderVisitor(
     path.join(typescriptClientsDir, "src", "generated"),
     {
       formatCode: true,

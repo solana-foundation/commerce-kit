@@ -2,8 +2,8 @@
 
 import React, { useState, useCallback } from 'react';
 import type { DemoConfig, Mode } from './types';
-import { cn } from '../../../lib/utils';
-import { OrderItem } from '@solana-commerce/headless-sdk';
+// Note: cn utility removed as it's no longer needed
+// Note: OrderItem removed for tip flow MVP
 import { TokenIcon } from '../../../../../packages/react-sdk/src/components/icons';
 import { getButtonBorder, getButtonShadow, getAccessibleTextColor } from '../../../../../packages/react-sdk/src/utils';
 import type { ThemeConfig } from '../../../../../packages/react-sdk/src/types';
@@ -41,13 +41,12 @@ const getModalBorderRadius = (radius?: BorderRadius): string =>
 interface ModalPreviewContentProps {
   config: DemoConfig;
   selectedMode: Mode;
-  demoProducts: OrderItem[];
 }
 
 type Currency = 'USDC' | 'SOL' | 'USDT';
 type PaymentMethod = 'qr' | 'wallet';
 
-export function ModalPreviewContent({ config, selectedMode, demoProducts }: ModalPreviewContentProps) {
+export function ModalPreviewContent({ config, selectedMode }: ModalPreviewContentProps) {
   const [selectedAmount, setSelectedAmount] = useState<number>(1);
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>(
     (config.allowedMints[0] as Currency) || 'USDC'
@@ -745,41 +744,12 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
         </p>
       </div>
 
-      {/* Products */}
-      <div className="mb-6">
-        {demoProducts.map((product, index) => (
-          <div 
-            key={index} 
-            className={cn(
-              "flex items-center py-3",
-              index < demoProducts.length - 1 && "border-b border-gray-100"
-            )}
-          >
-            <div style={{
-              width: '2.5rem',
-              height: '2.5rem',
-              backgroundColor: '#f3f4f6',
-              marginRight: '0.75rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: getBorderRadius('md')
-            }}>
-              📦
-            </div>
-            <div className="flex-1">
-              <div 
-                className="font-semibold text-sm"
-                style={{ color: theme.textColor }}
-              >
-                {product.name}
-              </div>
-              <div className="text-gray-500 text-xs">
-                ${(product.price / 1_000_000).toFixed(2)} {selectedCurrency}
-              </div>
-            </div>
-          </div>
-        ))}
+      {/* Note: Products section removed for tip flow MVP */}
+      <div className="mb-6 p-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 text-center">
+        <div className="text-sm text-gray-600">
+          🎯 <strong>Tip Flow MVP</strong><br/>
+          Products removed - focus on tip functionality
+        </div>
       </div>
 
       {/* Total */}
@@ -794,7 +764,7 @@ export function ModalPreviewContent({ config, selectedMode, demoProducts }: Moda
           className="font-bold text-lg"
           style={{ color: theme.primaryColor }}
         >
-          ${(demoProducts.reduce((sum, p) => sum + p.price, 0) / 1_000_000).toFixed(2)} {selectedCurrency}
+          $5.00 {selectedCurrency}
         </span>
       </div>
 

@@ -4,6 +4,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
+import type { RefObject } from 'react';
 
 interface UseDropdownOptions {
   initialOpen?: boolean;
@@ -11,7 +12,7 @@ interface UseDropdownOptions {
   closeOnClickOutside?: boolean;
 }
 
-interface UseDropdownReturn<T = any> {
+interface UseDropdownReturn<T = any, E extends HTMLElement = HTMLElement> {
   isOpen: boolean;
   selectedValue: T | null;
   open: () => void;
@@ -19,17 +20,17 @@ interface UseDropdownReturn<T = any> {
   toggle: () => void;
   select: (value: T) => void;
   clear: () => void;
-  ref: React.RefObject<HTMLElement | null>;
+  ref: RefObject<E | null>;
 }
 
-export function useDropdown<T = any>({
+export function useDropdown<T = any, E extends HTMLElement = HTMLElement>({
   initialOpen = false,
   closeOnSelect = true,
   closeOnClickOutside = true
-}: UseDropdownOptions = {}): UseDropdownReturn<T> {
+}: UseDropdownOptions = {}): UseDropdownReturn<T, E> {
   const [isOpen, setIsOpen] = useState(initialOpen);
   const [selectedValue, setSelectedValue] = useState<T | null>(null);
-  const ref = useRef<HTMLElement | null>(null);
+  const ref = useRef<E | null>(null);
 
   const open = useCallback(() => {
     setIsOpen(true);

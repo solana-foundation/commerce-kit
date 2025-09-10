@@ -40,7 +40,7 @@ interface OutgoingMessage {
   height?: number;
   amount?: number;
   currency?: string;
-  products?: any[];
+
   signature?: string;
   error?: string;
 }
@@ -80,12 +80,11 @@ function IframeApp({ config, theme, totalAmount, paymentUrl }: {
   paymentUrl?: string;
 }) {
   // Handlers that communicate with parent
-  const handlePayment = React.useCallback((amount: number, currency: string, products?: any[]) => {
+  const handlePayment = React.useCallback((amount: number, currency: string) => {
     sendToParent({ 
       type: 'payment', 
       amount, 
-      currency, 
-      products 
+      currency
     });
   }, []);
 
@@ -94,7 +93,7 @@ function IframeApp({ config, theme, totalAmount, paymentUrl }: {
       type: 'payment', 
       amount, 
       currency, 
-      products: [{ id: 'tip', name: 'Tip', price: amount, currency }] 
+ 
     });
   }, []);
 
@@ -102,7 +101,7 @@ function IframeApp({ config, theme, totalAmount, paymentUrl }: {
     sendToParent({ type: 'close' });
   }, []);
 
-  // Render appropriate modal content
+  // Render appropriate modal content - providers are handled by parent
   if (config.mode === 'tip') {
     return (
       <IframeTipModalContent
@@ -120,7 +119,7 @@ function IframeApp({ config, theme, totalAmount, paymentUrl }: {
       theme={theme}
       totalAmount={totalAmount || 0}
       paymentUrl={paymentUrl || ''}
-      onPayment={() => handlePayment(totalAmount || 0, config.allowedMints?.[0] || 'SOL', config.products ? [...config.products] : undefined)}
+      onPayment={() => handlePayment(totalAmount || 0, config.allowedMints?.[0] || 'SOL')}
       onCancel={handleCancel}
     />
   );
@@ -188,14 +187,12 @@ function init() {
           (window as any).__IFRAME_WALLETS__ = (message as any).wallets
         }
         root.render(
-          <React.StrictMode>
-            <IframeApp 
-              config={message.config}
-              theme={message.theme}
-              totalAmount={message.totalAmount}
-              paymentUrl={message.paymentUrl}
-            />
-          </React.StrictMode>
+          <IframeApp 
+            config={message.config}
+            theme={message.theme}
+            totalAmount={message.totalAmount}
+            paymentUrl={message.paymentUrl}
+          />
         );
       } catch (error) {
         console.error('[IframeApp] Failed to render:', error);

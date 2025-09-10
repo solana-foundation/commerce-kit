@@ -6,7 +6,7 @@ import {
   sanitizeString, 
   formatSolAmount
 } from '../../utils';
-import { ProductList } from './product-list';
+
 import type { PaymentModalContentProps } from '../../types';
 
 export const PaymentModalContent = memo<PaymentModalContentProps>(({ 
@@ -52,12 +52,7 @@ export const PaymentModalContent = memo<PaymentModalContentProps>(({
       )}
     </div>
 
-    {/* Products */}
-    <ProductList
-      products={config.products || []}
-      theme={theme}
-      showDetails={config.showProductDetails ?? true}
-    />
+    {/* Note: Products removed - focusing on tip flow MVP */}
 
     {/* QR Code section */}
     {config.showQR !== false && (

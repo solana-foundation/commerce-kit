@@ -31,7 +31,6 @@
     "@wallet-standard/app": "^1.0.0",
     "@wallet-standard/base": "^1.0.0",
     "@solana-commerce/ui-primitives": "workspace:*",
-    "@solana-mobile/wallet-standard-mobile": "^0.3.0",
     "bs58": "^6.0.0"
   },
   "devDependencies": {

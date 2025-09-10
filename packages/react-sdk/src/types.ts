@@ -3,7 +3,7 @@
  * Production-ready type system for commerce components
  */
 
-import { OrderItem } from '@solana-commerce/headless-sdk';
+
 import { SPLToken } from '@solana-commerce/solana-pay';
 import { address } from 'gill';
 import type React from 'react';
@@ -41,19 +41,17 @@ export interface SolanaCommerceConfig {
   readonly position?: Position;
   readonly merchant: MerchantConfig;
   readonly theme?: ThemeConfig;
-  readonly products?: readonly OrderItem[];
   readonly allowedMints?: readonly string[];
   readonly network?: Network;
   readonly showQR?: boolean;
   readonly enableWalletConnect?: boolean;
   readonly showMerchantInfo?: boolean;
-  readonly showProductDetails?: boolean;
 
 }
 
 // Payment callbacks
 export interface PaymentCallbacks {
-  readonly onPayment?: (amount: number, currency: string, products?: readonly OrderItem[]) => void;
+  readonly onPayment?: (amount: number, currency: string) => void;
   readonly onPaymentStart?: () => void;
   readonly onPaymentSuccess?: (signature: string) => void;
   readonly onPaymentError?: (error: Error) => void;
@@ -61,7 +59,7 @@ export interface PaymentCallbacks {
 }
 
 // Main SDK props
-export interface SolanaCommerceSDKProps {
+export interface PaymentButtonProps {
   readonly config: SolanaCommerceConfig;
   readonly children?: React.ReactNode;
   readonly className?: string;
@@ -72,6 +70,8 @@ export interface SolanaCommerceSDKProps {
   readonly onPaymentSuccess?: PaymentCallbacks['onPaymentSuccess'];
   readonly onPaymentError?: PaymentCallbacks['onPaymentError'];
   readonly onCancel?: PaymentCallbacks['onCancel'];
+  /** Optional payment configuration for price and decimal overrides */
+  readonly paymentConfig?: import('./components/ui/secure-iframe-shell').PaymentConfig;
 }
 
 // Internal component props
@@ -84,11 +84,7 @@ export interface TriggerButtonProps {
   readonly variant?: 'default' | 'icon-only';
 }
 
-export interface ProductListProps {
-  readonly products: readonly OrderItem[];
-  readonly theme: Required<ThemeConfig>;
-  readonly showDetails: boolean;
-}
+
 
 // Internal component props for iframe components
 export interface PaymentModalContentProps {

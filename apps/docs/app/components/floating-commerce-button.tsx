@@ -1,29 +1,19 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-import { SolanaCommerceSDK } from '@solana-commerce/react-sdk';
-import type { OrderItem } from '@solana-commerce/headless-sdk';
-
-// Create a client-only version to avoid SSR issues
-const ClientOnlyCommerceSDK = dynamic(
-  () => Promise.resolve(SolanaCommerceSDK),
-  { 
-    ssr: false,
-    loading: () => null
-  }
-);
+import { PaymentButton } from '@solana-commerce/react-sdk';
+// Note: OrderItem removed for tip flow MVP
 
 export function FloatingCommerceButton() {
   return (
     <div className="fixed bottom-6 right-6 z-50">
-      <ClientOnlyCommerceSDK
+      <PaymentButton
         config={{
-          rpcUrl: process.env.NEXT_PUBLIC_RPC_URL,
+          rpcUrl: process.env.NEXT_PUBLIC_SOLANA_RPC_URL,
           mode: 'tip',
           position: 'overlay',
           merchant: {
             name: 'Hackweek Store',
-            wallet: 'BizigGQZuLqg6iSgjEr3LwDL8c3eL7PdjKdSavx6P73V',
+            wallet: 'A7Xmq3qqt4uvw3GELHw9HHNFbwZzHDJNtmk6fe2p5b5s',
             description: 'Experience the Solana Commerce SDK'
           },
           theme: {
@@ -34,17 +24,17 @@ export function FloatingCommerceButton() {
             borderRadius: 'full',
             fontFamily: 'system-ui, -apple-system, sans-serif'
           },
-          products: [],
-          allowedMints: ["USDC", "USDT", "USDC_DEVNET", "SOL_DEVNET", "USDT_DEVNET"],
-          network: 'devnet',
+
+          allowedMints: ["USDC", "USDT", "SOL"],
+          network: 'mainnet-beta',
           showQR: true,
           enableWalletConnect: true,
-          showProductDetails: false,
+
           showMerchantInfo: true,
         }}
         // variant="icon-only"
-        onPayment={(amount: number, currency: string, products?: readonly OrderItem[]) => {
-          console.log('Payment:', { amount, currency, products });
+        onPayment={(amount: number, currency: string) => {
+          console.log('Payment:', { amount, currency });
         }}
         onPaymentSuccess={(signature: string) => {
           console.log('Payment successful:', { signature });

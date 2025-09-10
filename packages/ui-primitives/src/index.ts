@@ -30,4 +30,7 @@ export {
   TabsList,
   TabsTab,
   TabsPanel
-} from './tabs-alpha'; 
+} from './tabs-alpha';
+
+// Shared constants for z-index system
+export { Z_INDEX, Z_INDEX_CSS_VARS } from './constants'; 

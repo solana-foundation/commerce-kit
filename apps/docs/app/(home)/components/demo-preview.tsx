@@ -1,9 +1,8 @@
 'use client';
 
 import React from 'react';
-import type { OrderItem } from '@solana-commerce/headless-sdk';
 import { SolanaCommerceClient } from './solana-commerce-client';
-import { SingleItemCart, MultiItemCart, type CartItem, type CommerceMode } from '@solana-commerce/react-sdk';
+import { type CommerceMode } from '@solana-commerce/react-sdk';
 
 import type { Mode, CheckoutStyle, Customizations, DemoConfig } from './types';
 import { IconCursorarrowRays, IconHandPointUpLeftFill, IconInsetFilledCenterRectangle, IconApp, IconShadow } from 'symbols-react';
@@ -18,22 +17,16 @@ interface DemoPreviewProps {
   selectedMode: Mode;
   checkoutStyle: CheckoutStyle;
   customizations: Customizations;
-  demoProducts: OrderItem[];
-  merchantConfig: {
-    name: string;
-    wallet: string;
-    description: string;
-  };
+
   config: DemoConfig;
   onCheckoutStyleChange: (style: CheckoutStyle) => void;
   onCustomizationChange: <K extends keyof Customizations>(key: K, value: Customizations[K]) => void;
 }
 
 // Modal Preview Component - wrapper that positions the modal content properly
-function ModalPreview({ config, selectedMode, demoProducts }: { 
+function ModalPreview({ config, selectedMode }: { 
   config: DemoConfig; 
   selectedMode: Mode; 
-  demoProducts: OrderItem[];
 }) {
   return (
     <div 
@@ -50,7 +43,6 @@ function ModalPreview({ config, selectedMode, demoProducts }: {
       <ModalPreviewContent 
         config={config}
         selectedMode={selectedMode}
-        demoProducts={demoProducts}
       />
     </div>
   );
@@ -60,18 +52,11 @@ export function DemoPreview({
   selectedMode, 
   checkoutStyle, 
   customizations, 
-  demoProducts, 
-  merchantConfig, 
   config,
   onCheckoutStyleChange,
   onCustomizationChange
 }: DemoPreviewProps) {
-  const getCartItems = (): CartItem[] => {
-    return demoProducts.map(product => ({
-      ...product,
-      quantity: 1
-    }));
-  };
+  // Note: Cart functionality removed for tip flow MVP
 
   return (
     <div className="flex flex-col h-full">
@@ -112,12 +97,12 @@ export function DemoPreview({
               <SolanaCommerceClient
                 config={{
                   ...config,
-                  mode: config.mode === 'qrCustomization' ? 'buyNow' : config.mode as CommerceMode
+                  mode: config.mode === 'qrCustomization' ? 'tip' : config.mode as CommerceMode
                 }}
                 variant={customizations.buttonVariant}
-                onPayment={(amount: number, currency: string, products?: readonly OrderItem[]) => {
-                  console.log('Demo payment:', { amount, currency, products });
-                  alert(`Payment initiated: ${amount / 1000000000} ${currency}`);
+                onPayment={(amount: number, currency: string) => {
+                  console.log('Demo payment:', { amount, currency });
+                  alert(`Payment initiated: $${amount} ${currency}`);
                 }}
                 onPaymentStart={() => {
                   console.log('Payment started...');
@@ -191,9 +176,7 @@ export function DemoPreview({
               </div>
               <ModalPreview 
                 config={config} 
-                selectedMode={selectedMode} 
-                demoProducts={demoProducts}
-              />
+                selectedMode={selectedMode}               />
             </div>
           </div>
         </div>
@@ -216,72 +199,15 @@ export function DemoPreview({
                   Switch to Modal Checkout
                 </button>
               </div>
-            ) : selectedMode === 'buyNow' ? (
-              <div className="h-full">
-
-                <div style={{ transform: 'scale(0.65)', transformOrigin: 'top left', width: '154%', height: '154%' }}>
-                  <SingleItemCart
-                    products={[{
-                      id: demoProducts[0].id,
-                      name: demoProducts[0].name,
-                      description: demoProducts[0].description,
-                      price: demoProducts[0].price,
-                      image: 'https://via.placeholder.com/400x300/9945FF/FFFFFF?text=Demo+Product'
-                    }]}
-                    merchant={merchantConfig}
-                    user={customizations.showMerchantInfo ? {
-                      name: merchantConfig.name,
-                      wallet: "FLsQ...4c67",
-                      email: "you@email.com"
-                    } : undefined}
-                    theme={config.theme}
-                    allowedMints={config.allowedMints}
-                    defaultCurrency={config.allowedMints[0] as 'SOL' | 'USDC' | 'USDT'}
-                    showTransactionFee={true}
-                    transactionFeePercent={0.015}
-                    onPayment={(amount: number, currency: string, paymentMethod: 'qr' | 'wallet', formData?: Record<string, unknown>) => {
-                      console.log('Payment initiated:', { amount, currency, paymentMethod, formData });
-                      alert(`Payment initiated: ${(amount / 1_000_000).toFixed(2)} ${currency}`);
-                    }}
-                    onEmailChange={(email: string) => {
-                      console.log('Email changed:', email);
-                    }}
-                  />
-                </div>
-              </div>
             ) : (
-              <div className="h-full">
-
-                <div style={{ transform: 'scale(0.55)', transformOrigin: 'top left', width: '182%', height: '182%' }}>
-                  <MultiItemCart
-                    initialItems={getCartItems()}
-                    merchant={merchantConfig}
-                    user={customizations.showMerchantInfo ? {
-                      name: merchantConfig.name,
-                      wallet: "FLsQ...4c67",
-                      email: "you@email.com"
-                    } : undefined}
-                    theme={config.theme}
-                    allowedMints={config.allowedMints}
-                    defaultCurrency={config.allowedMints[0] as 'SOL' | 'USDC' | 'USDT'}
-                    showTransactionFee={true}
-                    transactionFeePercent={0.015}
-                    enableItemEditing={true}
-                    maxQuantityPerItem={10}
-                    onPayment={(amount: number, currency: string, paymentMethod: 'qr' | 'wallet', formData?: Record<string, unknown>) => {
-                      console.log('Cart payment initiated:', { amount, currency, paymentMethod, formData });
-                      alert(`Cart payment initiated: ${(amount / 1_000_000).toFixed(2)} ${currency}`);
-                    }}
-                    onEmailChange={(email: string) => {
-                      console.log('Email changed:', email);
-                    }}
-                    onItemQuantityChange={(itemId: string, newQuantity: number) => {
-                      console.log('Quantity changed:', { itemId, newQuantity });
-                    }}
-                    onItemRemove={(itemId: string) => {
-                      console.log('Item removed:', itemId);
-                    }}
-                  />
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center p-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                  <div className="text-2xl mb-4">🎯</div>
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">Tip Flow MVP</h3>
+                  <p className="text-gray-600 text-sm max-w-md">
+                    Cart and product features have been removed to focus on the tip flow as the MVP. 
+                    Click the button above to test the tip modal!
+                  </p>
                 </div>
               </div>
             )}

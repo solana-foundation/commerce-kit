@@ -28,7 +28,7 @@ runs:
         fi
         
         # Install Solana CLI (stable version)
-        sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+        sh -c "$(curl -sSfL https://release.anza.xyz/v2.2.19/install)"
         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
         export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
 

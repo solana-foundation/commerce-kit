@@ -185,7 +185,7 @@ export const ConnectButton = memo<ConnectButtonProps>(({ className, style, varia
               </div>
             ) : null}
             {selectedWallet?.name ? (
-              <DropdownItem onSelect={async (_e) => {
+              <DropdownItem onSelect={async (_e: React.MouseEvent<HTMLDivElement> | React.KeyboardEvent<HTMLDivElement> | undefined) => {
                 try {
                   setConnectingWalletName(selectedWallet.name)
                   await select(selectedWallet.name)
@@ -207,7 +207,7 @@ export const ConnectButton = memo<ConnectButtonProps>(({ className, style, varia
                 </div>
               </DropdownItem>
             ) : null}
-              <DropdownItem onSelect={async (_e) => { 
+              <DropdownItem onSelect={async (_e: React.MouseEvent<HTMLDivElement> | React.KeyboardEvent<HTMLDivElement> | undefined) => { 
                 try {
                     setIsDialogOpen(false);
                     setCurrentStep('list');
@@ -231,7 +231,7 @@ export const ConnectButton = memo<ConnectButtonProps>(({ className, style, varia
   }
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setCurrentStep('list') }}>
+    <Dialog open={isDialogOpen} onOpenChange={(open: boolean) => { setIsDialogOpen(open); if (!open) setCurrentStep('list') }}>
       <DialogTrigger asChild>
         <button
           className={className}

@@ -3,12 +3,13 @@ import { TEN } from './constants';
 import BigNumber from 'bignumber.js';
 import {
   address,
-  Address,
+  type Address,
   Rpc,
   SolanaRpcApi,
   TransactionSigner,
   Instruction,
   AccountRole,
+  type AccountMeta,
 } from 'gill';
 import {
   getAssociatedTokenAccountAddress,
@@ -108,15 +109,21 @@ export async function createSplTransfer(
 
   if (reference) {
     const refs = Array.isArray(reference) ? reference : [reference];
-    for (const ref of refs) {
-      transferInstruction.accounts.push({
-        address: address(ref),
-        role: AccountRole.READONLY,
-      });
-    }
+    const referenceAccounts: AccountMeta[] = refs.map(ref => ({
+      address: address(ref.toString()),
+      role: AccountRole.READONLY,
+    }));
+    
+    // Create a new instruction with the additional reference accounts
+    const instructionWithReferences: Instruction = {
+      ...transferInstruction,
+      accounts: [...transferInstruction.accounts, ...referenceAccounts],
+    };
+    
+    instructions.push(instructionWithReferences);
+  } else {
+    instructions.push(transferInstruction);
   }
-
-  instructions.push(transferInstruction);
 
   return instructions;
 }

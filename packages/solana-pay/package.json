@@ -5,9 +5,9 @@
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts --clean --external gill --external ws --external node-fetch",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch --external gill --external ws --external node-fetch",
-    "clean": "rm -rf .turbo dist node_modules"
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean --external gill",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch --external gill",
+    "clean": "rm -rf dist"
   },
   "dependencies": {
     "bignumber.js": "4.0.4",
@@ -17,6 +17,6 @@
   "devDependencies": {
     "@types/qrcode": "^1.5.5",
     "tsup": "^8.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.4.5"
   }
 }

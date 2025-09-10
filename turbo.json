@@ -7,7 +7,7 @@
       "outputs": ["program/clients/typescript/src/**", "program/clients/rust/src/generated/**"]
     },
     "build": {
-      "dependsOn": ["^build", "generate"],
+      "dependsOn": ["^build", "^generate", "generate"],
       "outputs": ["dist/**", ".next/**"]
     },
     "lint": {
