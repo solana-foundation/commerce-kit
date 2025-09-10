@@ -23,7 +23,7 @@ pub fn process_instruction(
     let (discriminator, instruction_data) = instruction_data
         .split_first()
         .ok_or(ProgramError::InvalidInstructionData)?;
-
+ 
     let discriminator = CommerceInstructionDiscriminators::try_from(*discriminator)
         .map_err(|_| ProgramError::InvalidInstructionData)?;
 
