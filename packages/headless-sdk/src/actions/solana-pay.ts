@@ -1,5 +1,4 @@
 import { createQR, createQRCanvas, createStyledQRCode, encodeURL, TransferRequestURLFields, createSPLToken, createRecipient } from "@solana-commerce/solana-pay";
-import BigNumber from "bignumber.js";
 
 export interface SolanaPayRequestOptions {
     size?: number;
@@ -55,7 +54,7 @@ export async function createPaymentRequest(
     try {
         const request: TransferRequestURLFields = {
             recipient: createRecipient(recipientAddress),
-            amount: new BigNumber(amount),
+            amount: BigInt(Math.floor(amount * 1_000_000_000)), // Convert to lamports
         };
 
         // Only add SPL token if provided and not SOL

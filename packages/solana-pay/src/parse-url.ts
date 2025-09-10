@@ -1,6 +1,5 @@
 import { address } from 'gill';
-import BigNumber from 'bignumber.js';
-import { SOLANA_PROTOCOL, HTTPS_PROTOCOL } from './constants';
+import { SOLANA_PROTOCOL, HTTPS_PROTOCOL, SOL_DECIMALS } from './constants';
 import type { TransferRequestURLFields, TransactionRequestURLFields } from './encode-url';
 
 /**
@@ -58,11 +57,18 @@ function parseTransferRequestURL(url: URL): TransferRequestURLFields {
     if (amountParam != null) {
         if (!/^\d+(\.\d+)?$/.test(amountParam)) throw new ParseURLError('amount invalid');
 
-        amount = new BigNumber(amountParam);
-        if (amount.isNaN() || amount.isNegative()) throw new ParseURLError('amount invalid');
+        const parsedAmount = parseFloat(amountParam);
+        if (isNaN(parsedAmount) || parsedAmount < 0) throw new ParseURLError('amount invalid');
 
-        const decimals = amount.decimalPlaces();
-        if (decimals !== null && decimals > 9) throw new ParseURLError('amount decimals invalid');
+        // Check decimal places
+        const decimalIndex = amountParam.indexOf('.');
+        if (decimalIndex !== -1) {
+            const decimals = amountParam.length - decimalIndex - 1;
+            if (decimals > SOL_DECIMALS) throw new ParseURLError('amount decimals invalid');
+        }
+
+        // Convert to bigint in lamports (smallest unit)
+        amount = BigInt(Math.floor(parsedAmount * Math.pow(10, SOL_DECIMALS)));
     }
 
     let splToken;

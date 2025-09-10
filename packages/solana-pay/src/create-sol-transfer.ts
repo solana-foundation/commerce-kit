@@ -28,7 +28,7 @@ export async function createSolTransfer(
     getTransferInstruction({
       source: sender,
       destination: recipientAddress,
-      amount: amount.toNumber(),
+      amount: Number(amount),
       authority: sender,
     }),
   ];

@@ -1,4 +1,4 @@
-import { SOLANA_PROTOCOL, HTTPS_PROTOCOL } from './constants';
+import { SOLANA_PROTOCOL, HTTPS_PROTOCOL, SOL_DECIMALS } from './constants';
 import type { Amount, Label, Link, Memo, Message, Recipient, References, SPLToken } from './types';
 
 /**
@@ -52,7 +52,9 @@ export function encodeTransferRequestURL({
     const url = new URL(SOLANA_PROTOCOL + pathname);
 
     if (amount) {
-        url.searchParams.append('amount', amount.toFixed(amount.decimalPlaces()));
+        // Convert bigint lamports to decimal string
+        const amountStr = (Number(amount) / Math.pow(10, SOL_DECIMALS)).toString();
+        url.searchParams.append('amount', amountStr);
     }
 
     

@@ -36,7 +36,6 @@
     "@solana-commerce/solana-hooks": "workspace:*",
     "@solana-commerce/solana-pay": "workspace:*",
     "@solana-commerce/ui-primitives": "workspace:*",
-    "bignumber.js": "4.0.4",
     "gill": "^0.10.2"
   },
   "peerDependencies": {

@@ -12,7 +12,6 @@
   "dependencies": {
     "@solana-commerce/solana-pay": "workspace:*",
     "@solana-commerce/program-client": "workspace:*",
-    "bignumber.js": "4.0.4",
     "gill": "^0.10.2"
   },
   "devDependencies": {

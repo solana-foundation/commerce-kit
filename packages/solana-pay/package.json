@@ -7,16 +7,18 @@
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts --clean --external gill",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch --external gill",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
-    "bignumber.js": "4.0.4",
     "gill": "^0.10.2",
     "qrcode": "^1.5.4"
   },
   "devDependencies": {
     "@types/qrcode": "^1.5.5",
     "tsup": "^8.0.0",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vitest": "^1.0.0"
   }
 }

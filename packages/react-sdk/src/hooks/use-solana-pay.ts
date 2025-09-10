@@ -1,6 +1,5 @@
 import { createSolanaPayRequest } from "@solana-commerce/headless-sdk";
 import { Recipient, Reference, References, SPLToken } from "@solana-commerce/solana-pay";
-import BigNumber from "bignumber.js";
 import { useState, useEffect } from "react";
 
 export interface SolanaPayQROptions {
@@ -37,7 +36,7 @@ export function useSolanaPay(
                
                 const request = await createSolanaPayRequest({
                     recipient: recipient as Recipient,
-                    amount: new BigNumber(amount),
+                    amount: BigInt(Math.floor(amount * 1_000_000_000)), // Convert to lamports
                     splToken: token,
                     memo: reference,
                     label: opts?.label ?? 'commerceKit',

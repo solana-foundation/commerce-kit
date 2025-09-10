@@ -1,6 +1,5 @@
 import type { Amount, Memo, Recipient, References, SPLToken } from './types';
-import { TEN } from './constants';
-import BigNumber from 'bignumber.js';
+import { SOL_DECIMALS } from './constants';
 import {
   address,
   type Address,
@@ -54,12 +53,21 @@ export async function createSplTransfer(
   const mint = await fetchMint(rpc, splTokenAddress);
   if (!mint.data.isInitialized) throw new CreateTransferError('mint not initialized');
 
-  if ((amount.decimalPlaces() ?? 0) > mint.data.decimals) {
-    throw new CreateTransferError('amount decimals invalid');
+  // Convert amount from lamports (9 decimals) to token's decimal precision
+  // amount is in lamports (10^9), we need to convert to token decimals
+  let tokens: bigint;
+  if (mint.data.decimals === SOL_DECIMALS) {
+    // Same decimal precision, use as-is
+    tokens = amount;
+  } else if (mint.data.decimals < SOL_DECIMALS) {
+    // Token has fewer decimals, divide by the difference
+    const scaleFactor = BigInt(10 ** (SOL_DECIMALS - mint.data.decimals));
+    tokens = amount / scaleFactor;
+  } else {
+    // Token has more decimals, multiply by the difference  
+    const scaleFactor = BigInt(10 ** (mint.data.decimals - SOL_DECIMALS));
+    tokens = amount * scaleFactor;
   }
-
-  const tokenAmount = amount.times(TEN.pow(mint.data.decimals)).toFixed(0);
-  const tokens = BigInt(tokenAmount.toString());
 
   const senderATA = await getAssociatedTokenAccountAddress(splTokenAddress, sender, tokenProgram);
   const recipientATA = await getAssociatedTokenAccountAddress(splTokenAddress, recipientAddress, tokenProgram);
