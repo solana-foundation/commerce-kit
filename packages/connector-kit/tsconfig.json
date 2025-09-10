@@ -12,10 +12,7 @@
     "jsx": "react-jsx",
     "strict": true,
     "skipLibCheck": true,
-    "baseUrl": ".",
-    "paths": {
-      "@solana-commerce/ui-primitives": ["../ui-primitives/dist/index.d.ts"]
-    }
+    "baseUrl": "."
   },
   "include": ["src"]
 }

@@ -1,0 +1,5 @@
+{
+  "buildCommand": "cd ../.. && pnpm build --filter=docs",
+  "outputDirectory": ".next",
+  "installCommand": "cd ../.. && pnpm install"
+}
