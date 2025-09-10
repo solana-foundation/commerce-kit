@@ -110,7 +110,7 @@ export async function createSplTransfer(
   if (reference) {
     const refs = Array.isArray(reference) ? reference : [reference];
     const referenceAccounts: AccountMeta[] = refs.map(ref => ({
-      address: ref as Address<string>,
+      address: address(ref.toString()),
       role: AccountRole.READONLY,
     }));
     
