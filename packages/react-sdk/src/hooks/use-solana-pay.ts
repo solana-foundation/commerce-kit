@@ -1,6 +1,16 @@
 import { createSolanaPayRequest } from "@solana-commerce/headless-sdk";
-import { Recipient, Reference, References, SPLToken } from "@solana-commerce/solana-pay";
+import { Recipient, SPLToken } from "@solana-commerce/solana-pay";
 import { useState, useEffect } from "react";
+
+// Converts a decimal `amount` to minor units as bigint using string math.
+export function toMinorUnits(amt: number, decimals: number): bigint {
+  if (!Number.isFinite(amt) || decimals < 0) throw new Error('Invalid amount/decimals');
+  const s = amt.toFixed(decimals); // stable string with exactly `decimals` fraction digits
+  const parts = s.split('.');
+  const i = parts[0] || '0';
+  const f = parts[1] || '';
+  return BigInt(i) * (10n ** BigInt(decimals)) + BigInt(f.padEnd(decimals, '0'));
+}
 
 export interface SolanaPayQROptions {
   size?: number;
@@ -36,7 +46,7 @@ export function useSolanaPay(
                
                 const request = await createSolanaPayRequest({
                     recipient: recipient as Recipient,
-                    amount: BigInt(Math.floor(amount * 1_000_000_000)), // Convert to lamports
+                    amount: toMinorUnits(amount, ('decimals' in token ? (token as any).decimals : 9)), // to minor units
                     splToken: token,
                     memo: reference,
                     label: opts?.label ?? 'commerceKit',

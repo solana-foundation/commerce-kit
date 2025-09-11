@@ -10,6 +10,51 @@ export class ParseURLError extends Error {
 }
 
 /**
+ * Convert a decimal string to atomic units (bigint) with proper precision handling.
+ * 
+ * @param amount - String representation of the decimal amount
+ * @param decimals - Number of decimal places for the target unit
+ * @returns Amount in atomic units as bigint
+ * 
+ * @throws {ParseURLError} When amount is negative or has too many decimal places
+ */
+function toAtomicUnits(amount: string, decimals: number): bigint {
+    // Validate: empty or whitespace
+    if (!amount || !amount.trim()) {
+        throw new ParseURLError('amount invalid');
+    }
+
+    const trimmed = amount.trim();
+
+    // Check for negative values
+    if (trimmed.startsWith('-')) {
+        throw new ParseURLError('amount invalid');
+    }
+
+    // Split into integer and decimal parts
+    const [integerPart = '0', fractionalPart = ''] = trimmed.split('.');
+
+    // Validate we have at least one digit somewhere
+    if ((integerPart === '' || integerPart === '0') && fractionalPart === '') {
+        throw new ParseURLError('amount invalid');
+    }
+
+    // Validate decimal places don't exceed maximum
+    if (fractionalPart.length > decimals) {
+        throw new ParseURLError('amount decimals invalid');
+    }
+
+    // Pad decimal part to required length
+    const paddedFractional = fractionalPart.padEnd(decimals, '0');
+    
+    // Convert to base units: integer part * 10^decimals + fractional part
+    const integerLamports = BigInt(integerPart || '0') * (10n ** BigInt(decimals));
+    const fractionalLamports = BigInt(paddedFractional || '0');
+    
+    return integerLamports + fractionalLamports;
+}
+
+/**
  * Parse a Solana Pay URL.
  *
  * @param url - URL to parse.
@@ -57,18 +102,11 @@ function parseTransferRequestURL(url: URL): TransferRequestURLFields {
     if (amountParam != null) {
         if (!/^\d+(\.\d+)?$/.test(amountParam)) throw new ParseURLError('amount invalid');
 
-        const parsedAmount = parseFloat(amountParam);
-        if (isNaN(parsedAmount) || parsedAmount < 0) throw new ParseURLError('amount invalid');
+        // Additional validation for NaN (though regex should catch most cases)
+        if (isNaN(parseFloat(amountParam))) throw new ParseURLError('amount invalid');
 
-        // Check decimal places
-        const decimalIndex = amountParam.indexOf('.');
-        if (decimalIndex !== -1) {
-            const decimals = amountParam.length - decimalIndex - 1;
-            if (decimals > SOL_DECIMALS) throw new ParseURLError('amount decimals invalid');
-        }
-
-        // Convert to bigint in lamports (smallest unit)
-        amount = BigInt(Math.floor(parsedAmount * Math.pow(10, SOL_DECIMALS)));
+        // Convert to atomic units (lamports) using safe integer arithmetic
+        amount = toAtomicUnits(amountParam, SOL_DECIMALS);
     }
 
     let splToken;

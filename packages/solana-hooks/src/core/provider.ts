@@ -1,50 +1,9 @@
-import type { Address, Instruction, Lamports } from '@solana/kit'
+/**
+ * Minimal stub - providers not needed for MVP
+ */
 
-export interface SwapQuote {
-  provider: string
-  inputMint: Address
-  outputMint: Address
-  inputAmount: Lamports
-  outputAmount: Lamports
-  priceImpact: number
-  fees: Lamports
-  route?: any // Provider-specific route data
-  // Optional: surface provider-computed effective slippage (bps)
-  effectiveSlippageBps?: number
+// Minimal stub export for backward compatibility
+export function createProvider(config: any = {}): any {
+  // Just return the config as-is - no provider logic needed for MVP
+  return config
 }
-
-export interface SwapParams {
-  inputMint: Address
-  outputMint: Address
-  amount: Lamports
-  slippageBps?: number
-}
-
-export interface SwapProvider {
-  name: string
-  quote(params: SwapParams): Promise<SwapQuote>
-  build(params: { quote: SwapQuote; userPublicKey: string; capabilities?: { walletSupportsVersioned?: boolean } }): Promise<SwapBuild>
-  isTokenSupported(mint: Address): boolean
-}
-
-export interface Provider {
-  swap?: SwapProvider[]
-  // Future: lending, staking, etc.
-}
-
-export function createProvider(config: Partial<Provider>): Provider {
-  return {
-    ...config,
-    swap: config.swap || []
-  }
-}
-
-// ===== Extended types for prebuilt transactions (provider-friendly) =====
-
-export interface PrebuiltTransaction {
-  wireTransaction: Uint8Array
-}
-
-export type SwapBuild =
-  | { kind: 'instructions'; instructions: Instruction[] }
-  | { kind: 'prebuilt'; transaction: PrebuiltTransaction }

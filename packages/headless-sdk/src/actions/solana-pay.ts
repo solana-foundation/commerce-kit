@@ -1,4 +1,14 @@
-import { createQR, createQRCanvas, createStyledQRCode, encodeURL, TransferRequestURLFields, createSPLToken, createRecipient } from "@solana-commerce/solana-pay";
+import { createStyledQRCode, encodeURL, TransferRequestURLFields, createSPLToken, createRecipient } from "@solana-commerce/solana-pay";
+
+// Converts a decimal `amount` to minor units as bigint using string math.
+function toMinorUnits(amt: number, decimals: number): bigint {
+  if (!Number.isFinite(amt) || decimals < 0) throw new Error('Invalid amount/decimals');
+  const s = amt.toFixed(decimals); // stable string with exactly `decimals` fraction digits
+  const parts = s.split('.');
+  const i = parts[0] || '0';
+  const f = parts[1] || '';
+  return BigInt(i) * (10n ** BigInt(decimals)) + BigInt(f.padEnd(decimals, '0'));
+}
 
 export interface SolanaPayRequestOptions {
     size?: number;
@@ -54,7 +64,7 @@ export async function createPaymentRequest(
     try {
         const request: TransferRequestURLFields = {
             recipient: createRecipient(recipientAddress),
-            amount: BigInt(Math.floor(amount * 1_000_000_000)), // Convert to lamports
+            amount: toMinorUnits(amount, 9), // Default to 9 decimals (SOL standard)
         };
 
         // Only add SPL token if provided and not SOL

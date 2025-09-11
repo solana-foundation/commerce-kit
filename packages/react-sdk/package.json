@@ -28,7 +28,10 @@
     "build:iframe": "tsup --config tsup.iframe.config.ts",
     "generate:iframe-bundle": "tsx scripts/generate-iframe-bundle.ts",
     "dev": "tsup src/index.tsx --format cjs,esm --dts --splitting --watch --external react --external react-dom",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@solana-commerce/connector-kit": "workspace:*",
@@ -43,11 +46,17 @@
     "react-dom": ">=19.0.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.0.0",
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/user-event": "^14.0.0",
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.8",
+    "@vitest/coverage-v8": "^3.2.4",
     "esbuild": "^0.25.9",
+    "happy-dom": "^12.0.0",
     "tsup": "^8.0.0",
-    "tsx": "^4.19.2"
+    "tsx": "^4.19.2",
+    "vitest": "^1.0.0"
   },
   "files": [
     "dist"

@@ -5,7 +5,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useArcClient } from '../core/arc-client-provider'
 import { releaseRpcConnection } from '../core/rpc-manager'
 import { createTransactionBuilder, createTransactionContext } from '../core/transaction-builder'
-import type { Transport } from '../transports/types'
 import { 
   address,
   type Address,

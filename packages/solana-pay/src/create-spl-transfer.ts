@@ -1,24 +1,19 @@
 import type { Amount, Memo, Recipient, References, SPLToken } from './types';
-import { SOL_DECIMALS } from './constants';
 import {
   address,
   type Address,
   Rpc,
   SolanaRpcApi,
-  TransactionSigner,
   Instruction,
   AccountRole,
   type AccountMeta,
 } from 'gill';
 import {
   getAssociatedTokenAccountAddress,
-  getCreateAssociatedTokenIdempotentInstruction,
   getTransferCheckedInstruction,
   TOKEN_PROGRAM_ADDRESS,
   TOKEN_2022_PROGRAM_ADDRESS,
   fetchMint,
-  findAssociatedTokenPda,
-  fetchMaybeToken,
 } from 'gill/programs/token';
 import { getAddMemoInstruction } from 'gill/programs';
 import { CreateTransferError } from './error';
@@ -53,21 +48,7 @@ export async function createSplTransfer(
   const mint = await fetchMint(rpc, splTokenAddress);
   if (!mint.data.isInitialized) throw new CreateTransferError('mint not initialized');
 
-  // Convert amount from lamports (9 decimals) to token's decimal precision
-  // amount is in lamports (10^9), we need to convert to token decimals
-  let tokens: bigint;
-  if (mint.data.decimals === SOL_DECIMALS) {
-    // Same decimal precision, use as-is
-    tokens = amount;
-  } else if (mint.data.decimals < SOL_DECIMALS) {
-    // Token has fewer decimals, divide by the difference
-    const scaleFactor = BigInt(10 ** (SOL_DECIMALS - mint.data.decimals));
-    tokens = amount / scaleFactor;
-  } else {
-    // Token has more decimals, multiply by the difference  
-    const scaleFactor = BigInt(10 ** (mint.data.decimals - SOL_DECIMALS));
-    tokens = amount * scaleFactor;
-  }
+  const tokens = amount;
 
   const senderATA = await getAssociatedTokenAccountAddress(splTokenAddress, sender, tokenProgram);
   const recipientATA = await getAssociatedTokenAccountAddress(splTokenAddress, recipientAddress, tokenProgram);

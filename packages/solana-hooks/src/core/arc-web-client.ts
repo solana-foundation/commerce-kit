@@ -4,7 +4,7 @@ import { type Address } from '@solana/kit'
 import { getClusterInfo, type ClusterInfo } from '../utils/cluster'
 import type { Transport } from '../transports/types'
 import { createHttpTransport } from '../transports/http'
-import type { Provider } from './provider'
+// Removed Provider import - not needed for MVP
 import {
   WalletStandardKitSigner,
   type StandardWalletInfo,
@@ -18,7 +18,6 @@ import type { ConnectorClient, ConnectorState } from '@solana-commerce/connector
  * This extends the configuration available in the ArcProvider.
  */
 export interface ArcWebClientConfig {
-  providers?: Provider[]
   network?: 'mainnet' | 'devnet' | 'testnet'
   rpcUrl?: string
   commitment?: 'processed' | 'confirmed' | 'finalized'

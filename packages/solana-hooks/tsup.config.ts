@@ -13,16 +13,10 @@ const externals = [
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    react: 'src/react/index.ts',
-    core: 'src/core.ts',
-    client: 'src/client.ts',
-    experimental: 'src/experimental/index.ts',
-    programs: 'src/programs.ts',
-    graphql: 'src/graphql.ts',
-    subscriptions: 'src/subscriptions.ts'
+    react: 'src/react/index.ts'
   },
   format: ['cjs', 'esm'],
-  dts: false, // Temporarily disabled due to Solana Web3.js v2 Address type conflicts
+  dts: true, // Re-enabled after cleanup
   splitting: false,
   sourcemap: true,
   clean: true,

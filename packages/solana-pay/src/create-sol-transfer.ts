@@ -24,11 +24,37 @@ export async function createSolTransfer(
 ): Promise<Instruction[]> {
   const recipientAddress = address(recipient);
 
+  // Safely coerce amount to number with precision check
+  let numericAmount: number;
+  
+  if (typeof amount === 'bigint') {
+    if (amount > BigInt(Number.MAX_SAFE_INTEGER)) {
+      throw new RangeError(
+        `Amount ${amount} exceeds the safe integer range (max: ${Number.MAX_SAFE_INTEGER}). ` +
+        'Use a smaller value or handle large amounts with BigInt-compatible methods.'
+      );
+    }
+    numericAmount = Number(amount);
+  } else if (typeof amount === 'string') {
+    // Parse string to BigInt first to check precision safety
+    const bigintAmount = BigInt(amount);
+    if (bigintAmount > BigInt(Number.MAX_SAFE_INTEGER)) {
+      throw new RangeError(
+        `Amount "${amount}" exceeds the safe integer range (max: ${Number.MAX_SAFE_INTEGER}). ` +
+        'Use a smaller value or handle large amounts with BigInt-compatible methods.'
+      );
+    }
+    numericAmount = Number(amount);
+  } else {
+    // Assume it's already a number or can be safely coerced
+    numericAmount = Number(amount);
+  }
+
   return [
     getTransferInstruction({
       source: sender,
       destination: recipientAddress,
-      amount: Number(amount),
+      amount: numericAmount,
       authority: sender,
     }),
   ];

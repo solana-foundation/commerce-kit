@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import type { Currency, PaymentMethod } from '../types';
+import type { PaymentMethod } from '../types';
 
 // Static Icons - JSX Elements
 export const WALLET_ICON = React.createElement(
@@ -135,24 +135,3 @@ export const ANIMATION_STYLES = `s
 }
 `;
 
-// Utility function for clipboard
-export const copyToClipboard = (text: string): Promise<void> => {
-  if (navigator.clipboard) {
-    return navigator.clipboard.writeText(text);
-  }
-  
-  // Fallback for older browsers
-  return new Promise((resolve, reject) => {
-    try {
-      const textArea = document.createElement('textarea');
-      textArea.value = text;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      resolve();
-    } catch (error) {
-      reject(error);
-    }
-  });
-};

@@ -26,7 +26,6 @@ export type {
 export type { PaymentConfig, Product } from './components/ui/secure-iframe-shell';
 
 import React, { useState, useCallback, useMemo, memo, useEffect } from 'react';
-import { DialogTrigger } from '../../ui-primitives/src/react';
 import { ModalShell } from './components/ui/modal-shell';
 import { SecureIframeShell } from './components/ui/secure-iframe-shell';
 import { AppProvider } from '@solana-commerce/connector-kit';

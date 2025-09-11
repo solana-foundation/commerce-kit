@@ -9,43 +9,13 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
+      "import": "./dist/index.mjs", 
       "require": "./dist/index.js"
     },
     "./react": {
       "types": "./dist/react.d.ts",
       "import": "./dist/react.mjs",
       "require": "./dist/react.js"
-    },
-    "./core": {
-      "types": "./dist/core.d.ts",
-      "import": "./dist/core.mjs",
-      "require": "./dist/core.js"
-    },
-    "./client": {
-      "types": "./dist/client.d.ts",
-      "import": "./dist/client.mjs",
-      "require": "./dist/client.js"
-    },
-    "./experimental": {
-      "types": "./dist/experimental.d.ts", 
-      "import": "./dist/experimental.mjs",
-      "require": "./dist/experimental.js"
-    },
-    "./programs": {
-      "types": "./dist/programs.d.ts",
-      "import": "./dist/programs.mjs",
-      "require": "./dist/programs.js"
-    },
-    "./graphql": {
-      "types": "./dist/graphql.d.ts",
-      "import": "./dist/graphql.mjs",
-      "require": "./dist/graphql.js"
-    },
-    "./subscriptions": {
-      "types": "./dist/subscriptions.d.ts",
-      "import": "./dist/subscriptions.mjs",
-      "require": "./dist/subscriptions.js"
     }
   },
   "files": ["dist/**"],
