@@ -347,15 +347,27 @@ importers:
         specifier: ^3.22.4
         version: 3.25.76
     devDependencies:
+      '@testing-library/jest-dom':
+        specifier: ^6.0.0
+        version: 6.8.0
       '@testing-library/react':
         specifier: ^14.0.0
         version: 14.3.1(@types/react@18.3.24)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@testing-library/react-hooks':
         specifier: ^8.0.0
         version: 8.0.1(@types/react@18.3.24)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@testing-library/user-event':
+        specifier: ^14.0.0
+        version: 14.6.1(@testing-library/dom@9.3.4)
       '@types/react':
         specifier: ^18.0.0
         version: 18.3.24
+      '@vitest/coverage-v8':
+        specifier: ^3.2.4
+        version: 3.2.4(vitest@1.6.1(@types/node@24.3.1)(happy-dom@12.10.3)(lightningcss@1.30.1)(terser@5.44.0))
+      happy-dom:
+        specifier: ^12.0.0
+        version: 12.10.3
       react:
         specifier: ^18.0.0
         version: 18.3.1
@@ -484,7 +496,7 @@ importers:
         version: 3.6.2
       ts-jest:
         specifier: ^29.4.0
-        version: 29.4.1(@babel/core@7.28.4)(@jest/transform@30.1.1)(@jest/types@30.0.5)(babel-jest@30.1.1(@babel/core@7.28.4))(jest-util@30.0.5)(jest@30.1.1(@types/node@24.1.0)(ts-node@10.9.2(@types/node@24.1.0)(typescript@5.9.2)))(typescript@5.9.2)
+        version: 29.4.1(@babel/core@7.28.3)(@jest/transform@30.1.1)(@jest/types@30.0.5)(babel-jest@30.1.1(@babel/core@7.28.3))(jest-util@30.0.5)(jest@30.1.1(@types/node@24.1.0)(ts-node@10.9.2(@types/node@24.1.0)(typescript@5.9.2)))(typescript@5.9.2)
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@24.1.0)(typescript@5.9.2)
@@ -512,7 +524,7 @@ importers:
         version: 30.1.1(@types/node@24.1.0)(ts-node@10.9.2(@types/node@24.1.0)(typescript@5.9.2))
       ts-jest:
         specifier: ^29.4.0
-        version: 29.4.1(@babel/core@7.28.3)(@jest/transform@30.1.1)(@jest/types@30.0.5)(babel-jest@30.1.1(@babel/core@7.28.3))(jest-util@30.0.5)(jest@30.1.1(@types/node@24.1.0)(ts-node@10.9.2(@types/node@24.1.0)(typescript@5.9.2)))(typescript@5.9.2)
+        version: 29.4.1(@babel/core@7.28.4)(@jest/transform@30.1.1)(@jest/types@30.0.5)(babel-jest@30.1.1(@babel/core@7.28.4))(jest-util@30.0.5)(jest@30.1.1(@types/node@24.1.0)(ts-node@10.9.2(@types/node@24.1.0)(typescript@5.9.2)))(typescript@5.9.2)
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@24.1.0)(typescript@5.9.2)

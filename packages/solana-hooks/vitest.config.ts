@@ -10,10 +10,10 @@ export default defineConfig({
   },
   test: {
     // Environment configuration
-    environment: 'node', // Use Node environment for server-side testing
+    environment: 'happy-dom', // Use happy-dom for React testing
     
     // Setup files for React
-    setupFiles: [],
+    setupFiles: ['./src/__tests__/setup.ts'],
     
     // Test timeout configuration
     testTimeout: 10000, // 10 seconds for read operations
@@ -40,9 +40,9 @@ export default defineConfig({
       ]
     },
     
-    // File patterns
-    include: ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    exclude: ['node_modules/', 'dist/', '.git/'],
+    // File patterns - only include our src tests
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    exclude: ['node_modules/**', 'dist/**', '.git/**', '**/node_modules/**'],
     
     // Reporter configuration
     reporters: ['verbose', 'json'],

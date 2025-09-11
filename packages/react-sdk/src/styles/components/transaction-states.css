@@ -1,0 +1,137 @@
+/* Transaction States Components */
+
+/* Shared Base Styles */
+.ck-transaction-success-container,
+.ck-transaction-error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 40px 20px;
+  text-align: center;
+  background-color: white !important;
+}
+
+/* Icons Base */
+.ck-transaction-success-icon,
+.ck-transaction-error-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Success States */
+.ck-transaction-success-container {
+  /* Future: Success-specific animations and styling */
+}
+
+.ck-transaction-success-icon {
+  /* Future: Success icon animations (bouncy scale, checkmark draw) */
+  transform: scale(1);
+  width: 80px;
+  height: 80px;
+  border-radius: 16px;
+  background-color: rgba(35, 196, 86, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ck-transaction-success-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.ck-transaction-success-message {
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.3s ease-out 0.2s;
+}
+
+/* Error States */
+.ck-transaction-error-container {
+  /* Future: Error-specific animations and styling */
+}
+
+.ck-transaction-error-icon {
+  /* Future: Error icon animations (shake, pulse) */
+  transform: scale(1);
+}
+
+.ck-transaction-error-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.ck-transaction-error-message {
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.3s ease-out 0.2s;
+}
+
+/* Shared Token Info */
+.ck-transaction-token-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Explorer Link (Success Only) */
+.ck-transaction-explorer-link {
+  font-size: 14px;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.3s;
+  border: 1px solid;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ck-transaction-explorer-link:hover {
+  color: white !important;
+}
+
+/* Try Again Button (Error Only) */
+.ck-transaction-try-again-button {
+  font-size: 14px;
+  color: var(--color-text);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  padding: 8px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.3s;
+  font-weight: 500;
+}
+
+.ck-transaction-try-again-button:hover {
+  background: var(--color-background-hover, #f3f4f6);
+  border-color: var(--color-disabled);
+}

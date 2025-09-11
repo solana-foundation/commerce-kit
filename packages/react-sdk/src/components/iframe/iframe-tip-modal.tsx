@@ -44,8 +44,24 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
     availableCurrencies,
   } = useTipForm(config);
 
+  // Transaction state management
+  const [transactionState, setTransactionState] = React.useState<'idle' | 'success' | 'error'>('idle');
+
   // Handlers
   const handlePaymentComplete = handlers.handlePaymentComplete(onPayment);
+
+  // Transaction status callbacks
+  const handleTransactionSuccess = useCallback(() => {
+    setTransactionState('success');
+  }, []);
+
+  const handleTransactionError = useCallback(() => {
+    setTransactionState('error');
+  }, []);
+
+  const handleTransactionReset = useCallback(() => {
+    setTransactionState('idle');
+  }, []);
   
   // Ref to prevent multiple wallet completion calls
   const walletCompletionRef = React.useRef(false);
@@ -147,6 +163,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
         config={config}
         currentStep={state.currentStep}
         selectedPaymentMethod={state.selectedPaymentMethod}
+        transactionState={transactionState}
         onBack={handlers.handleBack}
         onClose={handleCancel}
       />
@@ -218,7 +235,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
 
         {/* Payment step */}
         <div
-          className={`sc-step payment ${state.currentStep === 'payment' ? 'active' : ''} ${state.selectedPaymentMethod === 'wallet' ? 'wallet-bg' : ''}`}
+          className={`sc-step payment ${state.currentStep === 'payment' ? 'active' : ''} ${state.selectedPaymentMethod === 'wallet' && transactionState === 'idle' ? 'wallet-bg' : ''}`}
         >
           {state.selectedPaymentMethod === 'qr' ? (
             <QRPaymentContent 
@@ -242,6 +259,9 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({
               customAmount={state.customAmount}
               showCustomInput={state.showCustomInput}
               onPaymentComplete={handleWalletPaymentComplete}
+              onTransactionSuccess={handleTransactionSuccess}
+              onTransactionError={handleTransactionError}
+              onTransactionReset={handleTransactionReset}
               walletIcon={WALLET_ICON}
             />
           )}

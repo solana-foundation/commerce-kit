@@ -14,6 +14,7 @@ interface TipModalHeaderProps {
   config: SolanaCommerceConfig;
   currentStep: 'form' | 'payment';
   selectedPaymentMethod: PaymentMethod;
+  transactionState?: 'idle' | 'success' | 'error';
   onBack: () => void;
   onClose: () => void;
 }
@@ -23,6 +24,7 @@ export const TipModalHeader = memo<TipModalHeaderProps>(({
   config,
   currentStep,
   selectedPaymentMethod,
+  transactionState = 'idle',
   onBack,
   onClose
 }) => {
@@ -75,7 +77,14 @@ export const TipModalHeader = memo<TipModalHeaderProps>(({
 
       {currentStep === 'payment' && (
         <h2 className="ck-header-payment-title">
-          {selectedPaymentMethod === 'qr' ? 'Scan to pay' : 'Connect Wallet'}
+          {selectedPaymentMethod === 'qr' 
+            ? 'Scan to pay' 
+            : transactionState === 'success' 
+              ? 'Transaction Successful' 
+              : transactionState === 'error'
+                ? 'Transaction Unsuccessful'
+                : 'Connect Wallet'
+          }
         </h2>
       )}
 

@@ -50,3 +50,9 @@
 .sc-step.payment.wallet-bg.active {
   background-color: var(--color-surface);
 }
+
+/* Override background for transaction states to ensure white background */
+.sc-step.payment.active .ck-transaction-success-container,
+.sc-step.payment.active .ck-transaction-error-container {
+  background-color: white !important;
+}

@@ -1,8 +1,9 @@
 import React from 'react'
 import type { ThemeConfig, MerchantConfig, Currency } from '../../types'
 import { MerchantAddressPill } from '../tip-modal/merchant-address-pill'
-import { TokenIcon, SuccessIcon, ErrorIcon } from '../icons'
+import { TokenIcon } from '../icons'
 import { Spinner } from '../../../../connector-kit/src/ui/spinner'
+import { TransactionSuccess, TransactionError } from '../transaction-states'
 
 interface WalletPaymentContentProps {
   theme: Required<ThemeConfig>
@@ -12,6 +13,9 @@ interface WalletPaymentContentProps {
   customAmount: string
   showCustomInput: boolean
   onPaymentComplete: () => void
+  onTransactionSuccess?: () => void
+  onTransactionError?: () => void
+  onTransactionReset?: () => void
   walletIcon: React.ReactNode
 }
 
@@ -130,6 +134,9 @@ export const WalletPaymentContent = ({
   customAmount,
   showCustomInput,
   onPaymentComplete,
+  onTransactionSuccess,
+  onTransactionError,
+  onTransactionReset,
   walletIcon,
 }: WalletPaymentContentProps) => {
   const [wallets, setWallets] = React.useState<IFrameWalletInfo[]>([])
@@ -239,6 +246,9 @@ export const WalletPaymentContent = ({
         setPaymentSuccess(true)
         setPaymentSignature(data.signature || null)
         
+        // Notify parent component about transaction success
+        onTransactionSuccess?.()
+        
         // Keep modal open, just show success state
       } else if (data.type === 'paymentError') {
         if (!mountedRef.current) return
@@ -247,6 +257,9 @@ export const WalletPaymentContent = ({
         setError(null)
         setPaymentError(true)
         setPaymentSuccess(false)
+        
+        // Notify parent component about transaction error
+        onTransactionError?.()
       }
     }
     window.addEventListener('message', onMessage)
@@ -298,82 +311,32 @@ export const WalletPaymentContent = ({
   // Show failure state if payment failed
   if (paymentError) {
     return (
-      <div className="ck-wallet-state-container">
-        {/* Error Icon */}
-        <div className="ck-wallet-state-icon error">
-          <ErrorIcon size={32} />
-        </div>
-        
-        {/* Error Message with Token */}
-        <div className="ck-wallet-state-content">
-          <div className="ck-wallet-state-message" style={{ color: theme.textColor }}>
-            Failed to send 
-            <div className="ck-wallet-state-token-info">
-              <TokenIcon symbol={selectedCurrency} size={20} />
-              {displayAmount} {selectedCurrency}
-            </div>
-            to {config.merchant.name || 'Merchant'}
-          </div>
-          
-          <button
-            onClick={() => {
-              setPaymentError(false)
-              setProcessingPayment(null)
-              setError(null)
-            }}
-            className="ck-wallet-try-again-button"
-            style={{ color: theme.textColor }}
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
+      <TransactionError
+        theme={theme}
+        config={config}
+        selectedCurrency={selectedCurrency}
+        displayAmount={displayAmount}
+        onRetry={() => {
+          setPaymentError(false)
+          setProcessingPayment(null)
+          setError(null)
+          // Notify parent component about transaction reset
+          onTransactionReset?.()
+        }}
+      />
     )
   }
 
   // Show success state if payment succeeded
   if (paymentSuccess) {
-    const explorerUrl = `https://explorer.solana.com/tx/${paymentSignature}${config.rpcUrl?.includes('devnet') ? '?cluster=devnet' : ''}`
-    
     return (
-      <div className="ck-wallet-state-container">
-        {/* Success Checkmark */}
-        <div className="ck-wallet-state-icon success">
-          <SuccessIcon size={32} />
-        </div>
-        
-        {/* Success Message with Token */}
-        <div className="ck-wallet-state-content">
-          <div className="ck-wallet-state-message" style={{ color: theme.textColor }}>
-            {config.merchant.name || 'Merchant'} has received your 
-            <div className="ck-wallet-state-token-info">
-              <TokenIcon symbol={selectedCurrency} size={20} />
-              {displayAmount} {selectedCurrency}
-            </div>
-          </div>
-          
-          {paymentSignature && (
-            <a
-              href={explorerUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="ck-wallet-explorer-link"
-              style={{
-                color: theme.primaryColor || '#6366F1',
-                borderColor: theme.primaryColor || '#6366F1'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = theme.primaryColor || '#6366F1'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent'
-              }}
-            >
-              View Transaction on Solana Explorer
-            </a>
-          )}
-        </div>
-      </div>
+      <TransactionSuccess
+        theme={theme}
+        config={config}
+        selectedCurrency={selectedCurrency}
+        displayAmount={displayAmount}
+        paymentSignature={paymentSignature}
+      />
     )
   }
 
