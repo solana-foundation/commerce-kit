@@ -3,9 +3,10 @@ import React from 'react';
 interface SolanaIconProps {
   size?: number;
   className?: string;
+  'data-testid'?: string;
 }
 
-export const SolanaIcon: React.FC<SolanaIconProps> = ({ size = 24, className }) => {
+export const SolanaIcon: React.FC<SolanaIconProps> = ({ size = 24, className, 'data-testid': testId }) => {
   return (
     <svg 
       width={size} 
@@ -14,6 +15,10 @@ export const SolanaIcon: React.FC<SolanaIconProps> = ({ size = 24, className }) 
       fill="none" 
       xmlns="http://www.w3.org/2000/svg"
       className={className}
+      role="img"
+      aria-label="Solana"
+      data-testid={testId}
+      data-size={size}
     >
       <path d="M44.7352 90.0006C69.526 90.0006 89.4703 70.0563 89.4703 45.2654C89.4703 20.4746 69.526 0.530273 44.7352 0.530273C19.9443 0.530273 0 20.4746 0 45.2654C0 70.0563 19.9443 90.0006 44.7352 90.0006Z" fill="#FFFCFB"/>
       <path d="M44.7353 1.03027C69.25 1.03037 88.9707 20.7509 88.9707 45.2656C88.9706 69.7802 69.2499 89.5009 44.7353 89.501C20.2207 89.501 0.500101 69.7803 0.5 45.2656C0.5 20.7509 20.2206 1.03027 44.7353 1.03027Z" stroke="url(#paint0_linear_solana)" strokeOpacity="0.39"/>

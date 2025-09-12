@@ -3,9 +3,10 @@ import React from 'react';
 interface USDCIconProps {
   size?: number;
   className?: string;
+  'data-testid'?: string;
 }
 
-export const USDCIcon: React.FC<USDCIconProps> = ({ size = 24, className }) => {
+export const USDCIcon: React.FC<USDCIconProps> = ({ size = 24, className, 'data-testid': testId }) => {
   return (
     <svg 
       width={size} 
@@ -14,6 +15,10 @@ export const USDCIcon: React.FC<USDCIconProps> = ({ size = 24, className }) => {
       fill="none" 
       xmlns="http://www.w3.org/2000/svg"
       className={className}
+      role="img"
+      aria-label="USDC"
+      data-testid={testId}
+      data-size={size}
     >
       <path d="M45.3516 91C70.484 91 90.7031 70.7809 90.7031 45.6484C90.7031 20.516 70.484 0.296875 45.3516 0.296875C20.2191 0.296875 0 20.516 0 45.6484C0 70.7809 20.2191 91 45.3516 91Z" fill="#2775CA"/>
       <path d="M45.3516 0.796875C70.2079 0.796875 90.2031 20.7921 90.2031 45.6484C90.2031 70.5048 70.2079 90.5 45.3516 90.5C20.4952 90.5 0.5 70.5048 0.5 45.6484C0.500001 20.7921 20.4952 0.796876 45.3516 0.796875Z" stroke="url(#paint0_linear_usdc)" strokeOpacity="0.3"/>

@@ -94,7 +94,7 @@ export const CURRENCY_DECIMALS = {
 } as const;
 
 // Static Data
-export const PRESET_AMOUNTS = [1, 5, 15, 25, 50] as const;
+export const PRESET_AMOUNTS = [5, 10, 20, 50] as const;
 
 export const ALL_CURRENCIES = [
   { value: 'USDC', label: 'USD Coin', symbol: 'USDC' },

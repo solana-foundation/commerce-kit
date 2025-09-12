@@ -12,7 +12,7 @@ interface UseAsyncState<T> {
 }
 
 interface UseAsyncReturn<T> extends UseAsyncState<T> {
-  execute: (...args: any[]) => Promise<T | null>;
+  execute: (asyncFn?: (...args: any[]) => Promise<T>, ...args: any[]) => Promise<T | null>;
   reset: () => void;
 }
 
@@ -29,8 +29,9 @@ export function useAsync<T = any>(
   // Keep track of the current async operation to prevent race conditions
   const asyncRef = useRef<number>(0);
 
-  const execute = useCallback(async (...args: any[]): Promise<T | null> => {
-    if (!asyncFunction) return null;
+  const execute = useCallback(async (asyncFn?: (...args: any[]) => Promise<T>, ...args: any[]): Promise<T | null> => {
+    const fnToExecute = asyncFn || asyncFunction;
+    if (!fnToExecute) return null;
 
     // Increment counter for this execution
     const currentExecution = ++asyncRef.current;
@@ -38,7 +39,7 @@ export function useAsync<T = any>(
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      const result = await asyncFunction(...args);
+      const result = await fnToExecute(...args);
       
       // Only update state if this is still the current execution
       if (currentExecution === asyncRef.current) {

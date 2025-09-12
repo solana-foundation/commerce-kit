@@ -1,3 +1,4 @@
+console.log("Testing minLength validation");
 /**
  * useFormField Hook
  * Standardized form field state management with validation
@@ -64,12 +65,12 @@ export function useFormField({
       return null;
     }
 
-    // Length validations - check if value has content
-    if (validation.minLength !== undefined && inputValue.length < validation.minLength) {
+    // Length validations
+    if (typeof validation.minLength === 'number' && inputValue.length < validation.minLength) {
       return `Must be at least ${validation.minLength} characters`;
     }
 
-    if (validation.maxLength !== undefined && inputValue.length > validation.maxLength) {
+    if (typeof validation.maxLength === 'number' && inputValue.length > validation.maxLength) {
       return `Must be no more than ${validation.maxLength} characters`;
     }
 

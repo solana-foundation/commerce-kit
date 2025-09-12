@@ -6,8 +6,13 @@ interface TransactionSuccessProps {
   theme: Required<ThemeConfig>
   config: { merchant: MerchantConfig; rpcUrl?: string }
   selectedCurrency: Currency
-  displayAmount: string
-  paymentSignature: string | null
+  displayAmount?: string
+  amount?: number
+  currency?: Currency
+  signature?: string
+  recipient?: string
+  onClose?: () => void
+  onViewTransaction?: (signature: string) => void
 }
 
 export function TransactionSuccess({
@@ -15,26 +20,48 @@ export function TransactionSuccess({
   config,
   selectedCurrency,
   displayAmount,
-  paymentSignature,
+  amount,
+  currency = selectedCurrency,
+  signature,
+  recipient,
+  onClose,
+  onViewTransaction,
 }: TransactionSuccessProps) {
-  const explorerUrl = paymentSignature 
-    ? `https://explorer.solana.com/tx/${paymentSignature}${config.rpcUrl?.includes('devnet') ? '?cluster=devnet' : ''}`
+  const explorerUrl = signature 
+    ? `https://explorer.solana.com/tx/${signature}${config.rpcUrl?.includes('devnet') ? '?cluster=devnet' : ''}`
     : null
 
+  // Format address/signature for display (first 4 + ... + last 4)
+  const formatAddress = (address: string): string => {
+    if (!address || address.length <= 10) return address
+    return `${address.slice(0, 4)}...${address.slice(-4)}`
+  }
+
   return (
-    <div className="ck-transaction-success-container">
+    <div className="ck-transaction-success ck-transaction-success-container" style={{ backgroundColor: theme.backgroundColor, color: theme.textColor }}>
       {/* Success Checkmark */}
       <div className="ck-transaction-success-icon">
-        <SuccessIcon size={32} />
+        <SuccessIcon size={32} color="#10b981" />
       </div>
       
       {/* Success Message with Token */}
       <div className="ck-transaction-success-content">
-        <div className="ck-transaction-success-message" style={{ color: theme.textColor }}>
-          {config.merchant.name || 'Merchant'} has received your 
-          <div className="ck-transaction-token-info">
-            ${displayAmount} in <TokenIcon symbol={selectedCurrency} size={20} />{selectedCurrency}
-          </div>
+        <div>
+            <div className="ck-transaction-success-title" style={{ color: theme.textColor }}>
+              Successfully sent
+            </div>
+            <div className="ck-transaction-success-message" style={{ color: theme.textColor }}>
+            {config.merchant.name} has received your
+            <div className="ck-transaction-token-info">
+                {amount !== undefined ? `${amount} ${currency || selectedCurrency}` : `${displayAmount} in ${selectedCurrency}`}
+            </div>
+            {recipient && (
+              <div>to {formatAddress(recipient)}</div>
+            )}
+            {signature && (
+              <div>Transaction: {formatAddress(signature)}</div>
+            )}            
+        </div>
         </div>
         
         {explorerUrl && (
@@ -43,16 +70,8 @@ export function TransactionSuccess({
             target="_blank"
             rel="noopener noreferrer"
             className="ck-transaction-explorer-link"
-            style={{
-              color: theme.primaryColor || '#6366F1',
-              borderColor: theme.primaryColor || '#6366F1'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = theme.primaryColor || '#6366F1'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent'
-            }}
+            style={{ color: theme.textColor }}
+            onClick={() => onViewTransaction?.(signature!)}
           >
             See Transaction
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -61,6 +80,15 @@ export function TransactionSuccess({
             </svg>
           </a>
         )}
+        
+        <button
+          type="button"
+          onClick={onClose}
+          className="ck-transaction-close-button"
+          style={{ color: theme.textColor }}
+        >
+          Close
+        </button>
       </div>
     </div>
   )

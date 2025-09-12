@@ -8,13 +8,15 @@ interface TokenIconProps {
   size?: number;
   className?: string;
   customIconUrl?: string; // For custom tokens with their own icon URLs
+  'data-testid'?: string; // Allow override of test ID to avoid duplicates
 }
 
 // Generic fallback icon for unknown tokens
-const GenericTokenIcon: React.FC<{ size: number; symbol: string; className?: string }> = ({ 
+const GenericTokenIcon: React.FC<{ size: number; symbol: string; className?: string; 'data-testid'?: string }> = ({
   size, 
   symbol, 
-  className 
+  className,
+  'data-testid': testId
 }) => {
   // Generate a consistent color based on the symbol
   const generateColor = (str: string) => {
@@ -41,6 +43,7 @@ const GenericTokenIcon: React.FC<{ size: number; symbol: string; className?: str
       fill="none" 
       xmlns="http://www.w3.org/2000/svg"
       className={className}
+      data-testid={testId}
     >
       <circle cx="45" cy="45" r="45" fill={bgColor}/>
       <text 
@@ -62,7 +65,8 @@ export const TokenIcon: React.FC<TokenIconProps> = ({
   symbol,
   size = 24,
   className,
-  customIconUrl
+  customIconUrl,
+  'data-testid': testId
 }) => {
   const [imgError, setImgError] = React.useState(false);
 
@@ -89,20 +93,22 @@ export const TokenIcon: React.FC<TokenIconProps> = ({
   }
 
   // Map known tokens to their specific icons
+  const finalTestId = testId || `token-icon-${symbol}`;
+  
   switch (symbol.toUpperCase()) {
     case 'SOL':
     case 'SOL_DEVNET':
-      return <SolanaIcon size={size} className={className} />;
+      return <SolanaIcon size={size} className={className} data-testid={finalTestId} />;
     
     case 'USDC':
     case 'USDC_DEVNET':
-      return <USDCIcon size={size} className={className} />;
+      return <USDCIcon size={size} className={className} data-testid={finalTestId} />;
     
     case 'USDT':
     case 'USDT_DEVNET':
-      return <USDTIcon size={size} className={className} />;
+      return <USDTIcon size={size} className={className} data-testid={finalTestId} />;
     
     default:
-      return <GenericTokenIcon size={size} symbol={symbol} className={className} />;
+      return <GenericTokenIcon size={size} symbol={symbol} className={className} data-testid={finalTestId} />;
   }
 };

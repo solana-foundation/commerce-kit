@@ -64,11 +64,11 @@ export const AmountSelector = memo<AmountSelectorProps>(({
   const amountThemeStyles = useThemeStyles({ theme, variant: 'amount' });
   return (
     <div className="ck-form-section">
-      <label className="ck-form-label">
+      <label className="ck-form-label" id="amount-label">
         Select amount
       </label>
       
-      <div className="ck-amounts-grid">
+      <div className="ck-amounts-grid" role="group" aria-labelledby="amount-label">
         {PRESET_AMOUNTS.map(amount => (
           <AmountButton
             key={amount}
@@ -95,7 +95,8 @@ export const AmountSelector = memo<AmountSelectorProps>(({
       {showCustomInput && (
         <div>
           <input
-            type="number"
+            type="text"
+            inputMode="decimal"
             {...customAmountField.fieldProps}
             placeholder="Enter amount"
             className={`ck-input ${customAmountField.error ? 'error' : ''} ${customAmountField.isFocused ? 'focused' : ''}`}

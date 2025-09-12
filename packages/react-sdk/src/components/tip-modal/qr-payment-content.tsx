@@ -56,7 +56,10 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(({
     }
   });
 
-  const { paymentRequest, loading } = useSolanaPay(config.merchant.wallet, selectedAmount, CurrencyMap[selectedCurrency]);
+  // Compute the effective amount for QR code generation
+  const effectiveAmount = showCustomInput ? parseFloat(customAmount || '0') : selectedAmount;
+
+  const { paymentRequest, loading } = useSolanaPay(config.merchant.wallet, effectiveAmount, selectedCurrency);
 
   // Start polling when QR code is generated and user might have scanned it
   useEffect(() => {

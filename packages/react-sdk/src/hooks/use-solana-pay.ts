@@ -1,6 +1,8 @@
 import { createSolanaPayRequest } from "@solana-commerce/headless-sdk";
-import { Recipient, SPLToken } from "@solana-commerce/solana-pay";
+import { Recipient } from "@solana-commerce/solana-pay";
 import { useState, useEffect } from "react";
+import { Currency, CurrencyMap } from "../types";
+import { CURRENCY_DECIMALS } from "../constants/tip-modal";
 
 // Converts a decimal `amount` to minor units as bigint using string math.
 export function toMinorUnits(amt: number, decimals: number): bigint {
@@ -32,7 +34,7 @@ export interface SolanaPayQROptions {
 export function useSolanaPay(
   recipient: string,
   amount: number,
-  token: SPLToken,
+  currency: Currency,
   opts?: SolanaPayQROptions
 ) {
     const [paymentRequest, setPaymentRequest] = useState<any>(null);
@@ -41,13 +43,21 @@ export function useSolanaPay(
     useEffect(() => {
         async function createRequest() {
             try {
+                setLoading(true);
                 // Generate a unique reference for this payment
-                const reference = `tip-${Math.floor(Math.random() * 1000000)}`.toString();
+                const reference = `tip-${Math.floor(Math.random() * 1000000)}`;
+                
+                // Get token address and decimals from currency
+                const decimals = CURRENCY_DECIMALS[currency];
+                // For native SOL, use undefined; for SPL tokens, use the mint address
+                const splToken = currency === 'SOL' || currency === 'SOL_DEVNET' 
+                    ? undefined 
+                    : CurrencyMap[currency];
                
                 const request = await createSolanaPayRequest({
                     recipient: recipient as Recipient,
-                    amount: toMinorUnits(amount, ('decimals' in token ? (token as any).decimals : 9)), // to minor units
-                    splToken: token,
+                    amount: toMinorUnits(amount, decimals), // to minor units
+                    splToken,
                     memo: reference,
                     label: opts?.label ?? 'commerceKit',
                     message: opts?.message,
@@ -73,13 +83,16 @@ export function useSolanaPay(
                 });
             } catch (error) {
                 console.error('Error creating Solana Pay request:', error);
+                setPaymentRequest(null);
             } finally {
                 setLoading(false);
             }
         }
 
-        createRequest();
-    }, [recipient, amount, token]);
+        if (recipient && amount && currency) {
+            createRequest();
+        }
+    }, [recipient, amount, currency, opts]);
 
     return {
         paymentRequest,

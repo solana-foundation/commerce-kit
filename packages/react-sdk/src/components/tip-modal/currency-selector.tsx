@@ -27,7 +27,7 @@ interface CurrencySelectorProps {
   selectedCurrency: Currency;
   currencies: readonly CurrencyInfo[];
   isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange?: (open: boolean) => void;
   onSelect: (currency: Currency) => void;
 }
 
@@ -81,7 +81,7 @@ export const CurrencySelector = memo<CurrencySelectorProps>(({
             style={dropdownThemeStyles}
           >
             <div className="ck-currency-selected">
-              <TokenIcon symbol={selectedCurrency} size={24} />
+              <TokenIcon symbol={selectedCurrency} size={24} data-testid={`token-icon-${selectedCurrency}-trigger`} />
               <span className="ck-currency-symbol">
                 {selectedCurrencyInfo?.symbol || selectedCurrency}
               </span>
@@ -103,7 +103,7 @@ export const CurrencySelector = memo<CurrencySelectorProps>(({
               onSelect={() => handleSelect(currency.value as Currency)}
             >
               <div className="ck-dropdown-item">
-                <TokenIcon symbol={currency.value} size={16} />
+                <TokenIcon symbol={currency.value} size={16} data-testid={`token-icon-${currency.value}-dropdown`} />
                 <span>{currency.symbol}</span>
                 {selectedCurrency === currency.value && (
                   <div 

@@ -80,9 +80,9 @@ export const TipModalHeader = memo<TipModalHeaderProps>(({
           {selectedPaymentMethod === 'qr' 
             ? 'Scan to pay' 
             : transactionState === 'success' 
-              ? 'Transaction Successful' 
+              ? 'Successful Payment' 
               : transactionState === 'error'
-                ? 'Transaction Unsuccessful'
+                ? 'Unsuccessful Payment'
                 : 'Connect Wallet'
           }
         </h2>
