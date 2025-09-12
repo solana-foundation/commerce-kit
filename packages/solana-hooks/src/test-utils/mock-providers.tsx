@@ -78,14 +78,40 @@ export function TestWrapper({
     },
   })
 
-  const mockArcClient = createMockArcClient(arcState)
+  // Create a mock config for ArcClientProvider
+  const mockConfig = {
+    network: 'devnet' as const,
+    commitment: 'confirmed' as const,
+    debug: false,
+    autoConnect: false,
+  }
 
+  // Since we can't easily mock ArcClientProvider, let's create a simple wrapper
+  // that provides the mock client through context
   return (
     <QueryClientProvider client={client}>
-      <ArcClientProvider value={mockArcClient}>
+      <MockArcClientProvider arcState={arcState}>
         {children}
-      </ArcClientProvider>
+      </MockArcClientProvider>
     </QueryClientProvider>
+  )
+}
+
+// Create a simple mock provider that bypasses the real ArcClientProvider
+const MockArcClientContext = React.createContext<any>(null)
+
+function MockArcClientProvider({ 
+  children, 
+  arcState = {} 
+}: { 
+  children: React.ReactNode; 
+  arcState?: Partial<ArcWebClientState> 
+}) {
+  const mockClient = createMockArcClient(arcState)
+  return (
+    <MockArcClientContext.Provider value={mockClient}>
+      {children}
+    </MockArcClientContext.Provider>
   )
 }
 

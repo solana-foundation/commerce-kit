@@ -699,6 +699,59 @@ export class TransactionBuilder {
       owner: ownerAddress,
     }
   }
+
+  /**
+   * Confirm a transaction with retries
+   */
+  async confirmTransaction(signature: string): Promise<{ confirmed: boolean; signature: string }> {
+    try {
+      const result = await defaultRetryManager.executeWithRetry(async () => {
+        const response = await this.rpc.sendRequest('getSignatureStatuses', [[signature]])
+        const status = response?.value?.[0]
+        
+        if (!status) {
+          throw new Error('Transaction not found')
+        }
+        
+        if (status.confirmationStatus === 'confirmed' || status.confirmationStatus === 'finalized') {
+          return { confirmed: true, signature }
+        }
+        
+        if (status.err) {
+          throw new Error(`Transaction failed: ${JSON.stringify(status.err)}`)
+        }
+        
+        // If not confirmed yet, throw to trigger retry
+        throw new Error('Transaction not yet confirmed')
+      })
+
+      return result
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not yet confirmed')) {
+        throw new Error('Transaction confirmation timeout')
+      }
+      throw createTransactionError(`Transaction confirmation failed: ${error instanceof Error ? error.message : 'Unknown error'}`, {
+        signature,
+        operation: 'confirmTransaction'
+      }, error instanceof Error ? error : undefined)
+    }
+  }
+
+  /**
+   * Calculate transaction fees based on signature count
+   */
+  async calculateFees(signatureCount: number): Promise<bigint> {
+    try {
+      // Base fee per signature (5000 lamports = 0.000005 SOL)
+      const feePerSignature = 5000n
+      return BigInt(signatureCount) * feePerSignature
+    } catch (error) {
+      throw createTransactionError(`Fee calculation failed: ${error instanceof Error ? error.message : 'Unknown error'}`, {
+        signatureCount,
+        operation: 'calculateFees'
+      }, error instanceof Error ? error : undefined)
+    }
+  }
 }
 
 // ===== FACTORY FUNCTIONS =====
@@ -724,7 +777,7 @@ export function createTransactionContext(
 ): TransactionContext {
   return {
     rpcUrl,
-    commitment: commitment || 'confirmed',
-    enableLogging: enableLogging || false
+    commitment,
+    enableLogging
   }
 }
