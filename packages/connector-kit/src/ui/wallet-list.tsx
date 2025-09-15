@@ -33,6 +33,7 @@ export const WalletList = memo<WalletListProps>(({ wallets, onSelect }) => {
           <span style={{ fontSize: 12, color: '#6b7280' }}>{w.installed ? 'Installed' : 'Not installed'}</span>
         </button>
       ))}
+      
     </div>
   )
 })
