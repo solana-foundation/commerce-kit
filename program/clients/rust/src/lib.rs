@@ -1,3 +1,6 @@
+// Suppress warnings for generated code
+#![allow(warnings)]
+
 // Re-export generated code
 pub mod generated;
 pub use generated::*;

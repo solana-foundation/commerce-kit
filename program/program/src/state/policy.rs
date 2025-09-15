@@ -176,3 +176,195 @@ impl PolicyData {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use alloc::vec;
+
+    #[test]
+    fn test_fee_type_from_u8() {
+        assert_eq!(FeeType::from_u8(0).unwrap(), FeeType::Bps);
+        assert_eq!(FeeType::from_u8(1).unwrap(), FeeType::Fixed);
+        assert!(FeeType::from_u8(2).is_err());
+        assert!(FeeType::from_u8(255).is_err());
+    }
+
+    #[test]
+    fn test_fee_type_to_u8() {
+        assert_eq!(FeeType::Bps.to_u8(), 0);
+        assert_eq!(FeeType::Fixed.to_u8(), 1);
+    }
+
+    #[test]
+    fn test_fee_type_roundtrip() {
+        let fee_type = FeeType::Bps;
+        assert_eq!(FeeType::from_u8(fee_type.to_u8()).unwrap(), fee_type);
+
+        let fee_type = FeeType::Fixed;
+        assert_eq!(FeeType::from_u8(fee_type.to_u8()).unwrap(), fee_type);
+    }
+
+    #[test]
+    fn test_policy_type_from_u8() {
+        assert_eq!(PolicyType::from_u8(0).unwrap(), PolicyType::Refund);
+        assert_eq!(PolicyType::from_u8(1).unwrap(), PolicyType::Settlement);
+        assert!(PolicyType::from_u8(2).is_err());
+        assert!(PolicyType::from_u8(255).is_err());
+    }
+
+    #[test]
+    fn test_policy_type_to_u8() {
+        assert_eq!(PolicyType::Refund.to_u8(), 0);
+        assert_eq!(PolicyType::Settlement.to_u8(), 1);
+    }
+
+    #[test]
+    fn test_policy_type_get_size() {
+        assert_eq!(PolicyType::Refund.get_size(), 1 + REFUND_POLICY_SIZE);
+        assert_eq!(
+            PolicyType::Settlement.get_size(),
+            1 + SETTLEMENT_POLICY_SIZE
+        );
+    }
+
+    #[test]
+    fn test_policy_type_roundtrip() {
+        let policy_type = PolicyType::Refund;
+        assert_eq!(
+            PolicyType::from_u8(policy_type.to_u8()).unwrap(),
+            policy_type
+        );
+
+        let policy_type = PolicyType::Settlement;
+        assert_eq!(
+            PolicyType::from_u8(policy_type.to_u8()).unwrap(),
+            policy_type
+        );
+    }
+
+    #[test]
+    fn test_refund_policy_serialization() {
+        let policy = RefundPolicy {
+            max_amount: 1000,
+            max_time_after_purchase: 3600,
+        };
+
+        let bytes = policy.to_bytes();
+        assert_eq!(bytes.len(), REFUND_POLICY_SIZE);
+
+        let deserialized = RefundPolicy::from_bytes(&bytes).unwrap();
+        assert_eq!(deserialized, policy);
+    }
+
+    #[test]
+    fn test_refund_policy_from_bytes_invalid_length() {
+        let short_data = vec![1, 2, 3];
+        assert!(RefundPolicy::from_bytes(&short_data).is_err());
+    }
+
+    #[test]
+    fn test_settlement_policy_serialization() {
+        let policy = SettlementPolicy {
+            min_settlement_amount: 5000,
+            settlement_frequency_hours: 24,
+            auto_settle: true,
+        };
+
+        let bytes = policy.to_bytes();
+        assert_eq!(bytes.len(), SETTLEMENT_POLICY_SIZE);
+
+        let deserialized = SettlementPolicy::from_bytes(&bytes).unwrap();
+        assert_eq!(deserialized, policy);
+    }
+
+    #[test]
+    fn test_settlement_policy_auto_settle_false() {
+        let policy = SettlementPolicy {
+            min_settlement_amount: 1000,
+            settlement_frequency_hours: 12,
+            auto_settle: false,
+        };
+
+        let bytes = policy.to_bytes();
+        let deserialized = SettlementPolicy::from_bytes(&bytes).unwrap();
+        assert!(!deserialized.auto_settle);
+    }
+
+    #[test]
+    fn test_settlement_policy_from_bytes_invalid_length() {
+        let short_data = vec![1, 2, 3];
+        assert!(SettlementPolicy::from_bytes(&short_data).is_err());
+    }
+
+    #[test]
+    fn test_policy_data_refund_serialization() {
+        let refund_policy = RefundPolicy {
+            max_amount: 2000,
+            max_time_after_purchase: 7200,
+        };
+        let policy_data = PolicyData::Refund(refund_policy.clone());
+
+        let bytes = policy_data.to_bytes();
+        assert_eq!(bytes.len(), PolicyData::SIZE);
+        assert_eq!(bytes[0], PolicyType::Refund.to_u8());
+
+        let deserialized = PolicyData::from_bytes(&bytes).unwrap();
+        assert_eq!(deserialized, policy_data);
+        assert_eq!(deserialized.policy_type(), PolicyType::Refund);
+    }
+
+    #[test]
+    fn test_policy_data_settlement_serialization() {
+        let settlement_policy = SettlementPolicy {
+            min_settlement_amount: 3000,
+            settlement_frequency_hours: 48,
+            auto_settle: false,
+        };
+        let policy_data = PolicyData::Settlement(settlement_policy.clone());
+
+        let bytes = policy_data.to_bytes();
+        assert_eq!(bytes.len(), PolicyData::SIZE);
+        assert_eq!(bytes[0], PolicyType::Settlement.to_u8());
+
+        let deserialized = PolicyData::from_bytes(&bytes).unwrap();
+        assert_eq!(deserialized, policy_data);
+        assert_eq!(deserialized.policy_type(), PolicyType::Settlement);
+    }
+
+    #[test]
+    fn test_policy_data_from_bytes_empty() {
+        assert!(PolicyData::from_bytes(&[]).is_err());
+    }
+
+    #[test]
+    fn test_policy_data_from_bytes_invalid_policy_type() {
+        let mut data = vec![0; PolicyData::SIZE];
+        data[0] = 99; // Invalid policy type
+        assert!(PolicyData::from_bytes(&data).is_err());
+    }
+
+    #[test]
+    fn test_policy_data_from_bytes_insufficient_data() {
+        let data = vec![0]; // Only policy type, no policy data
+        assert!(PolicyData::from_bytes(&data).is_err());
+    }
+
+    #[test]
+    fn test_policy_data_padding() {
+        let refund_policy = RefundPolicy {
+            max_amount: 100,
+            max_time_after_purchase: 200,
+        };
+        let policy_data = PolicyData::Refund(refund_policy);
+
+        let bytes = policy_data.to_bytes();
+        assert_eq!(bytes.len(), PolicyData::SIZE);
+
+        // Check that padding bytes are zeros
+        let expected_data_len = 1 + REFUND_POLICY_SIZE;
+        (expected_data_len..PolicyData::SIZE).for_each(|i| {
+            assert_eq!(bytes[i], 0, "Padding byte at index {} should be 0", i);
+        });
+    }
+}

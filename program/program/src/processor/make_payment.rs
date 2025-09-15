@@ -262,3 +262,52 @@ fn process_instruction_data(data: &[u8]) -> Result<MakePaymentArgs, ProgramError
         bump,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use alloc::vec;
+
+    #[test]
+    fn test_process_instruction_data_valid() {
+        let mut data = vec![];
+        data.extend_from_slice(&12345u32.to_le_bytes());
+        data.extend_from_slice(&1000000u64.to_le_bytes());
+        data.push(254u8);
+
+        let args = process_instruction_data(&data).unwrap();
+        assert_eq!(args.order_id, 12345);
+        assert_eq!(args.amount, 1000000);
+        assert_eq!(args.bump, 254);
+    }
+
+    #[test]
+    fn test_process_instruction_data_edge_cases() {
+        let mut data = vec![];
+        data.extend_from_slice(&0u32.to_le_bytes());
+        data.extend_from_slice(&0u64.to_le_bytes());
+        data.push(0u8);
+
+        let args = process_instruction_data(&data).unwrap();
+        assert_eq!(args.order_id, 0);
+        assert_eq!(args.amount, 0);
+        assert_eq!(args.bump, 0);
+
+        let mut data = vec![];
+        data.extend_from_slice(&u32::MAX.to_le_bytes());
+        data.extend_from_slice(&u64::MAX.to_le_bytes());
+        data.push(u8::MAX);
+
+        let args = process_instruction_data(&data).unwrap();
+        assert_eq!(args.order_id, u32::MAX);
+        assert_eq!(args.amount, u64::MAX);
+        assert_eq!(args.bump, u8::MAX);
+    }
+
+    #[test]
+    fn test_process_instruction_data_invalid_length() {
+        let data = vec![1u8; 12]; // Too short
+        let result = process_instruction_data(&data);
+        assert!(result.is_err());
+    }
+}

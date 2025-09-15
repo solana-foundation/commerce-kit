@@ -270,3 +270,154 @@ fn calculate_fees(
 
     Ok((operator_fee_amount, merchant_amount))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::constants::MAX_BPS;
+    use crate::state::policy::{PolicyData, SettlementPolicy};
+    use crate::state::{FeeType, Payment, Status};
+    use alloc::vec;
+
+    #[test]
+    fn test_calculate_fees_bps_normal() {
+        // 2.5% fee (250 bps) on 10000 units = 250 units fee, 9750 merchant
+        let (operator_fee, merchant_amount) = calculate_fees(10000, 250, &FeeType::Bps).unwrap();
+        assert_eq!(operator_fee, 250);
+        assert_eq!(merchant_amount, 9750);
+    }
+
+    #[test]
+    fn test_calculate_fees_bps_high_fee() {
+        // 50% fee (5000 bps) on 1000 units = 500 units fee, 500 merchant
+        let (operator_fee, merchant_amount) = calculate_fees(1000, 5000, &FeeType::Bps).unwrap();
+        assert_eq!(operator_fee, 500);
+        assert_eq!(merchant_amount, 500);
+    }
+
+    #[test]
+    fn test_calculate_fees_bps_zero_fee() {
+        let (operator_fee, merchant_amount) = calculate_fees(1000, 0, &FeeType::Bps).unwrap();
+        assert_eq!(operator_fee, 0);
+        assert_eq!(merchant_amount, 1000);
+    }
+
+    #[test]
+    fn test_calculate_fees_bps_max_fee() {
+        // 100% fee (10000 bps) = everything goes to operator
+        let (operator_fee, merchant_amount) = calculate_fees(1000, MAX_BPS, &FeeType::Bps).unwrap();
+        assert_eq!(operator_fee, 1000);
+        assert_eq!(merchant_amount, 0);
+    }
+
+    #[test]
+    fn test_calculate_fees_bps_rounding() {
+        // 1 bps on 999 units = 0.99 units, should round down to 0
+        let (operator_fee, merchant_amount) = calculate_fees(999, 1, &FeeType::Bps).unwrap();
+        assert_eq!(operator_fee, 0);
+        assert_eq!(merchant_amount, 999);
+
+        // 1 bps on 10000 units = 1 unit exactly
+        let (operator_fee, merchant_amount) = calculate_fees(10000, 1, &FeeType::Bps).unwrap();
+        assert_eq!(operator_fee, 1);
+        assert_eq!(merchant_amount, 9999);
+    }
+
+    #[test]
+    fn test_calculate_fees_fixed_normal() {
+        let (operator_fee, merchant_amount) = calculate_fees(1000, 100, &FeeType::Fixed).unwrap();
+        assert_eq!(operator_fee, 100);
+        assert_eq!(merchant_amount, 900);
+    }
+
+    #[test]
+    fn test_calculate_fees_fixed_exceeds_total() {
+        // Fixed fee larger than total amount - should be capped at total
+        let (operator_fee, merchant_amount) = calculate_fees(500, 1000, &FeeType::Fixed).unwrap();
+        assert_eq!(operator_fee, 500);
+        assert_eq!(merchant_amount, 0);
+    }
+
+    #[test]
+    fn test_calculate_fees_fixed_zero_fee() {
+        let (operator_fee, merchant_amount) = calculate_fees(1000, 0, &FeeType::Fixed).unwrap();
+        assert_eq!(operator_fee, 0);
+        assert_eq!(merchant_amount, 1000);
+    }
+
+    #[test]
+    fn test_validate_settlement_policy_no_policy() {
+        let policies = vec![];
+        let payment = Payment {
+            order_id: 1,
+            amount: 500,
+            created_at: 1000000,
+            status: Status::Paid,
+            bump: 1,
+        };
+
+        // No policy should pass validation
+        assert!(validate_settlement_policy(&policies, &payment).is_ok());
+    }
+
+    #[test]
+    fn test_validate_settlement_policy_min_amount_pass() {
+        let settlement_policy = PolicyData::Settlement(SettlementPolicy {
+            min_settlement_amount: 100,
+            settlement_frequency_hours: 0,
+            auto_settle: false,
+        });
+        let policies = vec![settlement_policy];
+
+        let payment = Payment {
+            order_id: 1,
+            amount: 500, // Above minimum
+            created_at: 1000000,
+            status: Status::Paid,
+            bump: 1,
+        };
+
+        assert!(validate_settlement_policy(&policies, &payment).is_ok());
+    }
+
+    #[test]
+    fn test_validate_settlement_policy_min_amount_fail() {
+        let settlement_policy = PolicyData::Settlement(SettlementPolicy {
+            min_settlement_amount: 1000,
+            settlement_frequency_hours: 0,
+            auto_settle: false,
+        });
+        let policies = vec![settlement_policy];
+
+        let payment = Payment {
+            order_id: 1,
+            amount: 500, // Below minimum
+            created_at: 1000000,
+            status: Status::Paid,
+            bump: 1,
+        };
+
+        let result = validate_settlement_policy(&policies, &payment);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_settlement_policy_min_amount_zero_no_limit() {
+        let settlement_policy = PolicyData::Settlement(SettlementPolicy {
+            min_settlement_amount: 0, // No limit
+            settlement_frequency_hours: 0,
+            auto_settle: false,
+        });
+        let policies = vec![settlement_policy];
+
+        let payment = Payment {
+            order_id: 1,
+            amount: 1, // Very small amount
+            created_at: 1000000,
+            status: Status::Paid,
+            bump: 1,
+        };
+
+        assert!(validate_settlement_policy(&policies, &payment).is_ok());
+    }
+}

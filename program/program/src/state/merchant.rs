@@ -84,3 +84,91 @@ impl Merchant {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use alloc::vec;
+
+    #[test]
+    fn test_validate_owner_success() {
+        let owner = [1u8; 32];
+        let merchant = Merchant {
+            owner,
+            bump: 255,
+            settlement_wallet: [2u8; 32],
+        };
+
+        assert!(merchant.validate_owner(&owner).is_ok());
+    }
+
+    #[test]
+    fn test_validate_owner_failure() {
+        let owner = [1u8; 32];
+        let wrong_owner = [2u8; 32];
+        let merchant = Merchant {
+            owner,
+            bump: 255,
+            settlement_wallet: [3u8; 32],
+        };
+
+        let result = merchant.validate_owner(&wrong_owner);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            CommerceProgramError::MerchantOwnerMismatch.into()
+        );
+    }
+
+    #[test]
+    fn test_merchant_serialization() {
+        let merchant = Merchant {
+            owner: [1u8; 32],
+            bump: 254,
+            settlement_wallet: [2u8; 32],
+        };
+
+        let bytes = merchant.to_bytes_inner();
+        assert_eq!(bytes.len(), Merchant::LEN - 1); // Excluding discriminator
+
+        let mut full_data = vec![Merchant::DISCRIMINATOR];
+        full_data.extend_from_slice(&bytes);
+
+        let deserialized = Merchant::try_from_bytes(&full_data).unwrap();
+        assert_eq!(deserialized, merchant);
+    }
+
+    #[test]
+    fn test_merchant_try_from_bytes_wrong_discriminator() {
+        let mut data = vec![0; Merchant::LEN];
+        data[0] = 99; // Wrong discriminator
+
+        let result = Merchant::try_from_bytes(&data);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), ProgramError::InvalidAccountData);
+    }
+
+    #[test]
+    fn test_merchant_different_wallets() {
+        let owner = [1u8; 32];
+        let settlement_wallet = [100u8; 32];
+
+        let merchant = Merchant {
+            owner,
+            bump: 200,
+            settlement_wallet,
+        };
+
+        // Test owner validation works
+        assert!(merchant.validate_owner(&owner).is_ok());
+
+        // Test serialization works
+        let bytes = merchant.to_bytes_inner();
+        let mut full_data = vec![Merchant::DISCRIMINATOR];
+        full_data.extend_from_slice(&bytes);
+
+        let deserialized = Merchant::try_from_bytes(&full_data).unwrap();
+        assert_eq!(deserialized.owner, owner);
+        assert_eq!(deserialized.settlement_wallet, settlement_wallet);
+    }
+}

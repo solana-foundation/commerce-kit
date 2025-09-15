@@ -308,6 +308,7 @@ pub fn assert_make_payment(
     Ok((payment_pda, bump))
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn assert_refund_payment(
     context: &mut TestContext,
     payer: &Keypair,
@@ -402,6 +403,7 @@ pub fn assert_refund_payment(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn assert_clear_payment(
     context: &mut TestContext,
     payer: &Keypair,

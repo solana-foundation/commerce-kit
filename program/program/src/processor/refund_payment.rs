@@ -196,3 +196,124 @@ fn validate_refund_policy(policies: &[PolicyData], payment: &Payment) -> Result<
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::state::policy::{PolicyData, RefundPolicy};
+    use crate::state::{Payment, Status};
+    use alloc::vec;
+
+    #[test]
+    fn test_validate_refund_policy_no_policy() {
+        let policies = vec![];
+        let payment = Payment {
+            order_id: 1,
+            amount: 500,
+            created_at: 1000000,
+            status: Status::Paid,
+            bump: 1,
+        };
+
+        // No policy should pass validation
+        assert!(validate_refund_policy(&policies, &payment).is_ok());
+    }
+
+    #[test]
+    fn test_validate_refund_policy_max_amount_pass() {
+        let refund_policy = PolicyData::Refund(RefundPolicy {
+            max_amount: 1000,
+            max_time_after_purchase: 0, // No time restriction
+        });
+        let policies = vec![refund_policy];
+
+        let payment = Payment {
+            order_id: 1,
+            amount: 500, // Below max amount
+            created_at: 1000000,
+            status: Status::Paid,
+            bump: 1,
+        };
+
+        assert!(validate_refund_policy(&policies, &payment).is_ok());
+    }
+
+    #[test]
+    fn test_validate_refund_policy_max_amount_exact() {
+        let refund_policy = PolicyData::Refund(RefundPolicy {
+            max_amount: 500,
+            max_time_after_purchase: 0,
+        });
+        let policies = vec![refund_policy];
+
+        let payment = Payment {
+            order_id: 1,
+            amount: 500, // Exactly at max amount
+            created_at: 1000000,
+            status: Status::Paid,
+            bump: 1,
+        };
+
+        assert!(validate_refund_policy(&policies, &payment).is_ok());
+    }
+
+    #[test]
+    fn test_validate_refund_policy_max_amount_fail() {
+        let refund_policy = PolicyData::Refund(RefundPolicy {
+            max_amount: 300,
+            max_time_after_purchase: 0,
+        });
+        let policies = vec![refund_policy];
+
+        let payment = Payment {
+            order_id: 1,
+            amount: 500, // Above max amount
+            created_at: 1000000,
+            status: Status::Paid,
+            bump: 1,
+        };
+
+        let result = validate_refund_policy(&policies, &payment);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_refund_policy_zero_max_amount() {
+        let refund_policy = PolicyData::Refund(RefundPolicy {
+            max_amount: 0, // Zero max amount should block all refunds
+            max_time_after_purchase: 0,
+        });
+        let policies = vec![refund_policy];
+
+        let payment = Payment {
+            order_id: 1,
+            amount: 1, // Any amount should fail
+            created_at: 1000000,
+            status: Status::Paid,
+            bump: 1,
+        };
+
+        let result = validate_refund_policy(&policies, &payment);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_refund_policy_time_restriction_no_limit() {
+        let refund_policy = PolicyData::Refund(RefundPolicy {
+            max_amount: 1000,
+            max_time_after_purchase: 0, // No time restriction
+        });
+        let policies = vec![refund_policy];
+
+        let payment = Payment {
+            order_id: 1,
+            amount: 500,
+            created_at: 1, // Very old payment
+            status: Status::Paid,
+            bump: 1,
+        };
+
+        // No time restriction means any payment age should work
+        assert!(validate_refund_policy(&policies, &payment).is_ok());
+    }
+}
