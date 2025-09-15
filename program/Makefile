@@ -1,4 +1,4 @@
-.PHONY: setup-deps test test-all test-integration test-typescript test-typescript-integration build clean generate-idl generate-clients fmt deploy-devnet
+.PHONY: setup-deps test test-all test-integration test-typescript test-typescript-integration build clean generate-idl generate-clients fmt deploy-devnet profiling
 
 # Install dependencies
 install:
@@ -116,3 +116,9 @@ test-ts-integration:
 	cd clients/typescript && pnpm run test:ci:integration
 
 test-ts-all: generate-clients test-ts-unit test-ts-integration
+
+# Generate CU profiling report from integration tests
+profiling: build setup-deps
+	@echo "🔥 Generating CU profiling report for Commerce Program..."
+	python3 generate_profiling.py
+	@echo "✅ Profiling report generated at profiling_report.md"

@@ -49,11 +49,17 @@ async fn setup_make_payment_test(
     get_or_create_associated_token_account(&mut context, &buyer.pubkey(), &USDC_MINT);
 
     // Create operator
-    let (operator_pda, _) = assert_get_or_create_operator(&mut context, &operator_authority, true)?;
+    let (operator_pda, _) =
+        assert_get_or_create_operator(&mut context, &operator_authority, true, false)?;
 
     // Create merchant
-    let (merchant_pda, _) =
-        assert_get_or_create_merchant(&mut context, &merchant_authority, &settlement_wallet, true)?;
+    let (merchant_pda, _) = assert_get_or_create_merchant(
+        &mut context,
+        &merchant_authority,
+        &settlement_wallet,
+        true,
+        false,
+    )?;
 
     // Create merchant operator config
     let operator_fee = 500u64; // 5%
@@ -79,6 +85,7 @@ async fn setup_make_payment_test(
         policies,
         accepted_currencies,
         true,
+        false,
     )?;
 
     Ok((
@@ -110,13 +117,19 @@ async fn test_make_payment_not_auto_settle_success() {
     get_or_create_associated_token_account(&mut context, &buyer.pubkey(), &USDC_MINT);
 
     // Step 1: Create operator
-    let (operator_pda, _) = assert_get_or_create_operator(&mut context, &operator_authority, true)
-        .expect("Should create operator");
+    let (operator_pda, _) =
+        assert_get_or_create_operator(&mut context, &operator_authority, true, false)
+            .expect("Should create operator");
 
     // Step 2: Create merchant
-    let (merchant_pda, _) =
-        assert_get_or_create_merchant(&mut context, &merchant_authority, &settlement_wallet, true)
-            .expect("Should create merchant");
+    let (merchant_pda, _) = assert_get_or_create_merchant(
+        &mut context,
+        &merchant_authority,
+        &settlement_wallet,
+        true,
+        false,
+    )
+    .expect("Should create merchant");
 
     // Step 3: Create merchant operator config
     let operator_fee = 500u64; // 5%
@@ -142,6 +155,7 @@ async fn test_make_payment_not_auto_settle_success() {
         policies,
         accepted_currencies,
         true,
+        false,
     )
     .expect("Should create merchant operator config");
 
@@ -161,6 +175,7 @@ async fn test_make_payment_not_auto_settle_success() {
         amount,
         true,
         false,
+        true,
     )
     .expect("Should make payment successfully");
 }
@@ -191,6 +206,7 @@ async fn test_make_payment_with_auto_settle_success() {
         &USDC_MINT,
         order_id,
         amount,
+        true,
         true,
         true,
     )

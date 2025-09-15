@@ -45,3 +45,6 @@ worktrees/
 /wallet-standard-master/
 /mobile-wallet-adapter-main/
 /porto-main/
+
+# Claude
+.claude
