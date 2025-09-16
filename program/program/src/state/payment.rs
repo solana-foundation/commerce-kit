@@ -159,3 +159,149 @@ impl Payment {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use alloc::vec;
+
+    #[test]
+    fn test_status_from_u8() {
+        assert_eq!(Status::from_u8(0).unwrap(), Status::Paid);
+        assert_eq!(Status::from_u8(1).unwrap(), Status::Cleared);
+        assert_eq!(Status::from_u8(2).unwrap(), Status::Refunded);
+        assert!(Status::from_u8(3).is_err());
+        assert!(Status::from_u8(255).is_err());
+    }
+
+    #[test]
+    fn test_validate_status_success() {
+        let payment = Payment {
+            order_id: 123,
+            amount: 1000,
+            created_at: 1234567890,
+            status: Status::Paid,
+            bump: 255,
+        };
+
+        assert!(payment.validate_status(Status::Paid).is_ok());
+    }
+
+    #[test]
+    fn test_validate_status_failure() {
+        let payment = Payment {
+            order_id: 123,
+            amount: 1000,
+            created_at: 1234567890,
+            status: Status::Paid,
+            bump: 255,
+        };
+
+        let result = payment.validate_status(Status::Cleared);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            CommerceProgramError::InvalidPaymentStatus.into()
+        );
+    }
+
+    #[test]
+    fn test_validate_not_status_success() {
+        let payment = Payment {
+            order_id: 123,
+            amount: 1000,
+            created_at: 1234567890,
+            status: Status::Paid,
+            bump: 255,
+        };
+
+        assert!(payment.validate_not_status(Status::Cleared).is_ok());
+        assert!(payment.validate_not_status(Status::Refunded).is_ok());
+    }
+
+    #[test]
+    fn test_validate_not_status_failure() {
+        let payment = Payment {
+            order_id: 123,
+            amount: 1000,
+            created_at: 1234567890,
+            status: Status::Cleared,
+            bump: 255,
+        };
+
+        let result = payment.validate_not_status(Status::Cleared);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            CommerceProgramError::InvalidPaymentStatus.into()
+        );
+    }
+
+    #[test]
+    fn test_payment_serialization() {
+        let payment = Payment {
+            order_id: 12345,
+            amount: 5000000,
+            created_at: 1640995200,
+            status: Status::Paid,
+            bump: 254,
+        };
+
+        let bytes = payment.to_bytes_inner();
+        assert_eq!(bytes.len(), Payment::LEN - 1); // Excluding discriminator
+
+        let mut full_data = vec![Payment::DISCRIMINATOR];
+        full_data.extend_from_slice(&bytes);
+
+        let deserialized = Payment::try_from_bytes(&full_data).unwrap();
+        assert_eq!(deserialized, payment);
+    }
+
+    #[test]
+    fn test_payment_serialization_all_statuses() {
+        for (_status_val, status) in [
+            (0, Status::Paid),
+            (1, Status::Cleared),
+            (2, Status::Refunded),
+        ] {
+            let payment = Payment {
+                order_id: 999,
+                amount: u64::MAX,
+                created_at: i64::MIN,
+                status: status.clone(),
+                bump: 1,
+            };
+
+            let bytes = payment.to_bytes_inner();
+            let mut full_data = vec![Payment::DISCRIMINATOR];
+            full_data.extend_from_slice(&bytes);
+
+            let deserialized = Payment::try_from_bytes(&full_data).unwrap();
+            assert_eq!(deserialized, payment);
+            assert_eq!(deserialized.status, status);
+        }
+    }
+
+    #[test]
+    fn test_payment_try_from_bytes_wrong_discriminator() {
+        let mut data = vec![0; Payment::LEN];
+        data[0] = 99; // Wrong discriminator
+
+        let result = Payment::try_from_bytes(&data);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), ProgramError::InvalidAccountData);
+    }
+
+    #[test]
+    fn test_payment_try_from_bytes_invalid_status() {
+        let mut data = vec![Payment::DISCRIMINATOR];
+        data.extend_from_slice(&123u32.to_le_bytes()); // order_id
+        data.extend_from_slice(&1000u64.to_le_bytes()); // amount
+        data.extend_from_slice(&1234567890i64.to_le_bytes()); // created_at
+        data.push(99); // Invalid status
+        data.push(255); // bump
+
+        let result = Payment::try_from_bytes(&data);
+        assert!(result.is_err());
+    }
+}

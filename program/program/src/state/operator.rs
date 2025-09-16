@@ -72,3 +72,80 @@ impl Operator {
         Ok(Self { owner, bump })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use alloc::vec;
+
+    #[test]
+    fn test_validate_owner_success() {
+        let owner = [1u8; 32];
+        let operator = Operator { owner, bump: 255 };
+
+        assert!(operator.validate_owner(&owner).is_ok());
+    }
+
+    #[test]
+    fn test_validate_owner_failure() {
+        let owner = [1u8; 32];
+        let wrong_owner = [2u8; 32];
+        let operator = Operator { owner, bump: 255 };
+
+        let result = operator.validate_owner(&wrong_owner);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            CommerceProgramError::OperatorOwnerMismatch.into()
+        );
+    }
+
+    #[test]
+    fn test_operator_serialization() {
+        let operator = Operator {
+            owner: [1u8; 32],
+            bump: 254,
+        };
+
+        let bytes = operator.to_bytes_inner();
+        assert_eq!(bytes.len(), Operator::LEN - 1); // Excluding discriminator
+
+        let mut full_data = vec![Operator::DISCRIMINATOR];
+        full_data.extend_from_slice(&bytes);
+
+        let deserialized = Operator::try_from_bytes(&full_data).unwrap();
+        assert_eq!(deserialized, operator);
+    }
+
+    #[test]
+    fn test_operator_try_from_bytes_wrong_discriminator() {
+        let mut data = vec![0; Operator::LEN];
+        data[0] = 99; // Wrong discriminator
+
+        let result = Operator::try_from_bytes(&data);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), ProgramError::InvalidAccountData);
+    }
+
+    #[test]
+    fn test_operator_owner_validation() {
+        let owner1 = [100u8; 32];
+        let owner2 = [200u8; 32];
+
+        let operator = Operator {
+            owner: owner1,
+            bump: 128,
+        };
+
+        // Should succeed with correct owner
+        assert!(operator.validate_owner(&owner1).is_ok());
+
+        // Should fail with wrong owner
+        let result = operator.validate_owner(&owner2);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            CommerceProgramError::OperatorOwnerMismatch.into()
+        );
+    }
+}
