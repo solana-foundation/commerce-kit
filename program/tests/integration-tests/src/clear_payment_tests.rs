@@ -50,11 +50,17 @@ async fn setup_clear_payment_test(
     get_or_create_associated_token_account(&mut context, &buyer.pubkey(), &USDC_MINT);
 
     // Create operator
-    let (operator_pda, _) = assert_get_or_create_operator(&mut context, &operator_authority, true)?;
+    let (operator_pda, _) =
+        assert_get_or_create_operator(&mut context, &operator_authority, true, false)?;
 
     // Create merchant
-    let (merchant_pda, _) =
-        assert_get_or_create_merchant(&mut context, &merchant_authority, &settlement_wallet, true)?;
+    let (merchant_pda, _) = assert_get_or_create_merchant(
+        &mut context,
+        &merchant_authority,
+        &settlement_wallet,
+        true,
+        false,
+    )?;
 
     // Create merchant operator config
     let operator_fee = 500u64; // 5%
@@ -79,7 +85,8 @@ async fn setup_clear_payment_test(
         DAYS_TO_CLOSE,
         policies,
         accepted_currencies,
-        true,
+        true, // fail_if_exists
+        false,
     )?;
 
     // Make payment (not auto-settle so it goes to escrow)
@@ -96,7 +103,8 @@ async fn setup_clear_payment_test(
         &USDC_MINT,
         order_id,
         amount,
-        true,
+        true,  // fail_if_exists
+        false, // is_auto_settle
         false,
     )?;
 
@@ -130,13 +138,19 @@ async fn test_clear_payment_not_auto_settle_success() {
     get_or_create_associated_token_account(&mut context, &buyer.pubkey(), &USDC_MINT);
 
     // Step 1: Create operator
-    let (operator_pda, _) = assert_get_or_create_operator(&mut context, &operator_authority, true)
-        .expect("Should create operator");
+    let (operator_pda, _) =
+        assert_get_or_create_operator(&mut context, &operator_authority, true, false)
+            .expect("Should create operator");
 
     // Step 2: Create merchant
-    let (merchant_pda, _) =
-        assert_get_or_create_merchant(&mut context, &merchant_authority, &settlement_wallet, true)
-            .expect("Should create merchant");
+    let (merchant_pda, _) = assert_get_or_create_merchant(
+        &mut context,
+        &merchant_authority,
+        &settlement_wallet,
+        true,
+        false,
+    )
+    .expect("Should create merchant");
 
     // Step 3: Create merchant operator config
     let operator_fee = 500u64; // 5%
@@ -161,7 +175,8 @@ async fn test_clear_payment_not_auto_settle_success() {
         DAYS_TO_CLOSE,
         policies,
         accepted_currencies,
-        true,
+        true, // fail_if_exists
+        false,
     )
     .expect("Should create merchant operator config");
 
@@ -179,7 +194,8 @@ async fn test_clear_payment_not_auto_settle_success() {
         &USDC_MINT,
         order_id,
         amount,
-        true,
+        true,  // fail_if_exists
+        false, // is_auto_settle
         false,
     )
     .expect("Should make payment successfully");
@@ -193,6 +209,7 @@ async fn test_clear_payment_not_auto_settle_success() {
         &payment_pda,
         &USDC_MINT,
         &merchant_operator_config_pda,
+        true, // with_profiling
     )
     .expect("Should clear payment successfully");
 }
@@ -211,13 +228,19 @@ async fn test_clear_payment_with_lamports_fee() {
     get_or_create_associated_token_account(&mut context, &buyer.pubkey(), &USDC_MINT);
 
     // Step 1: Create operator
-    let (operator_pda, _) = assert_get_or_create_operator(&mut context, &operator_authority, true)
-        .expect("Should create operator");
+    let (operator_pda, _) =
+        assert_get_or_create_operator(&mut context, &operator_authority, true, false)
+            .expect("Should create operator");
 
     // Step 2: Create merchant
-    let (merchant_pda, _) =
-        assert_get_or_create_merchant(&mut context, &merchant_authority, &settlement_wallet, true)
-            .expect("Should create merchant");
+    let (merchant_pda, _) = assert_get_or_create_merchant(
+        &mut context,
+        &merchant_authority,
+        &settlement_wallet,
+        true,
+        false,
+    )
+    .expect("Should create merchant");
 
     // Step 3: Create merchant operator config with fixed lamports fee
     let operator_fee = 50_000u64; // 0.05 USDC fixed fee
@@ -238,7 +261,8 @@ async fn test_clear_payment_with_lamports_fee() {
         DAYS_TO_CLOSE,
         policies,
         accepted_currencies,
-        true,
+        true, // fail_if_exists
+        false,
     )
     .expect("Should create merchant operator config");
 
@@ -256,7 +280,8 @@ async fn test_clear_payment_with_lamports_fee() {
         &USDC_MINT,
         order_id,
         amount,
-        true,
+        true,  // fail_if_exists
+        false, // is_auto_settle
         false,
     )
     .expect("Should make payment successfully");
@@ -270,6 +295,7 @@ async fn test_clear_payment_with_lamports_fee() {
         &payment_pda,
         &USDC_MINT,
         &merchant_operator_config_pda,
+        false,
     )
     .expect("Should clear payment successfully");
 }
@@ -288,13 +314,19 @@ async fn test_clear_payment_with_zero_fee() {
     get_or_create_associated_token_account(&mut context, &buyer.pubkey(), &USDC_MINT);
 
     // Step 1: Create operator
-    let (operator_pda, _) = assert_get_or_create_operator(&mut context, &operator_authority, true)
-        .expect("Should create operator");
+    let (operator_pda, _) =
+        assert_get_or_create_operator(&mut context, &operator_authority, true, false)
+            .expect("Should create operator");
 
     // Step 2: Create merchant
-    let (merchant_pda, _) =
-        assert_get_or_create_merchant(&mut context, &merchant_authority, &settlement_wallet, true)
-            .expect("Should create merchant");
+    let (merchant_pda, _) = assert_get_or_create_merchant(
+        &mut context,
+        &merchant_authority,
+        &settlement_wallet,
+        true,
+        false,
+    )
+    .expect("Should create merchant");
 
     // Step 3: Create merchant operator config with zero fee
     let operator_fee = 0u64; // No fee
@@ -315,7 +347,8 @@ async fn test_clear_payment_with_zero_fee() {
         DAYS_TO_CLOSE,
         policies,
         accepted_currencies,
-        true,
+        true, // fail_if_exists
+        false,
     )
     .expect("Should create merchant operator config");
 
@@ -333,7 +366,8 @@ async fn test_clear_payment_with_zero_fee() {
         &USDC_MINT,
         order_id,
         amount,
-        true,
+        true,  // fail_if_exists
+        false, // is_auto_settle
         false,
     )
     .expect("Should make payment successfully");
@@ -347,6 +381,7 @@ async fn test_clear_payment_with_zero_fee() {
         &payment_pda,
         &USDC_MINT,
         &merchant_operator_config_pda,
+        false,
     )
     .expect("Should clear payment successfully");
 }
@@ -376,6 +411,7 @@ async fn test_clear_payment_with_settlement_policy_success() {
         &payment_pda,
         &USDC_MINT,
         &merchant_operator_config_pda,
+        false,
     )
     .expect("Should clear payment successfully with settlement policy");
 }
@@ -408,6 +444,7 @@ async fn test_clear_payment_with_time_restriction_success() {
         &payment_pda,
         &USDC_MINT,
         &merchant_operator_config_pda,
+        false,
     )
     .expect("Should clear payment successfully after time restriction");
 }
@@ -426,13 +463,19 @@ async fn test_clear_payment_high_bps_fee() {
     get_or_create_associated_token_account(&mut context, &buyer.pubkey(), &USDC_MINT);
 
     // Step 1: Create operator
-    let (operator_pda, _) = assert_get_or_create_operator(&mut context, &operator_authority, true)
-        .expect("Should create operator");
+    let (operator_pda, _) =
+        assert_get_or_create_operator(&mut context, &operator_authority, true, false)
+            .expect("Should create operator");
 
     // Step 2: Create merchant
-    let (merchant_pda, _) =
-        assert_get_or_create_merchant(&mut context, &merchant_authority, &settlement_wallet, true)
-            .expect("Should create merchant");
+    let (merchant_pda, _) = assert_get_or_create_merchant(
+        &mut context,
+        &merchant_authority,
+        &settlement_wallet,
+        true,
+        false,
+    )
+    .expect("Should create merchant");
 
     // Step 3: Create merchant operator config with high BPS fee
     let operator_fee = 2000u64; // 20% (2000 bps)
@@ -453,7 +496,8 @@ async fn test_clear_payment_high_bps_fee() {
         DAYS_TO_CLOSE,
         policies,
         accepted_currencies,
-        true,
+        true, // fail_if_exists
+        false,
     )
     .expect("Should create merchant operator config");
 
@@ -471,7 +515,8 @@ async fn test_clear_payment_high_bps_fee() {
         &USDC_MINT,
         order_id,
         amount,
-        true,
+        true,  // fail_if_exists
+        false, // is_auto_settle
         false,
     )
     .expect("Should make payment successfully");
@@ -485,6 +530,7 @@ async fn test_clear_payment_high_bps_fee() {
         &payment_pda,
         &USDC_MINT,
         &merchant_operator_config_pda,
+        false,
     )
     .expect("Should clear payment successfully");
 }
@@ -503,13 +549,19 @@ async fn test_clear_payment_fee_exceeds_amount() {
     get_or_create_associated_token_account(&mut context, &buyer.pubkey(), &USDC_MINT);
 
     // Step 1: Create operator
-    let (operator_pda, _) = assert_get_or_create_operator(&mut context, &operator_authority, true)
-        .expect("Should create operator");
+    let (operator_pda, _) =
+        assert_get_or_create_operator(&mut context, &operator_authority, true, false)
+            .expect("Should create operator");
 
     // Step 2: Create merchant
-    let (merchant_pda, _) =
-        assert_get_or_create_merchant(&mut context, &merchant_authority, &settlement_wallet, true)
-            .expect("Should create merchant");
+    let (merchant_pda, _) = assert_get_or_create_merchant(
+        &mut context,
+        &merchant_authority,
+        &settlement_wallet,
+        true,
+        false,
+    )
+    .expect("Should create merchant");
 
     // Step 3: Create merchant operator config with fixed lamports fee that exceeds typical payment amounts
     let operator_fee = 10_000_000u64; // 10 USDC fixed fee
@@ -530,7 +582,8 @@ async fn test_clear_payment_fee_exceeds_amount() {
         DAYS_TO_CLOSE,
         policies,
         accepted_currencies,
-        true,
+        true, // fail_if_exists
+        false,
     )
     .expect("Should create merchant operator config");
 
@@ -548,7 +601,8 @@ async fn test_clear_payment_fee_exceeds_amount() {
         &USDC_MINT,
         order_id,
         amount,
-        true,
+        true,  // fail_if_exists
+        false, // is_auto_settle
         false,
     )
     .expect("Should make payment successfully");
@@ -562,6 +616,7 @@ async fn test_clear_payment_fee_exceeds_amount() {
         &payment_pda,
         &USDC_MINT,
         &merchant_operator_config_pda,
+        false,
     )
     .expect("Should clear payment successfully even when fee exceeds amount");
 }
@@ -651,6 +706,7 @@ async fn test_clear_payment_invalid_payment_status_fails() {
         &payment_pda,
         &USDC_MINT,
         &merchant_operator_config_pda,
+        true, // with_profiling
     )
     .expect("Should clear payment successfully first time");
 

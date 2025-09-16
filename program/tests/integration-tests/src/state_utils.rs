@@ -33,6 +33,7 @@ pub fn assert_get_or_create_operator(
     context: &mut TestContext,
     owner: &Keypair,
     fail_if_exists: bool,
+    with_profiling: bool,
 ) -> Result<(Pubkey, u8), Box<dyn std::error::Error>> {
     context.airdrop_if_required(&owner.pubkey(), 1_000_000_000)?;
 
@@ -53,7 +54,11 @@ pub fn assert_get_or_create_operator(
 
     // Send transaction with owner as additional signer
     context
-        .send_transaction_with_signers(instruction, &[owner])
+        .send_transaction_with_signers_with_transaction_result(
+            instruction,
+            &[owner],
+            with_profiling,
+        )
         .expect("Create operator should succeed");
 
     assert_operator_account(context, &operator_pda, &owner.pubkey(), bump);
@@ -66,6 +71,7 @@ pub fn assert_get_or_create_merchant(
     authority: &Keypair,
     settlement_wallet: &Keypair,
     fail_if_exists: bool,
+    with_profiling: bool,
 ) -> Result<(Pubkey, u8), Box<dyn std::error::Error>> {
     context.airdrop_if_required(&authority.pubkey(), 1_000_000_000)?;
 
@@ -87,7 +93,11 @@ pub fn assert_get_or_create_merchant(
 
     // Send transaction with authority as additional signer
     context
-        .send_transaction_with_signers(instruction, &[authority])
+        .send_transaction_with_signers_with_transaction_result(
+            instruction,
+            &[authority],
+            with_profiling,
+        )
         .expect("Create merchant should succeed");
 
     assert_merchant_account(
@@ -115,6 +125,7 @@ pub fn assert_get_or_create_merchant_operator_config(
     policies: Vec<PolicyData>,
     accepted_currencies: Vec<Pubkey>,
     fail_if_exists: bool,
+    with_profiling: bool,
 ) -> Result<(Pubkey, u8), Box<dyn std::error::Error>> {
     let (merchant_operator_config_pda, merchant_operator_config_bump) =
         find_merchant_operator_config_pda(merchant_pda, operator_pda, version);
@@ -149,7 +160,11 @@ pub fn assert_get_or_create_merchant_operator_config(
 
     // Send transaction with authority as additional signer
     context
-        .send_transaction_with_signers(instruction, &[authority])
+        .send_transaction_with_signers_with_transaction_result(
+            instruction,
+            &[authority],
+            with_profiling,
+        )
         .expect("Create merchant operator config should succeed");
 
     assert_merchant_operator_config_account(
@@ -181,6 +196,7 @@ pub fn assert_make_payment(
     amount: u64,
     fail_if_exists: bool,
     is_auto_settle: bool,
+    with_profiling: bool,
 ) -> Result<(Pubkey, u8), Box<dyn std::error::Error>> {
     context.airdrop_if_required(&payer.pubkey(), 1_000_000_000)?;
     context.airdrop_if_required(&operator_authority.pubkey(), 1_000_000_000)?;
@@ -261,6 +277,7 @@ pub fn assert_make_payment(
         .send_transaction_with_signers_with_transaction_result(
             instruction,
             &[operator_authority, buyer],
+            with_profiling,
         )
         .expect("Make payment should succeed");
 
@@ -316,6 +333,7 @@ pub fn assert_refund_payment(
     payment_pda: &Pubkey,
     mint: &Pubkey,
     merchant_operator_config_pda: &Pubkey,
+    with_profiling: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     context.airdrop_if_required(&payer.pubkey(), 1_000_000_000)?;
     context.airdrop_if_required(&operator_authority.pubkey(), 1_000_000_000)?;
@@ -367,7 +385,11 @@ pub fn assert_refund_payment(
 
     // Send transaction with required signers (payer, operator_authority)
     let transaction_metadata = context
-        .send_transaction_with_signers_with_transaction_result(instruction, &[operator_authority])
+        .send_transaction_with_signers_with_transaction_result(
+            instruction,
+            &[operator_authority],
+            with_profiling,
+        )
         .expect("Refund payment should succeed");
 
     assert_payment_account(
@@ -410,6 +432,7 @@ pub fn assert_clear_payment(
     payment_pda: &Pubkey,
     mint: &Pubkey,
     merchant_operator_config_pda: &Pubkey,
+    with_profiling: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     context.airdrop_if_required(&payer.pubkey(), 1_000_000_000)?;
     context.airdrop_if_required(&operator_authority.pubkey(), 1_000_000_000)?;
@@ -495,7 +518,11 @@ pub fn assert_clear_payment(
 
     // Send transaction with required signers (payer, operator_authority)
     let transaction_metadata = context
-        .send_transaction_with_signers_with_transaction_result(instruction, &[operator_authority])
+        .send_transaction_with_signers_with_transaction_result(
+            instruction,
+            &[operator_authority],
+            with_profiling,
+        )
         .expect("Clear payment should succeed");
 
     assert_payment_account(
@@ -559,6 +586,7 @@ pub fn assert_clear_payment(
 pub fn assert_update_merchant_settlement_wallet(
     context: &mut TestContext,
     authority: &Keypair,
+    with_profiling: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let new_settlement_wallet = Keypair::new();
 
@@ -572,7 +600,11 @@ pub fn assert_update_merchant_settlement_wallet(
         .instruction();
 
     context
-        .send_transaction_with_signers(instruction, &[authority])
+        .send_transaction_with_signers_with_transaction_result(
+            instruction,
+            &[authority],
+            with_profiling,
+        )
         .expect("Update merchant settlement wallet should succeed");
 
     assert_merchant_account(
@@ -590,6 +622,7 @@ pub fn assert_update_merchant_authority(
     context: &mut TestContext,
     authority: &Keypair,
     settlement_wallet: &Pubkey,
+    with_profiling: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let new_authority = Keypair::new();
     let (merchant_pda, bump) = find_merchant_pda(&authority.pubkey());
@@ -602,7 +635,11 @@ pub fn assert_update_merchant_authority(
         .instruction();
 
     context
-        .send_transaction_with_signers(instruction, &[authority])
+        .send_transaction_with_signers_with_transaction_result(
+            instruction,
+            &[authority],
+            with_profiling,
+        )
         .expect("Update merchant settlement wallet should succeed");
 
     assert_merchant_account(
@@ -619,6 +656,7 @@ pub fn assert_update_merchant_authority(
 pub fn assert_update_operator_authority(
     context: &mut TestContext,
     authority: &Keypair,
+    with_profiling: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let (operator_pda, bump) = find_operator_pda(&authority.pubkey());
 
@@ -632,7 +670,11 @@ pub fn assert_update_operator_authority(
         .instruction();
 
     context
-        .send_transaction_with_signers(instruction, &[authority])
+        .send_transaction_with_signers_with_transaction_result(
+            instruction,
+            &[authority],
+            with_profiling,
+        )
         .expect("Update operator authority should succeed");
 
     assert_operator_account(context, &operator_pda, &new_authority.pubkey(), bump);
@@ -651,6 +693,7 @@ pub fn assert_close_payment(
     merchant_operator_config_pda: &Pubkey,
     mint: &Pubkey,
     operator_authority: &Keypair,
+    with_profiling: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     context.airdrop_if_required(&payer.pubkey(), 1_000_000_000)?;
 
@@ -675,7 +718,11 @@ pub fn assert_close_payment(
 
     // Send transaction with required signers
     context
-        .send_transaction_with_signers(instruction, &[payer, operator_authority])
+        .send_transaction_with_signers_with_transaction_result(
+            instruction,
+            &[payer, operator_authority],
+            with_profiling,
+        )
         .expect("Close payment should succeed");
 
     // Verify payment account is closed (balance should be 0)
