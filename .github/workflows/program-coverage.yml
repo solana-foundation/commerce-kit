@@ -28,13 +28,14 @@ jobs:
   combine-coverage:
     name: Combine Coverage Reports
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && contains(fromJson('["Program Unit Tests", "Program Integration Tests", "TypeScript SDK Unit Tests", "TypeScript SDK Integration Tests"]'), github.event.workflow_run.name)) || github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request' }}
     timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
 
       - name: Download unit test coverage
+        if: github.event_name == 'workflow_run'
         uses: actions/download-artifact@v4
         with:
           name: unit-coverage-reports
@@ -44,6 +45,7 @@ jobs:
         continue-on-error: true
 
       - name: Download integration test coverage
+        if: github.event_name == 'workflow_run'
         uses: actions/download-artifact@v4
         with:
           name: integration-coverage-reports
@@ -53,6 +55,7 @@ jobs:
         continue-on-error: true
 
       - name: Download TypeScript unit coverage
+        if: github.event_name == 'workflow_run'
         uses: actions/download-artifact@v4
         with:
           name: ts-unit-coverage-reports
@@ -62,6 +65,7 @@ jobs:
         continue-on-error: true
 
       - name: Download TypeScript integration coverage
+        if: github.event_name == 'workflow_run'
         uses: actions/download-artifact@v4
         with:
           name: ts-integration-coverage-reports
@@ -78,12 +82,17 @@ jobs:
 
       - name: Combine Rust coverage reports
         run: |
-          if [ -f coverage-artifacts/unit/coverage-unit.lcov ] && [ -f coverage-artifacts/integration/coverage-integration.lcov ]; then
+          if [ -f coverage-artifacts/unit/program/coverage-unit.lcov ] && [ -f coverage-artifacts/integration/program/coverage-integration.lcov ]; then
             echo "Combining Rust coverage reports..."
             lcov-result-merger 'coverage-artifacts/**/*.lcov' coverage-combined.lcov
             echo "✅ Combined coverage report generated"
           else
             echo "⚠️ Some coverage reports are missing, skipping combination"
+            echo "Looking for:"
+            echo "- coverage-artifacts/unit/program/coverage-unit.lcov"
+            echo "- coverage-artifacts/integration/program/coverage-integration.lcov"
+            echo "Files found:"
+            find coverage-artifacts -name "*.lcov" -type f || echo "No .lcov files found"
           fi
 
       - name: Generate coverage summary
@@ -96,22 +105,22 @@ jobs:
           COVERAGE_SUMMARY=""
           
           # Parse Rust Unit Test coverage
-          if [ -f coverage-artifacts/unit/coverage-unit.lcov ]; then
+          if [ -f coverage-artifacts/unit/program/coverage-unit.lcov ]; then
             echo "## Rust Unit Tests"
-            LINES_FOUND=$(grep -E "^LF:" coverage-artifacts/unit/coverage-unit.lcov | awk -F: '{sum += $2} END {print sum}')
-            LINES_HIT=$(grep -E "^LH:" coverage-artifacts/unit/coverage-unit.lcov | awk -F: '{sum += $2} END {print sum}')
+            LINES_FOUND=$(grep -E "^LF:" coverage-artifacts/unit/program/coverage-unit.lcov | awk -F: '{sum += $2} END {print sum}')
+            LINES_HIT=$(grep -E "^LH:" coverage-artifacts/unit/program/coverage-unit.lcov | awk -F: '{sum += $2} END {print sum}')
             if [ "$LINES_FOUND" -gt 0 ]; then
               RUST_UNIT_COV=$(echo "scale=1; $LINES_HIT * 100 / $LINES_FOUND" | bc)
               echo "Rust Unit Tests: ${RUST_UNIT_COV}%"
               COVERAGE_SUMMARY="${COVERAGE_SUMMARY}**Rust Unit Tests:** ${RUST_UNIT_COV}%\n"
             fi
           fi
-          
-          # Parse Rust Integration Test coverage  
-          if [ -f coverage-artifacts/integration/coverage-integration.lcov ]; then
+
+          # Parse Rust Integration Test coverage
+          if [ -f coverage-artifacts/integration/program/coverage-integration.lcov ]; then
             echo "## Rust Integration Tests"
-            LINES_FOUND=$(grep -E "^LF:" coverage-artifacts/integration/coverage-integration.lcov | awk -F: '{sum += $2} END {print sum}')
-            LINES_HIT=$(grep -E "^LH:" coverage-artifacts/integration/coverage-integration.lcov | awk -F: '{sum += $2} END {print sum}')
+            LINES_FOUND=$(grep -E "^LF:" coverage-artifacts/integration/program/coverage-integration.lcov | awk -F: '{sum += $2} END {print sum}')
+            LINES_HIT=$(grep -E "^LH:" coverage-artifacts/integration/program/coverage-integration.lcov | awk -F: '{sum += $2} END {print sum}')
             if [ "$LINES_FOUND" -gt 0 ]; then
               RUST_INT_COV=$(echo "scale=1; $LINES_HIT * 100 / $LINES_FOUND" | bc)
               echo "Rust Integration Tests: ${RUST_INT_COV}%"
@@ -141,7 +150,7 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Post coverage comment on PR
-        if: github.event.workflow_run.event == 'pull_request'
+        if: github.event_name == 'workflow_run' && github.event.workflow_run.event == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
