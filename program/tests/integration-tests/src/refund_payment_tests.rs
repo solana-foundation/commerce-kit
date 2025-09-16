@@ -50,11 +50,17 @@ async fn setup_refund_payment_test(
     get_or_create_associated_token_account(&mut context, &buyer.pubkey(), &USDC_MINT);
 
     // Create operator
-    let (operator_pda, _) = assert_get_or_create_operator(&mut context, &operator_authority, true)?;
+    let (operator_pda, _) =
+        assert_get_or_create_operator(&mut context, &operator_authority, true, false)?;
 
     // Create merchant
-    let (merchant_pda, _) =
-        assert_get_or_create_merchant(&mut context, &merchant_authority, &settlement_wallet, true)?;
+    let (merchant_pda, _) = assert_get_or_create_merchant(
+        &mut context,
+        &merchant_authority,
+        &settlement_wallet,
+        true,
+        false,
+    )?;
 
     // Create merchant operator config with refund policy
     let operator_fee = 500u64; // 5%
@@ -86,6 +92,7 @@ async fn setup_refund_payment_test(
         policies,
         accepted_currencies,
         true,
+        false,
     )?;
 
     // Make payment (not auto-settle so it goes to escrow)
@@ -103,6 +110,7 @@ async fn setup_refund_payment_test(
         order_id,
         amount,
         true,
+        false,
         false,
     )?;
 
@@ -136,13 +144,19 @@ async fn test_refund_payment_not_auto_settle_success() {
     get_or_create_associated_token_account(&mut context, &buyer.pubkey(), &USDC_MINT);
 
     // Step 1: Create operator
-    let (operator_pda, _) = assert_get_or_create_operator(&mut context, &operator_authority, true)
-        .expect("Should create operator");
+    let (operator_pda, _) =
+        assert_get_or_create_operator(&mut context, &operator_authority, true, false)
+            .expect("Should create operator");
 
     // Step 2: Create merchant
-    let (merchant_pda, _) =
-        assert_get_or_create_merchant(&mut context, &merchant_authority, &settlement_wallet, true)
-            .expect("Should create merchant");
+    let (merchant_pda, _) = assert_get_or_create_merchant(
+        &mut context,
+        &merchant_authority,
+        &settlement_wallet,
+        true,
+        false,
+    )
+    .expect("Should create merchant");
 
     // Step 3: Create merchant operator config with refund policy
     let operator_fee = 500u64; // 5%
@@ -174,6 +188,7 @@ async fn test_refund_payment_not_auto_settle_success() {
         policies,
         accepted_currencies,
         true,
+        false,
     )
     .expect("Should create merchant operator config");
 
@@ -193,6 +208,7 @@ async fn test_refund_payment_not_auto_settle_success() {
         amount,
         true,
         false,
+        false,
     )
     .expect("Should make payment successfully");
 
@@ -205,6 +221,7 @@ async fn test_refund_payment_not_auto_settle_success() {
         &payment_pda,
         &USDC_MINT,
         &merchant_operator_config_pda,
+        true,
     )
     .expect("Should refund payment successfully");
 }
@@ -234,6 +251,7 @@ async fn test_refund_payment_with_refund_policy_success() {
         &payment_pda,
         &USDC_MINT,
         &merchant_operator_config_pda,
+        true,
     )
     .expect("Should refund payment successfully with refund policy");
 }
@@ -266,6 +284,7 @@ async fn test_refund_payment_within_time_window_success() {
         &payment_pda,
         &USDC_MINT,
         &merchant_operator_config_pda,
+        true,
     )
     .expect("Should refund payment successfully within time window");
 }
@@ -381,6 +400,7 @@ async fn test_refund_payment_invalid_payment_status_fails() {
         &payment_pda,
         &USDC_MINT,
         &merchant_operator_config_pda,
+        false,
     )
     .expect("Should clear payment successfully first time");
 

@@ -30,6 +30,7 @@ export const WalletList = memo<WalletListProps>(({ wallets, onSelect }) => {
             {w.icon ? <img src={w.icon} alt={`${w.name} wallet icon`} width={20} height={20} style={{ borderRadius: '50%' }} /> : null}
             <span style={{ fontSize: 14, color: '#111827' }}>{w.name}</span>
           </span>
+          
           <span style={{ fontSize: 12, color: '#6b7280' }}>{w.installed ? 'Installed' : 'Not installed'}</span>
         </button>
       ))}

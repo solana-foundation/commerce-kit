@@ -17,7 +17,8 @@ async fn test_create_merchant_success() {
         .airdrop_if_required(&authority.pubkey(), 1_000_000_000)
         .unwrap();
 
-    assert_get_or_create_merchant(&mut context, &authority, &settlement_wallet, true).unwrap();
+    assert_get_or_create_merchant(&mut context, &authority, &settlement_wallet, true, true)
+        .unwrap();
 }
 
 #[tokio::test]
@@ -30,9 +31,10 @@ pub async fn test_update_merchant_settlement_wallet_success() {
         .airdrop_if_required(&authority.pubkey(), 1_000_000_000)
         .unwrap();
 
-    assert_get_or_create_merchant(&mut context, &authority, &settlement_wallet, true).unwrap();
+    assert_get_or_create_merchant(&mut context, &authority, &settlement_wallet, true, false)
+        .unwrap();
 
-    assert_update_merchant_settlement_wallet(&mut context, &authority).unwrap();
+    assert_update_merchant_settlement_wallet(&mut context, &authority, true).unwrap();
 }
 
 #[tokio::test]
@@ -41,8 +43,9 @@ pub async fn test_update_merchant_authority_success() {
     let authority = Keypair::new();
     let settlement_wallet = Keypair::new();
 
-    assert_get_or_create_merchant(&mut context, &authority, &settlement_wallet, true).unwrap();
+    assert_get_or_create_merchant(&mut context, &authority, &settlement_wallet, true, false)
+        .unwrap();
 
-    assert_update_merchant_authority(&mut context, &authority, &settlement_wallet.pubkey())
+    assert_update_merchant_authority(&mut context, &authority, &settlement_wallet.pubkey(), true)
         .unwrap();
 }

@@ -206,7 +206,7 @@ impl TestContext {
         instruction: Instruction,
         signers: &[&Keypair],
     ) -> Result<(), Box<dyn std::error::Error>> {
-        self.send_transaction_with_signers_with_transaction_result(instruction, signers)
+        self.send_transaction_with_signers_with_transaction_result(instruction, signers, false)
             .map(|_| ())
     }
 
@@ -214,16 +214,30 @@ impl TestContext {
         &mut self,
         instruction: Instruction,
         signers: &[&Keypair],
+        enable_profiling: bool,
     ) -> Result<TransactionMetadata, Box<dyn std::error::Error>> {
         let mut all_signers = vec![&self.payer];
         all_signers.extend(signers);
 
         let transaction = Transaction::new_signed_with_payer(
-            &[instruction],
+            &[instruction.clone()],
             Some(&self.payer.pubkey()),
             &all_signers,
             self.svm.latest_blockhash(),
         );
+
+        // Simulate first to get CU consumption for profiling (only if enabled)
+        if enable_profiling && instruction.program_id == PROGRAM_ID {
+            let simulation_result = self.svm.simulate_transaction(transaction.clone());
+            if let Ok(sim_metadata) = simulation_result {
+                let cu_consumed = sim_metadata.meta.compute_units_consumed;
+                let operation = get_operation_name(&instruction);
+                eprintln!(
+                    r#"{{"type":"profiling","operation":"{}","cu_consumed":{}}}"#,
+                    operation, cu_consumed
+                );
+            }
+        }
 
         let result = self.svm.send_transaction(transaction);
         match result {
@@ -504,4 +518,26 @@ pub fn assert_event_present(
         "Expected event with discriminator {} not found in transaction. Expected data: {:?}",
         discriminator, expected_data
     );
+}
+
+/// Map instruction discriminator to operation name for profiling
+fn get_operation_name(instruction: &Instruction) -> &'static str {
+    if instruction.data.is_empty() {
+        return "Unknown";
+    }
+
+    match instruction.data[0] {
+        0 => "InitializeMerchant",
+        1 => "CreateOperator",
+        2 => "InitializeMerchantOperatorConfig",
+        3 => "MakePayment",
+        4 => "ClearPayment",
+        5 => "RefundPayment",
+        6 => "UpdateMerchantSettlementWallet",
+        7 => "UpdateMerchantAuthority",
+        8 => "UpdateOperatorAuthority",
+        9 => "ClosePayment",
+        228 => "EmitEvent",
+        _ => "Unknown",
+    }
 }
