@@ -69,25 +69,7 @@ async function runTestsWithValidator() {
     await waitForValidator();
 
     console.log('Running tests...');
-
-    // Build test command with coverage if requested
-    let testCommand = ['test:integration'];
-
-    // Check if coverage is requested via environment variable or command line args
-    if (process.env.JEST_COVERAGE === 'true' || process.argv.includes('--coverage')) {
-      console.log('Coverage enabled, running tests with coverage...');
-
-      // Find coverage directory argument
-      const coverageDirIndex = process.argv.findIndex(arg => arg === '--coverageDirectory');
-      const coverageDir = coverageDirIndex !== -1 && process.argv[coverageDirIndex + 1]
-        ? process.argv[coverageDirIndex + 1]
-        : 'coverage-integration';
-
-      // Use jest directly with coverage options instead of test:integration script
-      testCommand = ['exec', 'jest', 'tests/integration', '--coverage', `--coverageDirectory=${coverageDir}`];
-    }
-
-    const testProcess = spawn('pnpm', testCommand, {
+    const testProcess = spawn('pnpm', ['test:integration'], {
       stdio: 'inherit',
       shell: platform() === 'win32' // Windows compatibility
     });
