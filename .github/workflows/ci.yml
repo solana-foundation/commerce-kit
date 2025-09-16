@@ -1,0 +1,511 @@
+name: CI - Tests and Coverage
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_LOG: info
+
+permissions:
+  contents: read
+  pull-requests: write
+  actions: read
+
+jobs:
+  program-unit:
+    name: Program Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+
+      - name: Install coverage tools
+        run: cargo install cargo-llvm-cov
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+          workspaces: ./program
+
+      - name: Run unit tests with coverage
+        run: |
+          echo "🧪 Running unit tests with coverage..."
+          cd program/program
+          cargo llvm-cov --lib --tests --lcov --output-path ../coverage-unit.lcov
+
+      - name: Generate HTML coverage report
+        run: |
+          cd program/program
+          cargo llvm-cov --html --output-dir ../coverage-html-unit
+
+      - name: Display coverage summary
+        run: |
+          cd program/program
+          cargo llvm-cov --summary-only
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-coverage-reports
+          path: |
+            program/coverage-unit.lcov
+            program/coverage-html-unit/
+          retention-days: 30
+
+      - name: Show failure logs
+        if: failure()
+        uses: ./.github/actions/show-failure-logs
+        with:
+          test-type: "Program unit"
+
+  program-integration:
+    name: Program Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+
+      - name: Install tools
+        run: |
+          cargo install shank-cli
+          cargo install cargo-llvm-cov
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+          workspaces: |
+            ./program
+            ./program/tests/integration-tests
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.14.0
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: |
+          cd program && make install
+
+      - name: Setup Solana CLI
+        uses: ./.github/actions/setup-solana
+
+      - name: Add Solana to PATH
+        run: echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Build program and generate clients
+        run: |
+          echo "🔨 Building program and generating clients..."
+          cd program && make build
+
+      - name: Setup test dependencies
+        run: |
+          echo "📦 Setting up test dependencies..."
+          cd program && make setup-deps
+
+      - name: Run integration tests with coverage
+        run: |
+          echo "🧪 Running integration tests with coverage..."
+          cd program/tests/integration-tests
+          cargo llvm-cov --lcov --output-path ../../coverage-integration.lcov
+
+      - name: Generate HTML coverage report
+        run: |
+          cd program/tests/integration-tests
+          cargo llvm-cov --html --output-dir ../../coverage-html-integration
+
+      - name: Display coverage summary
+        run: |
+          cd program/tests/integration-tests
+          cargo llvm-cov --summary-only
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-coverage-reports
+          path: |
+            program/coverage-integration.lcov
+            program/coverage-html-integration/
+          retention-days: 30
+
+      - name: Show failure logs
+        if: failure()
+        uses: ./.github/actions/show-failure-logs
+        with:
+          test-type: "Program integration"
+
+  typescript-unit:
+    name: TypeScript SDK Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.14.0
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-
+
+      - name: Install root dependencies
+        shell: bash
+        run: cd program && pnpm install --frozen-lockfile
+
+      - name: Generate clients
+        run: cd program && pnpm run generate-clients
+
+      - name: Install test dependencies
+        working-directory: program/clients/typescript
+        run: pnpm install --frozen-lockfile
+
+      - name: Build TypeScript SDK
+        working-directory: program/clients/typescript
+        run: pnpm run build
+
+      - name: Run TypeScript unit tests with coverage
+        working-directory: program/clients/typescript
+        run: |
+          echo "🧪 Running TypeScript SDK unit tests with coverage..."
+          pnpm run test:unit --coverage --coverageDirectory=coverage-unit
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: ts-unit-coverage-reports
+          path: |
+            program/clients/typescript/coverage-unit/
+          retention-days: 30
+
+      - name: Display coverage summary
+        working-directory: program/clients/typescript
+        run: |
+          if [ -f coverage-unit/coverage-summary.json ]; then
+            echo "📊 Coverage Summary:"
+            cat coverage-unit/coverage-summary.json | jq '.total'
+          fi
+
+      - name: Show failure logs
+        if: failure()
+        uses: ./.github/actions/show-failure-logs
+        with:
+          test-type: "TypeScript unit"
+
+  typescript-integration:
+    name: TypeScript SDK Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Shank
+        run: cargo install shank-cli
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.14.0
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: |
+          cd program && make install
+
+      - name: Setup Solana CLI
+        uses: ./.github/actions/setup-solana
+
+      - name: Build program and generate clients
+        run: |
+          echo "Building program and generating clients..."
+          cd program && make build
+
+      - name: Install TypeScript dependencies
+        working-directory: program/clients/typescript
+        run: pnpm install --frozen-lockfile
+
+      - name: Build TypeScript SDK
+        working-directory: program/clients/typescript
+        run: pnpm run build
+
+      - name: Create mints directory
+        working-directory: program/clients/typescript
+        run: mkdir -p tests/setup/mints
+
+      - name: Fetch USDC and USDT mints
+        working-directory: program/clients/typescript
+        run: pnpm run fetch-mints
+
+      - name: Run TypeScript integration tests with coverage
+        working-directory: program/clients/typescript
+        run: |
+          echo "🧪 Running TypeScript SDK integration tests with coverage..."
+          # Build the SDK first
+          pnpm run build
+          # Run tests with coverage using the test validator script
+          JEST_COVERAGE=true node tests/setup/test-with-validator.js --coverage --coverageDirectory=coverage-integration
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: ts-integration-coverage-reports
+          path: |
+            program/clients/typescript/coverage-integration/
+          retention-days: 30
+
+      - name: Display coverage summary
+        working-directory: program/clients/typescript
+        run: |
+          if [ -f coverage-integration/coverage-summary.json ]; then
+            echo "📊 Coverage Summary:"
+            cat coverage-integration/coverage-summary.json | jq '.total'
+          fi
+
+      - name: Show failure logs
+        if: failure()
+        uses: ./.github/actions/show-failure-logs
+        with:
+          test-type: "TypeScript integration"
+
+  coverage-report:
+    name: Generate Combined Coverage Report
+    needs: [program-unit, program-integration, typescript-unit, typescript-integration]
+    if: always()  # Run even if some tests fail
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Download unit test coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: unit-coverage-reports
+          path: coverage-artifacts/unit
+        continue-on-error: true
+
+      - name: Download integration test coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: integration-coverage-reports
+          path: coverage-artifacts/integration
+        continue-on-error: true
+
+      - name: Download TypeScript unit coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: ts-unit-coverage-reports
+          path: coverage-artifacts/ts-unit
+        continue-on-error: true
+
+      - name: Download TypeScript integration coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: ts-integration-coverage-reports
+          path: coverage-artifacts/ts-integration
+        continue-on-error: true
+
+      - name: Setup coverage tools
+        run: |
+          # Install tools for combining coverage reports and math calculations
+          npm install -g lcov-result-merger
+          sudo apt-get update && sudo apt-get install -y bc jq
+
+      - name: List coverage artifacts for debugging
+        run: |
+          echo "📁 Listing all coverage artifacts:"
+          find coverage-artifacts/ -name "*.lcov" -o -name "*.json" 2>/dev/null || echo "No coverage artifacts found"
+
+      - name: Combine Rust coverage reports
+        run: |
+          if [ -f coverage-artifacts/unit/program/coverage-unit.lcov ] && [ -f coverage-artifacts/integration/program/coverage-integration.lcov ]; then
+            echo "Combining Rust coverage reports..."
+            lcov-result-merger 'coverage-artifacts/**/*.lcov' coverage-combined.lcov
+            echo "✅ Combined coverage report generated"
+          elif [ -f coverage-artifacts/unit/program/coverage-unit.lcov ]; then
+            echo "Only unit coverage found, using it as combined report"
+            cp coverage-artifacts/unit/program/coverage-unit.lcov coverage-combined.lcov
+          elif [ -f coverage-artifacts/integration/program/coverage-integration.lcov ]; then
+            echo "Only integration coverage found, using it as combined report"
+            cp coverage-artifacts/integration/program/coverage-integration.lcov coverage-combined.lcov
+          else
+            echo "⚠️ No Rust coverage reports found, creating empty combined report"
+            touch coverage-combined.lcov
+          fi
+
+      - name: Generate coverage summary
+        id: coverage-summary
+        run: |
+          echo "📊 Coverage Summary Report"
+          echo "========================="
+
+          # Initialize coverage summary
+          COVERAGE_SUMMARY=""
+
+          # Parse Rust Unit Test coverage
+          if [ -f coverage-artifacts/unit/program/coverage-unit.lcov ]; then
+            echo "## Rust Unit Tests"
+            LINES_FOUND=$(grep -E "^LF:" coverage-artifacts/unit/program/coverage-unit.lcov | awk -F: '{sum += $2} END {print sum}')
+            LINES_HIT=$(grep -E "^LH:" coverage-artifacts/unit/program/coverage-unit.lcov | awk -F: '{sum += $2} END {print sum}')
+            if [ "$LINES_FOUND" -gt 0 ]; then
+              RUST_UNIT_COV=$(echo "scale=1; $LINES_HIT * 100 / $LINES_FOUND" | bc)
+              echo "Rust Unit Tests: ${RUST_UNIT_COV}%"
+              COVERAGE_SUMMARY="${COVERAGE_SUMMARY}**Rust Unit Tests:** ${RUST_UNIT_COV}%\n"
+            fi
+          fi
+
+          # Parse Rust Integration Test coverage
+          if [ -f coverage-artifacts/integration/program/coverage-integration.lcov ]; then
+            echo "## Rust Integration Tests"
+            LINES_FOUND=$(grep -E "^LF:" coverage-artifacts/integration/program/coverage-integration.lcov | awk -F: '{sum += $2} END {print sum}')
+            LINES_HIT=$(grep -E "^LH:" coverage-artifacts/integration/program/coverage-integration.lcov | awk -F: '{sum += $2} END {print sum}')
+            if [ "$LINES_FOUND" -gt 0 ]; then
+              RUST_INT_COV=$(echo "scale=1; $LINES_HIT * 100 / $LINES_FOUND" | bc)
+              echo "Rust Integration Tests: ${RUST_INT_COV}%"
+              COVERAGE_SUMMARY="${COVERAGE_SUMMARY}**Rust Integration Tests:** ${RUST_INT_COV}%\n"
+            fi
+          fi
+
+          # Parse TypeScript Unit Test coverage
+          if [ -f coverage-artifacts/ts-unit/program/clients/typescript/coverage-unit/coverage-summary.json ]; then
+            echo "## TypeScript Unit Tests"
+            TS_UNIT_COV=$(cat coverage-artifacts/ts-unit/program/clients/typescript/coverage-unit/coverage-summary.json | jq -r '.total.lines.pct')
+            echo "TypeScript Unit Tests: ${TS_UNIT_COV}%"
+            COVERAGE_SUMMARY="${COVERAGE_SUMMARY}**TypeScript Unit Tests:** ${TS_UNIT_COV}%\n"
+          fi
+
+          # Parse TypeScript Integration Test coverage
+          if [ -f coverage-artifacts/ts-integration/program/clients/typescript/coverage-integration/coverage-summary.json ]; then
+            echo "## TypeScript Integration Tests"
+            TS_INT_COV=$(cat coverage-artifacts/ts-integration/program/clients/typescript/coverage-integration/coverage-summary.json | jq -r '.total.lines.pct')
+            echo "TypeScript Integration Tests: ${TS_INT_COV}%"
+            COVERAGE_SUMMARY="${COVERAGE_SUMMARY}**TypeScript Integration Tests:** ${TS_INT_COV}%\n"
+          fi
+
+          # Save summary for PR comment
+          echo "COVERAGE_SUMMARY<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$COVERAGE_SUMMARY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Post coverage comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const coverageSummary = `${{ steps.coverage-summary.outputs.COVERAGE_SUMMARY }}`;
+
+            const comment = `## 📊 Coverage Report
+
+            ${coverageSummary}
+
+            <details>
+            <summary>📁 View Coverage Artifacts</summary>
+
+            Coverage reports have been generated for all test suites:
+            - [Combined Coverage Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            - Individual test coverage artifacts available in workflow runs
+
+            </details>`;
+
+            // Find existing coverage comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('## 📊 Coverage Report')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: comment
+              });
+              console.log('Updated existing coverage comment');
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+              console.log('Created new coverage comment');
+            }
+
+      - name: Upload combined coverage report
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: combined-coverage-report
+          path: |
+            coverage-combined.lcov
+            coverage-artifacts/
+          retention-days: 30
