@@ -3,8 +3,12 @@ use const_crypto::ed25519;
 use pinocchio::pubkey::Pubkey;
 
 pub const POLICY_SIZE: usize = 100;
+
+// Time constants
 pub const SECONDS_PER_HOUR: i64 = 3600;
 pub const SECONDS_PER_DAY: i64 = 86400;
+
+// Max BPS
 pub const MAX_BPS: u64 = 10_000;
 
 // Seeds and PDAs

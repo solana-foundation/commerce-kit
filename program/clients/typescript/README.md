@@ -23,7 +23,7 @@ pnpm test:integration
 Note: this will start a local validator using surfpool and run the tests.
 
 
-# Other Commands
+# Other Commands 
 
 ```bash
 pnpm fetch-mints
