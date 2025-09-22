@@ -571,4 +571,33 @@ mod tests {
         assert!(has_high_refund);
         assert!(has_auto_settlement);
     }
+
+    #[test]
+    fn test_get_policy_by_type_found() {
+        let refund_policy = create_test_refund_policy();
+        let settlement_policy = create_test_settlement_policy();
+        let policies = vec![refund_policy.clone(), settlement_policy.clone()];
+
+        let found_refund =
+            MerchantOperatorConfig::get_policy_by_type(&policies, PolicyType::Refund);
+        assert_eq!(found_refund, Some(&refund_policy));
+
+        let found_settlement =
+            MerchantOperatorConfig::get_policy_by_type(&policies, PolicyType::Settlement);
+        assert_eq!(found_settlement, Some(&settlement_policy));
+    }
+
+    #[test]
+    fn test_get_policy_by_type_not_found() {
+        let policies = vec![create_test_refund_policy()];
+
+        let found_settlement =
+            MerchantOperatorConfig::get_policy_by_type(&policies, PolicyType::Settlement);
+        assert_eq!(found_settlement, None);
+
+        let empty_policies = vec![];
+        let found_any =
+            MerchantOperatorConfig::get_policy_by_type(&empty_policies, PolicyType::Refund);
+        assert_eq!(found_any, None);
+    }
 }

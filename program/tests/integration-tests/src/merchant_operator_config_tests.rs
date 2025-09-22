@@ -28,12 +28,14 @@ async fn test_initialize_merchant_operator_config_success() {
     let settlement_wallet = Keypair::new();
 
     let (merchant_pda, _) =
-        assert_get_or_create_merchant(&mut context, &authority, &settlement_wallet, false).unwrap();
+        assert_get_or_create_merchant(&mut context, &authority, &settlement_wallet, false, false)
+            .unwrap();
 
     // Setup Operator
     let owner = Keypair::new();
 
-    let (operator_pda, _) = assert_get_or_create_operator(&mut context, &owner, false).unwrap();
+    let (operator_pda, _) =
+        assert_get_or_create_operator(&mut context, &owner, false, false).unwrap();
 
     // Setup MerchantOperatorConfig
     let version = 1;
@@ -58,6 +60,7 @@ async fn test_initialize_merchant_operator_config_success() {
         policies,
         accepted_currencies,
         true,
+        true,
     )
     .unwrap();
 }
@@ -71,12 +74,14 @@ async fn test_initialize_merchant_operator_config_empty_accepted_currencies_fail
     let settlement_wallet = Keypair::new();
 
     let (merchant_pda, _) =
-        assert_get_or_create_merchant(&mut context, &authority, &settlement_wallet, false).unwrap();
+        assert_get_or_create_merchant(&mut context, &authority, &settlement_wallet, false, false)
+            .unwrap();
 
     // Setup Operator
     let owner = Keypair::new();
 
-    let (operator_pda, _) = assert_get_or_create_operator(&mut context, &owner, false).unwrap();
+    let (operator_pda, _) =
+        assert_get_or_create_operator(&mut context, &owner, false, false).unwrap();
 
     // Setup MerchantOperatorConfig
     let version = 1;
@@ -122,10 +127,12 @@ async fn test_initialize_merchant_operator_config_invalid_mint_fails() {
 
     // Setup Merchant
     let (merchant_pda, _) =
-        assert_get_or_create_merchant(&mut context, &authority, &settlement_wallet, false).unwrap();
+        assert_get_or_create_merchant(&mut context, &authority, &settlement_wallet, false, false)
+            .unwrap();
 
     // Setup Operator
-    let (operator_pda, _) = assert_get_or_create_operator(&mut context, &owner, false).unwrap();
+    let (operator_pda, _) =
+        assert_get_or_create_operator(&mut context, &owner, false, false).unwrap();
 
     // Create a fake mint account that's not actually a mint
     let fake_mint = Keypair::new();
@@ -182,10 +189,12 @@ async fn test_initialize_merchant_operator_config_invalid_mint_data_fails() {
 
     // Setup Merchant
     let (merchant_pda, _) =
-        assert_get_or_create_merchant(&mut context, &authority, &settlement_wallet, false).unwrap();
+        assert_get_or_create_merchant(&mut context, &authority, &settlement_wallet, false, false)
+            .unwrap();
 
     // Setup Operator
-    let (operator_pda, _) = assert_get_or_create_operator(&mut context, &owner, false).unwrap();
+    let (operator_pda, _) =
+        assert_get_or_create_operator(&mut context, &owner, false, false).unwrap();
 
     // Create an account owned by token program but with invalid mint data
     let fake_mint = Keypair::new();
@@ -244,10 +253,12 @@ async fn test_initialize_merchant_operator_config_wrong_mint_address_fails() {
 
     // Setup Merchant
     let (merchant_pda, _) =
-        assert_get_or_create_merchant(&mut context, &authority, &settlement_wallet, false).unwrap();
+        assert_get_or_create_merchant(&mut context, &authority, &settlement_wallet, false, false)
+            .unwrap();
 
     // Setup Operator
-    let (operator_pda, _) = assert_get_or_create_operator(&mut context, &owner, false).unwrap();
+    let (operator_pda, _) =
+        assert_get_or_create_operator(&mut context, &owner, false, false).unwrap();
 
     // Create a different valid mint
     let valid_mint = Keypair::new();
@@ -301,10 +312,12 @@ async fn test_initialize_merchant_operator_config_missing_mint_accounts_fails() 
 
     // Setup Merchant
     let (merchant_pda, _) =
-        assert_get_or_create_merchant(&mut context, &authority, &settlement_wallet, false).unwrap();
+        assert_get_or_create_merchant(&mut context, &authority, &settlement_wallet, false, false)
+            .unwrap();
 
     // Setup Operator
-    let (operator_pda, _) = assert_get_or_create_operator(&mut context, &owner, false).unwrap();
+    let (operator_pda, _) =
+        assert_get_or_create_operator(&mut context, &owner, false, false).unwrap();
 
     // Try to create MerchantOperatorConfig with accepted_currencies but no remaining accounts
     let version = 1;
@@ -350,10 +363,12 @@ async fn test_initialize_merchant_operator_config_valid_mints_success() {
 
     // Setup Merchant
     let (merchant_pda, _) =
-        assert_get_or_create_merchant(&mut context, &authority, &settlement_wallet, false).unwrap();
+        assert_get_or_create_merchant(&mut context, &authority, &settlement_wallet, false, false)
+            .unwrap();
 
     // Setup Operator
-    let (operator_pda, _) = assert_get_or_create_operator(&mut context, &owner, false).unwrap();
+    let (operator_pda, _) =
+        assert_get_or_create_operator(&mut context, &owner, false, false).unwrap();
 
     // USDC and USDT are already set up in TestContext, so they're valid mints
     let version = 1;
@@ -379,6 +394,7 @@ async fn test_initialize_merchant_operator_config_valid_mints_success() {
         policies,
         accepted_currencies,
         true,
+        true,
     )
     .expect("Should successfully create merchant operator config with valid mints");
 }
@@ -392,10 +408,12 @@ async fn test_initialize_merchant_operator_config_duplicate_mint_fails() {
 
     // Setup Merchant
     let (merchant_pda, _) =
-        assert_get_or_create_merchant(&mut context, &authority, &settlement_wallet, false).unwrap();
+        assert_get_or_create_merchant(&mut context, &authority, &settlement_wallet, false, false)
+            .unwrap();
 
     // Setup Operator
-    let (operator_pda, _) = assert_get_or_create_operator(&mut context, &owner, false).unwrap();
+    let (operator_pda, _) =
+        assert_get_or_create_operator(&mut context, &owner, false, false).unwrap();
 
     // Try to create MerchantOperatorConfig with duplicate mints in accepted_currencies
     let version = 1;

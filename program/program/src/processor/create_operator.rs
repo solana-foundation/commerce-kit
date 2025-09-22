@@ -82,3 +82,33 @@ fn process_instruction_data(data: &[u8]) -> Result<CreateOperatorArgs, ProgramEr
     let bump = data[0];
     Ok(CreateOperatorArgs { bump })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_process_instruction_data_valid() {
+        let data = [128u8];
+        let args = process_instruction_data(&data).unwrap();
+        assert_eq!(args.bump, 128);
+    }
+
+    #[test]
+    fn test_process_instruction_data_edge_cases() {
+        let data = [0u8];
+        let args = process_instruction_data(&data).unwrap();
+        assert_eq!(args.bump, 0);
+
+        let data = [u8::MAX];
+        let args = process_instruction_data(&data).unwrap();
+        assert_eq!(args.bump, u8::MAX);
+    }
+
+    #[test]
+    fn test_process_instruction_data_invalid_length() {
+        let data = [];
+        let result = process_instruction_data(&data);
+        assert!(result.is_err());
+    }
+}

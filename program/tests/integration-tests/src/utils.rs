@@ -1,4 +1,4 @@
-use commerce_program_client::{COMMERCE_PROGRAM_ID as PROGRAM_ID, CommerceProgramError};
+use commerce_program_client::{CommerceProgramError, COMMERCE_PROGRAM_ID as PROGRAM_ID};
 use litesvm::{types::TransactionMetadata, LiteSVM};
 use solana_program::pubkey;
 use solana_program_pack::Pack;
@@ -8,7 +8,7 @@ use solana_sdk::{
     program_option::COption,
     pubkey::Pubkey,
     signature::{Keypair, Signer},
-    transaction::Transaction
+    transaction::Transaction,
 };
 use spl_token::{
     state::{Account as TokenAccount, Mint},
@@ -31,13 +31,16 @@ pub const USDT_MINT: Pubkey = pubkey!("Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8Benw
 // Commerce Program Error Codes (using generated error enum)
 pub const INVALID_MINT_ERROR: u32 = CommerceProgramError::InvalidMint as u32;
 pub const INVALID_PAYMENT_STATUS_ERROR: u32 = CommerceProgramError::InvalidPaymentStatus as u32;
-pub const INSUFFICIENT_SETTLEMENT_AMOUNT_ERROR: u32 = CommerceProgramError::InsufficientSettlementAmount as u32;
+pub const INSUFFICIENT_SETTLEMENT_AMOUNT_ERROR: u32 =
+    CommerceProgramError::InsufficientSettlementAmount as u32;
 pub const SETTLEMENT_TOO_EARLY_ERROR: u32 = CommerceProgramError::SettlementTooEarly as u32;
-pub const REFUND_AMOUNT_EXCEEDS_POLICY_LIMIT_ERROR: u32 = CommerceProgramError::RefundAmountExceedsPolicyLimit as u32;
+pub const REFUND_AMOUNT_EXCEEDS_POLICY_LIMIT_ERROR: u32 =
+    CommerceProgramError::RefundAmountExceedsPolicyLimit as u32;
 pub const REFUND_WINDOW_EXPIRED_ERROR: u32 = CommerceProgramError::RefundWindowExpired as u32;
 pub const INVALID_EVENT_AUTHORITY_ERROR: u32 = CommerceProgramError::InvalidEventAuthority as u32;
 pub const INVALID_ATA_ERROR: u32 = CommerceProgramError::InvalidAta as u32;
-pub const PAYMENT_CANNOT_BE_CLOSED_ERROR: u32 = CommerceProgramError::PaymentCloseWindowNotReached as u32;
+pub const PAYMENT_CANNOT_BE_CLOSED_ERROR: u32 =
+    CommerceProgramError::PaymentCloseWindowNotReached as u32;
 pub const MERCHANT_OWNER_MISMATCH_ERROR: u32 = CommerceProgramError::MerchantOwnerMismatch as u32;
 pub const MERCHANT_INVALID_PDA_ERROR: u32 = CommerceProgramError::MerchantInvalidPda as u32;
 pub const OPERATOR_OWNER_MISMATCH_ERROR: u32 = CommerceProgramError::OperatorOwnerMismatch as u32;
@@ -45,8 +48,10 @@ pub const OPERATOR_INVALID_PDA_ERROR: u32 = CommerceProgramError::OperatorInvali
 pub const OPERATOR_MISMATCH_ERROR: u32 = CommerceProgramError::OperatorMismatch as u32;
 pub const MERCHANT_MISMATCH_ERROR: u32 = CommerceProgramError::MerchantMismatch as u32;
 pub const ORDER_ID_INVALID_ERROR: u32 = CommerceProgramError::OrderIdInvalid as u32;
-pub const MERCHANT_OPERATOR_CONFIG_INVALID_PDA_ERROR: u32 = CommerceProgramError::MerchantOperatorConfigInvalidPda as u32;
-pub const ACCEPTED_CURRENCIES_EMPTY_ERROR: u32 = CommerceProgramError::AcceptedCurrenciesEmpty as u32;
+pub const MERCHANT_OPERATOR_CONFIG_INVALID_PDA_ERROR: u32 =
+    CommerceProgramError::MerchantOperatorConfigInvalidPda as u32;
+pub const ACCEPTED_CURRENCIES_EMPTY_ERROR: u32 =
+    CommerceProgramError::AcceptedCurrenciesEmpty as u32;
 pub const DUPLICATE_MINT_ERROR: u32 = CommerceProgramError::DuplicateMint as u32;
 
 // Standard Solana Program Error Codes
@@ -201,7 +206,7 @@ impl TestContext {
         instruction: Instruction,
         signers: &[&Keypair],
     ) -> Result<(), Box<dyn std::error::Error>> {
-        self.send_transaction_with_signers_with_transaction_result(instruction, signers)
+        self.send_transaction_with_signers_with_transaction_result(instruction, signers, false)
             .map(|_| ())
     }
 
@@ -209,16 +214,30 @@ impl TestContext {
         &mut self,
         instruction: Instruction,
         signers: &[&Keypair],
+        enable_profiling: bool,
     ) -> Result<TransactionMetadata, Box<dyn std::error::Error>> {
         let mut all_signers = vec![&self.payer];
         all_signers.extend(signers);
 
         let transaction = Transaction::new_signed_with_payer(
-            &[instruction],
+            &[instruction.clone()],
             Some(&self.payer.pubkey()),
             &all_signers,
             self.svm.latest_blockhash(),
         );
+
+        // Simulate first to get CU consumption for profiling (only if enabled)
+        if enable_profiling && instruction.program_id == PROGRAM_ID {
+            let simulation_result = self.svm.simulate_transaction(transaction.clone());
+            if let Ok(sim_metadata) = simulation_result {
+                let cu_consumed = sim_metadata.meta.compute_units_consumed;
+                let operation = get_operation_name(&instruction);
+                eprintln!(
+                    r#"{{"type":"profiling","operation":"{}","cu_consumed":{}}}"#,
+                    operation, cu_consumed
+                );
+            }
+        }
 
         let result = self.svm.send_transaction(transaction);
         match result {
@@ -499,4 +518,26 @@ pub fn assert_event_present(
         "Expected event with discriminator {} not found in transaction. Expected data: {:?}",
         discriminator, expected_data
     );
+}
+
+/// Map instruction discriminator to operation name for profiling
+fn get_operation_name(instruction: &Instruction) -> &'static str {
+    if instruction.data.is_empty() {
+        return "Unknown";
+    }
+
+    match instruction.data[0] {
+        0 => "InitializeMerchant",
+        1 => "CreateOperator",
+        2 => "InitializeMerchantOperatorConfig",
+        3 => "MakePayment",
+        4 => "ClearPayment",
+        5 => "RefundPayment",
+        6 => "UpdateMerchantSettlementWallet",
+        7 => "UpdateMerchantAuthority",
+        8 => "UpdateOperatorAuthority",
+        9 => "ClosePayment",
+        228 => "EmitEvent",
+        _ => "Unknown",
+    }
 }

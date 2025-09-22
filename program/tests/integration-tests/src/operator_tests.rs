@@ -7,7 +7,7 @@ async fn test_create_operator_success() {
     let mut context = TestContext::new();
     let owner = Keypair::new();
 
-    assert_get_or_create_operator(&mut context, &owner, true).unwrap();
+    assert_get_or_create_operator(&mut context, &owner, true, true).unwrap();
 }
 
 #[tokio::test]
@@ -15,5 +15,5 @@ async fn test_update_operator_authority_success() {
     let mut context = TestContext::new();
     let owner = Keypair::new();
 
-    assert_get_or_create_operator(&mut context, &owner, true).unwrap();
+    assert_get_or_create_operator(&mut context, &owner, true, true).unwrap();
 }

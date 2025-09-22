@@ -261,3 +261,204 @@ fn process_instruction_data(
         accepted_currencies,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use alloc::vec;
+
+    #[test]
+    fn test_process_instruction_data_minimal_valid() {
+        let mut data = vec![];
+        // version (4 bytes)
+        data.extend_from_slice(&1u32.to_le_bytes());
+        // bump (1 byte)
+        data.push(254u8);
+        // operator_fee (8 bytes)
+        data.extend_from_slice(&1000u64.to_le_bytes());
+        // fee_type (1 byte) - Fixed = 1
+        data.push(1u8);
+        // days_to_close (2 bytes)
+        data.extend_from_slice(&30u16.to_le_bytes());
+        // num_policies (4 bytes)
+        data.extend_from_slice(&0u32.to_le_bytes());
+        // num_accepted_currencies (4 bytes)
+        data.extend_from_slice(&1u32.to_le_bytes());
+        // accepted_currencies (32 bytes each)
+        let pubkey_bytes = [1u8; 32];
+        data.extend_from_slice(&pubkey_bytes);
+
+        let args = process_instruction_data(&data).unwrap();
+        assert_eq!(args.version, 1);
+        assert_eq!(args.bump, 254);
+        assert_eq!(args.operator_fee, 1000);
+        assert_eq!(args.fee_type, FeeType::Fixed);
+        assert_eq!(args.days_to_close, 30);
+        assert_eq!(args.policies.len(), 0);
+        assert_eq!(args.accepted_currencies.len(), 1);
+    }
+
+    #[test]
+    fn test_process_instruction_data_with_policies() {
+        let mut data = vec![];
+        // version (4 bytes)
+        data.extend_from_slice(&1u32.to_le_bytes());
+        // bump (1 byte)
+        data.push(255u8);
+        // operator_fee (8 bytes)
+        data.extend_from_slice(&250u64.to_le_bytes()); // 2.5% in BPS
+                                                       // fee_type (1 byte) - Bps = 0
+        data.push(0u8);
+        // days_to_close (2 bytes)
+        data.extend_from_slice(&7u16.to_le_bytes());
+        // num_policies (4 bytes)
+        data.extend_from_slice(&2u32.to_le_bytes());
+
+        // Refund Policy (type = 0)
+        data.push(0u8); // Policy type
+        data.extend_from_slice(&5000u64.to_le_bytes()); // max_amount
+        data.extend_from_slice(&604800u64.to_le_bytes()); // max_time_after_purchase (1 week)
+
+        // Settlement Policy (type = 1)
+        data.push(1u8); // Policy type
+        data.extend_from_slice(&100u64.to_le_bytes()); // min_settlement_amount
+        data.extend_from_slice(&24u32.to_le_bytes()); // settlement_frequency_hours
+        data.push(1u8); // auto_settle = true
+
+        // num_accepted_currencies (4 bytes)
+        data.extend_from_slice(&2u32.to_le_bytes());
+        // accepted_currencies
+        data.extend_from_slice(&[2u8; 32]); // First currency
+        data.extend_from_slice(&[3u8; 32]); // Second currency
+
+        let args = process_instruction_data(&data).unwrap();
+        assert_eq!(args.version, 1);
+        assert_eq!(args.bump, 255);
+        assert_eq!(args.operator_fee, 250);
+        assert_eq!(args.fee_type, FeeType::Bps);
+        assert_eq!(args.days_to_close, 7);
+        assert_eq!(args.policies.len(), 2);
+        assert_eq!(args.accepted_currencies.len(), 2);
+
+        // Verify refund policy
+        if let PolicyData::Refund(refund) = &args.policies[0] {
+            assert_eq!(refund.max_amount, 5000);
+            assert_eq!(refund.max_time_after_purchase, 604800);
+        } else {
+            panic!("First policy should be Refund");
+        }
+
+        // Verify settlement policy
+        if let PolicyData::Settlement(settlement) = &args.policies[1] {
+            assert_eq!(settlement.min_settlement_amount, 100);
+            assert_eq!(settlement.settlement_frequency_hours, 24);
+            assert!(settlement.auto_settle);
+        } else {
+            panic!("Second policy should be Settlement");
+        }
+    }
+
+    #[test]
+    fn test_process_instruction_data_zero_values() {
+        let mut data = vec![];
+        data.extend_from_slice(&0u32.to_le_bytes());
+        data.push(0u8);
+        data.extend_from_slice(&0u64.to_le_bytes());
+        data.push(1u8); // FeeType::Fixed
+        data.extend_from_slice(&0u16.to_le_bytes());
+        data.extend_from_slice(&0u32.to_le_bytes()); // No policies
+        data.extend_from_slice(&1u32.to_le_bytes()); // One currency
+        data.extend_from_slice(&[0u8; 32]);
+
+        let args = process_instruction_data(&data).unwrap();
+        assert_eq!(args.version, 0);
+        assert_eq!(args.bump, 0);
+        assert_eq!(args.operator_fee, 0);
+        assert_eq!(args.fee_type, FeeType::Fixed);
+        assert_eq!(args.days_to_close, 0);
+    }
+
+    #[test]
+    fn test_process_instruction_data_invalid_empty() {
+        let data = vec![];
+        let result = process_instruction_data(&data);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_process_instruction_data_invalid_too_short() {
+        let data = vec![1u8; 10]; // Too short for minimum required fields
+        let result = process_instruction_data(&data);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_process_instruction_data_invalid_fee_type() {
+        let mut data = vec![];
+        data.extend_from_slice(&1u32.to_le_bytes());
+        data.push(254u8);
+        data.extend_from_slice(&1000u64.to_le_bytes());
+        data.push(99u8); // Invalid fee type
+        data.extend_from_slice(&30u16.to_le_bytes());
+        data.extend_from_slice(&0u32.to_le_bytes());
+        data.extend_from_slice(&1u32.to_le_bytes());
+        data.extend_from_slice(&[1u8; 32]);
+
+        let result = process_instruction_data(&data);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_process_instruction_data_truncated_policies() {
+        let mut data = vec![];
+        data.extend_from_slice(&1u32.to_le_bytes());
+        data.push(254u8);
+        data.extend_from_slice(&1000u64.to_le_bytes());
+        data.push(0u8); // FeeType::Bps
+        data.extend_from_slice(&30u16.to_le_bytes());
+        data.extend_from_slice(&1u32.to_le_bytes()); // 1 policy
+        data.push(0u8); // Policy type Settlement
+                        // Missing policy data - should fail
+
+        let result = process_instruction_data(&data);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_process_instruction_data_truncated_currencies() {
+        let mut data = vec![];
+        data.extend_from_slice(&1u32.to_le_bytes());
+        data.push(254u8);
+        data.extend_from_slice(&1000u64.to_le_bytes());
+        data.push(1u8); // FeeType::Fixed
+        data.extend_from_slice(&30u16.to_le_bytes());
+        data.extend_from_slice(&0u32.to_le_bytes()); // No policies
+        data.extend_from_slice(&2u32.to_le_bytes()); // 2 currencies
+        data.extend_from_slice(&[1u8; 32]); // First currency
+                                            // Missing second currency - should fail
+
+        let result = process_instruction_data(&data);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_process_instruction_data_multiple_currencies() {
+        let mut data = vec![];
+        data.extend_from_slice(&1u32.to_le_bytes());
+        data.push(254u8);
+        data.extend_from_slice(&500u64.to_le_bytes());
+        data.push(0u8); // FeeType::Bps
+        data.extend_from_slice(&14u16.to_le_bytes());
+        data.extend_from_slice(&0u32.to_le_bytes()); // No policies
+        data.extend_from_slice(&3u32.to_le_bytes()); // 3 currencies
+        data.extend_from_slice(&[1u8; 32]);
+        data.extend_from_slice(&[2u8; 32]);
+        data.extend_from_slice(&[3u8; 32]);
+
+        let args = process_instruction_data(&data).unwrap();
+        assert_eq!(args.accepted_currencies.len(), 3);
+        assert_eq!(args.accepted_currencies[0], Pubkey::from([1u8; 32]));
+        assert_eq!(args.accepted_currencies[1], Pubkey::from([2u8; 32]));
+        assert_eq!(args.accepted_currencies[2], Pubkey::from([3u8; 32]));
+    }
+}

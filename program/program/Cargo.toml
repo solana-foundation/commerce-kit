@@ -3,6 +3,11 @@ name = "commerce-program"
 version = { workspace = true }
 edition = { workspace = true }
 
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(target_os, values("solana"))',
+] }
+
 [lib]
 crate-type = ["cdylib", "lib"]
 
