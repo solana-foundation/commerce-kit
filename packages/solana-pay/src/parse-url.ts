@@ -11,11 +11,11 @@ export class ParseURLError extends Error {
 
 /**
  * Convert a decimal string to atomic units (bigint) with proper precision handling.
- * 
+ *
  * @param amount - String representation of the decimal amount
  * @param decimals - Number of decimal places for the target unit
  * @returns Amount in atomic units as bigint
- * 
+ *
  * @throws {ParseURLError} When amount is negative or has too many decimal places
  */
 function toAtomicUnits(amount: string, decimals: number): bigint {
@@ -46,11 +46,11 @@ function toAtomicUnits(amount: string, decimals: number): bigint {
 
     // Pad decimal part to required length
     const paddedFractional = fractionalPart.padEnd(decimals, '0');
-    
+
     // Convert to base units: integer part * 10^decimals + fractional part
-    const integerLamports = BigInt(integerPart || '0') * (10n ** BigInt(decimals));
+    const integerLamports = BigInt(integerPart || '0') * 10n ** BigInt(decimals);
     const fractionalLamports = BigInt(paddedFractional || '0');
-    
+
     return integerLamports + fractionalLamports;
 }
 
@@ -123,7 +123,7 @@ function parseTransferRequestURL(url: URL): TransferRequestURLFields {
     let reference;
     if (referenceParams.length) {
         try {
-            reference = referenceParams.map((param) => address(param));
+            reference = referenceParams.map(param => address(param));
         } catch (error) {
             throw new ParseURLError('reference invalid');
         }

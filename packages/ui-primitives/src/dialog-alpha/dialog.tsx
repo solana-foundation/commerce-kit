@@ -9,11 +9,11 @@ import type { DialogRootProps } from './types';
 
 // Main compound component
 export function Dialog({ children, open, onOpenChange }: DialogRootProps) {
-  return (
-    <DialogRoot open={open} onOpenChange={onOpenChange}>
-      {children}
-    </DialogRoot>
-  );
+    return (
+        <DialogRoot open={open} onOpenChange={onOpenChange}>
+            {children}
+        </DialogRoot>
+    );
 }
 
 // Attach subcomponents for compound pattern
@@ -22,4 +22,4 @@ Dialog.Trigger = DialogTrigger;
 Dialog.Portal = DialogPortal;
 Dialog.Content = DialogContent;
 Dialog.Backdrop = DialogBackdrop;
-Dialog.Close = DialogClose; 
+Dialog.Close = DialogClose;

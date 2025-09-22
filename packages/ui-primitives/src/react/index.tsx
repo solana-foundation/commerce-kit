@@ -19,4 +19,4 @@ export { DropdownTrigger } from '../dropdown-alpha/trigger';
 export { DropdownContent } from '../dropdown-alpha/content';
 export { DropdownItem } from '../dropdown-alpha/item';
 
-// Note: DialogPortal is excluded due to react-dom bundling issues 
+// Note: DialogPortal is excluded due to react-dom bundling issues

@@ -56,14 +56,14 @@ export function encodeURL(fields: TransferRequestURLFields | TransactionRequestU
  *
  * @param fields - Fields to encode in the URL.
  */
-export function encodeTransferRequestURL({ 
-    recipient, 
-    amount, 
-    splToken, 
-    reference, 
-    label, 
-    message, 
-    memo 
+export function encodeTransferRequestURL({
+    recipient,
+    amount,
+    splToken,
+    reference,
+    label,
+    message,
+    memo,
 }: TransferRequestURLFields): URL {
     const pathname = recipient.toString();
     const url = new URL(SOLANA_PROTOCOL + pathname);
@@ -74,7 +74,6 @@ export function encodeTransferRequestURL({
         url.searchParams.append('amount', amountStr);
     }
 
-    
     if (splToken) {
         try {
             // Ensure splToken is properly converted to string
@@ -127,7 +126,7 @@ export interface TransactionRequestURLFields {
 export function encodeTransactionRequestURL({ link, label, message }: TransactionRequestURLFields): URL {
     // Remove trailing slashes
     const pathname = String(link).replace(/\/\?/, '?').replace(/\/$/, '');
-    
+
     // Handle absolute and relative URLs
     const url = pathname.startsWith('http') ? new URL(pathname) : new URL(SOLANA_PROTOCOL + pathname);
 

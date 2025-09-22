@@ -1,13 +1,19 @@
-import { createStyledQRCode, encodeURL, TransferRequestURLFields, createSPLToken, createRecipient } from "@solana-commerce/solana-pay";
+import {
+    createStyledQRCode,
+    encodeURL,
+    TransferRequestURLFields,
+    createSPLToken,
+    createRecipient,
+} from '@solana-commerce/solana-pay';
 
 // Converts a decimal `amount` to minor units as bigint using string math.
 function toMinorUnits(amt: number, decimals: number): bigint {
-  if (!Number.isFinite(amt) || decimals < 0) throw new Error('Invalid amount/decimals');
-  const s = amt.toFixed(decimals); // stable string with exactly `decimals` fraction digits
-  const parts = s.split('.');
-  const i = parts[0] || '0';
-  const f = parts[1] || '';
-  return BigInt(i) * (10n ** BigInt(decimals)) + BigInt(f.padEnd(decimals, '0'));
+    if (!Number.isFinite(amt) || decimals < 0) throw new Error('Invalid amount/decimals');
+    const s = amt.toFixed(decimals); // stable string with exactly `decimals` fraction digits
+    const parts = s.split('.');
+    const i = parts[0] || '0';
+    const f = parts[1] || '';
+    return BigInt(i) * 10n ** BigInt(decimals) + BigInt(f.padEnd(decimals, '0'));
 }
 
 export interface SolanaPayRequestOptions {
@@ -46,7 +52,7 @@ export async function createSolanaPayRequest(request: TransferRequestURLFields, 
 
     return {
         url,
-        qr
+        qr,
     };
 }
 
@@ -59,7 +65,7 @@ export async function createPaymentRequest(
         label?: string;
         message?: string;
         memo?: string;
-    } = {}
+    } = {},
 ) {
     try {
         const request: TransferRequestURLFields = {
@@ -87,7 +93,7 @@ export async function createPaymentRequest(
             logoBackgroundColor: options.logoBackgroundColor,
             logoMargin: options.logoMargin,
             dotStyle: options.dotStyle,
-            cornerStyle: options.cornerStyle
+            cornerStyle: options.cornerStyle,
         });
     } catch (error) {
         console.error('Error creating payment request:', error);

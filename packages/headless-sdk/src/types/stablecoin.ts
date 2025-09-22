@@ -1,4 +1,3 @@
-
 export interface StablecoinConfig {
     mint: string;
     symbol: string;
@@ -10,17 +9,17 @@ export interface StablecoinConfig {
 // Common stablecoin configurations
 export const STABLECOINS: Record<string, StablecoinConfig> = {
     USDC: {
-      mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-      symbol: 'USDC',
-      decimals: 6,
-      name: 'USD Coin',
-      icon: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png'
+        mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+        symbol: 'USDC',
+        decimals: 6,
+        name: 'USD Coin',
+        icon: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png',
     },
     USDT: {
-      mint: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
-      symbol: 'USDT',
-      decimals: 6,
-      name: 'Tether USD',
-      icon: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB/logo.png'
-    }
-  };
+        mint: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
+        symbol: 'USDT',
+        decimals: 6,
+        name: 'Tether USD',
+        icon: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB/logo.png',
+    },
+};

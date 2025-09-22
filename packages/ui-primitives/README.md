@@ -16,28 +16,24 @@ A lightweight wrapper around the native `<dialog>` element that adds scroll lock
 
 ```html
 <!-- Include the styles -->
-<link rel="stylesheet" href="node_modules/@solana-commerce/ui-primitives/dist/dialog/styles.css">
+<link rel="stylesheet" href="node_modules/@solana-commerce/ui-primitives/dist/dialog/styles.css" />
 
 <!-- Include the script -->
 <script type="module" src="node_modules/@solana-commerce/ui-primitives/dist/dialog/index.js"></script>
 
 <!-- Trigger button -->
-<button command="show-modal" commandfor="example-dialog">
-  Open Dialog
-</button>
+<button command="show-modal" commandfor="example-dialog">Open Dialog</button>
 
 <!-- Dialog -->
 <dialog-wrapper>
-  <dialog id="example-dialog">
-    <dialog-backdrop></dialog-backdrop>
-    <dialog-panel>
-      <h2>Dialog Title</h2>
-      <p>Dialog content goes here.</p>
-      <button command="close" commandfor="example-dialog">
-        Close
-      </button>
-    </dialog-panel>
-  </dialog>
+    <dialog id="example-dialog">
+        <dialog-backdrop></dialog-backdrop>
+        <dialog-panel>
+            <h2>Dialog Title</h2>
+            <p>Dialog content goes here.</p>
+            <button command="close" commandfor="example-dialog">Close</button>
+        </dialog-panel>
+    </dialog>
 </dialog-wrapper>
 ```
 
@@ -48,13 +44,16 @@ A lightweight wrapper around the native `<dialog>` element that adds scroll lock
 Wrapper around the native `<dialog>` element used to manage the open state and transitions.
 
 **Attributes:**
+
 - `open` - Boolean attribute that indicates whether the dialog is open or closed
 
 **Events:**
+
 - `open` - Dispatched when the dialog is opened
 - `close` - Dispatched when the dialog is closed
 
 **Methods:**
+
 - `show()` - Shows the dialog in modal mode
 - `hide(options?)` - Hides the dialog
 
@@ -89,11 +88,11 @@ Include the default styles or create your own:
 
 ```css
 dialog-backdrop[data-closed] {
-  opacity: 0;
+    opacity: 0;
 }
 
 dialog-panel[data-closed] {
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.95);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
 }
-``` 
+```

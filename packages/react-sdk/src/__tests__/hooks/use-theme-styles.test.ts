@@ -1,361 +1,349 @@
-import { describe, it, expect, vi } from 'vitest'
-import { renderHook } from '@testing-library/react'
-import { useThemeStyles } from '../../hooks/use-theme-styles'
-import type { ThemeConfig } from '../../types'
+import { describe, it, expect, vi } from 'vitest';
+import { renderHook } from '@testing-library/react';
+import { useThemeStyles } from '../../hooks/use-theme-styles';
+import type { ThemeConfig } from '../../types';
 
 // Mock the utils functions
 vi.mock('../../utils', () => ({
-  getBorderRadius: vi.fn(),
-  getButtonShadow: vi.fn(),
-  getButtonBorder: vi.fn(),
-  getRadius: vi.fn(),
-}))
+    getBorderRadius: vi.fn(),
+    getButtonShadow: vi.fn(),
+    getButtonBorder: vi.fn(),
+    getRadius: vi.fn(),
+}));
 
 // Import the mocked functions
-import * as utils from '../../utils'
+import * as utils from '../../utils';
 
 describe('useThemeStyles', () => {
-  const baseTheme: Required<ThemeConfig> = {
-    primaryColor: '#9945FF',
-    secondaryColor: '#14F195',
-    backgroundColor: '#ffffff',
-    textColor: '#111827',
-    borderRadius: 'lg',
-    fontFamily: 'system-ui, -apple-system, sans-serif',
-    buttonShadow: 'md',
-    buttonBorder: 'black-10'
-  }
+    const baseTheme: Required<ThemeConfig> = {
+        primaryColor: '#9945FF',
+        secondaryColor: '#14F195',
+        backgroundColor: '#ffffff',
+        textColor: '#111827',
+        borderRadius: 'lg',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        buttonShadow: 'md',
+        buttonBorder: 'black-10',
+    };
 
-  beforeEach(() => {
-    // Reset mocks
-    vi.clearAllMocks()
-    
-    // Set up default mock implementations
-    vi.mocked(utils.getBorderRadius).mockReturnValue('16px')
-    vi.mocked(utils.getButtonShadow).mockReturnValue('0 4px 6px rgba(0,0,0,0.1)')
-    vi.mocked(utils.getButtonBorder).mockReturnValue('1.5px solid rgba(0,0,0,0.1)')
-    vi.mocked(utils.getRadius).mockReturnValue('16px')
-  })
+    beforeEach(() => {
+        // Reset mocks
+        vi.clearAllMocks();
 
-  describe('Base Styles Generation', () => {
-    it('should generate base CSS custom properties', () => {
-      const { result } = renderHook(() => 
-        useThemeStyles({ theme: baseTheme })
-      )
+        // Set up default mock implementations
+        vi.mocked(utils.getBorderRadius).mockReturnValue('16px');
+        vi.mocked(utils.getButtonShadow).mockReturnValue('0 4px 6px rgba(0,0,0,0.1)');
+        vi.mocked(utils.getButtonBorder).mockReturnValue('1.5px solid rgba(0,0,0,0.1)');
+        vi.mocked(utils.getRadius).mockReturnValue('16px');
+    });
 
-      const styles = result.current
+    describe('Base Styles Generation', () => {
+        it('should generate base CSS custom properties', () => {
+            const { result } = renderHook(() => useThemeStyles({ theme: baseTheme }));
 
-      expect(styles).toEqual(expect.objectContaining({
-        '--primary-color': '#9945FF',
-        '--secondary-color': '#14F195',
-        '--background-color': '#ffffff',
-        '--text-color': '#111827',
-        '--text-color-60': '#11182760',
-        '--text-color-70': '#11182770',
-        '--font-family': 'system-ui, -apple-system, sans-serif',
-      }))
+            const styles = result.current;
 
-      expect(vi.mocked(utils.getBorderRadius)).toHaveBeenCalledWith('lg')
-    })
+            expect(styles).toEqual(
+                expect.objectContaining({
+                    '--primary-color': '#9945FF',
+                    '--secondary-color': '#14F195',
+                    '--background-color': '#ffffff',
+                    '--text-color': '#111827',
+                    '--text-color-60': '#11182760',
+                    '--text-color-70': '#11182770',
+                    '--font-family': 'system-ui, -apple-system, sans-serif',
+                }),
+            );
 
-    it('should handle different color formats', () => {
-      const themeWithDifferentColors: Required<ThemeConfig> = {
-        ...baseTheme,
-        primaryColor: 'rgb(153, 69, 255)',
-        textColor: 'hsl(220, 13%, 9%)'
-      }
+            expect(vi.mocked(utils.getBorderRadius)).toHaveBeenCalledWith('lg');
+        });
 
-      const { result } = renderHook(() => 
-        useThemeStyles({ theme: themeWithDifferentColors })
-      )
+        it('should handle different color formats', () => {
+            const themeWithDifferentColors: Required<ThemeConfig> = {
+                ...baseTheme,
+                primaryColor: 'rgb(153, 69, 255)',
+                textColor: 'hsl(220, 13%, 9%)',
+            };
 
-      expect(result.current).toEqual(expect.objectContaining({
-        '--primary-color': 'rgb(153, 69, 255)',
-        '--text-color': 'hsl(220, 13%, 9%)',
-        '--text-color-60': 'hsl(220, 13%, 9%)60',
-        '--text-color-70': 'hsl(220, 13%, 9%)70',
-      }))
-    })
-  })
+            const { result } = renderHook(() => useThemeStyles({ theme: themeWithDifferentColors }));
 
-  describe('Button Variant', () => {
-    it('should generate button-specific styles', () => {
-      vi.mocked(utils.getRadius).mockReturnValue('16px')
-      vi.mocked(utils.getButtonBorder).mockReturnValue('1.5px solid rgba(0,0,0,0.1)')
-      vi.mocked(utils.getButtonShadow).mockReturnValue('0 4px 6px rgba(0,0,0,0.1)')
+            expect(result.current).toEqual(
+                expect.objectContaining({
+                    '--primary-color': 'rgb(153, 69, 255)',
+                    '--text-color': 'hsl(220, 13%, 9%)',
+                    '--text-color-60': 'hsl(220, 13%, 9%)60',
+                    '--text-color-70': 'hsl(220, 13%, 9%)70',
+                }),
+            );
+        });
+    });
 
-      const { result } = renderHook(() => 
-        useThemeStyles({ theme: baseTheme, variant: 'button' })
-      )
+    describe('Button Variant', () => {
+        it('should generate button-specific styles', () => {
+            vi.mocked(utils.getRadius).mockReturnValue('16px');
+            vi.mocked(utils.getButtonBorder).mockReturnValue('1.5px solid rgba(0,0,0,0.1)');
+            vi.mocked(utils.getButtonShadow).mockReturnValue('0 4px 6px rgba(0,0,0,0.1)');
 
-      expect(result.current).toEqual(expect.objectContaining({
-        '--primary-color': '#9945FF',
-        '--border-radius': '16px',
-        '--button-border': '1.5px solid rgba(0,0,0,0.1)',
-        '--button-shadow': '0 4px 6px rgba(0,0,0,0.1)',
-      }))
+            const { result } = renderHook(() => useThemeStyles({ theme: baseTheme, variant: 'button' }));
 
-      expect(vi.mocked(utils.getRadius)).toHaveBeenCalledWith('button', 'lg')
-      expect(vi.mocked(utils.getButtonBorder)).toHaveBeenCalledWith(baseTheme)
-      expect(vi.mocked(utils.getButtonShadow)).toHaveBeenCalledWith('md')
-    })
-  })
+            expect(result.current).toEqual(
+                expect.objectContaining({
+                    '--primary-color': '#9945FF',
+                    '--border-radius': '16px',
+                    '--button-border': '1.5px solid rgba(0,0,0,0.1)',
+                    '--button-shadow': '0 4px 6px rgba(0,0,0,0.1)',
+                }),
+            );
 
-  describe('Payment Method Variant', () => {
-    it('should generate payment method-specific styles', () => {
-      vi.mocked(utils.getRadius).mockReturnValue('16px')
+            expect(vi.mocked(utils.getRadius)).toHaveBeenCalledWith('button', 'lg');
+            expect(vi.mocked(utils.getButtonBorder)).toHaveBeenCalledWith(baseTheme);
+            expect(vi.mocked(utils.getButtonShadow)).toHaveBeenCalledWith('md');
+        });
+    });
 
-      const { result } = renderHook(() => 
-        useThemeStyles({ theme: baseTheme, variant: 'payment-method' })
-      )
+    describe('Payment Method Variant', () => {
+        it('should generate payment method-specific styles', () => {
+            vi.mocked(utils.getRadius).mockReturnValue('16px');
 
-      expect(result.current).toEqual(expect.objectContaining({
-        '--primary-color': '#9945FF',
-        '--border-radius': '16px',
-        '--primary-color-10': '#9945FF10',
-        '--primary-color-60': '#9945FF60',
-      }))
+            const { result } = renderHook(() => useThemeStyles({ theme: baseTheme, variant: 'payment-method' }));
 
-      expect(vi.mocked(utils.getRadius)).toHaveBeenCalledWith('payment', 'lg')
-    })
-  })
+            expect(result.current).toEqual(
+                expect.objectContaining({
+                    '--primary-color': '#9945FF',
+                    '--border-radius': '16px',
+                    '--primary-color-10': '#9945FF10',
+                    '--primary-color-60': '#9945FF60',
+                }),
+            );
 
-  describe('Amount Variant', () => {
-    it('should generate amount-specific styles', () => {
-      vi.mocked(utils.getRadius).mockReturnValue('16px')
+            expect(vi.mocked(utils.getRadius)).toHaveBeenCalledWith('payment', 'lg');
+        });
+    });
 
-      const { result } = renderHook(() => 
-        useThemeStyles({ theme: baseTheme, variant: 'amount' })
-      )
+    describe('Amount Variant', () => {
+        it('should generate amount-specific styles', () => {
+            vi.mocked(utils.getRadius).mockReturnValue('16px');
 
-      expect(result.current).toEqual(expect.objectContaining({
-        '--primary-color': '#9945FF',
-        '--border-radius': '16px',
-        '--primary-color-10': '#9945FF10',
-        '--primary-color-60': '#9945FF60',
-      }))
+            const { result } = renderHook(() => useThemeStyles({ theme: baseTheme, variant: 'amount' }));
 
-      expect(vi.mocked(utils.getRadius)).toHaveBeenCalledWith('preset', 'lg')
-    })
-  })
+            expect(result.current).toEqual(
+                expect.objectContaining({
+                    '--primary-color': '#9945FF',
+                    '--border-radius': '16px',
+                    '--primary-color-10': '#9945FF10',
+                    '--primary-color-60': '#9945FF60',
+                }),
+            );
 
-  describe('Modal Variant', () => {
-    it('should generate modal-specific styles', () => {
-      vi.mocked(utils.getRadius).mockReturnValue('20px')
+            expect(vi.mocked(utils.getRadius)).toHaveBeenCalledWith('preset', 'lg');
+        });
+    });
 
-      const { result } = renderHook(() => 
-        useThemeStyles({ theme: baseTheme, variant: 'modal' })
-      )
+    describe('Modal Variant', () => {
+        it('should generate modal-specific styles', () => {
+            vi.mocked(utils.getRadius).mockReturnValue('20px');
 
-      expect(result.current).toEqual(expect.objectContaining({
-        '--primary-color': '#9945FF',
-        '--modal-border-radius': '20px',
-      }))
+            const { result } = renderHook(() => useThemeStyles({ theme: baseTheme, variant: 'modal' }));
 
-      expect(vi.mocked(utils.getRadius)).toHaveBeenCalledWith('modal', 'lg')
-    })
-  })
+            expect(result.current).toEqual(
+                expect.objectContaining({
+                    '--primary-color': '#9945FF',
+                    '--modal-border-radius': '20px',
+                }),
+            );
 
-  describe('Dropdown Variant', () => {
-    it('should generate dropdown-specific styles', () => {
-      vi.mocked(utils.getRadius).mockReturnValue('8px')
+            expect(vi.mocked(utils.getRadius)).toHaveBeenCalledWith('modal', 'lg');
+        });
+    });
 
-      const { result } = renderHook(() => 
-        useThemeStyles({ theme: baseTheme, variant: 'dropdown' })
-      )
+    describe('Dropdown Variant', () => {
+        it('should generate dropdown-specific styles', () => {
+            vi.mocked(utils.getRadius).mockReturnValue('8px');
 
-      expect(result.current).toEqual(expect.objectContaining({
-        '--primary-color': '#9945FF',
-        '--dropdown-radius': '8px',
-      }))
+            const { result } = renderHook(() => useThemeStyles({ theme: baseTheme, variant: 'dropdown' }));
 
-      expect(vi.mocked(utils.getRadius)).toHaveBeenCalledWith('dropdown', 'lg')
-    })
-  })
+            expect(result.current).toEqual(
+                expect.objectContaining({
+                    '--primary-color': '#9945FF',
+                    '--dropdown-radius': '8px',
+                }),
+            );
 
-  describe('Input Variant', () => {
-    it('should generate input-specific styles (default fallback)', () => {
-      const { result } = renderHook(() => 
-        useThemeStyles({ theme: baseTheme, variant: 'input' })
-      )
+            expect(vi.mocked(utils.getRadius)).toHaveBeenCalledWith('dropdown', 'lg');
+        });
+    });
 
-      // Should fallback to base styles only
-      expect(result.current).toEqual(expect.objectContaining({
-        '--primary-color': '#9945FF',
-        '--secondary-color': '#14F195',
-        '--background-color': '#ffffff',
-        '--text-color': '#111827',
-      }))
+    describe('Input Variant', () => {
+        it('should generate input-specific styles (default fallback)', () => {
+            const { result } = renderHook(() => useThemeStyles({ theme: baseTheme, variant: 'input' }));
 
-      // Should not have variant-specific styles
-      expect(result.current).not.toHaveProperty('--button-shadow')
-      expect(result.current).not.toHaveProperty('--primary-color-10')
-    })
-  })
+            // Should fallback to base styles only
+            expect(result.current).toEqual(
+                expect.objectContaining({
+                    '--primary-color': '#9945FF',
+                    '--secondary-color': '#14F195',
+                    '--background-color': '#ffffff',
+                    '--text-color': '#111827',
+                }),
+            );
 
-  describe('Memoization', () => {
-    it('should memoize styles and only recalculate when theme or variant changes', () => {
-      const { result, rerender } = renderHook(
-        ({ theme, variant }) => useThemeStyles({ theme, variant }),
-        {
-          initialProps: { theme: baseTheme, variant: 'button' as const }
-        }
-      )
+            // Should not have variant-specific styles
+            expect(result.current).not.toHaveProperty('--button-shadow');
+            expect(result.current).not.toHaveProperty('--primary-color-10');
+        });
+    });
 
-      const initialStyles = result.current
+    describe('Memoization', () => {
+        it('should memoize styles and only recalculate when theme or variant changes', () => {
+            const { result, rerender } = renderHook(({ theme, variant }) => useThemeStyles({ theme, variant }), {
+                initialProps: { theme: baseTheme, variant: 'button' as const },
+            });
 
-      // Re-render with same props
-      rerender({ theme: baseTheme, variant: 'button' })
-      
-      // Should return the same object (memoized)
-      expect(result.current).toBe(initialStyles)
+            const initialStyles = result.current;
 
-      // Re-render with different variant
-      rerender({ theme: baseTheme, variant: 'modal' })
-      
-      // Should return new object
-      expect(result.current).not.toBe(initialStyles)
-    })
+            // Re-render with same props
+            rerender({ theme: baseTheme, variant: 'button' });
 
-    it('should recalculate when theme properties change', () => {
-      const { result, rerender } = renderHook(
-        ({ theme }) => useThemeStyles({ theme }),
-        {
-          initialProps: { theme: baseTheme }
-        }
-      )
+            // Should return the same object (memoized)
+            expect(result.current).toBe(initialStyles);
 
-      const initialStyles = result.current
+            // Re-render with different variant
+            rerender({ theme: baseTheme, variant: 'modal' });
 
-      const modifiedTheme = { ...baseTheme, primaryColor: '#FF6B35' }
-      rerender({ theme: modifiedTheme })
+            // Should return new object
+            expect(result.current).not.toBe(initialStyles);
+        });
 
-      expect(result.current).not.toBe(initialStyles)
-      expect(result.current['--primary-color']).toBe('#FF6B35')
-    })
-  })
+        it('should recalculate when theme properties change', () => {
+            const { result, rerender } = renderHook(({ theme }) => useThemeStyles({ theme }), {
+                initialProps: { theme: baseTheme },
+            });
 
-  describe('Border Radius Handling', () => {
-    it('should handle different border radius values', () => {
-      const testCases: Array<{ radius: ThemeConfig['borderRadius'], expected: string }> = [
-        { radius: 'none', expected: '0px' },
-        { radius: 'sm', expected: '12px' },
-        { radius: 'md', expected: '16px' },
-        { radius: 'lg', expected: '20px' },
-        { radius: 'xl', expected: '24px' },
-        { radius: 'full', expected: '2rem' },
-      ]
+            const initialStyles = result.current;
 
-      testCases.forEach(({ radius, expected }) => {
-        vi.mocked(utils.getRadius).mockReturnValue(expected)
+            const modifiedTheme = { ...baseTheme, primaryColor: '#FF6B35' };
+            rerender({ theme: modifiedTheme });
 
-        const themeWithRadius = { ...baseTheme, borderRadius: radius }
-        const { result } = renderHook(() => 
-          useThemeStyles({ theme: themeWithRadius, variant: 'button' })
-        )
+            expect(result.current).not.toBe(initialStyles);
+            expect(result.current['--primary-color']).toBe('#FF6B35');
+        });
+    });
 
-        expect(vi.mocked(utils.getRadius)).toHaveBeenCalledWith('button', radius)
-        expect(result.current['--border-radius']).toBe(expected)
-      })
-    })
-  })
+    describe('Border Radius Handling', () => {
+        it('should handle different border radius values', () => {
+            const testCases: Array<{ radius: ThemeConfig['borderRadius']; expected: string }> = [
+                { radius: 'none', expected: '0px' },
+                { radius: 'sm', expected: '12px' },
+                { radius: 'md', expected: '16px' },
+                { radius: 'lg', expected: '20px' },
+                { radius: 'xl', expected: '24px' },
+                { radius: 'full', expected: '2rem' },
+            ];
 
-  describe('Shadow Handling', () => {
-    it('should handle different button shadow values', () => {
-      const testCases: Array<{ shadow: ThemeConfig['buttonShadow'], expected: string }> = [
-        { shadow: 'none', expected: 'none' },
-        { shadow: 'sm', expected: '0 1px 2px rgba(0,0,0,0.06)' },
-        { shadow: 'md', expected: '0 4px 6px rgba(0,0,0,0.1)' },
-        { shadow: 'lg', expected: '0 10px 15px rgba(0,0,0,0.15)' },
-        { shadow: 'xl', expected: '0 20px 25px rgba(0,0,0,0.2)' },
-      ]
+            testCases.forEach(({ radius, expected }) => {
+                vi.mocked(utils.getRadius).mockReturnValue(expected);
 
-      testCases.forEach(({ shadow, expected }) => {
-        vi.mocked(utils.getButtonShadow).mockReturnValue(expected)
+                const themeWithRadius = { ...baseTheme, borderRadius: radius };
+                const { result } = renderHook(() => useThemeStyles({ theme: themeWithRadius, variant: 'button' }));
 
-        const themeWithShadow = { ...baseTheme, buttonShadow: shadow }
-        const { result } = renderHook(() => 
-          useThemeStyles({ theme: themeWithShadow, variant: 'button' })
-        )
+                expect(vi.mocked(utils.getRadius)).toHaveBeenCalledWith('button', radius);
+                expect(result.current['--border-radius']).toBe(expected);
+            });
+        });
+    });
 
-        expect(vi.mocked(utils.getButtonShadow)).toHaveBeenCalledWith(shadow)
-        expect(result.current['--button-shadow']).toBe(expected)
-      })
-    })
-  })
+    describe('Shadow Handling', () => {
+        it('should handle different button shadow values', () => {
+            const testCases: Array<{ shadow: ThemeConfig['buttonShadow']; expected: string }> = [
+                { shadow: 'none', expected: 'none' },
+                { shadow: 'sm', expected: '0 1px 2px rgba(0,0,0,0.06)' },
+                { shadow: 'md', expected: '0 4px 6px rgba(0,0,0,0.1)' },
+                { shadow: 'lg', expected: '0 10px 15px rgba(0,0,0,0.15)' },
+                { shadow: 'xl', expected: '0 20px 25px rgba(0,0,0,0.2)' },
+            ];
 
-  describe('Return Type', () => {
-    it('should return React.CSSProperties compatible object', () => {
-      const { result } = renderHook(() => 
-        useThemeStyles({ theme: baseTheme })
-      )
+            testCases.forEach(({ shadow, expected }) => {
+                vi.mocked(utils.getButtonShadow).mockReturnValue(expected);
 
-      const styles = result.current
+                const themeWithShadow = { ...baseTheme, buttonShadow: shadow };
+                const { result } = renderHook(() => useThemeStyles({ theme: themeWithShadow, variant: 'button' }));
 
-      // Should be a plain object
-      expect(typeof styles).toBe('object')
-      expect(styles).not.toBe(null)
+                expect(vi.mocked(utils.getButtonShadow)).toHaveBeenCalledWith(shadow);
+                expect(result.current['--button-shadow']).toBe(expected);
+            });
+        });
+    });
 
-      // Should have CSS custom property keys (starting with --)
-      const keys = Object.keys(styles)
-      expect(keys.length).toBeGreaterThan(0)
-      expect(keys.every(key => key.startsWith('--'))).toBe(true)
+    describe('Return Type', () => {
+        it('should return React.CSSProperties compatible object', () => {
+            const { result } = renderHook(() => useThemeStyles({ theme: baseTheme }));
 
-      // Should have string values
-      const values = Object.values(styles)
-      expect(values.every(value => typeof value === 'string')).toBe(true)
-    })
-  })
+            const styles = result.current;
 
-  describe('Edge Cases', () => {
-    it('should handle empty theme gracefully', () => {
-      const emptyTheme = {} as Required<ThemeConfig>
-      
-      const { result } = renderHook(() => 
-        useThemeStyles({ theme: emptyTheme })
-      )
+            // Should be a plain object
+            expect(typeof styles).toBe('object');
+            expect(styles).not.toBe(null);
 
-      expect(result.current).toEqual(expect.objectContaining({
-        '--primary-color': undefined,
-        '--secondary-color': undefined,
-        '--background-color': undefined,
-        '--text-color': undefined,
-      }))
-    })
+            // Should have CSS custom property keys (starting with --)
+            const keys = Object.keys(styles);
+            expect(keys.length).toBeGreaterThan(0);
+            expect(keys.every(key => key.startsWith('--'))).toBe(true);
 
-    it('should handle null/undefined values in theme', () => {
-      const themeWithNulls = {
-        ...baseTheme,
-        primaryColor: null as any,
-        textColor: undefined as any,
-      }
-      
-      const { result } = renderHook(() => 
-        useThemeStyles({ theme: themeWithNulls })
-      )
+            // Should have string values
+            const values = Object.values(styles);
+            expect(values.every(value => typeof value === 'string')).toBe(true);
+        });
+    });
 
-      expect(result.current['--primary-color']).toBe(null)
-      expect(result.current['--text-color']).toBe(undefined)
-      expect(result.current['--text-color-60']).toBe('undefined60')
-      expect(result.current['--text-color-70']).toBe('undefined70')
-    })
+    describe('Edge Cases', () => {
+        it('should handle empty theme gracefully', () => {
+            const emptyTheme = {} as Required<ThemeConfig>;
 
-    it('should handle invalid variant gracefully', () => {
-      const { result } = renderHook(() => 
-        useThemeStyles({ 
-          theme: baseTheme, 
-          variant: 'invalid-variant' as any 
-        })
-      )
+            const { result } = renderHook(() => useThemeStyles({ theme: emptyTheme }));
 
-      // Should fallback to base styles
-      expect(result.current).toEqual(expect.objectContaining({
-        '--primary-color': '#9945FF',
-        '--secondary-color': '#14F195',
-      }))
+            expect(result.current).toEqual(
+                expect.objectContaining({
+                    '--primary-color': undefined,
+                    '--secondary-color': undefined,
+                    '--background-color': undefined,
+                    '--text-color': undefined,
+                }),
+            );
+        });
 
-      // Should not have variant-specific styles
-      expect(result.current).not.toHaveProperty('--button-shadow')
-    })
-  })
-})
+        it('should handle null/undefined values in theme', () => {
+            const themeWithNulls = {
+                ...baseTheme,
+                primaryColor: null as any,
+                textColor: undefined as any,
+            };
+
+            const { result } = renderHook(() => useThemeStyles({ theme: themeWithNulls }));
+
+            expect(result.current['--primary-color']).toBe(null);
+            expect(result.current['--text-color']).toBe(undefined);
+            expect(result.current['--text-color-60']).toBe('undefined60');
+            expect(result.current['--text-color-70']).toBe('undefined70');
+        });
+
+        it('should handle invalid variant gracefully', () => {
+            const { result } = renderHook(() =>
+                useThemeStyles({
+                    theme: baseTheme,
+                    variant: 'invalid-variant' as any,
+                }),
+            );
+
+            // Should fallback to base styles
+            expect(result.current).toEqual(
+                expect.objectContaining({
+                    '--primary-color': '#9945FF',
+                    '--secondary-color': '#14F195',
+                }),
+            );
+
+            // Should not have variant-specific styles
+            expect(result.current).not.toHaveProperty('--button-shadow');
+        });
+    });
+});

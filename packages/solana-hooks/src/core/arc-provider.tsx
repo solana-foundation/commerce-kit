@@ -1,18 +1,18 @@
-'use client'
+'use client';
 
-import React, { useMemo } from 'react'
-import type { ReactNode } from 'react'
-import { ArcClientProvider, useArcClient } from './arc-client-provider'
-import { useConnectorClient } from '@solana-commerce/connector-kit'
-import type { ArcWebClientConfig } from './arc-web-client'
-import type { SolanaConfig } from '../config/create-config'
-import type { QueryClient } from '@tanstack/react-query'
+import React, { useMemo } from 'react';
+import type { ReactNode } from 'react';
+import { ArcClientProvider, useArcClient } from './arc-client-provider';
+import { useConnectorClient } from '@solana-commerce/connector-kit';
+import type { ArcWebClientConfig } from './arc-web-client';
+import type { SolanaConfig } from '../config/create-config';
+import type { QueryClient } from '@tanstack/react-query';
 
 export type ArcProviderProps = {
-  children: ReactNode
-  config: ArcWebClientConfig | SolanaConfig
-  queryClient?: QueryClient
-}
+    children: ReactNode;
+    config: ArcWebClientConfig | SolanaConfig;
+    queryClient?: QueryClient;
+};
 
 /**
  * The primary ArcProvider.
@@ -22,33 +22,35 @@ export type ArcProviderProps = {
  * are now compatibility wrappers around the new useArcClient hook.
  */
 export function ArcProvider({ children, config, queryClient }: ArcProviderProps) {
-  const contextConnector = useConnectorClient()
-  // Use the connector from config if provided, otherwise fall back to context connector
-  const passedConnector = (config as ArcWebClientConfig).connector
-  const connector = passedConnector || contextConnector
-  
-  if (!connector) {
-    throw new Error('ArcProvider: connector is required - provide config.connector or ensure useConnectorClient() supplies one')
-  }
-  
-  const providerId = useMemo(() => 'arc-provider-' + Math.random().toString(36).substr(2, 5), []);
-  
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[ArcProvider:${providerId}] Connector selection:`, {
-      hasPassedConnector: !!passedConnector,
-      hasContextConnector: !!contextConnector,
-      usingConnector: connector === passedConnector ? 'passed' : 'context',
-      connectorConnected: connector?.getSnapshot?.()?.connected,
-      connectorSame: passedConnector === contextConnector
-    });
-  }
-  
-  const merged: ArcWebClientConfig = { ...config, connector } as ArcWebClientConfig
-  return (
-    <ArcClientProvider config={merged} queryClient={queryClient}>
-      {children}
-    </ArcClientProvider>
-  )
+    const contextConnector = useConnectorClient();
+    // Use the connector from config if provided, otherwise fall back to context connector
+    const passedConnector = (config as ArcWebClientConfig).connector;
+    const connector = passedConnector || contextConnector;
+
+    if (!connector) {
+        throw new Error(
+            'ArcProvider: connector is required - provide config.connector or ensure useConnectorClient() supplies one',
+        );
+    }
+
+    const providerId = useMemo(() => 'arc-provider-' + Math.random().toString(36).substr(2, 5), []);
+
+    if (process.env.NODE_ENV === 'development') {
+        console.log(`[ArcProvider:${providerId}] Connector selection:`, {
+            hasPassedConnector: !!passedConnector,
+            hasContextConnector: !!contextConnector,
+            usingConnector: connector === passedConnector ? 'passed' : 'context',
+            connectorConnected: connector?.getSnapshot?.()?.connected,
+            connectorSame: passedConnector === contextConnector,
+        });
+    }
+
+    const merged: ArcWebClientConfig = { ...config, connector } as ArcWebClientConfig;
+    return (
+        <ArcClientProvider config={merged} queryClient={queryClient}>
+            {children}
+        </ArcClientProvider>
+    );
 }
 
 // ===== BACKWARD COMPATIBLE HOOKS =====
@@ -59,8 +61,8 @@ export function ArcProvider({ children, config, queryClient }: ArcProviderProps)
  * @deprecated Use useArcClient instead.
  */
 export function useArcConfig(): ArcWebClientConfig {
-  const { config } = useArcClient()
-  return config
+    const { config } = useArcClient();
+    return config;
 }
 
 /**
@@ -69,8 +71,8 @@ export function useArcConfig(): ArcWebClientConfig {
  * @deprecated Use useArcClient instead.
  */
 export function useWallet() {
-  const { wallet, select, disconnect } = useArcClient()
-  return { ...wallet, select, disconnect, connect: select }
+    const { wallet, select, disconnect } = useArcClient();
+    return { ...wallet, select, disconnect, connect: select };
 }
 
 /**
@@ -79,8 +81,8 @@ export function useWallet() {
  * @deprecated Use useArcClient instead.
  */
 export function useNetwork() {
-  const { network } = useArcClient()
-  return network
+    const { network } = useArcClient();
+    return network;
 }
 
 /**
@@ -89,5 +91,5 @@ export function useNetwork() {
  * @deprecated Use useArcClient instead.
  */
 export function useArc() {
-  return useArcClient()
+    return useArcClient();
 }

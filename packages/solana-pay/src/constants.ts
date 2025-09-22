@@ -1,4 +1,4 @@
-import { address, Address } from "gill";
+import { address, Address } from 'gill';
 
 export const SOLANA_PROTOCOL = 'solana:';
 

@@ -13,7 +13,7 @@ export function createSPLToken(tokenAddress: string): SPLToken {
 }
 
 /**
- * Safely convert a string address to Recipient type  
+ * Safely convert a string address to Recipient type
  */
 export function createRecipient(recipientAddress: string): Recipient {
     try {

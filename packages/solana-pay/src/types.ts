@@ -1,6 +1,5 @@
 import type { Address } from 'gill';
 
-
 export type Recipient = Address;
 
 export type Amount = bigint;

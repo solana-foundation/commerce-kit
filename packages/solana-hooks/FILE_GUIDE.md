@@ -3,8 +3,10 @@
 ## Top-Level Source Files
 
 ### `index.ts` - Main Export (90KB)
+
 **Purpose**: Default export with all commonly used features  
 **Exports**:
+
 - Level 1 functions (getBalance, transferSOL, etc)
 - Common React hooks (useBalance, useWallet, etc)
 - Client creation functions
@@ -15,8 +17,10 @@
 ---
 
 ### `core.ts` - Minimal Bundle (15KB)
+
 **Purpose**: Smallest possible bundle with only essentials  
 **Exports**:
+
 - useWallet, useBalance, useTransferSOL
 - useCluster, useNetwork
 - Core utilities (cluster detection, etc)
@@ -26,8 +30,10 @@
 ---
 
 ### `client.ts` - Backend API (30KB)
+
 **Purpose**: Non-React API for servers, bots, scripts  
 **Exports**:
+
 - createArc, createEnterpriseArc
 - ArcClient class
 - Enterprise RPC types
@@ -38,8 +44,10 @@
 ---
 
 ### `level1.ts` - Zero Config Functions
+
 **Purpose**: Simple async functions, no setup required  
 **Exports**:
+
 - configure(options)
 - getBalance(address)
 - transferSOL(options)
@@ -51,8 +59,10 @@
 ---
 
 ### `react/index.ts` - All React Hooks (70KB)
+
 **Purpose**: Complete React hook collection  
 **Exports**:
+
 - All 29 React hooks
 - ArcProvider component
 - React-specific types
@@ -62,8 +72,10 @@
 ---
 
 ### `experimental/index.ts` - Advanced Features (40KB)
+
 **Purpose**: Cutting-edge features that may change  
 **Exports**:
+
 - Versioned transactions (v0)
 - Priority fee optimization
 - MEV protection
@@ -74,8 +86,10 @@
 ---
 
 ### `types.ts` - Core Types
+
 **Purpose**: Essential types used everywhere  
 **Contains**:
+
 - Basic option interfaces (BalanceOptions, etc)
 - Result types (TransactionResult, etc)
 - Network types
@@ -86,8 +100,10 @@
 ---
 
 ### `types/index.ts` - Type Re-exports
+
 **Purpose**: Central type export location  
 **Re-exports**:
+
 - All types from types.ts
 - Provider types
 - Hook option types
@@ -96,6 +112,7 @@
 ---
 
 ### `legacy-types.ts` - Deprecated Types
+
 **Purpose**: Backward compatibility only  
 **Status**: ⚠️ DEPRECATED - Will be removed in v2.0
 **Contains**: Old wallet adapter interfaces
@@ -108,7 +125,7 @@
 src/
 ├── components/          # React components
 ├── core/               # Core client & provider logic
-├── experimental/       # Advanced/experimental features  
+├── experimental/       # Advanced/experimental features
 ├── hooks/              # All React hooks
 ├── react/              # React-specific exports
 ├── types/              # Type definitions
@@ -119,22 +136,22 @@ src/
 
 ```typescript
 // Full SDK (default)
-import { useBalance, createArc } from '@arc/solana'
+import { useBalance, createArc } from '@arc/solana';
 
-// React only 
-import { useBalance } from '@arc/solana/react'
+// React only
+import { useBalance } from '@arc/solana/react';
 
 // Minimal bundle
-import { useBalance } from '@arc/solana/core'
+import { useBalance } from '@arc/solana/core';
 
 // Backend only
-import { createArc } from '@arc/solana/client'
+import { createArc } from '@arc/solana/client';
 
 // Advanced features
-import { VersionedTransactionManager } from '@arc/solana/experimental'
+import { VersionedTransactionManager } from '@arc/solana/experimental';
 
 // Simple functions
-import { getBalance } from '@arc/solana'
+import { getBalance } from '@arc/solana';
 ```
 
 ## Best Practices

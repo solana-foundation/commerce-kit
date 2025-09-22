@@ -13,11 +13,4 @@ export { TabsProvider, useTabs } from './context';
 export { Tabs } from './tabs';
 
 // Types
-export type { 
-  TabsContextType, 
-  TabsState, 
-  TabsRootProps,
-  TabsListProps,
-  TabsTabProps,
-  TabsPanelProps
-} from './types'; 
+export type { TabsContextType, TabsState, TabsRootProps, TabsListProps, TabsTabProps, TabsPanelProps } from './types';

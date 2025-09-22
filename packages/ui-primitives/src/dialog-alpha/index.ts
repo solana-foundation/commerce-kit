@@ -15,4 +15,4 @@ export { DialogProvider, useDialog } from '../dialog-alpha/context';
 export { Dialog } from '../dialog-alpha/dialog';
 
 // Types
-export type { DialogContextType, DialogState } from '../dialog-alpha/types'; 
+export type { DialogContextType, DialogState } from '../dialog-alpha/types';

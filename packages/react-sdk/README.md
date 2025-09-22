@@ -5,6 +5,7 @@ React SDK for Solana Commerce platform, providing hooks and components for build
 ## 🚀 Features
 
 ### Hooks
+
 - **`useTimer`** - Countdown timer with progress tracking
 - **`usePaymentStatus`** - Payment status management with state transitions
 - **`useCopyToClipboard`** - Clipboard utilities with fallback support
@@ -14,6 +15,7 @@ React SDK for Solana Commerce platform, providing hooks and components for build
 - **`useAsync`** - Async operation state handling
 
 ### Components
+
 - **`ActionButton`** - Primary action button with loading states and SOL equivalent display
 - **`TipModal`** - Complete tip/payment modal with currency selection and payment methods
 - **`PaymentMethodSelector`** - Payment method selection (QR, Wallet)
@@ -37,12 +39,14 @@ pnpm test:coverage
 ```
 
 ### Test Coverage
+
 - **41 test cases** covering hooks and components
 - **Hooks**: Timer functionality, payment status transitions, clipboard operations
 - **Components**: Button interactions, theming, accessibility
 - **Integration**: Solana Pay QR code generation and currency handling
 
 ### Test Structure
+
 ```
 src/__tests__/
 ├── setup.ts              # Test setup and mocks
@@ -59,6 +63,7 @@ src/__tests__/
 ## 🛠️ Development
 
 ### Scripts
+
 - `pnpm build` - Build the package
 - `pnpm dev` - Development build with watch mode
 - `pnpm test` - Run tests
@@ -67,6 +72,7 @@ src/__tests__/
 - `pnpm type-check` - TypeScript type checking
 
 ### Architecture
+
 - **Modern React Patterns**: Hooks-based architecture with functional components
 - **TypeScript First**: Full TypeScript support with comprehensive types
 - **Testing**: Vitest + React Testing Library for comprehensive testing
@@ -75,6 +81,7 @@ src/__tests__/
 ## 📦 Dependencies
 
 ### Runtime Dependencies
+
 - `@solana-commerce/connector-kit` - Wallet connection utilities
 - `@solana-commerce/headless-sdk` - Headless commerce operations
 - `@solana-commerce/solana-hooks` - Solana-specific React hooks
@@ -83,6 +90,7 @@ src/__tests__/
 - `gill` - Solana toolkit
 
 ### Development Dependencies
+
 - `vitest` - Fast test runner
 - `@testing-library/react` - React testing utilities
 - `@testing-library/jest-dom` - DOM testing matchers
@@ -95,34 +103,29 @@ All components support comprehensive theming:
 
 ```typescript
 const theme = {
-  primaryColor: '#6366f1',
-  secondaryColor: '#8b5cf6', 
-  backgroundColor: '#ffffff',
-  textColor: '#000000',
-  fontFamily: 'Inter, sans-serif',
-  borderRadius: 'lg',
-  buttonShadow: 'md'
-}
+    primaryColor: '#6366f1',
+    secondaryColor: '#8b5cf6',
+    backgroundColor: '#ffffff',
+    textColor: '#000000',
+    fontFamily: 'Inter, sans-serif',
+    borderRadius: 'lg',
+    buttonShadow: 'md',
+};
 ```
 
 ## 🔧 Usage Examples
 
 ```typescript
-import { useTimer, usePaymentStatus } from '@solana-commerce/react-sdk'
+import { useTimer, usePaymentStatus } from '@solana-commerce/react-sdk';
 
 // Timer hook
 const { timeRemaining, start, pause, isComplete } = useTimer({
-  duration: 120,
-  onComplete: () => console.log('Timer finished!')
-})
+    duration: 120,
+    onComplete: () => console.log('Timer finished!'),
+});
 
 // Payment status management
-const { 
-  status, 
-  handleSuccess, 
-  handleError, 
-  isLoading 
-} = usePaymentStatus()
+const { status, handleSuccess, handleError, isLoading } = usePaymentStatus();
 ```
 
 ## 🚀 Quality Assurance

@@ -1,34 +1,34 @@
 /**
  * @arc/solana - Type Exports
- * 
+ *
  * Central location for all public types.
  * Internal types should remain in their respective modules.
  */
 
 // ===== CORE TYPES =====
-export * from '../types' // Core types from types.ts
+export * from '../types'; // Core types from types.ts
 
 // ===== PROVIDER TYPES =====
-export type * from '../core/provider'
+export type * from '../core/provider';
 
 // ===== HOOK OPTION TYPES =====
 export interface UseSwapOptions {
-  providers?: string[]
-  strategy?: 'best-price' | 'fastest' | 'lowest-fees'
-  maxSlippage?: number
+    providers?: string[];
+    strategy?: 'best-price' | 'fastest' | 'lowest-fees';
+    maxSlippage?: number;
 }
 
 export interface UseTransactionOptions {
-  confirmationStrategy?: 'processed' | 'confirmed' | 'finalized'
-  skipPreflight?: boolean
-  computeUnitLimit?: number
-  computeUnitPrice?: number
+    confirmationStrategy?: 'processed' | 'confirmed' | 'finalized';
+    skipPreflight?: boolean;
+    computeUnitLimit?: number;
+    computeUnitPrice?: number;
 }
 
 // ===== STATE TYPES =====
 export interface SwapState {
-  isLoading: boolean
-  error: Error | null
-  quotes: any[]
-  selectedQuote: any | null
+    isLoading: boolean;
+    error: Error | null;
+    quotes: any[];
+    selectedQuote: any | null;
 }
