@@ -1,8 +1,9 @@
 import { createSolanaPayRequest } from '@solana-commerce/headless-sdk';
 import { Recipient } from '@solana-commerce/solana-pay';
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { Currency, CurrencyMap } from '../types';
 import { CURRENCY_DECIMALS } from '../constants/tip-modal';
+import { useAsync } from './use-async';
 
 // Converts a decimal `amount` to minor units as bigint using string math.
 export function toMinorUnits(amt: number, decimals: number): bigint {
@@ -32,66 +33,73 @@ export interface SolanaPayQROptions {
 }
 
 export function useSolanaPay(recipient: string, amount: number, currency: Currency, opts?: SolanaPayQROptions) {
-    const [paymentRequest, setPaymentRequest] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
+    // ✅ GOOD: Use useMemo for synchronous data derivation
+    const requestParams = useMemo(() => {
+        if (!recipient || !amount || !currency) return null;
+        
+        // Generate a unique reference for this payment
+        const reference = `tip-${Math.floor(Math.random() * 1000000)}`;
+        
+        // Get token address and decimals from currency
+        const decimals = CURRENCY_DECIMALS[currency];
+        // For native SOL, use undefined; for SPL tokens, use the mint address
+        const splToken = currency === 'SOL' || currency === 'SOL_DEVNET' ? undefined : CurrencyMap[currency];
 
-    useEffect(() => {
-        async function createRequest() {
-            try {
-                setLoading(true);
-                // Generate a unique reference for this payment
-                const reference = `tip-${Math.floor(Math.random() * 1000000)}`;
+        return {
+            paymentData: {
+                recipient: recipient as Recipient,
+                amount: toMinorUnits(amount, decimals), // to minor units
+                splToken,
+                memo: reference,
+                label: opts?.label ?? 'commerceKit',
+                message: opts?.message,
+            },
+            qrOptions: {
+                size: opts?.size ?? 256,
+                background: opts?.background ?? 'white',
+                color: opts?.color ?? 'black',
+                // Pass through advanced QR options
+                margin: opts?.margin,
+                errorCorrectionLevel: opts?.errorCorrectionLevel,
+                logo: opts?.logo,
+                logoSize: opts?.logoSize,
+                logoBackgroundColor: opts?.logoBackgroundColor,
+                logoMargin: opts?.logoMargin,
+                dotStyle: opts?.dotStyle,
+                cornerStyle: opts?.cornerStyle,
+            },
+            reference,
+        };
+    }, [recipient, amount, currency, opts]);
 
-                // Get token address and decimals from currency
-                const decimals = CURRENCY_DECIMALS[currency];
-                // For native SOL, use undefined; for SPL tokens, use the mint address
-                const splToken = currency === 'SOL' || currency === 'SOL_DEVNET' ? undefined : CurrencyMap[currency];
-
+    // ✅ GOOD: Use useAsync hook for proper async state management
+    const asyncRequestCreation = useMemo(
+        () => (requestParams 
+            ? async () => {
                 const request = await createSolanaPayRequest(
-                    {
-                        recipient: recipient as Recipient,
-                        amount: toMinorUnits(amount, decimals), // to minor units
-                        splToken,
-                        memo: reference,
-                        label: opts?.label ?? 'commerceKit',
-                        message: opts?.message,
-                    },
-                    {
-                        size: opts?.size ?? 256,
-                        background: opts?.background ?? 'white',
-                        color: opts?.color ?? 'black',
-                        // Pass through advanced QR options
-                        margin: opts?.margin,
-                        errorCorrectionLevel: opts?.errorCorrectionLevel,
-                        logo: opts?.logo,
-                        logoSize: opts?.logoSize,
-                        logoBackgroundColor: opts?.logoBackgroundColor,
-                        logoMargin: opts?.logoMargin,
-                        dotStyle: opts?.dotStyle,
-                        cornerStyle: opts?.cornerStyle,
-                    },
+                    requestParams.paymentData,
+                    requestParams.qrOptions,
                 );
 
                 // Add memo to the returned request
-                setPaymentRequest({
+                return {
                     ...request,
-                    memo: reference,
-                });
-            } catch (error) {
-                console.error('Error creating Solana Pay request:', error);
-                setPaymentRequest(null);
-            } finally {
-                setLoading(false);
+                    memo: requestParams.reference,
+                };
             }
-        }
+            : undefined
+        ),
+        [requestParams]
+    );
 
-        if (recipient && amount && currency) {
-            createRequest();
-        }
-    }, [recipient, amount, currency, opts]);
+    const { data: paymentRequest, loading, error } = useAsync(
+        asyncRequestCreation,
+        !!requestParams // Execute immediately if we have valid params
+    );
 
     return {
         paymentRequest,
         loading,
+        error,
     };
 }

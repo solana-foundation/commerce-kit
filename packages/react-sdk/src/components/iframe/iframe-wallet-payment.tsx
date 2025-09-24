@@ -189,8 +189,13 @@ export const WalletPaymentContent = ({
         return null;
     }, []);
 
-    // Validate that an origin is a proper HTTP/HTTPS origin
+    // Validate that an origin is a proper HTTP/HTTPS origin or "null" for srcDoc iframes
     const isValidOrigin = React.useCallback((origin: string) => {
+        // Allow "null" origin for srcDoc iframes
+        if (origin === 'null') {
+            return true;
+        }
+        
         try {
             const url = new URL(origin);
             return url.protocol === 'http:' || url.protocol === 'https:';
@@ -206,6 +211,12 @@ export const WalletPaymentContent = ({
         const detectedOrigin = detectParentOrigin();
         if (detectedOrigin && isValidOrigin(detectedOrigin)) {
             setParentOrigin(detectedOrigin);
+        }
+        
+        // For srcDoc iframes, we might not be able to detect the parent origin directly
+        // In this case, we'll trust the first valid message we receive
+        if (!detectedOrigin || detectedOrigin === 'null') {
+            console.log('[iframe-wallet-payment] Running in srcDoc context, will detect parent origin from messages');
         }
 
         // Read wallets provided by parent via init message and validate them
@@ -225,11 +236,22 @@ export const WalletPaymentContent = ({
 
             // If we don't have a parent origin yet, use this validated origin
             // Otherwise, ensure the message comes from the expected parent
+            // Special handling: if we're in a srcDoc iframe (origin null), be more permissive
+            const isInSrcDoc = window.location.origin === 'null';
+            
             if (!parentOrigin) {
-                setParentOrigin(e.origin);
+                // For srcDoc iframes, accept the first valid HTTP/HTTPS origin we receive
+                if (isInSrcDoc && e.origin !== 'null') {
+                    setParentOrigin(e.origin);
+                } else if (!isInSrcDoc) {
+                    setParentOrigin(e.origin);
+                }
             } else if (parentOrigin !== e.origin) {
-                console.warn(`Rejected message from mismatched origin. Expected: ${parentOrigin}, Got: ${e.origin}`);
-                return;
+                // For srcDoc iframes, be more permissive about origin mismatches
+                if (!isInSrcDoc) {
+                    console.warn(`Rejected message from mismatched origin. Expected: ${parentOrigin}, Got: ${e.origin}`);
+                    return;
+                }
             }
 
             if (data.type === 'walletConnectResult') {
@@ -280,7 +302,9 @@ export const WalletPaymentContent = ({
         setError(null);
 
         // Validate that we have a parent origin before proceeding
-        if (!parentOrigin) {
+        // For srcDoc iframes, we might not have parentOrigin detected yet, so be more permissive
+        const isInSrcDoc = window.location.origin === 'null';
+        if (!parentOrigin && !isInSrcDoc) {
             setError(
                 'Unable to connect: Cannot determine parent origin. Please ensure this component is properly embedded.',
             );
@@ -303,6 +327,9 @@ export const WalletPaymentContent = ({
         setConnecting(walletName);
         try {
             // Calculate the payment amount to send to parent
+            // Use '*' for srcDoc iframes since origin detection may fail
+            const targetOrigin = isInSrcDoc ? '*' : (parentOrigin || '*');
+            
             window.parent.postMessage(
                 {
                     type: 'walletConnect',
@@ -310,7 +337,7 @@ export const WalletPaymentContent = ({
                     amount: amountValue,
                     currency: selectedCurrency,
                 },
-                parentOrigin,
+                targetOrigin,
             );
         } catch (e: any) {
             setConnecting(null);
@@ -328,6 +355,7 @@ export const WalletPaymentContent = ({
                 config={config}
                 selectedCurrency={selectedCurrency}
                 displayAmount={displayAmount}
+                error={error || 'Payment failed'}
                 onRetry={() => {
                     setPaymentError(false);
                     setProcessingPayment(null);
@@ -347,7 +375,6 @@ export const WalletPaymentContent = ({
                 config={config}
                 selectedCurrency={selectedCurrency}
                 displayAmount={displayAmount}
-                paymentSignature={paymentSignature}
             />
         );
     }

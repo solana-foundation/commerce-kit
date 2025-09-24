@@ -1,10 +1,11 @@
 import React, { memo, useMemo, useCallback } from 'react';
-import { getModalBorderRadius, getCurrencySymbol, getBorderRadius, convertUsdToSol, getDecimals } from '../../utils';
+import { getModalBorderRadius, getCurrencySymbol, getBorderRadius, getDecimals } from '../../utils';
 import { QRPaymentContent } from './iframe-qr-payment';
 import { WalletPaymentContent } from './iframe-wallet-payment';
 import { WALLET_ICON } from '../../constants/tip-modal';
 import { useTipForm } from '../../hooks/use-tip-form';
 import { useAnimationStyles } from '../../hooks/use-animation-styles';
+import { useSolEquivalent } from '../../hooks/use-sol-equivalent';
 import { TipModalHeader, CurrencySelector, AmountSelector, PaymentMethodSelector, ActionButton } from '../tip-modal';
 import type { TipModalContentProps, Currency } from '../../types';
 
@@ -95,36 +96,20 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({ config, theme
         }
     }, [actions, computed.finalAmount, state.selectedCurrency, state.selectedPaymentMethod, onPayment, handleCancel]);
 
-    // Calculate SOL equivalent for display when SOL is selected
-    const [solEquivalent, setSolEquivalent] = React.useState<string | null>(null);
+    const { solEquivalent, isLoading: solEquivalentLoading, error: solEquivalentError } = useSolEquivalent(
+        state.selectedCurrency,
+        computed.finalAmount
+    );
 
-    React.useEffect(() => {
-        console.log('🎯 useEffect triggered:', {
+    if (process.env.NODE_ENV === 'development') {
+        console.log('💰 SOL Equivalent Calculation:', {
             selectedCurrency: state.selectedCurrency,
             finalAmount: computed.finalAmount,
-            isSOL: state.selectedCurrency === 'SOL' || state.selectedCurrency === 'SOL_DEVNET',
+            solEquivalent,
+            isLoading: solEquivalentLoading,
+            error: solEquivalentError?.message,
         });
-
-        if (
-            (state.selectedCurrency === 'SOL' || state.selectedCurrency === 'SOL_DEVNET') &&
-            computed.finalAmount &&
-            computed.finalAmount > 0
-        ) {
-            console.log('🚀 Calculating SOL equivalent for amount:', computed.finalAmount);
-            convertUsdToSol(computed.finalAmount)
-                .then(solAmount => {
-                    const solText = `${solAmount.toFixed(4)} SOL`;
-                    console.log('✅ SOL equivalent calculated:', solText);
-                    setSolEquivalent(solText);
-                })
-                .catch(error => {
-                    console.error('❌ Failed to calculate SOL equivalent:', error);
-                    setSolEquivalent(null); // Don't show if price fetch fails
-                });
-        } else {
-            setSolEquivalent(null);
-        }
-    }, [state.selectedCurrency, computed.finalAmount]);
+    }
 
     return (
         <div
