@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { useConnector } from './connector-provider';
 import {
     Dialog,
@@ -22,6 +22,7 @@ import {
     type ConnectorTheme,
 } from './theme';
 import { Spinner } from './spinner';
+import type { AccountInfo, WalletInfo } from '../lib/connector-client';
 
 export interface ConnectButtonProps {
     className?: string;
@@ -53,6 +54,9 @@ export const ConnectButton = memo<ConnectButtonProps>(
         const [unconnectableWalletName, setUnconnectableWalletName] = useState<string | null>(null);
 
         useEffect(() => {
+            if (!connected) {
+                return;
+            }
             setIsDialogOpen(false);
             setCurrentStep('list');
             setConnectingWalletName(null);
@@ -109,6 +113,7 @@ export const ConnectButton = memo<ConnectButtonProps>(
 
         const icon = (
             <svg width="18" height="14" viewBox="0 0 21 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                <title>Wallet icon</title>
                 <path
                     d="M3.98967 11.7879C4.10222 11.6755 4.25481 11.6123 4.41392 11.6123H19.0941C19.3615 11.6123 19.4954 11.9357 19.3062 12.1247L16.4054 15.0232C16.2929 15.1356 16.1403 15.1988 15.9812 15.1988H1.30102C1.03359 15.1988 0.899716 14.8754 1.08889 14.6864L3.98967 11.7879Z"
                     fill="currentColor"
@@ -124,25 +129,31 @@ export const ConnectButton = memo<ConnectButtonProps>(
             </svg>
         );
 
-        const connectableWallets = useMemo(() => (wallets ?? []).filter((w: any) => w.connectable), [wallets]);
-        const unconnectableWallets = useMemo(() => (wallets ?? []).filter((w: any) => !w.connectable), [wallets]);
+        const connectableWallets = useMemo(
+            () => wallets.filter(wallet => wallet.connectable === true),
+            [wallets],
+        );
+        const unconnectableWallets = useMemo(
+            () => wallets.filter(wallet => wallet.connectable !== true),
+            [wallets],
+        );
 
         const selectedAccountInfo = useMemo(() => {
             if (!selectedAccount) return null;
-            return (accounts ?? []).find((a: any) => a.address === selectedAccount) ?? null;
+            return accounts.find(account => account.address === selectedAccount) ?? null;
         }, [accounts, selectedAccount]);
 
         const selectedWalletIcon = useMemo(() => {
             if (selectedAccountInfo?.icon) return selectedAccountInfo.icon;
             if (!selectedWallet) return null;
-            const match = (wallets ?? []).find((w: any) => w.wallet === selectedWallet);
+            const match = wallets.find(walletOption => walletOption.wallet === selectedWallet);
             return match?.icon ?? null;
         }, [selectedAccountInfo, selectedWallet, wallets]);
 
-        function getUnconnectableReason(w: any): string {
+        function getUnconnectableReason(walletInfo: WalletInfo): string {
             try {
-                const features = (w?.wallet?.features ?? {}) as Record<string, unknown>;
-                const chains = (w?.wallet as any)?.chains as unknown as string[] | undefined;
+                const features = walletInfo.wallet.features ?? {};
+                const chains = walletInfo.wallet.chains as string[] | undefined;
                 const hasConnect = Boolean(features['standard:connect']);
                 const hasDisconnect = Boolean(features['standard:disconnect']);
                 const isSolana =
@@ -157,6 +168,11 @@ export const ConnectButton = memo<ConnectButtonProps>(
                 return 'Wallet is not compatible with Wallet Standard connect/disconnect for Solana.';
             }
         }
+
+        const activeUnconnectableWallet = useMemo(
+            () => unconnectableWallets.find(wallet => wallet.name === unconnectableWalletName) ?? null,
+            [unconnectableWalletName, unconnectableWallets],
+        );
 
         if (connected) {
             return (
@@ -217,14 +233,15 @@ export const ConnectButton = memo<ConnectButtonProps>(
                             >
                                 {selectedDisplay}
                             </div>
-                            {(accounts ?? []).length > 1 ? (
+                            {accounts.length > 1 ? (
                                 <div style={{ borderTop: '1px solid #e5e7eb', marginTop: 8, paddingTop: 8 }}>
                                     <div style={{ padding: '4px 12px', fontSize: 12, color: '#6b7280' }}>Accounts</div>
                                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                        {(accounts ?? []).map((acc: any) => (
+                                        {accounts.map(account => (
                                             <button
-                                                key={acc.address}
-                                                onClick={() => selectAccount(acc.address)}
+                                                key={account.address}
+                                                type="button"
+                                                onClick={() => selectAccount(account.address)}
                                                 style={{
                                                     display: 'flex',
                                                     alignItems: 'center',
@@ -234,14 +251,14 @@ export const ConnectButton = memo<ConnectButtonProps>(
                                                     border: 'none',
                                                     cursor: 'pointer',
                                                     borderRadius: 6,
-                                                    color: acc.address === selectedAccount ? '#111827' : '#374151',
+                                                    color: account.address === selectedAccount ? '#111827' : '#374151',
                                                 }}
                                             >
                                                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                                                    {acc.icon ? (
+                                                    {account.icon ? (
                                                         // eslint-disable-next-line @next/next/no-img-element
                                                         <img
-                                                            src={acc.icon}
+                                                            src={account.icon}
                                                             alt=""
                                                             width={16}
                                                             height={16}
@@ -249,11 +266,11 @@ export const ConnectButton = memo<ConnectButtonProps>(
                                                         />
                                                     ) : null}
                                                     <span style={{ fontFamily: 'monospace', fontSize: 12 }}>
-                                                        {String(acc.address).slice(0, 8)}...
-                                                        {String(acc.address).slice(-4)}
+                                                        {String(account.address).slice(0, 8)}...
+                                                        {String(account.address).slice(-4)}
                                                     </span>
                                                 </span>
-                                                <span aria-hidden>{acc.address === selectedAccount ? '●' : '○'}</span>
+                                                <span aria-hidden>{account.address === selectedAccount ? '●' : '○'}</span>
                                             </button>
                                         ))}
                                     </div>
@@ -458,9 +475,9 @@ export const ConnectButton = memo<ConnectButtonProps>(
                                             Wallet not connectable
                                         </div>
                                         <div style={{ fontSize: 13, color: '#374151' }}>
-                                            {getUnconnectableReason(
-                                                (wallets ?? []).find((w: any) => w.name === unconnectableWalletName),
-                                            )}
+                                        {activeUnconnectableWallet
+                                                ? getUnconnectableReason(activeUnconnectableWallet)
+                                                : 'Wallet is not compatible with Wallet Standard connect/disconnect for Solana.'}
                                         </div>
                                     </>
                                 ) : (
@@ -508,7 +525,7 @@ export const ConnectButton = memo<ConnectButtonProps>(
                                     </div>
                                 ) : null}
 
-                                {(wallets ?? []).length === 0 ? (
+                                {wallets.length === 0 ? (
                                     <div style={{ textAlign: 'center', color: '#6b7280', padding: 16 }}>
                                         <div style={{ fontSize: 13, fontWeight: 600, color: '#6b7280' }}>
                                             No wallets found

@@ -5,17 +5,23 @@ import type { ReactNode, ComponentType } from 'react';
 import { ConnectorProvider } from './connector-provider';
 import type { ConnectorConfig } from '../lib/connector-client';
 
+interface ProviderDescriptor<Props extends Record<string, unknown>> {
+    component: ComponentType<Props>;
+    props?: Props;
+}
+
 export interface UnifiedProviderProps {
     children: ReactNode;
     connectorConfig?: ConnectorConfig;
     // Optional additional providers to wrap around children
-    providers?: Array<{
-        component: ComponentType<any>;
-        props?: any;
-    }>;
+    providers?: ProviderDescriptor<Record<string, unknown>>[];
 }
 
-export function UnifiedProvider({ children, connectorConfig, providers = [] }: UnifiedProviderProps) {
+export function UnifiedProvider({
+    children,
+    connectorConfig,
+    providers = [],
+}: UnifiedProviderProps) {
     // Start with connector provider as the base
     let content = <ConnectorProvider config={connectorConfig}>{children}</ConnectorProvider>;
 

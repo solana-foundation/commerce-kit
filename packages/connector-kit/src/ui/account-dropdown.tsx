@@ -1,10 +1,11 @@
 'use client';
 
-import React, { memo } from 'react';
+import { memo } from 'react';
+import type { ReactNode } from 'react';
 
 export interface AccountDropdownProps {
-    children: React.ReactNode;
-    content: React.ReactNode;
+    children: ReactNode;
+    content: ReactNode;
 }
 
 export const AccountDropdown = memo<AccountDropdownProps>(({ children, content }) => {

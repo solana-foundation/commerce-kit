@@ -36,9 +36,11 @@
     "dependencies": {
         "@wallet-standard/app": "^1.0.0",
         "@wallet-standard/base": "^1.0.0",
+        "@wallet-standard/features": "^1.0.0",
         "@solana-commerce/ui-primitives": "workspace:*"
     },
     "devDependencies": {
+        "@biomejs/biome": "^1.9.4",
         "@testing-library/jest-dom": "^6.0.0",
         "@testing-library/react": "^16.0.0",
         "@testing-library/user-event": "^14.0.0",

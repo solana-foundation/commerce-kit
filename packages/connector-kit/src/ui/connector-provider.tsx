@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useMemo, useRef, useSyncExternalStore } from 'react';
+import { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { ConnectorClient, type ConnectorConfig } from '../lib/connector-client';
 
@@ -48,8 +48,8 @@ function releaseConnectorClient(): void {
                 // Disconnect wallet before cleanup
                 globalConnectorClient.disconnect().catch(console.warn);
                 // If the client has a destroy method, call it
-                if (typeof (globalConnectorClient as any).destroy === 'function') {
-                    (globalConnectorClient as any).destroy();
+                if (globalConnectorClient && typeof globalConnectorClient.destroy === 'function') {
+                    globalConnectorClient.destroy();
                 }
                 globalConnectorClient = null;
             }
@@ -69,7 +69,7 @@ export function ConnectorProvider({ children, config }: { children: ReactNode; c
     }
 
     // Cleanup on unmount with reference counting
-    React.useEffect(() => {
+    useEffect(() => {
         return () => {
             releaseConnectorClient();
         };
@@ -115,8 +115,8 @@ export function forceCleanupConnectorClient(): void {
     if (globalConnectorClient) {
         console.log('[ConnectorProvider] Force cleaning up singleton ConnectorClient');
         globalConnectorClient.disconnect().catch(console.warn);
-        if (typeof (globalConnectorClient as any).destroy === 'function') {
-            (globalConnectorClient as any).destroy();
+        if (globalConnectorClient && typeof globalConnectorClient.destroy === 'function') {
+            globalConnectorClient.destroy();
         }
         globalConnectorClient = null;
     }

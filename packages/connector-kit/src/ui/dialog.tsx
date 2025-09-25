@@ -1,13 +1,14 @@
 'use client';
 
-import React, { memo } from 'react';
+import { memo } from 'react';
+import type { ReactNode } from 'react';
 import { Dialog, DialogTrigger, DialogContent, DialogBackdrop, DialogClose } from '@solana-commerce/ui-primitives';
 
 export interface ConnectorDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    trigger: React.ReactNode;
-    children: React.ReactNode;
+    trigger: ReactNode;
+    children: ReactNode;
     width?: number;
 }
 

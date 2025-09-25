@@ -1,6 +1,17 @@
 import { getWallets } from '@wallet-standard/app';
-
-import type { Wallet } from '@wallet-standard/base';
+import type {
+    Wallet,
+    WalletAccount,
+    IdentifierArray,
+    IdentifierRecord,
+} from '@wallet-standard/base';
+import type {
+    StandardConnectFeature,
+    StandardConnectOutput,
+    StandardDisconnectFeature,
+    StandardEventsFeature,
+    StandardEventsChangeProperties,
+} from '@wallet-standard/features';
 
 export interface WalletInfo {
     wallet: Wallet;
@@ -11,7 +22,7 @@ export interface WalletInfo {
     connectable?: boolean;
 }
 
-import type { WalletAccount } from '@wallet-standard/base';
+type WalletFeatureMap = IdentifierRecord<unknown>;
 
 export interface AccountInfo {
     address: string;
@@ -92,18 +103,18 @@ export class ConnectorClient {
                     .filter((w): w is Wallet => w !== undefined);
                 this.state = {
                     ...this.state,
-                    wallets: unique.map(w => {
-                        const features = (w.features as any) || {};
+                    wallets: unique.map(walletEntry => {
+                        const features = walletEntry.features as WalletFeatureMap;
                         const hasConnect = Boolean(features['standard:connect']);
                         const hasDisconnect = Boolean(features['standard:disconnect']);
-                        const chains = (w as any)?.chains as unknown as string[] | undefined;
+                        const chains = walletEntry.chains as IdentifierArray | undefined;
                         const isSolana =
-                            Array.isArray(chains) && chains.some(c => typeof c === 'string' && c.includes('solana'));
+                            Array.isArray(chains) && chains.some(chain => typeof chain === 'string' && chain.includes('solana'));
                         const connectable = hasConnect && hasDisconnect && Boolean(isSolana);
                         return {
-                            wallet: w,
-                            name: w.name,
-                            icon: w.icon,
+                            wallet: walletEntry,
+                            name: walletEntry.name,
+                            icon: walletEntry.icon,
                             installed: true,
                             connectable,
                         } satisfies WalletInfo;
@@ -143,7 +154,9 @@ export class ConnectorClient {
     }
 
     private notify() {
-        this.listeners.forEach(l => l(this.state));
+        for (const listener of this.listeners) {
+            listener(this.state);
+        }
     }
 
     private startPollingWalletAccounts() {
@@ -152,13 +165,15 @@ export class ConnectorClient {
         if (!wallet) return;
         this.pollTimer = setInterval(() => {
             try {
-                const walletAccounts = ((wallet as any)?.accounts ?? []) as any[];
-                const accountMap = new Map<string, any>();
-                for (const a of walletAccounts) accountMap.set(a.address, a);
-                const nextAccounts: AccountInfo[] = Array.from(accountMap.values()).map((a: any) => ({
-                    address: a.address as string,
-                    icon: a.icon,
-                    raw: a,
+                const walletAccounts = (wallet.accounts ?? []) as readonly WalletAccount[];
+                const accountMap = new Map<string, WalletAccount>();
+                for (const account of walletAccounts) {
+                    accountMap.set(account.address, account);
+                }
+                const nextAccounts: AccountInfo[] = Array.from(accountMap.values()).map((account): AccountInfo => ({
+                    address: account.address,
+                    icon: account.icon,
+                    raw: account,
                 }));
                 const selectedStillExists =
                     this.state.selectedAccount && nextAccounts.some(acc => acc.address === this.state.selectedAccount);
@@ -207,8 +222,8 @@ export class ConnectorClient {
         if (!wallet) return;
 
         // Check if wallet supports standard:events feature
-        const eventsFeature = (wallet.features as any)?.['standard:events'];
-        if (!eventsFeature?.on) {
+        const eventsFeature = wallet.features['standard:events'];
+        if (!eventsFeature) {
             // Fallback: start polling wallet.accounts when events are not available
             this.startPollingWalletAccounts();
             return;
@@ -216,16 +231,19 @@ export class ConnectorClient {
 
         try {
             // Subscribe to change events
-            this.walletChangeUnsub = eventsFeature.on('change', (properties: any) => {
+            const onEvents = (eventsFeature as StandardEventsFeature['standard:events']).on;
+            this.walletChangeUnsub = onEvents('change', (properties: StandardEventsChangeProperties) => {
                 // Aggregate accounts from event and wallet.accounts (some wallets only include selected account in the event)
-                const changeAccounts = (properties?.accounts ?? []) as any[];
-                const walletAccounts = ((wallet as any)?.accounts ?? []) as any[];
-                const accountMap = new Map<string, any>();
-                for (const a of [...walletAccounts, ...changeAccounts]) accountMap.set(a.address, a);
-                const nextAccounts: AccountInfo[] = Array.from(accountMap.values()).map((a: any) => ({
-                    address: a.address as string,
-                    icon: a.icon,
-                    raw: a,
+                const changeAccounts = (properties.accounts ?? []) as readonly WalletAccount[];
+                const walletAccounts = (wallet.accounts ?? []) as readonly WalletAccount[];
+                const accountMap = new Map<string, WalletAccount>();
+                for (const account of [...walletAccounts, ...changeAccounts]) {
+                    accountMap.set(account.address, account);
+                }
+                const nextAccounts: AccountInfo[] = Array.from(accountMap.values()).map((account): AccountInfo => ({
+                    address: account.address,
+                    icon: account.icon,
+                    raw: account,
                 }));
 
                 // Preserve selection if possible
@@ -258,18 +276,19 @@ export class ConnectorClient {
         this.state = { ...this.state, connecting: true };
         this.notify();
         try {
-            const connectFeature = (w.wallet.features as any)['standard:connect'];
+            const connectFeature = w.wallet.features['standard:connect'];
             if (!connectFeature) throw new Error(`Wallet ${walletName} does not support standard connect`);
-            // Force non-silent connection to ensure wallet prompts for account selection
-            const result = await connectFeature.connect({ silent: false });
-            // Aggregate accounts from result and wallet.accounts (some wallets only return the selected account)
-            const walletAccounts = ((w.wallet as any)?.accounts ?? []) as any[];
-            const accountMap = new Map<string, any>();
-            for (const a of [...walletAccounts, ...result.accounts]) accountMap.set(a.address, a);
-            const accounts: AccountInfo[] = Array.from(accountMap.values()).map((a: any) => ({
-                address: a.address as string,
-                icon: a.icon,
-                raw: a,
+            const connect = (connectFeature as StandardConnectFeature['standard:connect']).connect;
+            const result: StandardConnectOutput = await connect({ silent: false });
+            const walletAccounts = (w.wallet.accounts ?? []) as readonly WalletAccount[];
+            const accountMap = new Map<string, WalletAccount>();
+            for (const account of [...walletAccounts, ...result.accounts]) {
+                accountMap.set(account.address, account);
+            }
+            const accounts: AccountInfo[] = Array.from(accountMap.values()).map((account): AccountInfo => ({
+                address: account.address,
+                icon: account.icon,
+                raw: account,
             }));
             // Prefer a never-before-seen account when reconnecting; otherwise preserve selection
             const previouslySelected = this.state.selectedAccount;
@@ -324,10 +343,10 @@ export class ConnectorClient {
         // Call wallet's disconnect feature if available
         const wallet = this.state.selectedWallet;
         if (wallet) {
-            const disconnectFeature = (wallet.features as any)?.['standard:disconnect'];
-            if (disconnectFeature?.disconnect) {
+            const disconnectFeature = wallet.features['standard:disconnect'];
+            if (disconnectFeature) {
                 try {
-                    await disconnectFeature.disconnect();
+                    await (disconnectFeature as StandardDisconnectFeature['standard:disconnect']).disconnect();
                     if (this.config.debug) {
                         console.log('[Connector] Called wallet disconnect feature');
                     }
@@ -350,15 +369,16 @@ export class ConnectorClient {
         let target = this.state.accounts.find((acc: AccountInfo) => acc.address === address)?.raw ?? null;
         if (!target) {
             try {
-                const feature = (current.features as any)['standard:connect'];
+                const feature = current.features['standard:connect'];
                 if (feature) {
-                    const res = await feature.connect();
+                    const connect = (feature as StandardConnectFeature['standard:connect']).connect;
+                    const res = await connect();
                     const accounts: AccountInfo[] = res.accounts.map((a: WalletAccount) => ({
                         address: a.address,
                         icon: a.icon,
                         raw: a,
                     }));
-                    target = accounts.find((acc: AccountInfo) => acc.address === address)?.raw ?? res.accounts[0];
+                    target = accounts.find((acc: AccountInfo) => acc.address === address)?.raw ?? res.accounts[0] ?? null;
                     this.state = { ...this.state, accounts };
                 }
             } catch (error) {

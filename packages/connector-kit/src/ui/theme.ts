@@ -48,7 +48,7 @@ export function getAccessibleTextColor(hexColor: string): string {
             throw new Error('Invalid hex color format');
         }
 
-        const bigint = parseInt(
+        const bigint = Number.parseInt(
             c.length === 3
                 ? c
                       .split('')
