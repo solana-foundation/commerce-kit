@@ -182,7 +182,7 @@ export function useTransferToken(
                         skipPreflight: false,
                     });
                 } catch (confirmError: any) {
-                    if (process.env.NODE_ENV !== 'production') {
+                    if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
                         console.log(
                             '[useTransferToken] Standard confirmation failed, using robust polling:',
                             confirmError.message,
@@ -213,7 +213,7 @@ export function useTransferToken(
                                 status.confirmationStatus === 'confirmed' ||
                                 status.confirmationStatus === 'finalized'
                             ) {
-                                if (process.env.NODE_ENV !== 'production') {
+                                if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
                                     console.log('[useTransferToken] Transaction confirmed via polling');
                                 }
                                 return; // Success
@@ -358,7 +358,7 @@ export function useTransferToken(
                             errorMessage.includes('last block for which this transaction could have been committed');
 
                         // Log attempt for debugging
-                        if (process.env.NODE_ENV !== 'production') {
+                        if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
                             console.log(
                                 `[useTransferToken] Attempt ${attempt + 1}/${maxAttempts} failed:`,
                                 errorMessage,
