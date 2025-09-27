@@ -157,8 +157,12 @@ export function toMinorUnits(amount: number, decimals: number): bigint {
         throw new Error('Invalid amount/decimals');
     }
     const s = amount.toFixed(decimals); // stable string with exactly `decimals` fraction digits
-    const parts = s.split('.');
-    const integerPart = parts[0] || '0';
-    const fractionalPart = parts[1] || '';
-    return BigInt(integerPart) * 10n ** BigInt(decimals) + BigInt(fractionalPart.padEnd(decimals, '0'));
+    const isNegative = s.startsWith('-');
+    const normalized = isNegative ? s.slice(1) : s;
+    const [integerPart = '0', fractionalPart = ''] = normalized.split('.');
+    const scale = 10n ** BigInt(decimals);
+    const integer = BigInt(integerPart || '0');
+    const fraction = decimals === 0 ? 0n : BigInt((fractionalPart || '').padEnd(decimals, '0'));
+    const minor = integer * scale + fraction;
+    return isNegative ? -minor : minor;
 }

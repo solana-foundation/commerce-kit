@@ -129,3 +129,5 @@ export function displayToLamports(amount: number, currency?: string): number {
     }
     return Math.round(amount * LAMPORTS_PER_SOL);
 }
+
+export { toMinorUnits } from './utils/validation';

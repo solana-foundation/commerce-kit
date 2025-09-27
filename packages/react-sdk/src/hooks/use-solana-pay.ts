@@ -1,5 +1,8 @@
-import { createSolanaPayRequest, SolanaPayRequestOptions } from '@solana-commerce/headless-sdk';
-import { toMinorUnits } from '@solana-commerce/headless-sdk/src/utils/validation';
+import {
+    createSolanaPayRequest,
+    SolanaPayRequestOptions,
+    toMinorUnits,
+} from '@solana-commerce/headless-sdk';
 import { Recipient } from '@solana-commerce/solana-pay';
 import { useMemo } from 'react';
 import { Currency, CurrencyMap } from '../types';

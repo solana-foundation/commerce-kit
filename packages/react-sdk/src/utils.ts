@@ -419,10 +419,11 @@ export const createSolPriceFetcher = (options: SolPriceFetcherOptions = {}): (()
 
     return async (): Promise<number> => {
         for (let attempt = 0; attempt <= retries; attempt++) {
+            let timeoutId: ReturnType<typeof setTimeout> | undefined;
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), timeout);
-                
+                timeoutId = setTimeout(() => controller.abort(), timeout);
+
                 const response = await fetch(endpoint, {
                     signal: controller.signal,
                     headers: {
@@ -430,8 +431,6 @@ export const createSolPriceFetcher = (options: SolPriceFetcherOptions = {}): (()
                         ...headers
                     }
                 });
-                
-                clearTimeout(timeoutId);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -451,6 +450,10 @@ export const createSolPriceFetcher = (options: SolPriceFetcherOptions = {}): (()
                 }
                 // Wait before retry (exponential backoff)
                 await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+            } finally {
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                }
             }
         }
         throw new Error('Unexpected error in price fetching');

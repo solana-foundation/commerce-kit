@@ -170,6 +170,13 @@ export const PaymentButton = memo<PaymentButtonProps>(function PaymentButton({
     const [resolvedRpcUrl, setResolvedRpcUrl] = useState<string>(rpcUrl);
 
     useEffect(() => {
+        if (config.rpcUrl !== undefined) {
+            setResolvedRpcUrl(config.rpcUrl);
+            if (config.rpcUrl) {
+                return;
+            }
+        }
+
         async function resolveRpc() {
             try {
                 const { fetchRpcUrl } = await import('./utils/rpc-resolver');
@@ -184,9 +191,7 @@ export const PaymentButton = memo<PaymentButtonProps>(function PaymentButton({
             }
         }
 
-        if (!config.rpcUrl) {
-            resolveRpc();
-        }
+        resolveRpc();
     }, [config.rpcUrl]);
 
     // Single AppProvider + ArcProvider for the entire component

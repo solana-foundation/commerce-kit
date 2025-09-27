@@ -15,6 +15,15 @@ interface TransactionSuccessProps {
     onViewTransaction?: (signature: string) => void;
 }
 
+function resolveCluster(rpcUrl?: string): 'devnet' | 'testnet' | 'mainnet-beta' | undefined {
+    if (!rpcUrl) return 'mainnet-beta';
+    const normalized = rpcUrl.trim().toLowerCase();
+    if (normalized.includes('devnet')) return 'devnet';
+    if (normalized.includes('testnet')) return 'testnet';
+    if (normalized.includes('localhost') || normalized.includes('127.')) return undefined;
+    return 'mainnet-beta';
+}
+
 export function TransactionSuccess({
     theme,
     config,
@@ -27,10 +36,11 @@ export function TransactionSuccess({
     onClose,
     onViewTransaction,
 }: TransactionSuccessProps) {
+    const cluster = resolveCluster(config.rpcUrl);
     const explorerUrl = signature
-        ? getExplorerLink({ 
-            transaction: signature, 
-            cluster: config.rpcUrl?.includes('devnet') ? 'devnet' : 'mainnet-beta' 
+        ? getExplorerLink({
+              transaction: signature,
+              ...(cluster ? { cluster } : {}),
           })
         : null;
 

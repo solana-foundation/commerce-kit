@@ -15,7 +15,11 @@ import type { RpcEndpointConfig, RpcEndpoint } from '../utils/rpc-resolver';
  */
 export async function POST(request: Request): Promise<Response> {
     try {
-        const config: RpcEndpointConfig = await request.json();
+        const body = await request.json().catch(() => null);
+        if (!body || typeof body !== 'object' || Array.isArray(body)) {
+            return Response.json({ error: 'Invalid request body' }, { status: 400 });
+        }
+        const config = body as RpcEndpointConfig;
         
         // Validate input
         if (!config.network || !['mainnet', 'devnet', 'testnet'].includes(config.network)) {

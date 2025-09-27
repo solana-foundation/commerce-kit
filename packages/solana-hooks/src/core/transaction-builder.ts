@@ -399,6 +399,16 @@ export class TransactionBuilder {
 
         // Create recipient token account if needed (idempotent)
         if (createAccountIfNeeded) {
+            let accountAlreadyExists = false;
+            try {
+                const { value } = await this.rpc.getAccountInfo(toAta).send();
+                accountAlreadyExists = Boolean(value);
+            } catch (error) {
+                if (this.context.debug) {
+                    console.log('⚠️ [Arc] Unable to prefetch recipient ATA state; assuming creation is required.', error);
+                }
+            }
+
             const createAtaInstruction = getCreateAssociatedTokenIdempotentInstruction({
                 mint: mintAddress,
                 owner: toAddress,
@@ -408,10 +418,14 @@ export class TransactionBuilder {
             });
 
             instructions.push(createAtaInstruction);
-            createdAccount = true; // Note: May not actually create if account exists
+            createdAccount = !accountAlreadyExists;
 
             if (this.context.debug) {
-                console.log('🏗️ [Arc] Adding idempotent create instruction for recipient token account:', toAta);
+                if (createdAccount) {
+                    console.log('🏗️ [Arc] Creating recipient token account:', toAta);
+                } else {
+                    console.log('ℹ️ [Arc] Recipient token account already exists, idempotent instruction will no-op:', toAta);
+                }
             }
         }
 

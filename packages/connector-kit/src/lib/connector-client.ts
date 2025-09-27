@@ -106,11 +106,10 @@ export class ConnectorClient {
             wallets: unique.map(walletEntry => {
                 const features = walletEntry.features as WalletFeatureMap;
                 const hasConnect = Boolean(features['standard:connect']);
-                const hasDisconnect = Boolean(features['standard:disconnect']);
                 const chains = walletEntry.chains as IdentifierArray | undefined;
                 const isSolana =
                     Array.isArray(chains) && chains.some(chain => typeof chain === 'string' && chain.includes('solana'));
-                const connectable = hasConnect && hasDisconnect && Boolean(isSolana);
+                const connectable = Boolean(hasConnect && isSolana);
                 return {
                     wallet: walletEntry,
                     name: walletEntry.name,

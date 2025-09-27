@@ -372,9 +372,6 @@ export const WalletPaymentContent = ({
         return (
             <TransactionError
                 theme={theme}
-                config={config}
-                selectedCurrency={selectedCurrency}
-                displayAmount={displayAmount}
                 error={error || 'Payment failed'}
                 onRetry={() => {
                     setPaymentError(false);

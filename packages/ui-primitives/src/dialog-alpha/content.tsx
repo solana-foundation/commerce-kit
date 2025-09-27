@@ -47,7 +47,7 @@ export function DialogContent({
     const contextStyles: React.CSSProperties = isInIframe
         ? {
               // Iframe-friendly styling - let the parent handle modal positioning
-              width: '528px',
+              width: 'auto',
               maxWidth: '90vw',
               maxHeight: '90vh',
               height: 'auto',

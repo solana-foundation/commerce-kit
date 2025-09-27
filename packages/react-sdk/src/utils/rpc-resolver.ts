@@ -102,7 +102,7 @@ function getPublicRpcEndpoint(network: string, priority: string): RpcEndpoint {
 export async function fetchRpcUrl(config: RpcEndpointConfig): Promise<string> {
     try {
         // Try server API first (if available)
-        if (typeof window !== 'undefined' && window.location.pathname.includes('/api/')) {
+        if (typeof window !== 'undefined') {
             try {
                 const response = await fetch('/api/rpc-endpoints', {
                     method: 'POST',

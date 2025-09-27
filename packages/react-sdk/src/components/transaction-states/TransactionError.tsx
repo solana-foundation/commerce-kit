@@ -43,7 +43,7 @@ export function TransactionError({
                         Payment Failed
                     </div>
                     <div className="ck-transaction-error-message" style={{ color: theme.textColor }}>
-                        {errorMessage}
+                        {error instanceof Error ? error.message : error}
                     </div>
                 </div>
 

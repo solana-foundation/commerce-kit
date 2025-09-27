@@ -17,8 +17,14 @@ vi.mock('@solana-commerce/headless-sdk/src/utils/validation', () => ({
         const s = amount.toFixed(decimals);
         const parts = s.split('.');
         const integerPart = parts[0] || '0';
-        const fractionalPart = parts[1] || '';
-        return BigInt(integerPart) * 10n ** BigInt(decimals) + BigInt(fractionalPart.padEnd(decimals, '0'));
+        const fractionalPartRaw = parts[1] || '';
+        const normalizedFractional =
+            decimals === 0 || fractionalPartRaw.length === 0
+                ? decimals === 0
+                    ? '0'
+                    : '0'.repeat(decimals)
+                : fractionalPartRaw.padEnd(decimals, '0');
+        return BigInt(integerPart) * 10n ** BigInt(decimals) + BigInt(normalizedFractional);
     }),
 }));
 
