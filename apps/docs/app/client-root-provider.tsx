@@ -4,7 +4,7 @@ import React, { type ReactNode, useMemo, useState } from 'react'
 import { QueryClient } from '@tanstack/react-query'
 import { AppProvider } from '@solana-commerce/connector-kit'
 import { ArcProvider } from '@solana-commerce/solana-hooks/react'
-import { createProvider } from '@solana-commerce/solana-hooks'
+// Removed unused createProvider import
 import { FloatingCommerceButton } from './components/floating-commerce-button'
 
 export function ClientRootProvider({ children }: { children: ReactNode }) {
@@ -27,16 +27,7 @@ export function ClientRootProvider({ children }: { children: ReactNode }) {
           ? 'https://api.testnet.solana.com'
           : 'https://api.mainnet-beta.solana.com'),
     autoConnect: true,
-    providers: [
-      // Provider structure ready for future swap integrations
-      // Jupiter and other swap providers can be added here when implemented
-      createProvider({
-        swap: [
-          // TODO: Add Jupiter or other swap providers when available
-          // Example: createJupiter({ ... })
-        ],
-      }),
-    ],
+    // Removed unused providers array - ArcWebClientConfig doesn't support it
   }), [])
 
 

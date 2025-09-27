@@ -1,10 +1,8 @@
 'use client';
 
 import { type Address } from '@solana/kit';
+import { type SolanaClusterMoniker } from 'gill';
 import { getClusterInfo, type ClusterInfo } from '../utils/cluster';
-import type { Transport } from '../transports/types';
-import { createHttpTransport } from '../transports/http';
-// Removed Provider import - not needed for MVP
 import { WalletStandardKitSigner, type StandardWalletInfo } from '../hooks/use-standard-wallets';
 import type { ConnectorClient, ConnectorState } from '@solana-commerce/connector-kit';
 
@@ -12,10 +10,10 @@ import type { ConnectorClient, ConnectorState } from '@solana-commerce/connector
 
 /**
  * Configuration for the ArcWebClient.
- * This extends the configuration available in the ArcProvider.
+ * Uses SolanaClusterMoniker from gill for standard network types.
  */
 export interface ArcWebClientConfig {
-    network?: 'mainnet' | 'devnet' | 'testnet';
+    network?: SolanaClusterMoniker;
     rpcUrl?: string;
     commitment?: 'processed' | 'confirmed' | 'finalized';
     autoConnect?: boolean;
@@ -25,8 +23,6 @@ export interface ArcWebClientConfig {
         setItem: (key: string, value: string) => void;
         removeItem: (key: string) => void;
     };
-    /** Pluggable transport for all RPC requests used by hooks/components */
-    transport?: Transport;
     /** Optional shared connector instance to unify wallet state with external providers */
     connector?: ConnectorClient | null;
 }
@@ -90,16 +86,16 @@ export class ArcWebClient {
     private connector: ConnectorClient | null = null;
 
     constructor(config: ArcWebClientConfig) {
-        const rpcUrl = config.rpcUrl || `https://api.${config.network || 'devnet'}.solana.com`;
+        // Expect pre-resolved RPC URL from server-side resolution
+        if (!config.rpcUrl) {
+            throw new Error(
+                'ArcWebClient requires a pre-resolved rpcUrl. ' +
+                'Use server-side RPC resolution before creating the client.'
+            );
+        }
+        
+        const rpcUrl = config.rpcUrl;
         const clusterInfo = getClusterInfo(rpcUrl);
-        // Default transport if none provided
-        const transport =
-            config.transport ||
-            createHttpTransport({
-                url: rpcUrl,
-                timeoutMs: 15000,
-                retry: { attempts: 2, strategy: 'exponential', baseDelayMs: 300, jitter: true },
-            });
 
         this.state = {
             network: {
@@ -120,7 +116,7 @@ export class ArcWebClient {
                 accounts: [],
                 selectedAccount: null,
             },
-            config: { ...config, transport },
+            config,
         };
 
         this.initializeWallets();
@@ -135,12 +131,14 @@ export class ArcWebClient {
         try {
             // Prefer externally provided connector (from app-level provider) when available
             const providedConnector = this.state.config.connector;
-            console.log('[ArcWebClient] Initializing with connector:', {
-                hasConnector: !!providedConnector,
-                connectorConnected: providedConnector?.getSnapshot?.()?.connected,
-                hasSubscribeMethod: typeof providedConnector?.subscribe === 'function',
-                connectorType: providedConnector?.constructor?.name,
-            });
+            if (this.state.config.debug) {
+                console.log('[ArcWebClient] Initializing with connector:', {
+                    hasConnector: !!providedConnector,
+                    connectorConnected: (providedConnector as any)?.getConnectorState?.()?.connected,
+                    hasSubscribeMethod: typeof providedConnector?.subscribe === 'function',
+                    connectorType: providedConnector?.constructor?.name,
+                });
+            }
             if (!providedConnector) {
                 throw new Error(
                     'ArcProvider requires @solana-commerce/connector-kit AppProvider. Wrap your app with AppProvider and ensure connector is passed to Arc.',
@@ -149,12 +147,14 @@ export class ArcWebClient {
             this.connector = providedConnector;
 
             const syncFromConnector = (s: ConnectorState) => {
-                console.log('[ArcWebClient] Syncing from connector state:', {
-                    connected: s.connected,
-                    selectedWallet: s.selectedWallet?.name,
-                    selectedAccount: s.selectedAccount,
-                    accountsCount: s.accounts?.length,
-                });
+                if (this.state.config.debug) {
+                    console.log('[ArcWebClient] Syncing from connector state:', {
+                        connected: s.connected,
+                        selectedWallet: s.selectedWallet?.name,
+                        selectedAccount: s.selectedAccount,
+                        accountsCount: s.accounts?.length,
+                    });
+                }
                 const selectedWallet = s.selectedWallet;
                 const connected = s.connected;
                 const connecting = s.connecting;
@@ -206,42 +206,50 @@ export class ArcWebClient {
                         })),
                     },
                 };
-                console.log('[ArcWebClient] State updated, notifying listeners:', {
-                    connected: this.state.wallet.connected,
-                    listenersCount: this.listeners.size,
-                });
+                if (this.state.config.debug) {
+                    console.log('[ArcWebClient] State updated, notifying listeners:', {
+                        connected: this.state.wallet.connected,
+                        listenersCount: this.listeners.size,
+                    });
+                }
                 this.notify();
             };
 
             // Initial sync and subscribe
-            console.log('[ArcWebClient] Initial sync and subscribe to connector');
-            syncFromConnector(this.connector.getSnapshot());
+            if (this.state.config.debug) {
+                console.log('[ArcWebClient] Initial sync and subscribe to connector');
+            }
+            syncFromConnector((this.connector as any).getConnectorState());
 
             const unsubscribe = this.connector.subscribe((state: any) => {
-                console.log('[ArcWebClient] Connector state changed, calling syncFromConnector');
+                if (this.state.config.debug) {
+                    console.log('[ArcWebClient] Connector state changed, calling syncFromConnector');
+                }
                 syncFromConnector(state);
             });
             this.walletUnsubscribers.push(unsubscribe);
-            console.log('[ArcWebClient] Subscribed to connector changes');
+            if (this.state.config.debug) {
+                console.log('[ArcWebClient] Subscribed to connector changes');
+            }
         } catch (error) {
-            console.warn('Failed to initialize connector:', error);
+            if (this.state.config.debug) {
+                console.warn('Failed to initialize connector:', error);
+            }
         }
     }
 
     /** Update configuration without recreating the client */
     updateConfig(next: ArcWebClientConfig): void {
-        const rpcUrl = next.rpcUrl || `https://api.${next.network || 'devnet'}.solana.com`;
+        if (!next.rpcUrl) {
+            throw new Error(
+                'ArcWebClient updateConfig requires a pre-resolved rpcUrl. ' +
+                'Use server-side RPC resolution before updating config.'
+            );
+        }
+        
+        const rpcUrl = next.rpcUrl;
         const clusterInfo = getClusterInfo(rpcUrl);
         const prevRpcUrl = this.state.network.rpcUrl;
-        // Ensure transport persists or defaults when config updates
-        const transport =
-            next.transport ||
-            this.state.config.transport ||
-            createHttpTransport({
-                url: rpcUrl,
-                timeoutMs: 15000,
-                retry: { attempts: 2, strategy: 'exponential', baseDelayMs: 300, jitter: true },
-            });
 
         this.state = {
             ...this.state,
@@ -253,7 +261,7 @@ export class ArcWebClient {
                 canAirdrop: clusterInfo.isDevnet || clusterInfo.isTestnet,
                 clusterInfo,
             },
-            config: { ...next, transport },
+            config: next,
         };
 
         // If RPC URL changed, we may want to reset ephemeral wallet state if needed
@@ -345,7 +353,9 @@ export class ArcWebClient {
                 this.notify();
             }
         } catch (error) {
-            console.error('Failed to select account:', error);
+            if (this.state.config.debug) {
+                console.error('Failed to select account:', error);
+            }
             throw error;
         }
     }
@@ -358,21 +368,13 @@ export class ArcWebClient {
     }
 
     private notify(): void {
-        console.log('[ArcWebClient] notify() called, calling', this.listeners.size, 'listeners');
+        if (this.state.config.debug) {
+            console.log('[ArcWebClient] notify() called, calling', this.listeners.size, 'listeners');
+        }
         this.listeners.forEach(listener => listener(this.state));
     }
 
-    private getStorage(): ArcWebClientConfig['storage'] | null {
-        if (this.state.config.storage) return this.state.config.storage;
-        if (typeof window !== 'undefined' && window.localStorage) {
-            return {
-                getItem: (k: string) => window.localStorage.getItem(k),
-                setItem: (k: string, v: string) => window.localStorage.setItem(k, v),
-                removeItem: (k: string) => window.localStorage.removeItem(k),
-            };
-        }
-        return null;
-    }
+    // Removed getStorage() - unused since connector manages persistence
 
     /**
      * Best-effort detection of versioned (v0) transaction support from Wallet Standard features

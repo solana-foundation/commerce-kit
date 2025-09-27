@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { STABLECOINS, type StablecoinConfig } from '../types/stablecoin';
+import { STABLECOINS, type StablecoinConfig } from '../types/tokens';
 
 describe('Types & Configuration', () => {
     describe('STABLECOINS Configuration', () => {

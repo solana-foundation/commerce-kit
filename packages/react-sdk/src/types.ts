@@ -4,14 +4,27 @@
  */
 
 import { SPLToken } from '@solana-commerce/solana-pay';
-import { address } from 'gill';
+import { address, SolanaClusterMoniker } from 'gill';
+import { TOKEN_PROGRAM_ADDRESS, TOKEN_2022_PROGRAM_ADDRESS } from 'gill/programs/token';
 import type React from 'react';
 
 // Core enums and types
 export type CommerceMode = 'cart' | 'tip' | 'buyNow';
 export type Position = 'inline' | 'overlay';
 export type BorderRadius = 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
-export type Network = 'mainnet-beta' | 'devnet' | 'localnet';
+// Use SolanaClusterMoniker from gill instead of custom Network type
+// Note: SolanaClusterMoniker uses "mainnet" (not "mainnet-beta") and includes "testnet"
+export type Network = SolanaClusterMoniker;
+
+// State union types
+export type TransactionState = 'idle' | 'success' | 'error';
+export type ProcessingState = 'idle' | 'processing' | 'success' | 'error';
+export type TipModalStep = 'form' | 'payment';
+export type CheckoutStep = 'details' | 'payment' | 'confirmation';
+export type ModalState = 'closed' | 'opening' | 'open' | 'closing';
+export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
+export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'error';
+export type VerificationState = 'pending' | 'verifying' | 'verified' | 'failed';
 
 // Merchant configuration
 export interface MerchantConfig {
@@ -45,6 +58,7 @@ export interface SolanaCommerceConfig {
     readonly showQR?: boolean;
     readonly enableWalletConnect?: boolean;
     readonly showMerchantInfo?: boolean;
+    readonly debug?: boolean;
 }
 
 // Payment callbacks
@@ -101,16 +115,53 @@ export interface TipModalContentProps {
 
 export type PaymentMethod = 'wallet' | 'qr';
 export type Currency = 'USDC' | 'SOL' | 'USDT' | 'USDC_DEVNET' | 'SOL_DEVNET' | 'USDT_DEVNET';
-export const CurrencyMap: Record<Currency, SPLToken> = {
-    // Mainnet addresses
-    USDC: address('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'), // USDC mainnet
-    SOL: address('So11111111111111111111111111111111111111112'), // Native SOL
-    USDT: address('Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'), // USDT mainnet
 
-    // Devnet addresses
-    USDC_DEVNET: address('4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU'), // USDC devnet
-    SOL_DEVNET: address('So11111111111111111111111111111111111111112'), // Native SOL (same on all networks)
-    USDT_DEVNET: address('E6Z6zLzk8MWY3TY8E87mr88FhGowEPJTeMWzkqtL6qkF'), // USDT devnet
+// Enhanced token information including program and metadata
+export interface SPLTokenInfo {
+    mint: SPLToken;
+    tokenProgram: SPLToken;
+    decimals: number;
+    symbol: string;
+    name: string;
+}
+
+// Enhanced currency mapping with complete token information
+export const CurrencyMap: Record<Currency, SPLTokenInfo | 'SOL'> = {
+    // Native SOL (no mint address, handled specially)
+    SOL: 'SOL',
+    SOL_DEVNET: 'SOL',
+
+    // Mainnet SPL tokens
+    USDC: {
+        mint: address('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'),
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
+        decimals: 6,
+        symbol: 'USDC',
+        name: 'USD Coin',
+    },
+    USDT: {
+        mint: address('Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'),
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
+        decimals: 6,
+        symbol: 'USDT',
+        name: 'Tether USD',
+    },
+
+    // Devnet SPL tokens (for testing)
+    USDC_DEVNET: {
+        mint: address('4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU'),
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
+        decimals: 6,
+        symbol: 'USDC',
+        name: 'USD Coin (Devnet)',
+    },
+    USDT_DEVNET: {
+        mint: address('E6Z6zLzk8MWY3TY8E87mr88FhGowEPJTeMWzkqtL6qkF'),
+        tokenProgram: TOKEN_PROGRAM_ADDRESS,
+        decimals: 6,
+        symbol: 'USDT',
+        name: 'Tether USD (Devnet)',
+    },
 };
 
 export interface TipFormData {

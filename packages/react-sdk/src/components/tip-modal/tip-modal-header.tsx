@@ -6,15 +6,15 @@
 import React, { memo } from 'react';
 import { sanitizeString } from '../../utils';
 import { useHover } from '../../hooks/use-hover';
-import { BACK_ARROW_ICON, CLOSE_ICON } from '../../constants/tip-modal';
-import type { ThemeConfig, SolanaCommerceConfig, PaymentMethod } from '../../types';
+import { BackArrowIcon, CloseIcon } from '../icons';
+import type { ThemeConfig, SolanaCommerceConfig, PaymentMethod, TransactionState, TipModalStep } from '../../types';
 
 interface TipModalHeaderProps {
     theme: Required<ThemeConfig>;
     config: SolanaCommerceConfig;
-    currentStep: 'form' | 'payment';
+    currentStep: TipModalStep;
     selectedPaymentMethod: PaymentMethod;
-    transactionState?: 'idle' | 'success' | 'error';
+    transactionState?: TransactionState;
     onBack: () => void;
     onClose: () => void;
 }
@@ -42,7 +42,7 @@ export const TipModalHeader = memo<TipModalHeaderProps>(
                             className={`ck-header-back-button ${backButtonHover.isHovered ? 'hovered' : ''} ${backButtonHover.isPressed ? 'pressed' : ''}`}
                             type="button"
                         >
-                            {BACK_ARROW_ICON}
+                            <BackArrowIcon />
                         </button>
                     )}
                     {currentStep === 'form' &&
@@ -87,7 +87,7 @@ export const TipModalHeader = memo<TipModalHeaderProps>(
                     type="button"
                     onClick={onClose}
                 >
-                    {CLOSE_ICON}
+                    <CloseIcon />
                 </button>
             </div>
         );

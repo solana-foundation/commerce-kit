@@ -3,7 +3,7 @@
  */
 
 import { STABLECOINS } from './types';
-import { address as parseAddress } from 'gill';
+import { isAddress, LAMPORTS_PER_SOL } from 'gill';
 
 export function validateCustomerInfo(email?: string, name?: string, mode?: string) {
     const errors: Record<string, string> = {};
@@ -35,11 +35,16 @@ export function validatePaymentMethod(method: string, allowedMints: string[] = [
     return { valid: true };
 }
 
-export function calculateTotal(products: any[], mode: string) {
+interface Product {
+    price: number;
+    [key: string]: unknown;
+}
+
+export function calculateTotal(products: Product[], mode: string): number {
     if (!products?.length) return 0;
 
     if (mode === 'cart') {
-        return products.reduce((sum: number, product: any) => sum + product.price, 0);
+        return products.reduce((sum: number, product: Product) => sum + product.price, 0);
     }
 
     return products[0]?.price || 0;
@@ -49,18 +54,11 @@ export function createPaymentReference() {
     return `commerce-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
-export function validateWalletAddress(addressStr: string): boolean {
-    try {
-        // Use gill's address parser for robust base58 validation
-        parseAddress(addressStr);
-        return true;
-    } catch {
-        return false;
-    }
-}
+// Re-export isAddress from gill for convenience
+export { isAddress as validateWalletAddress } from 'gill';
 
 export function createPaymentUrl(recipient: string, amount: number, merchantName: string, mode: string = 'payment') {
-    if (!validateWalletAddress(recipient) || amount <= 0) return '';
+    if (!isAddress(recipient) || amount <= 0) return '';
 
     const params = new URLSearchParams({
         amount: amount.toString(),
@@ -73,10 +71,16 @@ export function createPaymentUrl(recipient: string, amount: number, merchantName
     return `solana:${recipient}?${params.toString()}`;
 }
 
-export function validatePaymentRequest(request: any) {
+interface PaymentRequest {
+    recipient: string;
+    amount: number;
+    [key: string]: unknown;
+}
+
+export function validatePaymentRequest(request: PaymentRequest) {
     const errors: string[] = [];
 
-    if (!request.recipient || !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(request.recipient)) {
+    if (!request.recipient || !isAddress(request.recipient)) {
         errors.push('Invalid recipient wallet address');
     }
 
@@ -91,21 +95,18 @@ export function validatePaymentRequest(request: any) {
 }
 
 export function formatSolAmount(lamports: number, decimals: number = 3): string {
-    return (lamports / 1000000000).toFixed(decimals);
+    return (lamports / LAMPORTS_PER_SOL).toFixed(decimals);
 }
 
 export function parseSolAmount(solAmount: string): number {
     const parsed = parseFloat(solAmount);
-    return isNaN(parsed) ? 0 : Math.round(parsed * 1000000000);
+    return isNaN(parsed) ? 0 : Math.round(parsed * LAMPORTS_PER_SOL);
 }
 
 /**
- * Validate Solana address
+ * Validate Solana address (alias for validateWalletAddress)
  */
-export function isValidSolanaAddress(address: string): boolean {
-    // Backward compatibility helper; delegate to validateWalletAddress
-    return validateWalletAddress(address);
-}
+export { isAddress as isValidSolanaAddress } from 'gill';
 
 /**
  * Convert lamports to display amount
@@ -115,7 +116,7 @@ export function lamportsToDisplay(lamports: number, currency?: string): string {
         const stablecoin = STABLECOINS[currency];
         return (lamports / Math.pow(10, stablecoin.decimals)).toFixed(stablecoin.decimals);
     }
-    return (lamports / 1000000000).toFixed(9);
+    return (lamports / LAMPORTS_PER_SOL).toFixed(9);
 }
 
 /**
@@ -126,5 +127,5 @@ export function displayToLamports(amount: number, currency?: string): number {
         const stablecoin = STABLECOINS[currency];
         return Math.round(amount * Math.pow(10, stablecoin.decimals));
     }
-    return Math.round(amount * 1000000000);
+    return Math.round(amount * LAMPORTS_PER_SOL);
 }

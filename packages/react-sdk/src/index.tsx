@@ -22,19 +22,41 @@ export type {
     Network,
 } from './types';
 
+// Re-export SolanaClusterMoniker from gill for convenience
+export type { SolanaClusterMoniker } from 'gill';
+
 // Re-export payment configuration types
 export type { PaymentConfig, Product } from './components/ui/secure-iframe-shell';
+
+// Re-export price fetching utilities for enterprise users
+export { 
+    createSolPriceFetcher,
+    fetchSolPrice,
+    getCachedSolPrice,
+    type SolPriceFetcherOptions
+} from './utils';
+
+// Export server-side RPC resolution utilities
+export { 
+    fetchRpcUrl, 
+    resolveRpcEndpoint,
+    type RpcEndpointConfig, 
+    type RpcEndpoint 
+} from './utils/rpc-resolver';
+
+// Export API route handler
+export { POST as rpcEndpointsHandler } from './api/rpc-endpoints';
 
 import React, { useState, useCallback, useMemo, memo, useEffect } from 'react';
 import { ModalShell } from './components/ui/modal-shell';
 import { SecureIframeShell } from './components/ui/secure-iframe-shell';
 import { AppProvider } from '@solana-commerce/connector-kit';
 import { ArcProvider } from '@solana-commerce/solana-hooks';
+import { isAddress } from 'gill';
 import {
     useTheme,
     useTotalAmount,
     usePaymentUrl,
-    validateWalletAddress,
     createPaymentError,
     getBorderRadius,
 } from './utils';
@@ -92,7 +114,7 @@ export const PaymentButton = memo<PaymentButtonProps>(function PaymentButton({
     );
 
     // Validation checks AFTER all hooks to prevent React hooks rule violations
-    const isValidWallet = validateWalletAddress(config.merchant.wallet);
+    const isValidWallet = isAddress(config.merchant.wallet);
     const isValidPricing = config.mode === 'tip' || totalAmount > 0;
 
     // Handle validation errors gracefully without early returns
@@ -144,10 +166,33 @@ export const PaymentButton = memo<PaymentButtonProps>(function PaymentButton({
     const rpcUrl = config.rpcUrl || 'https://api.mainnet-beta.solana.com';
     const network = 'mainnet';
 
+    // Server-side RPC URL resolution
+    const [resolvedRpcUrl, setResolvedRpcUrl] = useState<string>(rpcUrl);
+
+    useEffect(() => {
+        async function resolveRpc() {
+            try {
+                const { fetchRpcUrl } = await import('./utils/rpc-resolver');
+                const resolvedUrl = await fetchRpcUrl({
+                    network: 'mainnet',
+                    endpoint: config.rpcUrl,
+                    priority: 'reliable'
+                });
+                setResolvedRpcUrl(resolvedUrl);
+            } catch (error) {
+                console.warn('[PaymentButton] RPC resolution failed, using fallback:', error);
+            }
+        }
+
+        if (!config.rpcUrl) {
+            resolveRpc();
+        }
+    }, [config.rpcUrl]);
+
     // Single AppProvider + ArcProvider for the entire component
     return (
         <AppProvider connectorConfig={connectorConfig}>
-            <ArcProvider config={{ network, rpcUrl }}>{renderContent()}</ArcProvider>
+            <ArcProvider config={{ network, rpcUrl: resolvedRpcUrl }}>{renderContent()}</ArcProvider>
         </AppProvider>
     );
 
@@ -158,7 +203,7 @@ export const PaymentButton = memo<PaymentButtonProps>(function PaymentButton({
                 <div style={{ fontFamily: theme.fontFamily, ...style }} className={className}>
                     {isClient ? (
                         <SecureIframeShell
-                            config={config}
+                            config={{...config, rpcUrl: resolvedRpcUrl}}
                             theme={theme}
                             onPayment={(amount, currency) => {
                                 try {
@@ -213,7 +258,7 @@ export const PaymentButton = memo<PaymentButtonProps>(function PaymentButton({
                 >
                     {isClient ? (
                         <SecureIframeShell
-                            config={config}
+                            config={{...config, rpcUrl: resolvedRpcUrl}}
                             theme={theme}
                             onPayment={(amount, currency) => {
                                 try {

@@ -1,9 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { useSolanaPay, toMinorUnits } from '../../hooks/use-solana-pay';
+import { useSolanaPay } from '../../hooks/use-solana-pay';
+import { toMinorUnits } from '@solana-commerce/headless-sdk/src/utils/validation';
 
 // Mock the headless SDK
-vi.mock('@solana-commerce/headless-sdk');
+vi.mock('@solana-commerce/headless-sdk', () => ({
+    createSolanaPayRequest: vi.fn(),
+}));
+
+vi.mock('@solana-commerce/headless-sdk/src/utils/validation', () => ({
+    toMinorUnits: vi.fn((amount: number, decimals: number): bigint => {
+        // Real implementation for tests
+        if (!Number.isFinite(amount) || decimals < 0) {
+            throw new Error('Invalid amount/decimals');
+        }
+        const s = amount.toFixed(decimals);
+        const parts = s.split('.');
+        const integerPart = parts[0] || '0';
+        const fractionalPart = parts[1] || '';
+        return BigInt(integerPart) * 10n ** BigInt(decimals) + BigInt(fractionalPart.padEnd(decimals, '0'));
+    }),
+}));
 
 // Get the mocked function
 import { createSolanaPayRequest } from '@solana-commerce/headless-sdk';
@@ -168,9 +185,6 @@ describe('useSolanaPay', () => {
             const mockError = new Error('Payment creation failed');
             mockCreateSolanaPayRequest.mockRejectedValue(mockError);
 
-            // Mock console.error to avoid test output noise
-            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
             const { result } = renderHook(() =>
                 useSolanaPay('9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM', 10, 'USDC'),
             );
@@ -180,9 +194,7 @@ describe('useSolanaPay', () => {
             });
 
             expect(result.current.paymentRequest).toBe(null);
-            expect(consoleSpy).toHaveBeenCalledWith('Error creating Solana Pay request:', mockError);
-
-            consoleSpy.mockRestore();
+            expect(result.current.error).toEqual(mockError);
         });
 
         it('should generate unique references for each payment', async () => {
@@ -364,6 +376,53 @@ describe('useSolanaPay', () => {
                 );
             });
         });
+
+        it('should handle devnet currencies correctly', async () => {
+            mockCreateSolanaPayRequest.mockResolvedValue(mockPaymentRequest);
+
+            // Test USDC_DEVNET
+            const { rerender } = renderHook(
+                ({ currency }) => useSolanaPay('9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM', 10, currency),
+                { initialProps: { currency: 'USDC_DEVNET' as const } }
+            );
+
+            await waitFor(() => {
+                expect(mockCreateSolanaPayRequest).toHaveBeenCalledWith(
+                    expect.objectContaining({
+                        amount: 10000000n, // 10 USDC_DEVNET with 6 decimals
+                        splToken: '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU', // USDC_DEVNET mint
+                    }),
+                    expect.any(Object),
+                );
+            });
+
+            // Test SOL_DEVNET
+            rerender({ currency: 'SOL_DEVNET' as const });
+            
+            await waitFor(() => {
+                expect(mockCreateSolanaPayRequest).toHaveBeenCalledWith(
+                    expect.objectContaining({
+                        amount: 10000000000n, // 10 SOL_DEVNET with 9 decimals
+                        splToken: undefined, // SOL_DEVNET doesn't use splToken
+                    }),
+                    expect.any(Object),
+                );
+            });
+        });
+
+        it('should validate all supported currencies without errors', () => {
+            const supportedCurrencies: Array<'USDC' | 'SOL' | 'USDT' | 'USDC_DEVNET' | 'SOL_DEVNET' | 'USDT_DEVNET'> = [
+                'USDC', 'SOL', 'USDT', 'USDC_DEVNET', 'SOL_DEVNET', 'USDT_DEVNET'
+            ];
+            
+            mockCreateSolanaPayRequest.mockResolvedValue(mockPaymentRequest);
+            
+            supportedCurrencies.forEach(currency => {
+                expect(() => {
+                    renderHook(() => useSolanaPay('9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM', 10, currency));
+                }).not.toThrow();
+            });
+        });
     });
 
     describe('QR Code options', () => {
@@ -450,9 +509,8 @@ describe('useSolanaPay', () => {
 
     describe('Error scenarios', () => {
         it('should handle network errors', async () => {
-            mockCreateSolanaPayRequest.mockRejectedValue(new Error('Network error'));
-
-            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+            const networkError = new Error('Network error');
+            mockCreateSolanaPayRequest.mockRejectedValue(networkError);
 
             const { result } = renderHook(() =>
                 useSolanaPay('9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM', 10, 'USDC'),
@@ -463,15 +521,12 @@ describe('useSolanaPay', () => {
             });
 
             expect(result.current.paymentRequest).toBe(null);
-            expect(consoleSpy).toHaveBeenCalledWith('Error creating Solana Pay request:', expect.any(Error));
-
-            consoleSpy.mockRestore();
+            expect(result.current.error).toEqual(networkError);
         });
 
         it('should handle invalid recipient addresses', async () => {
-            mockCreateSolanaPayRequest.mockRejectedValue(new Error('Invalid recipient address'));
-
-            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+            const addressError = new Error('Invalid recipient address');
+            mockCreateSolanaPayRequest.mockRejectedValue(addressError);
 
             const { result } = renderHook(() => useSolanaPay('invalid-address', 10, 'USDC'));
 
@@ -480,7 +535,31 @@ describe('useSolanaPay', () => {
             });
 
             expect(result.current.paymentRequest).toBe(null);
-            expect(consoleSpy).toHaveBeenCalled();
+            expect(result.current.error).toEqual(addressError);
+        });
+
+        it('should throw error for unsupported currency', () => {
+            // Mock console.error to avoid test output noise
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+            expect(() => {
+                renderHook(() => 
+                    useSolanaPay('9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM', 10, 'ZZZ' as any)
+                );
+            }).toThrow('Unsupported currency: ZZZ. Supported currencies are: SOL, SOL_DEVNET, USDC, USDT, USDC_DEVNET, USDT_DEVNET');
+
+            consoleSpy.mockRestore();
+        });
+
+        it('should throw error for another invalid currency format', () => {
+            // Mock console.error to avoid test output noise
+            const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+            expect(() => {
+                renderHook(() => 
+                    useSolanaPay('9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM', 15, 'INVALID_TOKEN' as any)
+                );
+            }).toThrow('Unsupported currency: INVALID_TOKEN');
 
             consoleSpy.mockRestore();
         });

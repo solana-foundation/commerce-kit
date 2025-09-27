@@ -1,6 +1,6 @@
-import React from 'react';
 import type { ThemeConfig, MerchantConfig, Currency } from '../../types';
-import { TokenIcon, SuccessIcon } from '../icons';
+import { SuccessIcon } from '../icons';
+import { getExplorerLink } from 'gill';
 
 interface TransactionSuccessProps {
     theme: Required<ThemeConfig>;
@@ -28,7 +28,10 @@ export function TransactionSuccess({
     onViewTransaction,
 }: TransactionSuccessProps) {
     const explorerUrl = signature
-        ? `https://explorer.solana.com/tx/${signature}${config.rpcUrl?.includes('devnet') ? '?cluster=devnet' : ''}`
+        ? getExplorerLink({ 
+            transaction: signature, 
+            cluster: config.rpcUrl?.includes('devnet') ? 'devnet' : 'mainnet-beta' 
+          })
         : null;
 
     // Format address/signature for display (first 4 + ... + last 4)

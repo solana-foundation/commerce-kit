@@ -23,6 +23,8 @@ export type {
 
 // Provider types
 export type { ArcProviderProps } from './core/arc-provider';
+export type { ArcWebClientConfig } from './core/arc-web-client';
+export type { SolanaClusterMoniker } from 'gill';
 
 // ===== ADDRESS HELPERS =====
 export { address } from '@solana/kit';
@@ -34,11 +36,6 @@ export { QueryInvalidator, createInvalidator } from './utils/invalidate';
 export type { InvalidateOptions } from './utils/invalidate';
 
 // ===== CONFIGURATION =====
-export { createSolanaConfig } from './config/create-config';
-export type { SolanaConfig } from './config/create-config';
-
-// ===== MINIMAL STUB =====
-export { createProvider } from './core/provider';
 
 // ===== VALIDATION TYPES =====
 export type { ValidationOptions, ValidationResult } from './utils/schema-validation';

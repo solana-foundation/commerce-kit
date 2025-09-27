@@ -1,39 +1,13 @@
 'use client';
 
-import React, { createContext, useEffect, useMemo, useRef, useState } from 'react';
-import { ConnectorClient, AppProvider, useConnectorClient } from '@solana-commerce/connector-kit';
-
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ConnectorClient, useConnectorClient } from '@solana-commerce/connector-kit';
 import { useTransferSOL, useTransferToken, useArcClient, address } from '@solana-commerce/solana-hooks';
-
-type Address = ReturnType<typeof address>;
 import type { SolanaCommerceConfig, ThemeConfig } from '../../types';
-
-// Local type definitions (not exported from main package)
-interface TransferSOLOptions {
-    to: string | Address;
-    amount: bigint;
-    from?: string | Address;
-}
-
-interface TransferSOLResult {
-    signature: string;
-}
-
-interface TransferTokenOptions {
-    mint: string | Address;
-    to: string | Address;
-    amount: bigint;
-    from?: string | Address;
-    createAccountIfNeeded?: boolean;
-}
-
-interface TransferTokenResult {
-    signature: string;
-}
+import { CurrencyMap } from '../../types';
 import { IFRAME_BUNDLE } from '../../iframe-app/bundle';
 import { IFRAME_STYLES } from '../../iframe-app/bundle';
-import { fetchSolPrice, convertUsdToLamports } from '../../utils';
-import { STABLECOINS } from '@solana-commerce/headless-sdk/src/types/stablecoin';
+import { fetchSolPrice } from '../../utils';
 
 /**
  * Product configuration for cart and buyNow modes
@@ -82,6 +56,12 @@ export interface Product {
 export interface PaymentConfig {
     /** Fixed SOL price override (USD). If not provided, fetches from price oracle */
     solPriceUsd?: number;
+    /** 
+     * Custom SOL price fetching function. Use this for enterprise applications,
+     * private price oracles, or when you need to avoid public API rate limits.
+     * If not provided, defaults to CoinGecko public API.
+     */
+    getSolPrice?: () => Promise<number>;
     /** Token decimals override. If not provided, uses known token configurations */
     tokenDecimals?: { [currency: string]: number };
     /** Fallback SOL price if API fails and no cache available */
@@ -99,13 +79,6 @@ interface SecureIframeShellProps {
     paymentConfig?: PaymentConfig;
 }
 
-// Token mint addresses for different networks
-const TOKEN_MINTS = {
-    USDC: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // Mainnet USDC
-    USDC_DEVNET: '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU', // Devnet USDC
-    USDT: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB', // Mainnet USDT
-    USDT_DEVNET: 'EJwZgeZrdC8TXTQbQBoL6bfuAnFUUy1PVCMB4DYPzVaS', // Devnet USDT
-} as const;
 
 /**
  * Secure iframe shell using srcDoc + postMessage (no allow-same-origin).
@@ -115,18 +88,25 @@ const TOKEN_MINTS = {
  */
 export function SecureIframeShell({ config, theme, onPayment, onCancel, paymentConfig }: SecureIframeShellProps) {
     const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
-    // Force mainnet for testing with real USDC
+    
+    // Use RPC URL from parent (already resolved server-side)
     const rpcUrl = config.rpcUrl || 'https://api.mainnet-beta.solana.com';
     const network = 'mainnet';
+
+    if (config.debug) {
+        console.log('[SecureIframeShell] Using RPC URL:', rpcUrl);
+    }
 
     // Get the connector from AppProvider context
     const connectorClient = useConnectorClient();
 
-    console.log('[SecureIframeShell] ConnectorClient from context:', {
-        hasClient: !!connectorClient,
-        connected: connectorClient?.getSnapshot?.()?.connected,
-        selectedWallet: connectorClient?.getSnapshot?.()?.selectedWallet?.name,
-    });
+    if (config.debug) {
+        console.log('[SecureIframeShell] ConnectorClient from context:', {
+            hasClient: !!connectorClient,
+            connected: (connectorClient as any)?.getConnectorState?.()?.connected,
+            selectedWallet: (connectorClient as any)?.getConnectorState?.()?.selectedWallet?.name,
+        });
+    }
 
     if (!connectorClient) {
         return <div>Loading connector...</div>;
@@ -138,11 +118,11 @@ export function SecureIframeShell({ config, theme, onPayment, onCancel, paymentC
         if (connectorClient) {
             try {
                 await connectorClient.disconnect();
-                if (process.env.NODE_ENV !== 'production') {
+                if (config.debug) {
                     console.log('[SecureIframeShell] Wallet disconnected on modal close');
                 }
             } catch (error) {
-                if (process.env.NODE_ENV !== 'production') {
+                if (config.debug) {
                     console.warn('[SecureIframeShell] Failed to disconnect wallet on close:', error);
                 }
             }
@@ -168,10 +148,12 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
     // Use the ConnectorClient from context
     const connectorClient = useConnectorClient();
 
-    console.log('[SecureIframeShellInner] ConnectorClient from context:', {
-        hasClient: !!connectorClient,
-        connected: connectorClient?.getSnapshot?.()?.connected,
-    });
+    if (config.debug) {
+        console.log('[SecureIframeShellInner] ConnectorClient from context:', {
+            hasClient: !!connectorClient,
+            connected: (connectorClient as any)?.getConnectorState?.()?.connected,
+        });
+    }
 
     if (!connectorClient) {
         return <div>Loading connector...</div>;
@@ -186,13 +168,15 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
 
     // Debug: Check ArcClient state - now using the fixed ArcProvider
     const arcClient = useArcClient();
-    console.log('[SecureIframeShell] ArcClient wallet state:', {
-        connected: arcClient.wallet.connected,
-        address: arcClient.wallet.address,
-        hasSigner: !!arcClient.wallet.signer,
-        selectedAccount: arcClient.wallet.selectedAccount,
-        accountsCount: arcClient.wallet.accounts?.length,
-    });
+    if (config.debug) {
+        console.log('[SecureIframeShell] ArcClient wallet state:', {
+            connected: arcClient.wallet.connected,
+            address: arcClient.wallet.address,
+            hasSigner: !!arcClient.wallet.signer,
+            selectedAccount: arcClient.wallet.selectedAccount,
+            accountsCount: arcClient.wallet.accounts?.length,
+        });
+    }
 
     // State to track current payment attempt
     const [currentPayment, setCurrentPayment] = useState<{
@@ -211,57 +195,56 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
             if (typeof price === 'number' && price > 0 && isFinite(price)) {
                 return price;
             }
-            console.warn('[PaymentConfig] Invalid solPriceUsd override, falling back to API:', price);
+            if (config.debug) {
+                console.warn('[PaymentConfig] Invalid solPriceUsd override, falling back to price fetcher:', price);
+            }
         }
 
         try {
-            // Attempt to fetch from price oracle
+            // Use custom price fetching function if provided
+            if (paymentConfig?.getSolPrice) {
+                if (config.debug) {
+                    console.log('[Payment] Using custom getSolPrice function');
+                }
+                const price = await paymentConfig.getSolPrice();
+                if (typeof price === 'number' && price > 0 && isFinite(price)) {
+                    return price;
+                } else {
+                    throw new Error(`Custom getSolPrice returned invalid value: ${price}`);
+                }
+            }
+
+            // Default to CoinGecko API
+            if (config.debug) {
+                console.log('[Payment] Using default CoinGecko price fetcher');
+            }
             const price = await fetchSolPrice();
             return price;
         } catch (error) {
-            console.warn('[Payment] Failed to fetch SOL price:', error);
+            if (config.debug) {
+                console.warn('[Payment] Failed to fetch SOL price:', error);
+            }
 
             // Use fallback if provided
             if (paymentConfig?.fallbackSolPriceUsd !== undefined) {
                 const fallback = paymentConfig.fallbackSolPriceUsd;
                 if (typeof fallback === 'number' && fallback > 0 && isFinite(fallback)) {
-                    console.info('[Payment] Using fallback SOL price:', fallback);
+                    if (config.debug) {
+                        console.info('[Payment] Using fallback SOL price:', fallback);
+                    }
                     return fallback;
                 }
             }
 
             // Final fallback with a reasonable recent SOL price
             const defaultFallback = 100;
-            console.info('[Payment] Using default fallback SOL price:', defaultFallback);
+            if (config.debug) {
+                console.info('[Payment] Using default fallback SOL price:', defaultFallback);
+            }
             return defaultFallback;
         }
     };
 
-    // Helper function to get token decimals with validation and fallbacks
-    const getTokenDecimals = (currency: string): number => {
-        // Check if explicit decimals override is provided
-        if (paymentConfig?.tokenDecimals?.[currency] !== undefined) {
-            const decimals = paymentConfig.tokenDecimals[currency];
-            if (typeof decimals === 'number' && Number.isInteger(decimals) && decimals >= 0 && decimals <= 18) {
-                return decimals;
-            }
-            console.warn('[PaymentConfig] Invalid tokenDecimals override for', currency, ':', decimals);
-        }
-
-        // Try to get decimals from known stablecoin configuration
-        const stablecoinConfig = STABLECOINS[currency as keyof typeof STABLECOINS];
-        if (stablecoinConfig?.decimals !== undefined) {
-            return stablecoinConfig.decimals;
-        }
-
-        // Fallback based on common token standards
-        if (currency.includes('SOL')) return 9; // SOL always has 9 decimals
-        if (currency.includes('USDC') || currency.includes('USDT')) return 6; // Common for stablecoins
-
-        // Safe default
-        console.warn('[Payment] Unknown decimals for currency', currency, ', using default 6');
-        return 6;
-    };
 
     // Create the HTML document for the iframe with the bundled app
     const srcDoc = useMemo(() => {
@@ -283,7 +266,7 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
     // Function to execute the actual payment after wallet connection
     const executePayment = async (paymentInfo: { amount: number; currency: string; walletName: string }) => {
         try {
-            if (process.env.NODE_ENV !== 'production') {
+            if (config.debug) {
                 console.log('[SecureIframeShell] Executing payment:', paymentInfo);
             }
 
@@ -296,29 +279,33 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
                 throw new Error('Connector client not available');
             }
 
-            const state = connectorClient.getSnapshot();
+            const state = (connectorClient as any).getConnectorState();
             if (!state.selectedWallet || !state.selectedAccount) {
                 throw new Error('No wallet connected');
             }
 
             // Get the connected wallet account
-            console.log('[SecureIframeShell] ConnectorClient state:', {
-                connected: state.connected,
-                selectedWallet: state.selectedWallet?.name,
-                selectedAccount: state.selectedAccount,
-                accountsCount: state.accounts?.length,
-                accounts: state.accounts?.map((a: any) => ({ address: a.address, hasRaw: !!a.raw })),
-            });
+            if (config.debug) {
+                console.log('[SecureIframeShell] ConnectorClient state:', {
+                    connected: state.connected,
+                    selectedWallet: state.selectedWallet?.name,
+                    selectedAccount: state.selectedAccount,
+                    accountsCount: state.accounts?.length,
+                    accounts: state.accounts?.map((a: any) => ({ address: a.address, hasRaw: !!a.raw })),
+                });
+            }
 
             const connectedAccount = state.accounts.find((acc: any) => acc.address === state.selectedAccount);
             if (!connectedAccount) {
                 throw new Error('Connected account not found');
             }
 
-            console.log('[SecureIframeShell] Found connected account:', {
-                address: connectedAccount.address,
-                hasRaw: !!connectedAccount.raw,
-            });
+            if (config.debug) {
+                console.log('[SecureIframeShell] Found connected account:', {
+                    address: connectedAccount.address,
+                    hasRaw: !!connectedAccount.raw,
+                });
+            }
 
             const { amount, currency } = paymentInfo;
             const isSOL = currency === 'SOL' || currency === 'SOL_DEVNET';
@@ -331,7 +318,7 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
                 const solAmountFloat = amount / solPriceUsd;
                 const lamports = BigInt(Math.floor(solAmountFloat * 1_000_000_000)); // Convert to lamports
 
-                if (process.env.NODE_ENV !== 'production') {
+                if (config.debug) {
                     console.log('[Payment] SOL conversion:', {
                         usdAmount: amount,
                         solPrice: solPriceUsd,
@@ -347,26 +334,25 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
                 });
             } else {
                 // SPL Token transfer
-                const tokenMint = TOKEN_MINTS[currency as keyof typeof TOKEN_MINTS];
-                if (!tokenMint) {
-                    throw new Error(`Unsupported token: ${currency}`);
+                const tokenInfo = CurrencyMap[currency as keyof typeof CurrencyMap];
+                if (tokenInfo === 'SOL' || !tokenInfo) {
+                    throw new Error(`Invalid SPL token: ${currency}`);
                 }
 
-                // Get token decimals from configuration or known values
-                const decimals = getTokenDecimals(currency);
-                const tokenAmount = BigInt(Math.floor(amount * Math.pow(10, decimals)));
+                // Use decimals from token info instead of separate function
+                const tokenAmount = BigInt(Math.floor(amount * Math.pow(10, tokenInfo.decimals)));
 
-                if (process.env.NODE_ENV !== 'production') {
+                if (config.debug) {
                     console.log('[Payment] Token conversion:', {
                         usdAmount: amount,
                         currency,
-                        decimals,
+                        decimals: tokenInfo.decimals,
                         tokenAmount: tokenAmount.toString(),
                     });
                 }
 
                 result = await transferToken({
-                    mint: tokenMint,
+                    mint: tokenInfo.mint.toString(),
                     to: config.merchant.wallet,
                     amount: tokenAmount,
                     createAccountIfNeeded: true,
@@ -376,7 +362,7 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
 
             const signature = result.signature;
 
-            if (process.env.NODE_ENV !== 'production') {
+            if (config.debug) {
                 console.log('[SecureIframeShell] Payment successful:', signature);
                 console.log('Payment details:', {
                     amount,
@@ -400,7 +386,9 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
             // Also call the parent payment callback
             onPayment(paymentInfo.amount, paymentInfo.currency);
         } catch (error: any) {
-            console.error('[SecureIframeShell] Payment failed:', error);
+            if (config.debug) {
+                console.error('[SecureIframeShell] Payment failed:', error);
+            }
 
             let errorMessage = 'Payment failed';
             if (error.message?.includes('User rejected') || error.message?.includes('cancelled')) {
@@ -432,7 +420,7 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
         async function waitForWallets(client: ConnectorClient, timeoutMs = 1500): Promise<void> {
             const start = Date.now();
             while (Date.now() - start < timeoutMs) {
-                const wallets = client.getSnapshot().wallets || [];
+                const wallets = (client as any).getConnectorState().wallets || [];
                 if (wallets.length > 0) return;
                 await new Promise(r => setTimeout(r, 50));
             }
@@ -457,7 +445,7 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
                     }
 
                     try {
-                        const snapshot = client.getSnapshot();
+                        const snapshot = (client as any).getConnectorState();
 
                         // Check multiple readiness conditions:
                         // 1. Client is connected and has selected wallet/account
@@ -474,7 +462,7 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
                         }
 
                         if (hasConnection && hasStableState && arcClientReady) {
-                            if (process.env.NODE_ENV !== 'production') {
+                            if (config.debug) {
                                 console.log('[SecureIframeShell] React components ready after', elapsed, 'ms');
                             }
                             resolve();
@@ -482,7 +470,7 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
                         }
                     } catch (error) {
                         // Continue polling if snapshot access fails temporarily
-                        if (process.env.NODE_ENV !== 'production') {
+                        if (config.debug) {
                             console.log('[SecureIframeShell] Readiness check error (continuing):', error);
                         }
                     }
@@ -515,11 +503,11 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
                     if (connectorClient) {
                         try {
                             await connectorClient.disconnect();
-                            if (process.env.NODE_ENV !== 'production') {
+                            if (config.debug) {
                                 console.log('[SecureIframeShell] Wallet disconnected on modal close');
                             }
                         } catch (error) {
-                            if (process.env.NODE_ENV !== 'production') {
+                            if (config.debug) {
                                 console.warn('[SecureIframeShell] Failed to disconnect wallet on close:', error);
                             }
                         }
@@ -545,19 +533,19 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
 
                         // Ensure wallet list is ready (Wallet Standard can be async to populate)
                         await waitForWallets(connectorClient);
-                        const snap = connectorClient.getSnapshot();
+                        const snap = (connectorClient as any).getConnectorState();
                         const target = (snap.wallets || []).find((w: any) => w.name === data.walletName);
                         if (!target) throw new Error('Wallet not found');
-                        if (process.env.NODE_ENV !== 'production') {
+                        if (config.debug) {
                             console.log('[SecureIframeShell] Selecting wallet for iframe:', data.walletName);
                         }
                         const res = await connectorClient.select(data.walletName);
-                        const result = connectorClient.getSnapshot();
+                        const result = (connectorClient as any).getConnectorState();
                         const accounts = (result.accounts || []).map((a: any) => ({
                             address: a.address,
                             icon: a.icon,
                         }));
-                        if (process.env.NODE_ENV !== 'production') {
+                        if (config.debug) {
                             console.log(
                                 '[SecureIframeShell] Iframe connect success, accounts:',
                                 accounts.map((a: any) => a.address),
@@ -568,7 +556,7 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
                         try {
                             await waitForReactComponentsReady(connectorClient);
                         } catch (readinessError: any) {
-                            if (process.env.NODE_ENV !== 'production') {
+                            if (config.debug) {
                                 console.warn(
                                     '[SecureIframeShell] React components readiness check failed:',
                                     readinessError,
@@ -586,7 +574,7 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
                             '*',
                         );
                     } catch (err: any) {
-                        if (process.env.NODE_ENV !== 'production') {
+                        if (config.debug) {
                             console.warn('[SecureIframeShell] walletConnect failed:', err);
                         }
                         iframeRef.current?.contentWindow?.postMessage(
@@ -618,7 +606,9 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
             const paymentUrl =
                 config.mode === 'tip' ? '' : `solana:?recipient=${config.merchant.wallet}&amount=${totalAmount}`;
 
-            console.log('[SecureIframeShell] Sending init message', { config, theme });
+            if (config.debug) {
+                console.log('[SecureIframeShell] Sending init message', { config, theme });
+            }
 
             // Gather wallet list from the existing connector client
             let initialWallets:
@@ -626,7 +616,7 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
                 | undefined;
             try {
                 if (connectorClient) {
-                    const snap = connectorClient.getSnapshot();
+                    const snap = (connectorClient as any).getConnectorState();
                     initialWallets = (snap.wallets || []).map((w: any) => ({
                         name: w.name,
                         icon: w.icon,

@@ -3,10 +3,10 @@
  * Handles currency selection dropdown
  */
 
-import React, { memo, useRef } from 'react';
+import React, { memo } from 'react';
 import { useDropdown } from '../../hooks/use-dropdown';
 import { useThemeStyles } from '../../hooks/use-theme-styles';
-import { CHEVRON_DOWN_ICON, CHECK_ICON } from '../../constants/tip-modal';
+import { ChevronDownIcon, CheckIcon } from '../icons';
 import { TokenIcon } from '../icons';
 import {
     DropdownRoot,
@@ -83,7 +83,7 @@ export const CurrencySelector = memo<CurrencySelectorProps>(
                                 </span>
                             </div>
                             <div className={`ck-currency-chevron ${currentIsOpen ? 'open' : ''}`}>
-                                {CHEVRON_DOWN_ICON}
+                                <ChevronDownIcon />
                             </div>
                         </button>
                     </DropdownTrigger>
@@ -107,7 +107,7 @@ export const CurrencySelector = memo<CurrencySelectorProps>(
                                                 className="ck-dropdown-check"
                                                 style={{ '--primary-color': theme.primaryColor } as React.CSSProperties}
                                             >
-                                                {CHECK_ICON}
+                                                <CheckIcon />
                                             </div>
                                         )}
                                     </div>

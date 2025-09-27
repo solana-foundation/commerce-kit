@@ -181,9 +181,11 @@ describe('useStandardWallets', () => {
             expect(result.current).not.toBeNull();
             expect(result.current.select).toBeDefined();
 
-            await expect(result.current.select('Phantom')).rejects.toThrow(
-                'Wallet Phantom does not support standard connect',
-            );
+            await expect(
+                act(async () => {
+                    await result.current.select('Phantom');
+                }),
+            ).rejects.toThrow('Wallet Phantom does not support standard connect');
         });
 
         it('should handle connection errors gracefully', async () => {
@@ -206,7 +208,11 @@ describe('useStandardWallets', () => {
             expect(result.current).not.toBeNull();
             expect(result.current.select).toBeDefined();
 
-            await expect(result.current.select('Phantom')).rejects.toThrow('User rejected connection');
+            await expect(
+                act(async () => {
+                    await result.current.select('Phantom');
+                }),
+            ).rejects.toThrow('User rejected connection');
 
             // Should reset connecting state on error
             expect(result.current.connecting).toBe(false);

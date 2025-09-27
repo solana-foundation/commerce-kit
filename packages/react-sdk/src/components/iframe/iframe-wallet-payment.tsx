@@ -1,13 +1,12 @@
 import React from 'react';
 import type { ThemeConfig, MerchantConfig, Currency } from '../../types';
 import { MerchantAddressPill } from '../tip-modal/merchant-address-pill';
-import { TokenIcon } from '../icons';
 import { Spinner } from '../../../../connector-kit/src/ui/spinner';
 import { TransactionSuccess, TransactionError } from '../transaction-states';
 
 interface WalletPaymentContentProps {
     theme: Required<ThemeConfig>;
-    config: { merchant: MerchantConfig; rpcUrl?: string };
+    config: { merchant: MerchantConfig; rpcUrl?: string; debug?: boolean };
     selectedAmount: number;
     selectedCurrency: Currency;
     customAmount: string;
@@ -71,12 +70,15 @@ function isValidIconUrl(iconUrl: string): boolean {
 /**
  * Validates and sanitizes wallet data from untrusted sources
  * @param rawWallets - The raw wallet data from window.__IFRAME_WALLETS__
+ * @param debug - Whether to show debug logs
  * @returns Array of validated and sanitized wallet objects
  */
-function validateAndSanitizeWallets(rawWallets: unknown): IFrameWalletInfo[] {
+function validateAndSanitizeWallets(rawWallets: unknown, debug?: boolean): IFrameWalletInfo[] {
     // First check: ensure it's an array
     if (!Array.isArray(rawWallets)) {
-        console.warn('__IFRAME_WALLETS__ is not an array, ignoring wallet data');
+        if (debug) {
+            console.warn('__IFRAME_WALLETS__ is not an array, ignoring wallet data');
+        }
         return [];
     }
 
@@ -87,7 +89,9 @@ function validateAndSanitizeWallets(rawWallets: unknown): IFrameWalletInfo[] {
 
         // Check if wallet is an object
         if (!wallet || typeof wallet !== 'object') {
-            console.warn(`Wallet at index ${i} is not an object, skipping`);
+            if (debug) {
+                console.warn(`Wallet at index ${i} is not an object, skipping`);
+            }
             continue;
         }
 
@@ -96,7 +100,9 @@ function validateAndSanitizeWallets(rawWallets: unknown): IFrameWalletInfo[] {
 
         // Wallet must have a non-empty name
         if (!name) {
-            console.warn(`Wallet at index ${i} missing or invalid name, skipping`);
+            if (debug) {
+                console.warn(`Wallet at index ${i} missing or invalid name, skipping`);
+            }
             continue;
         }
 
@@ -107,11 +113,15 @@ function validateAndSanitizeWallets(rawWallets: unknown): IFrameWalletInfo[] {
             if (isValidIconUrl(iconUrl)) {
                 icon = iconUrl;
             } else {
-                console.warn(`Wallet "${name}" has invalid/unsafe icon URL, using fallback: ${iconUrl}`);
+                if (debug) {
+                    console.warn(`Wallet "${name}" has invalid/unsafe icon URL, using fallback: ${iconUrl}`);
+                }
                 icon = FALLBACK_WALLET_ICON;
             }
         } else if (wallet.icon !== undefined) {
-            console.warn(`Wallet "${name}" has non-string icon value, using fallback`);
+            if (debug) {
+                console.warn(`Wallet "${name}" has non-string icon value, using fallback`);
+            }
             icon = FALLBACK_WALLET_ICON;
         }
         // If icon is undefined, we'll use the fallback during rendering
@@ -129,7 +139,9 @@ function validateAndSanitizeWallets(rawWallets: unknown): IFrameWalletInfo[] {
         });
     }
 
-    console.log(`Validated ${validatedWallets.length} out of ${rawWallets.length} wallet entries`);
+    if (debug) {
+        console.log(`Validated ${validatedWallets.length} out of ${rawWallets.length} wallet entries`);
+    }
     return validatedWallets;
 }
 
@@ -168,6 +180,8 @@ export const WalletPaymentContent = ({
                 const referrerUrl = new URL(document.referrer);
                 return referrerUrl.origin;
             } catch (e) {
+                // Note: This function doesn't have access to config, so we can't make this debug-conditional
+                // Consider moving this to the component level if debug logging is needed
                 console.warn('Invalid referrer URL:', document.referrer);
             }
         }
@@ -216,12 +230,14 @@ export const WalletPaymentContent = ({
         // For srcDoc iframes, we might not be able to detect the parent origin directly
         // In this case, we'll trust the first valid message we receive
         if (!detectedOrigin || detectedOrigin === 'null') {
-            console.log('[iframe-wallet-payment] Running in srcDoc context, will detect parent origin from messages');
+            if (config.debug) {
+                console.log('[iframe-wallet-payment] Running in srcDoc context, will detect parent origin from messages');
+            }
         }
 
         // Read wallets provided by parent via init message and validate them
         const rawWallets = (window as any).__IFRAME_WALLETS__;
-        const validatedWallets = validateAndSanitizeWallets(rawWallets);
+        const validatedWallets = validateAndSanitizeWallets(rawWallets, config.debug);
         setWallets(validatedWallets);
 
         function onMessage(e: MessageEvent) {
@@ -230,7 +246,9 @@ export const WalletPaymentContent = ({
 
             // Validate message origin
             if (!isValidOrigin(e.origin)) {
-                console.warn(`Rejected message from invalid origin: ${e.origin}`);
+                if (config.debug) {
+                    console.warn(`Rejected message from invalid origin: ${e.origin}`);
+                }
                 return;
             }
 
@@ -249,7 +267,9 @@ export const WalletPaymentContent = ({
             } else if (parentOrigin !== e.origin) {
                 // For srcDoc iframes, be more permissive about origin mismatches
                 if (!isInSrcDoc) {
-                    console.warn(`Rejected message from mismatched origin. Expected: ${parentOrigin}, Got: ${e.origin}`);
+                    if (config.debug) {
+                        console.warn(`Rejected message from mismatched origin. Expected: ${parentOrigin}, Got: ${e.origin}`);
+                    }
                     return;
                 }
             }
@@ -375,6 +395,7 @@ export const WalletPaymentContent = ({
                 config={config}
                 selectedCurrency={selectedCurrency}
                 displayAmount={displayAmount}
+                signature={paymentSignature || undefined}
             />
         );
     }

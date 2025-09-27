@@ -58,6 +58,42 @@ vi.mock('../../core/arc-client-provider', () => ({
 }));
 
 vi.mock('../../core/rpc-manager', () => ({
+    // New simplified functions
+    createRpc: vi.fn(() => ({
+        request: vi.fn().mockImplementation(async ({ method, params }) => {
+            switch (method) {
+                case 'getAccountInfo':
+                    // Return null for specific error test scenarios
+                    const address = params?.[0];
+                    if (address?.includes('missing') || address === 'MISSING_ACCOUNT') {
+                        return { value: null };
+                    }
+                    return {
+                        value: {
+                            data: ['', 'base64'],
+                            executable: false,
+                            lamports: 1000000000,
+                            owner: '11111111111111111111111111111111',
+                            rentEpoch: 200,
+                        },
+                    };
+                case 'getLatestBlockhash':
+                    return {
+                        value: {
+                            blockhash: 'mock-blockhash-12345',
+                            lastValidBlockHeight: 100000000,
+                        },
+                    };
+                default:
+                    return {};
+            }
+        }),
+    })),
+    createWebSocket: vi.fn(() => ({
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
+    })),
+    // Backward compatibility aliases
     getSharedRpc: vi.fn(() => ({
         request: vi.fn().mockImplementation(async ({ method, params }) => {
             switch (method) {

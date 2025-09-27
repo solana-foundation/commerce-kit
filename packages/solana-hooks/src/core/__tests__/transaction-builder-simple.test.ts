@@ -9,15 +9,15 @@ describe('Transaction Builder - Core Functionality', () => {
             expect(context).toBeDefined();
             expect(context.rpcUrl).toBe('https://api.devnet.solana.com');
             expect(context.commitment).toBe('confirmed');
-            expect(context.enableLogging).toBe(true);
+            expect(context.debug).toBe(true);
         });
 
-        it('should handle optional parameters', () => {
+        it('should handle optional parameters with defaults', () => {
             const context = createTransactionContext('https://api.devnet.solana.com');
 
             expect(context.rpcUrl).toBe('https://api.devnet.solana.com');
-            expect(context.commitment).toBeUndefined();
-            expect(context.enableLogging).toBeUndefined();
+            expect(context.commitment).toBe('confirmed');
+            expect(context.debug).toBe(false);
         });
 
         it('should create transaction builder instance', () => {
@@ -32,37 +32,33 @@ describe('Transaction Builder - Core Functionality', () => {
         });
     });
 
-    describe('Method Signatures', () => {
-        it('should have correct transferSOL method signature', () => {
+    describe('Method Availability', () => {
+        it('should expose all core transaction methods', () => {
             const context = createTransactionContext('https://api.devnet.solana.com');
             const builder = createTransactionBuilder(context);
 
+            // Verify all essential methods are available and callable
             expect(typeof builder.transferSOL).toBe('function');
-            expect(builder.transferSOL.length).toBe(3); // to, amount, from parameters
-        });
-
-        it('should have correct transferToken method signature', () => {
-            const context = createTransactionContext('https://api.devnet.solana.com');
-            const builder = createTransactionBuilder(context);
-
             expect(typeof builder.transferToken).toBe('function');
-            expect(builder.transferToken.length).toBeGreaterThan(2); // mint, to, amount, from, createAccount parameters
-        });
-
-        it('should have correct confirmTransaction method signature', () => {
-            const context = createTransactionContext('https://api.devnet.solana.com');
-            const builder = createTransactionBuilder(context);
-
             expect(typeof builder.confirmTransaction).toBe('function');
-            expect(builder.confirmTransaction.length).toBe(1); // signature parameter
+            expect(typeof builder.calculateFees).toBe('function');
+            
+            // Verify method names for better debugging
+            expect(builder.transferSOL.name).toBe('transferSOL');
+            expect(builder.transferToken.name).toBe('transferToken');
+            expect(builder.confirmTransaction.name).toBe('confirmTransaction');
+            expect(builder.calculateFees.name).toBe('calculateFees');
         });
 
-        it('should have correct calculateFees method signature', () => {
+        it('should have async transaction methods', () => {
             const context = createTransactionContext('https://api.devnet.solana.com');
             const builder = createTransactionBuilder(context);
 
-            expect(typeof builder.calculateFees).toBe('function');
-            expect(builder.calculateFees.length).toBe(1); // signatureCount parameter
+            // These methods should return promises (be async)
+            expect(builder.transferSOL.constructor.name).toBe('AsyncFunction');
+            expect(builder.transferToken.constructor.name).toBe('AsyncFunction');
+            expect(builder.confirmTransaction.constructor.name).toBe('AsyncFunction');
+            expect(builder.calculateFees.constructor.name).toBe('AsyncFunction');
         });
     });
 
@@ -83,12 +79,13 @@ describe('Transaction Builder - Core Functionality', () => {
             expect(fees).toBe(15000n); // 3 * 5000 lamports
         });
 
-        it('should handle zero signatures', async () => {
+        it('should calculate fees for two-signature transactions', async () => {
             const context = createTransactionContext('https://api.devnet.solana.com');
             const builder = createTransactionBuilder(context);
 
-            const fees = await builder.calculateFees(0);
-            expect(fees).toBe(0n);
+            // Common case: transaction requiring both fee payer and authority signatures
+            const fees = await builder.calculateFees(2);
+            expect(fees).toBe(10000n); // 2 * 5000 lamports
         });
     });
 

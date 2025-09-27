@@ -169,13 +169,20 @@ const createMockRpc = () => ({
     }),
 });
 
-// Mock RPC Manager to prevent real network calls
+// Mock simplified RPC utilities to prevent real network calls
 vi.mock('../core/rpc-manager', () => ({
+    createRpc: vi.fn(() => createMockRpc()),
+    createWebSocket: vi.fn(() => ({
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
+    })),
+    // Backward compatibility aliases
     getSharedRpc: vi.fn(() => createMockRpc()),
     getSharedWebSocket: vi.fn(() => ({
         subscribe: vi.fn(),
         unsubscribe: vi.fn(),
     })),
+    releaseRpcConnection: vi.fn(), // No-op
 }));
 
 // Mock the ArcClientProvider and useArcClient hook

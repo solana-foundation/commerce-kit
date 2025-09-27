@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useSyncExternalStore } f
 import type { ReactNode } from 'react';
 import { ConnectorClient, type ConnectorConfig } from '../lib/connector-client';
 
-export type ConnectorSnapshot = ReturnType<ConnectorClient['getSnapshot']> & {
+export type ConnectorSnapshot = ReturnType<ConnectorClient['getConnectorState']> & {
     select: (walletName: string) => Promise<void>;
     disconnect: () => Promise<void>;
     selectAccount: (address: string) => Promise<void>;
@@ -64,7 +64,7 @@ export function ConnectorProvider({ children, config }: { children: ReactNode; c
     if (process.env.NODE_ENV !== 'production') {
         console.log('[ConnectorProvider] Using singleton ConnectorClient:', {
             hasClient: !!client,
-            connected: client?.getSnapshot?.()?.connected,
+            connected: client?.getConnectorState?.()?.connected,
         });
     }
 
@@ -83,8 +83,8 @@ export function useConnector(): ConnectorSnapshot {
     if (!client) throw new Error('useConnector must be used within ConnectorProvider');
     const state = useSyncExternalStore(
         cb => client.subscribe(cb),
-        () => client.getSnapshot(),
-        () => client.getSnapshot(),
+        () => client.getConnectorState(),
+        () => client.getConnectorState(),
     );
     return useMemo(
         () => ({

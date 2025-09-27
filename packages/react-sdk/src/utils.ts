@@ -5,7 +5,7 @@
 
 import { useMemo } from 'react';
 import type { ThemeConfig, BorderRadius, CommerceMode, MerchantConfig, Currency } from './types';
-import { validateWalletAddress as coreValidateWalletAddress } from '@solana-commerce/headless-sdk';
+import { isAddress } from 'gill';
 import { CURRENCY_DECIMALS } from './constants/tip-modal';
 
 // Constants
@@ -183,8 +183,7 @@ export function getAccessibleTextColor(
     return light;
 }
 
-// Security & validation
-export const validateWalletAddress = (address: string): boolean => coreValidateWalletAddress(address);
+// Security & validation - using isAddress from gill directly
 
 export const sanitizeString = (str: string): string => {
     // XSS prevention for user inputs
@@ -233,7 +232,7 @@ export const useTotalAmount = (
 
 export const usePaymentUrl = (merchant: MerchantConfig, amount: number, mode: CommerceMode) =>
     useMemo(() => {
-        if (!validateWalletAddress(merchant.wallet) || amount <= 0) return '';
+        if (!isAddress(merchant.wallet) || amount <= 0) return '';
 
         const params = new URLSearchParams({
             recipient: merchant.wallet,
@@ -296,7 +295,16 @@ export const getCurrencySymbol = (currency: Currency): string => {
 let priceCache: { price: number; timestamp: number } | null = null;
 const PRICE_CACHE_DURATION = 60000; // 1 minute cache
 
-// Fetch current SOL price from CoinGecko API with caching
+/**
+ * Default SOL price fetching implementation using CoinGecko public API.
+ * 
+ * This function includes caching and error handling. For production applications
+ * with high volume or specific requirements, consider using a custom implementation
+ * via PaymentConfig.getSolPrice.
+ * 
+ * @returns Promise<number> SOL price in USD
+ * @throws Error when unable to fetch price and no cache available
+ */
 export const fetchSolPrice = async (): Promise<number> => {
     console.log('🔍 fetchSolPrice called');
 
@@ -358,10 +366,93 @@ export const convertUsdToLamports = async (usdAmount: number): Promise<number> =
     return Math.round(solAmount * 10 ** solDecimals); // Convert SOL to lamports
 };
 
-// Get cached SOL price (for debugging/display purposes)
+/**
+ * Get cached SOL price (for debugging/display purposes)
+ * @returns Cached SOL price if available and not expired, null otherwise
+ */
 export const getCachedSolPrice = (): number | null => {
     if (priceCache && Date.now() - priceCache.timestamp < PRICE_CACHE_DURATION) {
         return priceCache.price;
     }
     return null;
+};
+
+/**
+ * Creates a customizable SOL price fetching function with retry logic and custom endpoints.
+ * 
+ * @example
+ * ```typescript
+ * // Custom API endpoint with retry
+ * const customPriceFetcher = createSolPriceFetcher({
+ *   endpoint: 'https://api.your-service.com/sol-price',
+ *   retries: 3,
+ *   timeout: 5000,
+ *   parser: (data) => data.price.usd
+ * });
+ * 
+ * const paymentConfig = {
+ *   getSolPrice: customPriceFetcher
+ * };
+ * ```
+ */
+export interface SolPriceFetcherOptions {
+    /** Custom API endpoint for price fetching */
+    endpoint?: string;
+    /** Number of retry attempts on failure */
+    retries?: number;
+    /** Request timeout in milliseconds */
+    timeout?: number;
+    /** Custom response parser function */
+    parser?: (data: any) => number;
+    /** Custom headers for the request */
+    headers?: Record<string, string>;
+}
+
+export const createSolPriceFetcher = (options: SolPriceFetcherOptions = {}): (() => Promise<number>) => {
+    const {
+        endpoint = 'https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd',
+        retries = 2,
+        timeout = 10000,
+        parser = (data: any) => data.solana?.usd,
+        headers = {}
+    } = options;
+
+    return async (): Promise<number> => {
+        for (let attempt = 0; attempt <= retries; attempt++) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), timeout);
+                
+                const response = await fetch(endpoint, {
+                    signal: controller.signal,
+                    headers: {
+                        'Accept': 'application/json',
+                        ...headers
+                    }
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                const price = parser(data);
+                
+                if (typeof price !== 'number' || price <= 0 || !isFinite(price)) {
+                    throw new Error(`Invalid price data: ${price}`);
+                }
+                
+                return price;
+            } catch (error) {
+                if (attempt === retries) {
+                    throw new Error(`Failed to fetch SOL price after ${retries + 1} attempts: ${error}`);
+                }
+                // Wait before retry (exponential backoff)
+                await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+            }
+        }
+        throw new Error('Unexpected error in price fetching');
+    };
 };

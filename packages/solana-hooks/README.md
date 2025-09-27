@@ -1,150 +1,214 @@
-# @arc/solana
+# @solana-commerce/solana-hooks
 
-**The modern React SDK for Solana development** - Type-safe, progressive complexity, built on Kit 2.0
+**Modern React hooks for Solana development** - Type-safe, progressive complexity, built on Solana Kit 2.0
 
 ## 📦 Installation
 
 ```bash
-npm install @arc/solana
+npm install @solana-commerce/solana-hooks
 # or
-yarn add @arc/solana
-# or
-bun add @arc/solana
+yarn add @solana-commerce/solana-hooks
+# or  
+pnpm add @solana-commerce/solana-hooks
 ```
 
-## 🚀 Import Paths & Use Cases
-
-Arc provides different entry points optimized for specific use cases:
-
-### **Default Import** - Complete SDK
+## 🚀 Quick Start
 
 ```typescript
-import { ArcProvider, useBalance, useTransaction } from '@arc/solana';
-```
-
-- **Bundle Size**: ~90KB
-- **Use When**: Building full-featured Solana apps
-- **Includes**: All hooks, providers, and utilities
-
-### **`/react`** - React Hooks Only
-
-```typescript
-import { useBalance, useWallet } from '@arc/solana/react';
-```
-
-- **Bundle Size**: ~70KB
-- **Use When**: Building React apps with Solana
-- **Includes**: All React hooks and providers
-
-### **`/core`** - Minimal Bundle
-
-```typescript
-import { useBalance, useTransferSOL } from '@arc/solana/core';
-```
-
-- **Bundle Size**: ~15KB
-- **Use When**: You need only essential hooks
-- **Includes**: Core hooks only (wallet, balance, transfer)
-
-### **`/client`** - Backend/Server API
-
-```typescript
-import { createArc, createEnterpriseArc } from '@arc/solana/client';
-```
-
-- **Bundle Size**: ~30KB
-- **Use When**: Building backend services, bots, or scripts
-- **Includes**: Non-React client API
-
-### **`/experimental`** - Advanced Features
-
-```typescript
-import { VersionedTransactionManager } from '@arc/solana/experimental';
-```
-
-- **Bundle Size**: ~40KB
-- **Use When**: You need cutting-edge features
-- **Includes**: V0 transactions, MEV protection, priority fees
-
-## 📚 Progressive Complexity Levels
-
-### **Level 1: Simple Functions** (No React)
-
-```typescript
-import { getBalance, transferSOL, requestAirdrop } from '@arc/solana';
-
-// Just works™ - no setup required
-const balance = await getBalance('8rUupu3N3VV...');
-const sig = await transferSOL(from, to, 0.1);
-```
-
-### **Level 2: React Hooks** (Declarative)
-
-```typescript
-import { ArcProvider, useBalance, useWallet } from '@arc/solana'
+import { ArcProvider, useBalance, useWallet } from '@solana-commerce/solana-hooks';
 
 function App() {
   return (
     <ArcProvider config={{ network: 'devnet' }}>
       <WalletComponent />
     </ArcProvider>
-  )
+  );
 }
 
 function WalletComponent() {
-  const { wallet, connect } = useWallet()
-  const { balance } = useBalance()
+  const { wallet, connect } = useWallet();
+  const { balance } = useBalance();
 
-  return <div>Balance: {balance} SOL</div>
+  return <div>Balance: {balance} SOL</div>;
 }
 ```
 
-### **Level 3: Advanced Features** (Power Users)
+## 📁 Package Exports
+
+This package provides two import paths:
+
+### **Default Import** - Complete SDK
 
 ```typescript
-import { useProgramAccount } from '@arc/solana';
-
-// Custom codec for any program
-const { data } = useProgramAccount({
-    address: programId,
-    codec: async (rpc, address) => {
-        // Custom parsing logic
-        return parsedData;
-    },
-});
+import { ArcProvider, useBalance, useTransferSOL } from '@solana-commerce/solana-hooks';
 ```
 
-## 🏗️ Architecture
+- **Use When**: Building full-featured Solana apps
+- **Includes**: All hooks, providers, and utilities
 
+### **`/react`** - React Hooks Only  
+
+```typescript
+import { useBalance, useWallet } from '@solana-commerce/solana-hooks/react';
 ```
-@arc/solana/
-├── /                   # Default export - Complete SDK
-├── /react              # React-specific hooks and providers
-├── /core               # Minimal bundle - Essential hooks only
-├── /client             # Backend/server API (no React)
-└── /experimental       # Advanced features (V0 tx, MEV, etc)
-```
+
+- **Use When**: Building React apps with Solana
+- **Includes**: All React hooks and providers
 
 ## 🔧 Key Features
 
-- **🎯 Progressive Complexity**: Simple → React Hooks → Advanced
-- **📦 Optimized Bundles**: Import only what you need
-- **🔒 Type Safety**: Built on Solana Kit 2.0
-- **⚡ Performance**: React Query caching, optimized re-renders
-- **🌐 Context-Based**: No prop drilling, automatic coordination
-- **🚀 Modern Standards**: Wallet Standard, Kit 2.0 compatible
+- **🎯 Type Safety**: Built on Solana Kit 2.0 with full TypeScript support
+- **⚡ Performance**: Optimized re-renders and intelligent caching
+- **🌐 Context-Based**: No prop drilling, automatic state coordination
+- **🚀 Modern Standards**: Wallet Standard compatible
+- **🔌 Flexible**: Works with any RPC provider
 
-## 📖 Documentation
+## 📚 Core Hooks
 
-Full documentation available at [arc-docs.vercel.app](https://arc-docs.vercel.app)
+### Wallet Management
+- `useWallet()` - Wallet connection and state
+- `useStandardWallets()` - Wallet Standard integration
 
-## 🤝 Extension Packages
+### Account Operations  
+- `useBalance()` - Account balance monitoring
+- `useTransferSOL()` - SOL transfers
+- `useTransferToken()` - SPL token transfers
 
-Arc is designed to be extended. See these examples:
+### Network & Configuration
+- `useArcClient()` - RPC client access
+- Network utilities and cluster management
 
-- **[@arc/jupiter](../jupiter)** - Jupiter DEX integration example
-- **[@arc/ui-primitives](../ui-primitives)** - UI component library example
+## 🎯 Usage Patterns
 
-## 📝 License
+### Basic Balance Display
+```typescript
+function BalanceDisplay() {
+  const { balance, isLoading } = useBalance();
+  
+  if (isLoading) return <div>Loading...</div>;
+  return <div>{balance} SOL</div>;
+}
+```
+
+### SOL Transfer
+```typescript
+function SendSOL() {
+  const { transferSOL, isLoading } = useTransferSOL();
+  
+  const handleTransfer = async () => {
+    try {
+      const { signature } = await transferSOL({
+        to: 'recipient-address',
+        amount: BigInt(1_000_000_000) // 1 SOL in lamports
+      });
+      console.log('Transfer successful:', signature);
+    } catch (error) {
+      console.error('Transfer failed:', error);
+    }
+  };
+  
+  return (
+    <button onClick={handleTransfer} disabled={isLoading}>
+      Send 1 SOL
+    </button>
+  );
+}
+```
+
+### Token Transfer
+```typescript
+function SendToken() {
+  const { transferToken } = useTransferToken();
+  
+  const handleTransfer = async () => {
+    await transferToken({
+      mint: 'token-mint-address',
+      to: 'recipient-address', 
+      amount: BigInt(1_000_000) // Amount in token's minor units
+    });
+  };
+  
+  return <button onClick={handleTransfer}>Send Token</button>;
+}
+```
+
+## ⚙️ Configuration
+
+### ArcProvider Setup
+```typescript
+function App() {
+  return (
+    <ArcProvider 
+      config={{
+        network: 'devnet', // 'mainnet' | 'devnet' | 'testnet' | 'localnet'
+        rpcUrl: 'https://api.devnet.solana.com', // Optional custom RPC
+        debug: true // Enable debug logging
+      }}
+    >
+      <YourApp />
+    </ArcProvider>
+  );
+}
+```
+
+### Custom RPC Configuration
+```typescript
+<ArcProvider 
+  config={{
+    network: 'mainnet',
+    rpcUrl: 'https://your-private-rpc.com',
+    connector: customConnectorInstance // Optional shared connector
+  }}
+>
+  <YourApp />
+</ArcProvider>
+```
+
+## 🔗 Integration with Commerce Kit
+
+This package is designed to work seamlessly with other `@solana-commerce` packages:
+
+```typescript
+import { PaymentButton } from '@solana-commerce/react-sdk';
+import { ArcProvider } from '@solana-commerce/solana-hooks';
+
+function CommerceApp() {
+  return (
+    <ArcProvider config={{ network: 'mainnet' }}>
+      <PaymentButton 
+        config={{
+          merchant: { name: 'My Store', wallet: 'merchant-address' },
+          mode: 'tip'
+        }}
+      />
+    </ArcProvider>
+  );
+}
+```
+
+## 🛠️ Development
+
+```bash
+# Install dependencies
+pnpm install
+
+# Run tests
+pnpm test
+
+# Build package
+pnpm build
+
+# Type checking
+pnpm type-check
+```
+
+## 🤝 Related Packages
+
+- **[@solana-commerce/react-sdk](../react-sdk)** - Complete commerce UI components
+- **[@solana-commerce/headless-sdk](../headless-sdk)** - Headless commerce logic
+- **[@solana-commerce/connector-kit](../connector-kit)** - Wallet connection utilities
+- **[@solana-commerce/solana-pay](../solana-pay)** - Solana Pay implementation
+
+## 📄 License
 
 MIT

@@ -6,9 +6,7 @@ export default defineConfig({
         target: 'es2020',
     },
     test: {
-        environment: 'happy-dom', // For React components
         globals: true,
-        setupFiles: ['./src/__tests__/setup.ts'],
         include: ['**/*.{test,spec}.{js,ts,tsx}'],
         exclude: ['node_modules/', 'dist/', '.git/', '**/@testing-library/**'],
         testTimeout: 10000,

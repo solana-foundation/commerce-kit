@@ -147,6 +147,33 @@ describe('SOL to Lamports Conversion', () => {
         });
     });
 
+    describe('Type handling', () => {
+        it('should reject number inputs', () => {
+            // @ts-expect-error - Testing runtime behavior with wrong types
+            expect(() => convertSOLToLamports(1)).toThrow();
+            // @ts-expect-error - Testing runtime behavior with wrong types
+            expect(() => convertSOLToLamports(1.5)).toThrow();
+            // @ts-expect-error - Testing runtime behavior with wrong types
+            expect(() => convertSOLToLamports(0)).toThrow();
+        });
+
+        it('should reject null and undefined inputs', () => {
+            // @ts-expect-error - Testing runtime behavior with wrong types
+            expect(() => convertSOLToLamports(null)).toThrow();
+            // @ts-expect-error - Testing runtime behavior with wrong types
+            expect(() => convertSOLToLamports(undefined)).toThrow();
+        });
+
+        it('should reject non-string objects', () => {
+            // @ts-expect-error - Testing runtime behavior with wrong types
+            expect(() => convertSOLToLamports({})).toThrow();
+            // @ts-expect-error - Testing runtime behavior with wrong types
+            expect(() => convertSOLToLamports([])).toThrow();
+            // @ts-expect-error - Testing runtime behavior with wrong types
+            expect(() => convertSOLToLamports(true)).toThrow();
+        });
+    });
+
     describe('Precision handling', () => {
         it('should maintain precision for max decimals', () => {
             // Test the maximum precision Solana supports

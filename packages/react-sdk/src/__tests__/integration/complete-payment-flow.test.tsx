@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
+import type { PaymentMethod, ProcessingState } from '../../types';
 
 // Simple mock component that doesn't cause timeouts
 const CompletePaymentFlow = ({
@@ -17,8 +18,8 @@ const CompletePaymentFlow = ({
     const [selectedAmount, setSelectedAmount] = React.useState<number>(0);
     const [showCustomInput, setShowCustomInput] = React.useState(false);
     const [customAmount, setCustomAmount] = React.useState('');
-    const [paymentMethod, setPaymentMethod] = React.useState<'qr' | 'wallet'>('qr');
-    const [transactionState, setTransactionState] = React.useState<'idle' | 'processing' | 'success' | 'error'>('idle');
+    const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>('qr');
+    const [transactionState, setTransactionState] = React.useState<ProcessingState>('idle');
 
     const finalAmount = showCustomInput ? parseFloat(customAmount) || 0 : selectedAmount;
 

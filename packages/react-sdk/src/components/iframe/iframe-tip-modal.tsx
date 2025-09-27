@@ -2,12 +2,12 @@ import React, { memo, useMemo, useCallback } from 'react';
 import { getModalBorderRadius, getCurrencySymbol, getBorderRadius, getDecimals } from '../../utils';
 import { QRPaymentContent } from './iframe-qr-payment';
 import { WalletPaymentContent } from './iframe-wallet-payment';
-import { WALLET_ICON } from '../../constants/tip-modal';
+import { WalletIcon } from '../icons';
 import { useTipForm } from '../../hooks/use-tip-form';
 import { useAnimationStyles } from '../../hooks/use-animation-styles';
 import { useSolEquivalent } from '../../hooks/use-sol-equivalent';
 import { TipModalHeader, CurrencySelector, AmountSelector, PaymentMethodSelector, ActionButton } from '../tip-modal';
-import type { TipModalContentProps, Currency } from '../../types';
+import type { TipModalContentProps, Currency, TransactionState } from '../../types';
 
 // Currency-aware payment label formatter
 function formatPayLabel(currency: Currency, amount: number): string {
@@ -29,7 +29,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({ config, theme
     const { state, actions, computed, handlers, availableCurrencies } = useTipForm(config);
 
     // Transaction state management
-    const [transactionState, setTransactionState] = React.useState<'idle' | 'success' | 'error'>('idle');
+    const [transactionState, setTransactionState] = React.useState<TransactionState>('idle');
 
     // Handlers
     const handlePaymentComplete = handlers.handlePaymentComplete(onPayment);
@@ -63,11 +63,15 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({ config, theme
 
     // Wallet payment completion handler (calls onPayment once then closes)
     const handleWalletPaymentComplete = useCallback(() => {
-        console.log('[IframeTipModal] handleWalletPaymentComplete called - payment successful');
+        if (config.debug) {
+            console.log('[IframeTipModal] handleWalletPaymentComplete called - payment successful');
+        }
 
         // Reset before checking to ensure this guard only prevents duplicates during a single payment attempt
         if (walletCompletionRef.current) {
-            console.log('[IframeTipModal] Wallet completion already called, skipping');
+            if (config.debug) {
+                console.log('[IframeTipModal] Wallet completion already called, skipping');
+            }
             return;
         }
         walletCompletionRef.current = true;
@@ -80,7 +84,9 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({ config, theme
             const decimals = getDecimals(state.selectedCurrency);
             const amount = Math.round(finalAmount * 10 ** decimals);
 
-            console.log('[IframeTipModal] Calling onPayment with:', { amount, currency: state.selectedCurrency });
+            if (config.debug) {
+                console.log('[IframeTipModal] Calling onPayment with:', { amount, currency: state.selectedCurrency });
+            }
 
             // Call the payment callback once
             onPayment?.(amount, state.selectedCurrency, state.selectedPaymentMethod);
@@ -90,7 +96,9 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({ config, theme
                 handleCancel();
             }, 100);
         } catch (error) {
-            console.error('Wallet payment completion error:', error);
+            if (config.debug) {
+                console.error('Wallet payment completion error:', error);
+            }
             actions.setProcessing(false);
             walletCompletionRef.current = false; // Reset on error to allow retry
         }
@@ -101,7 +109,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({ config, theme
         computed.finalAmount
     );
 
-    if (process.env.NODE_ENV === 'development') {
+    if (config.debug) {
         console.log('💰 SOL Equivalent Calculation:', {
             selectedCurrency: state.selectedCurrency,
             finalAmount: computed.finalAmount,
@@ -223,7 +231,9 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({ config, theme
                             showCustomInput={state.showCustomInput}
                             onPaymentComplete={handlePaymentComplete}
                             onPaymentError={error => {
-                                console.error('Payment error:', error);
+                                if (config.debug) {
+                                    console.error('Payment error:', error);
+                                }
                             }}
                         />
                     ) : (
@@ -238,7 +248,7 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({ config, theme
                             onTransactionSuccess={handleTransactionSuccess}
                             onTransactionError={handleTransactionError}
                             onTransactionReset={handleTransactionReset}
-                            walletIcon={WALLET_ICON}
+                            walletIcon={<WalletIcon />}
                         />
                     )}
                 </div>

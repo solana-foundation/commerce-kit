@@ -259,27 +259,7 @@ describe('ArcProvider', () => {
         });
     });
 
-    describe('Transport Configuration', () => {
-        it('should accept custom transport', () => {
-            const mockConnector = createMockConnector();
-            const customTransport = {
-                request: vi.fn(),
-            };
-
-            const config = {
-                transport: customTransport,
-                connector: mockConnector,
-            };
-
-            render(
-                <ArcProvider config={config}>
-                    <TestComponent />
-                </ArcProvider>,
-            );
-
-            // Custom transport should be passed to client
-        });
-    });
+    // Transport configuration tests removed - now using @solana/kit built-in transport
 
     describe('Connector Integration', () => {
         it('should accept connector client', () => {
