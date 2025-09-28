@@ -32,18 +32,6 @@ export function ArcProvider({ children, config, queryClient }: ArcProviderProps)
         );
     }
 
-    const providerId = useMemo(() => 'arc-provider-' + Math.random().toString(36).substr(2, 5), []);
-
-    if (process.env.NODE_ENV === 'development' && config.debug) {
-        console.log(`[ArcProvider:${providerId}] Connector selection:`, {
-            hasPassedConnector: !!passedConnector,
-            hasContextConnector: !!contextConnector,
-            usingConnector: connector === passedConnector ? 'passed' : 'context',
-            connectorConnected: (connector as any)?.getConnectorState?.()?.connected,
-            connectorSame: passedConnector === contextConnector,
-        });
-    }
-
     const merged: ArcWebClientConfig = { ...config, connector } as ArcWebClientConfig;
     return (
         <ArcClientProvider config={merged} queryClient={queryClient}>

@@ -182,13 +182,6 @@ export function useTransferToken(
                         skipPreflight: false,
                     });
                 } catch (confirmError: any) {
-                    if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
-                        console.log(
-                            '[useTransferToken] Standard confirmation failed, using robust polling:',
-                            confirmError.message,
-                        );
-                    }
-
                     // If standard confirmation fails, use custom polling
                     await waitForTransactionConfirmation(signature, rpcClient);
                 }
@@ -213,9 +206,6 @@ export function useTransferToken(
                                 status.confirmationStatus === 'confirmed' ||
                                 status.confirmationStatus === 'finalized'
                             ) {
-                                if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
-                                    console.log('[useTransferToken] Transaction confirmed via polling');
-                                }
                                 return; // Success
                             }
 
@@ -357,18 +347,6 @@ export function useTransferToken(
                             errorMessage.includes('blockhash') ||
                             errorMessage.includes('last block for which this transaction could have been committed');
 
-                        // Log attempt for debugging
-                        if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
-                            console.log(
-                                `[useTransferToken] Attempt ${attempt + 1}/${maxAttempts} failed:`,
-                                errorMessage,
-                            );
-                            if (isBlockhashExpired) {
-                                console.log(
-                                    '[useTransferToken] Detected blockhash expiration, will retry with fresh blockhash',
-                                );
-                            }
-                        }
 
                         // If this is the last attempt, provide a better error message
                         if (attempt === maxAttempts - 1) {
