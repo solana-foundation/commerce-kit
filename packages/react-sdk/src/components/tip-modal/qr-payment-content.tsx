@@ -36,7 +36,7 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(
     }) => {
         const displayAmount = showCustomInput ? customAmount || '0' : selectedAmount.toString();
         const [pollingMessage, setPollingMessage] = useState('Waiting for payment...');
-        const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+        const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
         // Enhanced payment status management
         const paymentStatus = usePaymentStatus();

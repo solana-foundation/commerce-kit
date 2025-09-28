@@ -16,7 +16,7 @@ ConnectorContext.displayName = 'ConnectorContext';
 // Global singleton to persist across component mount/unmount cycles
 let globalConnectorClient: ConnectorClient | null = null;
 let providerRefCount = 0;
-let cleanupTimeoutId: NodeJS.Timeout | null = null;
+let cleanupTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
 function getOrCreateConnectorClient(config?: ConnectorConfig): ConnectorClient {
     // Cancel any pending cleanup
