@@ -26,7 +26,7 @@ export function FloatingCommerceButton() {
           },
 
           allowedMints: ["USDC", "USDT", "SOL"],
-          network: 'mainnet-beta',
+          network: 'mainnet',
           showQR: true,
           enableWalletConnect: true,
 

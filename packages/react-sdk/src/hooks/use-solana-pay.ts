@@ -1,79 +1,102 @@
-import { createSolanaPayRequest } from "@solana-commerce/headless-sdk";
-import { Recipient, Reference, References, SPLToken } from "@solana-commerce/solana-pay";
-import BigNumber from "bignumber.js";
-import { useState, useEffect } from "react";
+import {
+    createSolanaPayRequest,
+    SolanaPayRequestOptions,
+    toMinorUnits,
+} from '@solana-commerce/headless-sdk';
+import { Recipient } from '@solana-commerce/solana-pay';
+import { useMemo } from 'react';
+import { Currency, CurrencyMap } from '../types';
+import { useAsync } from './use-async';
 
-export interface SolanaPayQROptions {
-  size?: number;
-  background?: string;
-  color?: string;
-  label?: string;
-  message?: string;
-  // Advanced QR customization options
-  margin?: number;
-  errorCorrectionLevel?: 'L' | 'M' | 'Q' | 'H';
-  logo?: string;
-  logoSize?: number;
-  logoBackgroundColor?: string;
-  logoMargin?: number;
-  dotStyle?: 'dots' | 'rounded' | 'square';
-  cornerStyle?: 'square' | 'rounded' | 'extra-rounded' | 'full-rounded' | 'maximum-rounded';
+export interface SolanaPayQROptions extends SolanaPayRequestOptions {
+    label?: string;
+    message?: string;
 }
 
-export function useSolanaPay(
-  recipient: string,
-  amount: number,
-  token: SPLToken,
-  opts?: SolanaPayQROptions
-) {
-    const [paymentRequest, setPaymentRequest] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
+/**
+ * Validates that a currency is supported by checking if it exists in CurrencyMap
+ * @param currency - The currency to validate
+ * @throws {Error} When currency is not supported
+ */
+function validateCurrency(currency: Currency): void {
+    if (!CurrencyMap.hasOwnProperty(currency)) {
+        const supportedCurrencies = Object.keys(CurrencyMap).join(', ');
+        throw new Error(`Unsupported currency: ${currency}. Supported currencies are: ${supportedCurrencies}`);
+    }
+}
 
-    useEffect(() => {
-        async function createRequest() {
-            try {
-                // Generate a unique reference for this payment
-                const reference = `tip-${Math.floor(Math.random() * 1000000)}`.toString();
-               
-                const request = await createSolanaPayRequest({
-                    recipient: recipient as Recipient,
-                    amount: new BigNumber(amount),
-                    splToken: token,
-                    memo: reference,
-                    label: opts?.label ?? 'commerceKit',
-                    message: opts?.message,
-                }, {
-                    size: opts?.size ?? 256,
-                    background: opts?.background ?? 'white',
-                    color: opts?.color ?? 'black',
-                    // Pass through advanced QR options
-                    margin: opts?.margin,
-                    errorCorrectionLevel: opts?.errorCorrectionLevel,
-                    logo: opts?.logo,
-                    logoSize: opts?.logoSize,
-                    logoBackgroundColor: opts?.logoBackgroundColor,
-                    logoMargin: opts?.logoMargin,
-                    dotStyle: opts?.dotStyle,
-                    cornerStyle: opts?.cornerStyle,
-                });
-                
+export function useSolanaPay(recipient: string, amount: number, currency: Currency, opts?: SolanaPayQROptions) {
+    // ✅ GOOD: Use useMemo for synchronous data derivation
+    const requestParams = useMemo(() => {
+        if (!recipient || !amount || !currency) return null;
+        
+        // Validate currency before proceeding
+        validateCurrency(currency);
+        
+        // Generate a unique reference for this payment
+        const reference = `tip-${Math.floor(Math.random() * 1000000)}`;
+        
+        // Get token info from enhanced currency map
+        const tokenInfo = CurrencyMap[currency];
+        const decimals = tokenInfo === 'SOL' ? 9 : tokenInfo.decimals;
+        // For native SOL, use undefined; for SPL tokens, use the mint address
+        const splToken = tokenInfo === 'SOL' ? undefined : tokenInfo.mint;
+
+        return {
+            paymentData: {
+                recipient: recipient as Recipient,
+                amount: toMinorUnits(amount, decimals), // to minor units
+                splToken,
+                memo: reference,
+                label: opts?.label ?? 'commerceKit',
+                message: opts?.message,
+            },
+            qrOptions: {
+                size: opts?.size ?? 256,
+                background: opts?.background ?? 'white',
+                color: opts?.color ?? 'black',
+                // Pass through advanced QR options
+                margin: opts?.margin,
+                errorCorrectionLevel: opts?.errorCorrectionLevel,
+                logo: opts?.logo,
+                logoSize: opts?.logoSize,
+                logoBackgroundColor: opts?.logoBackgroundColor,
+                logoMargin: opts?.logoMargin,
+                dotStyle: opts?.dotStyle,
+                cornerStyle: opts?.cornerStyle,
+            },
+            reference,
+        };
+    }, [recipient, amount, currency, opts]);
+
+    // ✅ GOOD: Use useAsync hook for proper async state management
+    const asyncRequestCreation = useMemo(
+        () => (requestParams 
+            ? async () => {
+                const request = await createSolanaPayRequest(
+                    requestParams.paymentData,
+                    requestParams.qrOptions,
+                );
+
                 // Add memo to the returned request
-                setPaymentRequest({
+                return {
                     ...request,
-                    memo: reference,
-                });
-            } catch (error) {
-                console.error('Error creating Solana Pay request:', error);
-            } finally {
-                setLoading(false);
+                    memo: requestParams.reference,
+                };
             }
-        }
+            : undefined
+        ),
+        [requestParams]
+    );
 
-        createRequest();
-    }, [recipient, amount, token]);
+    const { data: paymentRequest, loading, error } = useAsync(
+        asyncRequestCreation,
+        !!requestParams // Execute immediately if we have valid params
+    );
 
     return {
         paymentRequest,
-        loading
-    }
+        loading,
+        error,
+    };
 }

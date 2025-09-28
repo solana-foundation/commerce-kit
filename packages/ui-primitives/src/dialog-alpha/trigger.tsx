@@ -3,27 +3,27 @@ import { useDialog } from './context';
 import type { DialogTriggerProps } from './types';
 
 export function DialogTrigger({ children, asChild = false }: DialogTriggerProps) {
-  const context = useDialog();
-  
-  // Safely handle the open action
-  const handleOpen = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (context && context.open) {
-      context.open();
+    const context = useDialog();
+
+    // Safely handle the open action
+    const handleOpen = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (context && context.open) {
+            context.open();
+        }
+    };
+
+    if (asChild) {
+        return (
+            <span onClick={handleOpen} style={{ cursor: 'pointer' }}>
+                {children}
+            </span>
+        );
     }
-  };
 
-  if (asChild) {
     return (
-      <span onClick={handleOpen} style={{ cursor: 'pointer' }}>
-        {children}
-      </span>
+        <button onClick={handleOpen} type="button">
+            {children}
+        </button>
     );
-  }
-
-  return (
-    <button onClick={handleOpen} type="button">
-      {children}
-    </button>
-  );
-} 
+}

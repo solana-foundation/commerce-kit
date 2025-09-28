@@ -1,15 +1,6 @@
-import {
-    Address,
-    Rpc,
-    SolanaRpcApi,
-    Signature,
-    Transaction,
-} from 'gill';
+import { Address, Rpc, SolanaRpcApi, Signature, Transaction } from 'gill';
 
-export async function fetchTransaction(
-    rpc: Rpc<SolanaRpcApi>,
-    signature: Signature,
-): Promise<Transaction> {
+export async function fetchTransaction(rpc: Rpc<SolanaRpcApi>, signature: Signature): Promise<Transaction> {
     const response = await rpc.getTransaction(signature).send();
     const transaction = response?.transaction;
     if (!transaction) {

@@ -1,10 +1,8 @@
-import BigNumber from 'bignumber.js';
 import type { Address } from 'gill';
-
 
 export type Recipient = Address;
 
-export type Amount = BigNumber;
+export type Amount = bigint;
 
 export type SPLToken = Address;
 

@@ -1,5 +1,4 @@
-import BigNumber from "bignumber.js";
-import { address, Address } from "gill";
+import { address, Address } from 'gill';
 
 export const SOLANA_PROTOCOL = 'solana:';
 
@@ -11,4 +10,4 @@ export const TOKEN_PROGRAM_ID = address('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623V
 
 export const SOL_DECIMALS = 9;
 
-export const TEN = new BigNumber(10);
+export const TEN = 10n;

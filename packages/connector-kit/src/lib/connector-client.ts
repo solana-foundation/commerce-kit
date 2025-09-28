@@ -1,352 +1,454 @@
-import { getWallets } from '@wallet-standard/app'
-
-import type { Wallet } from '@wallet-standard/base'
+import { getWallets } from '@wallet-standard/app';
+import type {
+    Wallet,
+    WalletAccount,
+    IdentifierArray,
+    IdentifierRecord,
+} from '@wallet-standard/base';
+import type {
+    StandardConnectFeature,
+    StandardConnectOutput,
+    StandardDisconnectFeature,
+    StandardEventsFeature,
+    StandardEventsChangeProperties,
+} from '@wallet-standard/features';
 
 export interface WalletInfo {
-	wallet: Wallet
-	name: string
-	icon?: string
-	installed: boolean
-	/** Precomputed capability flag for UI convenience */
-	connectable?: boolean
+    wallet: Wallet;
+    name: string;
+    icon?: string;
+    installed: boolean;
+    /** Precomputed capability flag for UI convenience */
+    connectable?: boolean;
 }
 
-import type { WalletAccount } from '@wallet-standard/base'
+type WalletFeatureMap = IdentifierRecord<unknown>;
 
 export interface AccountInfo {
-	address: string
-	icon?: string
-	raw: WalletAccount
+    address: string;
+    icon?: string;
+    raw: WalletAccount;
 }
-
 
 export interface ConnectorState {
-	wallets: WalletInfo[]
-	selectedWallet: Wallet | null
-	connected: boolean
-	connecting: boolean
-	accounts: AccountInfo[]
-	selectedAccount: string | null
+    wallets: WalletInfo[];
+    selectedWallet: Wallet | null;
+    connected: boolean;
+    connecting: boolean;
+    accounts: AccountInfo[];
+    selectedAccount: string | null;
 }
 
-type Listener = (s: ConnectorState) => void
+type Listener = (s: ConnectorState) => void;
 
 export interface ConnectorConfig {
-	autoConnect?: boolean
-	debug?: boolean
-	storage?: {
-		getItem: (k: string) => string | null
-		setItem: (k: string, v: string) => void
-		removeItem: (k: string) => void
-	}
+    autoConnect?: boolean;
+    debug?: boolean;
+    /** Account polling interval in milliseconds when wallet events are not available (default: 1500) */
+    accountPollingIntervalMs?: number;
+    storage?: {
+        getItem: (k: string) => string | null;
+        setItem: (k: string, v: string) => void;
+        removeItem: (k: string) => void;
+    };
 }
 
-const STORAGE_KEY = 'arc-connector:lastWallet'
+const STORAGE_KEY = 'arc-connector:lastWallet';
+const DEFAULT_ACCOUNT_POLLING_INTERVAL_MS = 1500;
+
+const INITIAL_STATE: ConnectorState = {
+    wallets: [],
+    selectedWallet: null,
+    connected: false,
+    connecting: false,
+    accounts: [],
+    selectedAccount: null,
+};
 
 export class ConnectorClient {
-	private state: ConnectorState
-	private listeners = new Set<Listener>()
-	private unsubscribers: Array<() => void> = []
-	private walletChangeUnsub: (() => void) | null = null
-	private pollTimer: ReturnType<typeof setInterval> | null = null
+    private state: ConnectorState;
+    private listeners = new Set<Listener>();
+    private unsubscribers: Array<() => void> = [];
+    private walletChangeUnsub: (() => void) | null = null;
+    private pollTimer: ReturnType<typeof setInterval> | null = null;
 
-	constructor(private config: ConnectorConfig = {}) {
-		this.state = {
-			wallets: [],
-			selectedWallet: null,
-			connected: false,
-			connecting: false,
-			accounts: [],
-			selectedAccount: null,
-		}
-		this.initialize()
-	}
+    constructor(private config: ConnectorConfig = {}) {
+        this.state = { ...INITIAL_STATE };
+        this.initialize();
+    }
 
-	private getStorage(): ConnectorConfig['storage'] | null {
-    if (this.config.storage) return this.config.storage
-    if (typeof window !== 'undefined') {
-      try {
-        // Accessing window.localStorage can throw in sandboxed iframes
-        if (window.localStorage) {
-          return {
-            getItem: (k: string) => window.localStorage.getItem(k),
-            setItem: (k: string, v: string) => window.localStorage.setItem(k, v),
-            removeItem: (k: string) => window.localStorage.removeItem(k),
-          }
+    private getStorage(): ConnectorConfig['storage'] {
+        if (this.config.storage) return this.config.storage;
+        if (typeof window !== 'undefined') {
+            try {
+                // Accessing window.localStorage can throw in sandboxed iframes
+                if (window.localStorage) {
+                    return {
+                        getItem: (k: string) => window.localStorage.getItem(k),
+                        setItem: (k: string, v: string) => window.localStorage.setItem(k, v),
+                        removeItem: (k: string) => window.localStorage.removeItem(k),
+                    };
+                }
+            } catch {
+                // Ignore storage when not available
+                return undefined;
+            }
         }
-      } catch {
-        // Ignore storage when not available
-        return null
-      }
+        return undefined;
     }
-		return null
-	}
 
-	private initialize() {
-		if (typeof window === 'undefined') return
-		try {
-			const walletsApi = getWallets()
-			const update = () => {
-				const ws = walletsApi.get()
-				const unique = Array.from(new Set(ws.map(w => w.name)))
-				  .map(n => ws.find(w => w.name === n))
-				  .filter((w): w is Wallet => w !== undefined)
-				this.state = {
-					...this.state,
-					wallets: unique.map(w => {
-						const features = (w.features as any) || {}
-						const hasConnect = Boolean(features['standard:connect'])
-						const hasDisconnect = Boolean(features['standard:disconnect'])
-						const chains = (w as any)?.chains as unknown as string[] | undefined
-						const isSolana = Array.isArray(chains) && chains.some(c => typeof c === 'string' && c.includes('solana'))
-						const connectable = hasConnect && hasDisconnect && Boolean(isSolana)
-						return { wallet: w, name: w.name, icon: w.icon, installed: true, connectable } satisfies WalletInfo
-					}),
-				}
-				this.notify()
-			}
-			update()
-			this.unsubscribers.push(walletsApi.on('register', update))
-			this.unsubscribers.push(walletsApi.on('unregister', update))
-			if (this.config.autoConnect) setTimeout(() => this.attemptAutoConnect(), 100)
-		} catch (e) {
-			if (this.config.debug) console.warn('[Connector] init failed', e)
-		}
-	}
-
-	private async attemptAutoConnect() {
-    try {
-      const storage = this.getStorage()
-      const last = storage?.getItem(STORAGE_KEY)
-      if (!last) return
-      if (this.state.wallets.some(w => w.name === last)) await this.select(last)
-    } catch (e) {
-      try { this.getStorage()?.removeItem(STORAGE_KEY) } catch {}
+    private updateWallets(wallets: readonly Wallet[]) {
+        const unique = Array.from(new Set(wallets.map(w => w.name)))
+            .map(n => wallets.find(w => w.name === n))
+            .filter((w): w is Wallet => w !== undefined);
+        this.state = {
+            ...this.state,
+            wallets: unique.map(walletEntry => {
+                const features = walletEntry.features as WalletFeatureMap;
+                const hasConnect = Boolean(features['standard:connect']);
+                const chains = walletEntry.chains as IdentifierArray | undefined;
+                const isSolana =
+                    Array.isArray(chains) && chains.some(chain => typeof chain === 'string' && chain.includes('solana'));
+                const connectable = Boolean(hasConnect && isSolana);
+                return {
+                    wallet: walletEntry,
+                    name: walletEntry.name,
+                    icon: walletEntry.icon,
+                    installed: true,
+                    connectable,
+                } satisfies WalletInfo;
+            }),
+        };
+        this.notify();
     }
-	}
 
-	subscribe(l: Listener) {
-		this.listeners.add(l)
-		return () => this.listeners.delete(l)
-	}
+    private initialize() {
+        if (typeof window === 'undefined') return;
+        try {
+            const walletsApi = getWallets();
+            const update = () => this.updateWallets(walletsApi.get());
+            update();
+            this.unsubscribers.push(walletsApi.on('register', update));
+            this.unsubscribers.push(walletsApi.on('unregister', update));
+            if (this.config.autoConnect) setTimeout(() => this.attemptAutoConnect(), 100);
+        } catch (e) {
+            if (this.config.debug) console.warn('[Connector] init failed', e);
+        }
+    }
 
-	getSnapshot(): ConnectorState {
-		return this.state
-	}
+    private async attemptAutoConnect() {
+        try {
+            const storage = this.getStorage();
+            let last: string | null = null;
+            
+            // Safely get last wallet from storage
+            try {
+                last = storage?.getItem(STORAGE_KEY) ?? null;
+            } catch (error) {
+                if (this.config.debug) {
+                    console.warn('[Connector] Failed to read wallet preference:', error);
+                }
+                return;
+            }
+            
+            if (!last) return;
+            if (this.state.wallets.some(w => w.name === last)) await this.select(last);
+        } catch (e) {
+            // If auto-connect fails, try to clean up the stored preference
+            try {
+                this.getStorage()?.removeItem(STORAGE_KEY);
+            } catch (error) {
+                if (this.config.debug) {
+                    console.warn('[Connector] Failed to remove invalid wallet preference:', error);
+                }
+            }
+        }
+    }
 
-	private notify() {
-		this.listeners.forEach(l => l(this.state))
-	}
+    subscribe(listener: Listener) {
+        this.listeners.add(listener);
+        return () => this.listeners.delete(listener);
+    }
 
-	private startPollingWalletAccounts() {
-		if (this.pollTimer) return
-		const wallet = this.state.selectedWallet
-		if (!wallet) return
-		this.pollTimer = setInterval(() => {
-			try {
-				const walletAccounts = ((wallet as any)?.accounts ?? []) as any[]
-				const accountMap = new Map<string, any>()
-				for (const a of walletAccounts) accountMap.set(a.address, a)
-				const nextAccounts: AccountInfo[] = Array.from(accountMap.values()).map((a: any) => ({ address: a.address as string, icon: a.icon, raw: a }))
-				const selectedStillExists = this.state.selectedAccount && nextAccounts.some(acc => acc.address === this.state.selectedAccount)
-				const newSelected = selectedStillExists ? this.state.selectedAccount : (nextAccounts[0]?.address ?? null)
-				// Only update if changed
-				const changed = nextAccounts.length !== this.state.accounts.length || nextAccounts.some((acc, i) => acc.address !== this.state.accounts[i]?.address)
-				if (changed) {
-					this.state = { ...this.state, accounts: nextAccounts, selectedAccount: newSelected }
-					this.notify()
-					if (this.config.debug) console.log('[Connector] Poll updated accounts:', nextAccounts.length)
-				}
-			} catch (error) {
-				if (this.config.debug) {
-					console.warn('[Connector] Error during account polling:', error)
-				}
-			}
-		}, 1500)
-	}
+    getConnectorState(): ConnectorState {
+        return this.state;
+    }
 
-	private stopPollingWalletAccounts() {
-		if (this.pollTimer) {
-			clearInterval(this.pollTimer)
-			this.pollTimer = null
-		}
-	}
+    private notify() {
+        for (const listener of this.listeners) {
+            listener(this.state);
+        }
+    }
 
-	private subscribeToWalletEvents() {
-			try {
-				if (this.walletChangeUnsub) this.walletChangeUnsub()
-			} catch (e) {
-				if (this.config.debug) console.warn('[Connector] Error unsubscribing wallet events:', e)
-			}
-		if (this.walletChangeUnsub) {
-			try { this.walletChangeUnsub() } catch {}
-			this.walletChangeUnsub = null
-		}
-		this.stopPollingWalletAccounts()
+    private startPollingWalletAccounts() {
+        if (this.pollTimer) return;
+        const wallet = this.state.selectedWallet;
+        if (!wallet) return;
+        this.pollTimer = setInterval(() => {
+            try {
+                const walletAccounts = (wallet.accounts ?? []) as readonly WalletAccount[];
+                const accountMap = new Map<string, WalletAccount>();
+                for (const account of walletAccounts) {
+                    accountMap.set(account.address, account);
+                }
+                const nextAccounts: AccountInfo[] = Array.from(accountMap.values()).map((account): AccountInfo => ({
+                    address: account.address,
+                    icon: account.icon,
+                    raw: account,
+                }));
+                const selectedStillExists =
+                    this.state.selectedAccount && nextAccounts.some(acc => acc.address === this.state.selectedAccount);
+                const newSelected = selectedStillExists
+                    ? this.state.selectedAccount
+                    : (nextAccounts[0]?.address ?? null);
+                // Only update if changed
+                const changed =
+                    nextAccounts.length !== this.state.accounts.length ||
+                    nextAccounts.some((acc, i) => acc.address !== this.state.accounts[i]?.address);
+                if (changed) {
+                    this.state = { ...this.state, accounts: nextAccounts, selectedAccount: newSelected };
+                    this.notify();
+                    if (this.config.debug) console.log('[Connector] Poll updated accounts:', nextAccounts.length);
+                }
+            } catch (error) {
+                if (this.config.debug) {
+                    console.warn('[Connector] Error during account polling:', error);
+                }
+            }
+        }, this.config.accountPollingIntervalMs ?? DEFAULT_ACCOUNT_POLLING_INTERVAL_MS);
+    }
 
-		const wallet = this.state.selectedWallet
-		if (!wallet) return
+    private stopPollingWalletAccounts() {
+        if (this.pollTimer) {
+            clearInterval(this.pollTimer);
+            this.pollTimer = null;
+        }
+    }
 
-		// Check if wallet supports standard:events feature
-		const eventsFeature = (wallet.features as any)?.['standard:events']
-		if (!eventsFeature?.on) {
-			// Fallback: start polling wallet.accounts when events are not available
-			this.startPollingWalletAccounts()
-			return
-		}
+    private unsubscribeWalletEvents() {
+        if (this.walletChangeUnsub) {
+            try {
+                this.walletChangeUnsub();
+            } catch (error) {
+                if (this.config.debug) {
+                    console.warn('[Connector] Error unsubscribing wallet events:', error);
+                }
+            }
+            this.walletChangeUnsub = null;
+        }
+    }
 
-		try {
-			// Subscribe to change events
-			this.walletChangeUnsub = eventsFeature.on('change', (properties: any) => {
-				// Aggregate accounts from event and wallet.accounts (some wallets only include selected account in the event)
-				const changeAccounts = (properties?.accounts ?? []) as any[]
-				const walletAccounts = ((wallet as any)?.accounts ?? []) as any[]
-				const accountMap = new Map<string, any>()
-				for (const a of [...walletAccounts, ...changeAccounts]) accountMap.set(a.address, a)
-				const nextAccounts: AccountInfo[] = Array.from(accountMap.values()).map((a: any) => ({ address: a.address as string, icon: a.icon, raw: a }))
+    private subscribeToWalletEvents() {
+        this.unsubscribeWalletEvents();
+        this.stopPollingWalletAccounts();
 
-				// Preserve selection if possible
-				const selectedStillExists = this.state.selectedAccount && nextAccounts.some(acc => acc.address === this.state.selectedAccount)
-				const newSelected = selectedStillExists ? this.state.selectedAccount : (nextAccounts[0]?.address ?? null)
+        const wallet = this.state.selectedWallet;
+        if (!wallet) return;
 
-				this.state = { ...this.state, accounts: nextAccounts, selectedAccount: newSelected }
-				this.notify()
+        // Check if wallet supports standard:events feature
+        const eventsFeature = wallet.features['standard:events'];
+        if (!eventsFeature) {
+            // Fallback: start polling wallet.accounts when events are not available
+            this.startPollingWalletAccounts();
+            return;
+        }
 
-				if (this.config.debug) {
-					console.log('[Connector] Wallet accounts changed:', nextAccounts.length, 'accounts')
-				}
-			})
-		} catch (error) {
-			if (this.config.debug) {
-				console.warn('[Connector] Failed to subscribe to wallet events:', error)
-			}
-			// Fallback to polling when event subscription fails
-			this.startPollingWalletAccounts()
-		}
-	}
+        try {
+            // Subscribe to change events
+            const onEvents = (eventsFeature as StandardEventsFeature['standard:events']).on;
+            this.walletChangeUnsub = onEvents('change', (properties: StandardEventsChangeProperties) => {
+                // Aggregate accounts from event and wallet.accounts (some wallets only include selected account in the event)
+                const changeAccounts = (properties.accounts ?? []) as readonly WalletAccount[];
+                const walletAccounts = (wallet.accounts ?? []) as readonly WalletAccount[];
+                const accountMap = new Map<string, WalletAccount>();
+                for (const account of [...walletAccounts, ...changeAccounts]) {
+                    accountMap.set(account.address, account);
+                }
+                const nextAccounts: AccountInfo[] = Array.from(accountMap.values()).map((account): AccountInfo => ({
+                    address: account.address,
+                    icon: account.icon,
+                    raw: account,
+                }));
 
-	async select(walletName: string): Promise<void> {
-		if (typeof window === 'undefined') return
-		const w = this.state.wallets.find(x => x.name === walletName)
-		if (!w) throw new Error(`Wallet ${walletName} not found`)
-		this.state = { ...this.state, connecting: true }
-		this.notify()
-		try {
-			const connectFeature = (w.wallet.features as any)['standard:connect']
-			if (!connectFeature) throw new Error(`Wallet ${walletName} does not support standard connect`)
-				// Force non-silent connection to ensure wallet prompts for account selection
-				const result = await connectFeature.connect({ silent: false })
-				// Aggregate accounts from result and wallet.accounts (some wallets only return the selected account)
-				const walletAccounts = ((w.wallet as any)?.accounts ?? []) as any[]
-				const accountMap = new Map<string, any>()
-				for (const a of [...walletAccounts, ...result.accounts]) accountMap.set(a.address, a)
-				const accounts: AccountInfo[] = Array.from(accountMap.values()).map((a: any) => ({ address: a.address as string, icon: a.icon, raw: a }))
-				// Prefer a never-before-seen account when reconnecting; otherwise preserve selection
-				const previouslySelected = this.state.selectedAccount
-				const previousAddresses = new Set(this.state.accounts.map(a => a.address))
-				const firstNew = accounts.find(a => !previousAddresses.has(a.address))
-				const selected = firstNew?.address ?? previouslySelected ?? accounts[0]?.address ?? null
-			
-			if (this.config.debug) {
-				console.log(`[Connector] Connected to ${walletName} with ${accounts.length} accounts`)
-				console.log('[Connector] Accounts:', accounts.map((a: AccountInfo) => a.address))
-				console.log('[Connector] Selected account:', selected)
-			}
-				this.state = {
-					...this.state,
-					selectedWallet: w.wallet,
-					connected: true,
-					connecting: false,
-					accounts,
-					selectedAccount: selected,
-				}
-			this.getStorage()?.setItem(STORAGE_KEY, walletName)
-			// Subscribe to wallet change events (or start polling if unavailable)
-			this.subscribeToWalletEvents()
-			this.notify()
-		} catch (e) {
-			this.state = { ...this.state, selectedWallet: null, connected: false, connecting: false, accounts: [], selectedAccount: null }
-			this.notify()
-			throw e
-		}
-	}
+                // Preserve selection if possible
+                const selectedStillExists =
+                    this.state.selectedAccount && nextAccounts.some(acc => acc.address === this.state.selectedAccount);
+                const newSelected = selectedStillExists
+                    ? this.state.selectedAccount
+                    : (nextAccounts[0]?.address ?? null);
 
-	async disconnect(): Promise<void> {
-		// Cleanup wallet event listener
-		if (this.walletChangeUnsub) {
-			try { this.walletChangeUnsub() } catch {}
-			this.walletChangeUnsub = null
-		}
-		this.stopPollingWalletAccounts()
+                this.state = { ...this.state, accounts: nextAccounts, selectedAccount: newSelected };
+                this.notify();
 
-		// Call wallet's disconnect feature if available
-		const wallet = this.state.selectedWallet
-		if (wallet) {
-			const disconnectFeature = (wallet.features as any)?.['standard:disconnect']
-			if (disconnectFeature?.disconnect) {
-				try {
-					await disconnectFeature.disconnect()
-					if (this.config.debug) {
-						console.log('[Connector] Called wallet disconnect feature')
-					}
-				} catch (error) {
-					if (this.config.debug) {
-						console.warn('[Connector] Wallet disconnect failed:', error)
-					}
-				}
-			}
-		}
+                if (this.config.debug) {
+                    console.log('[Connector] Wallet accounts changed:', nextAccounts.length, 'accounts');
+                }
+            });
+        } catch (error) {
+            if (this.config.debug) {
+                console.warn('[Connector] Failed to subscribe to wallet events:', error);
+            }
+            // Fallback to polling when event subscription fails
+            this.startPollingWalletAccounts();
+        }
+    }
 
-		this.state = { ...this.state, selectedWallet: null, connected: false, accounts: [], selectedAccount: null }
-		this.getStorage()?.removeItem(STORAGE_KEY)
-		this.notify()
-	}
+    async select(walletName: string): Promise<void> {
+        if (typeof window === 'undefined') return;
+        const w = this.state.wallets.find(x => x.name === walletName);
+        if (!w) throw new Error(`Wallet ${walletName} not found`);
+        this.state = { ...this.state, connecting: true };
+        this.notify();
+        try {
+            const connectFeature = w.wallet.features['standard:connect'];
+            if (!connectFeature) throw new Error(`Wallet ${walletName} does not support standard connect`);
+            const connect = (connectFeature as StandardConnectFeature['standard:connect']).connect;
+            const result: StandardConnectOutput = await connect({ silent: false });
+            const walletAccounts = (w.wallet.accounts ?? []) as readonly WalletAccount[];
+            const accountMap = new Map<string, WalletAccount>();
+            for (const account of [...walletAccounts, ...result.accounts]) {
+                accountMap.set(account.address, account);
+            }
+            const accounts: AccountInfo[] = Array.from(accountMap.values()).map((account): AccountInfo => ({
+                address: account.address,
+                icon: account.icon,
+                raw: account,
+            }));
+            // Prefer a never-before-seen account when reconnecting; otherwise preserve selection
+            const previouslySelected = this.state.selectedAccount;
+            const previousAddresses = new Set(this.state.accounts.map(a => a.address));
+            const firstNew = accounts.find(a => !previousAddresses.has(a.address));
+            const selected = firstNew?.address ?? previouslySelected ?? accounts[0]?.address ?? null;
 
-	async selectAccount(address: string): Promise<void> {
-		const current = this.state.selectedWallet
-		if (!current) throw new Error('No wallet connected')
-    let target = this.state.accounts.find((acc: AccountInfo) => acc.address === address)?.raw ?? null
-		if (!target) {
-			try {
-				const feature = (current.features as any)['standard:connect']
-				if (feature) {
-					const res = await feature.connect()
-					const accounts: AccountInfo[] = res.accounts.map((a: WalletAccount) => ({ address: a.address, icon: a.icon, raw: a }))
-					target = accounts.find((acc: AccountInfo) => acc.address === address)?.raw ?? res.accounts[0]
-					this.state = { ...this.state, accounts }
-				}
-			} catch (error) {
-				if (this.config.debug) {
-					console.warn('[Connector] Failed to reconnect for account selection:', error)
-				}
-				throw new Error('Failed to reconnect wallet for account selection')
-			}
-		}
-		if (!target) throw new Error('Requested account not available')
-		this.state = { ...this.state, selectedAccount: target.address as string }
-		this.notify()
-	}
+            if (this.config.debug) {
+                console.log(`[Connector] Connected to ${walletName} with ${accounts.length} accounts`);
+                console.log(
+                    '[Connector] Accounts:',
+                    accounts.map((a: AccountInfo) => a.address),
+                );
+                console.log('[Connector] Selected account:', selected);
+            }
+            this.state = {
+                ...this.state,
+                selectedWallet: w.wallet,
+                connected: true,
+                connecting: false,
+                accounts,
+                selectedAccount: selected,
+            };
+            
+            // Store wallet preference, but don't fail connection if storage fails
+            try {
+                this.getStorage()?.setItem(STORAGE_KEY, walletName);
+            } catch (error) {
+                if (this.config.debug) {
+                    console.warn('[Connector] Failed to store wallet preference:', error);
+                }
+            }
+            // Subscribe to wallet change events (or start polling if unavailable)
+            this.subscribeToWalletEvents();
+            this.notify();
+        } catch (e) {
+            this.state = {
+                ...this.state,
+                ...INITIAL_STATE,
+                wallets: this.state.wallets, // Preserve discovered wallets
+            };
+            this.notify();
+            throw e;
+        }
+    }
 
-	// Cleanup any resources (event listeners, timers) created by this client
-	destroy(): void {
-		// Unsubscribe wallet change listener
-		if (this.walletChangeUnsub) {
-			try { this.walletChangeUnsub() } catch {}
-			this.walletChangeUnsub = null
-		}
-		// Stop any polling timers
-		this.stopPollingWalletAccounts()
-		// Unsubscribe from wallets API events
-		for (const unsubscribe of this.unsubscribers) {
-			try { unsubscribe() } catch {}
-		}
-		this.unsubscribers = []
-		// Clear external store listeners
-		this.listeners.clear()
-		if (this.config.debug) {
-			console.log('[Connector] destroyed')
-		}
-	}
+    async disconnect(): Promise<void> {
+        // Cleanup wallet event listener
+        this.unsubscribeWalletEvents();
+        this.stopPollingWalletAccounts();
+
+        // Call wallet's disconnect feature if available
+        const wallet = this.state.selectedWallet;
+        if (wallet) {
+            const disconnectFeature = wallet.features['standard:disconnect'];
+            if (disconnectFeature) {
+                try {
+                    await (disconnectFeature as StandardDisconnectFeature['standard:disconnect']).disconnect();
+                    if (this.config.debug) {
+                        console.log('[Connector] Called wallet disconnect feature');
+                    }
+                } catch (error) {
+                    if (this.config.debug) {
+                        console.warn('[Connector] Wallet disconnect failed:', error);
+                    }
+                }
+            }
+        }
+
+        this.state = { 
+            ...this.state, 
+            selectedWallet: null, 
+            connected: false, 
+            accounts: [], 
+            selectedAccount: null 
+        };
+        
+        // Remove wallet preference, but don't fail disconnect if storage fails
+        try {
+            this.getStorage()?.removeItem(STORAGE_KEY);
+        } catch (error) {
+            if (this.config.debug) {
+                console.warn('[Connector] Failed to remove wallet preference:', error);
+            }
+        }
+        
+        this.notify();
+    }
+
+    async selectAccount(address: string): Promise<void> {
+        const current = this.state.selectedWallet;
+        if (!current) throw new Error('No wallet connected');
+        let target = this.state.accounts.find((acc: AccountInfo) => acc.address === address)?.raw ?? null;
+        if (!target) {
+            try {
+                const feature = current.features['standard:connect'];
+                if (feature) {
+                    const connect = (feature as StandardConnectFeature['standard:connect']).connect;
+                    const res = await connect();
+                    const accounts: AccountInfo[] = res.accounts.map((a: WalletAccount) => ({
+                        address: a.address,
+                        icon: a.icon,
+                        raw: a,
+                    }));
+                    target = accounts.find((acc: AccountInfo) => acc.address === address)?.raw ?? res.accounts[0] ?? null;
+                    this.state = { ...this.state, accounts };
+                }
+            } catch (error) {
+                if (this.config.debug) {
+                    console.warn('[Connector] Failed to reconnect for account selection:', error);
+                }
+                throw new Error('Failed to reconnect wallet for account selection');
+            }
+        }
+        if (!target) throw new Error('Requested account not available');
+        this.state = { ...this.state, selectedAccount: target.address as string };
+        this.notify();
+    }
+
+    // Cleanup any resources (event listeners, timers) created by this client
+    destroy(): void {
+        // Unsubscribe wallet change listener
+        this.unsubscribeWalletEvents();
+        // Stop any polling timers
+        this.stopPollingWalletAccounts();
+        // Unsubscribe from wallets API events
+        for (const unsubscribe of this.unsubscribers) {
+            try {
+                unsubscribe();
+            } catch {}
+        }
+        this.unsubscribers = [];
+        // Clear external store listeners
+        this.listeners.clear();
+        if (this.config.debug) {
+            console.log('[Connector] destroyed');
+        }
+    }
 }
-
-

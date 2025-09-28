@@ -21,6 +21,7 @@
 @import './components/payment-methods.css';
 @import './components/qr-code.css';
 @import './components/wallet.css';
+@import './components/transaction-states.css';
 @import './components/merchant-pill.css';
 @import './components/currency-selector.css';
 @import './components/header.css';

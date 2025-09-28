@@ -149,7 +149,7 @@ function createSecondaryColor(primaryColor: string): string {
 
 // Throttle function to limit update frequency during dragging
 function throttle<T extends (...args: Parameters<T>) => void>(func: T, delay: number): T {
-  let timeoutId: NodeJS.Timeout | null = null;
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
   let lastExecTime = 0;
   
   return ((...args: Parameters<T>) => {

@@ -14,13 +14,19 @@
     "build:docs": "turbo build --filter=docs",
     "dev": "turbo dev",
     "lint": "turbo lint",
-    "clean": "turbo clean"
+    "clean": "turbo clean",
+    "test": "turbo test --filter=./packages/* -- --run",
+    "format": "prettier --write \"packages/**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"packages/**/*.{ts,tsx,js,jsx,json,md}\""
   },
   "devDependencies": {
     "turbo": "latest",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "prettier": "^3.6",
+    "@solana/prettier-config-solana": "0.0.5"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.87.4"
-  }
+  },
+  "prettier": "@solana/prettier-config-solana"
 }

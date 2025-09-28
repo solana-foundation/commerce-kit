@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`useAnimationStyles > should inject complete animation styles with proper formatting 1`] = `
+"@keyframes sc-tip-modal-slide-up {
+  0% { transform: translateY(16px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.sc-tip-modal-anim {
+  transition: height 500ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sc-tip-modal-anim { 
+    animation: none !important;
+    transition: none !important;
+  }
+}"
+`;

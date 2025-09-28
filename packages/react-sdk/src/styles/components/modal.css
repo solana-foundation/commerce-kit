@@ -1,17 +1,15 @@
 /* Modal Component Styles */
 
-/* Modal Container */
+/* Modal Container - Styling moved to iframe, this is now just content container */
 .sc-tip-modal-anim {
   padding: 0;
   height: auto;
   width: 100%;
-  max-width: var(--modal-max-width);
-  min-width: var(--modal-min-width);
+  /* Removed max-width and min-width - iframe handles sizing */
   overflow: hidden;
   font-family: var(--font-family);
-  box-shadow: var(--modal-shadow);
+  /* Removed box-shadow and border-radius - iframe handles visual styling */
   background-color: var(--color-background);
-  border-radius: var(--modal-border-radius, 1.5rem);
   animation: modal-enter 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards;
   transform-origin: center;
   will-change: transform, opacity, filter;
@@ -49,4 +47,10 @@
 
 .sc-step.payment.wallet-bg.active {
   background-color: var(--color-surface);
+}
+
+/* Override background for transaction states to ensure white background */
+.sc-step.payment.active .ck-transaction-success-container,
+.sc-step.payment.active .ck-transaction-error-container {
+  background-color: white !important;
 }

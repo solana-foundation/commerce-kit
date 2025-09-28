@@ -1,144 +1,78 @@
-// Cluster detection and utilities following @solana/kit patterns
-export type Cluster = 'mainnet-beta' | 'devnet' | 'testnet' | 'localnet' | 'custom'
+/**
+ * Cluster utilities using gill's built-in functions
+ */
 
-export interface ClusterInfo {
-  cluster: Cluster
-  name: string
-  rpcUrl: string
-  explorerUrl: string
-  isMainnet: boolean
-  isDevnet: boolean
-  isTestnet: boolean
-  isLocal: boolean
-}
+import { getPublicSolanaRpcUrl, type SolanaClusterMoniker } from 'gill';
 
-// Official Solana RPC endpoints
-export const OFFICIAL_RPC_URLS = {
-  'mainnet-beta': 'https://api.mainnet-beta.solana.com',
-  'devnet': 'https://api.devnet.solana.com',
-  'testnet': 'https://api.testnet.solana.com',
-  'localnet': 'http://localhost:8899'
-} as const
-
-// Common RPC provider patterns for cluster detection
-const CLUSTER_PATTERNS = [
-  // Explicit cluster keywords first
-  { pattern: /devnet/i, cluster: 'devnet' as const },
-  { pattern: /testnet/i, cluster: 'testnet' as const },
-  { pattern: /localhost|127\.0\.0\.1|0\.0\.0\.0/i, cluster: 'localnet' as const },
-  // Official endpoints
-  { pattern: /api\.mainnet-beta\.solana\.com/i, cluster: 'mainnet-beta' as const },
-  { pattern: /api\.devnet\.solana\.com/i, cluster: 'devnet' as const },
-  { pattern: /api\.testnet\.solana\.com/i, cluster: 'testnet' as const },
-  // Common provider hosts (mainnet)
-  { pattern: /rpc\.ankr\.com\/solana(?!_devnet|_testnet)/i, cluster: 'mainnet-beta' as const },
-  { pattern: /ssc-dao\.genesysgo\.net/i, cluster: 'mainnet-beta' as const },
-  { pattern: /solana-api\.projectserum\.com/i, cluster: 'mainnet-beta' as const },
-  // Generic catch-all for URLs containing "mainnet"
-  { pattern: /mainnet/i, cluster: 'mainnet-beta' as const },
-]
+export type ClusterInfo = {
+    name: string;
+    rpcUrl: string;
+    wsUrl?: string;
+    isMainnet: boolean;
+    isDevnet: boolean;
+    isTestnet: boolean;
+};
 
 /**
- * Detect cluster from RPC URL
- * Following patterns from https://solwebkit.vercel.app/docs/basics/set-rpc
+ * Convert RPC URL to WebSocket URL
+ * Handles both http:// and https:// schemes, plus URLs without explicit schemes
  */
-export function detectClusterFromRpcUrl(rpcUrl: string): Cluster {
-  if (!rpcUrl) return 'devnet' // Default fallback
-  
-  // Check against known patterns
-  for (const { pattern, cluster } of CLUSTER_PATTERNS) {
-    if (pattern.test(rpcUrl)) {
-      return cluster
+function deriveWebSocketUrl(rpcUrl: string): string {
+    // Handle URLs with explicit schemes
+    if (rpcUrl.startsWith('https://')) {
+        return rpcUrl.replace('https://', 'wss://');
     }
-  }
-  
-  // If no pattern matches, it's a custom RPC
-  return 'custom'
+    if (rpcUrl.startsWith('http://')) {
+        return rpcUrl.replace('http://', 'ws://');
+    }
+    
+    // Handle URLs without explicit schemes - check prefix to determine protocol
+    if (rpcUrl.startsWith('https')) {
+        return `wss://${rpcUrl}`;
+    }
+    if (rpcUrl.startsWith('http')) {
+        return `ws://${rpcUrl}`;
+    }
+    
+    // Default to ws:// for other cases (localhost, domains without protocol, etc.)
+    return `ws://${rpcUrl}`;
 }
 
 /**
- * Get cluster information from RPC URL
+ * Get cluster information from a network identifier
+ * Leverages gill's getPublicSolanaRpcUrl for standard networks
  */
-export function getClusterInfo(rpcUrl?: string): ClusterInfo {
-  const cluster = detectClusterFromRpcUrl(rpcUrl || OFFICIAL_RPC_URLS.devnet)
-  
-  const baseInfo = {
-    cluster,
-    rpcUrl: rpcUrl || OFFICIAL_RPC_URLS.devnet,
-    isMainnet: cluster === 'mainnet-beta',
-    isDevnet: cluster === 'devnet', 
-    isTestnet: cluster === 'testnet',
-    isLocal: cluster === 'localnet'
-  }
-  
-  switch (cluster) {
-    case 'mainnet-beta':
-      return {
-        ...baseInfo,
-        name: 'Mainnet Beta',
-        explorerUrl: 'https://explorer.solana.com'
-      }
-    case 'devnet':
-      return {
-        ...baseInfo,
-        name: 'Devnet',
-        explorerUrl: 'https://explorer.solana.com?cluster=devnet'
-      }
-    case 'testnet':
-      return {
-        ...baseInfo,
-        name: 'Testnet', 
-        explorerUrl: 'https://explorer.solana.com?cluster=testnet'
-      }
-    case 'localnet':
-      return {
-        ...baseInfo,
-        name: 'Localnet',
-        explorerUrl: 'https://explorer.solana.com?cluster=custom&customUrl=' + encodeURIComponent(rpcUrl || '')
-      }
-    default:
-      return {
-        ...baseInfo,
-        name: 'Custom Network',
-        explorerUrl: 'https://explorer.solana.com?cluster=custom&customUrl=' + encodeURIComponent(rpcUrl || '')
-      }
-  }
+export function getClusterInfo(network: string): ClusterInfo {
+    // Handle standard Solana cluster monikers
+    if (isStandardCluster(network)) {
+        const rpcUrl = getPublicSolanaRpcUrl(network);
+        const wsUrl = deriveWebSocketUrl(rpcUrl);
+        
+        return {
+            name: network === 'mainnet-beta' ? 'mainnet' : network,
+            rpcUrl,
+            wsUrl,
+            isMainnet: network === 'mainnet' || network === 'mainnet-beta',
+            isDevnet: network === 'devnet',
+            isTestnet: network === 'testnet',
+        };
+    }
+    
+    // Handle custom RPC URLs (treat as mainnet by default)
+    const wsUrl = deriveWebSocketUrl(network);
+    return {
+        name: 'custom',
+        rpcUrl: network,
+        wsUrl,
+        isMainnet: true,
+        isDevnet: false,
+        isTestnet: false,
+    };
 }
 
 /**
- * Get explorer URL for an address/transaction
+ * Type guard to check if network is a standard Solana cluster
  */
-export function getExplorerUrl(
-  addressOrSignature: string, 
-  rpcUrl?: string,
-  type: 'address' | 'tx' = 'address'
-): string {
-  const clusterInfo = getClusterInfo(rpcUrl)
-  const baseUrl = clusterInfo.explorerUrl
-  
-  if (type === 'tx') {
-    return `${baseUrl}/tx/${addressOrSignature}`
-  }
-  
-  return `${baseUrl}/address/${addressOrSignature}`
-}
-
-/**
- * Check if RPC URL is a known official endpoint
- */
-export function isOfficialRpc(rpcUrl: string): boolean {
-  return Object.values(OFFICIAL_RPC_URLS).includes(rpcUrl as any)
-}
-
-/**
- * Get faucet URL for cluster (devnet/testnet only)
- */
-export function getFaucetUrl(cluster: Cluster): string | null {
-  switch (cluster) {
-    case 'devnet':
-    case 'testnet':
-      return 'https://faucet.solana.com'
-    default:
-      return null
-  }
+function isStandardCluster(network: string): network is SolanaClusterMoniker | 'mainnet-beta' | 'localhost' {
+    return ['mainnet', 'mainnet-beta', 'devnet', 'testnet', 'localnet', 'localhost'].includes(network);
 }

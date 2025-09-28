@@ -1,4 +1,4 @@
-import { SOLANA_PROTOCOL, HTTPS_PROTOCOL } from './constants';
+import { SOLANA_PROTOCOL, HTTPS_PROTOCOL, SOL_DECIMALS } from './constants';
 import type { Amount, Label, Link, Memo, Message, Recipient, References, SPLToken } from './types';
 
 /**
@@ -22,6 +22,23 @@ export interface TransferRequestURLFields {
 }
 
 /**
+ * Convert bigint lamports to decimal string without floating-point precision issues.
+ *
+ * @param amount - Amount in lamports as bigint
+ * @param decimals - Number of decimal places (defaults to SOL_DECIMALS)
+ */
+function lamportsToDecimal(amount: bigint, decimals = SOL_DECIMALS): string {
+    const neg = amount < 0n;
+    const abs = neg ? -amount : amount;
+    const base = 10n ** BigInt(decimals);
+    const int = abs / base;
+    const frac = abs % base;
+    if (frac === 0n) return `${neg ? '-' : ''}${int}`;
+    const fracStr = frac.toString().padStart(decimals, '0').replace(/0+$/, '');
+    return `${neg ? '-' : ''}${int}.${fracStr}`;
+}
+
+/**
  * Encode a Solana Pay transfer request URL.
  *
  * @param fields - Fields to encode in the URL.
@@ -39,31 +56,30 @@ export function encodeURL(fields: TransferRequestURLFields | TransactionRequestU
  *
  * @param fields - Fields to encode in the URL.
  */
-export function encodeTransferRequestURL({ 
-    recipient, 
-    amount, 
-    splToken, 
-    reference, 
-    label, 
-    message, 
-    memo 
+export function encodeTransferRequestURL({
+    recipient,
+    amount,
+    splToken,
+    reference,
+    label,
+    message,
+    memo,
 }: TransferRequestURLFields): URL {
     const pathname = recipient.toString();
     const url = new URL(SOLANA_PROTOCOL + pathname);
 
-    if (amount) {
-        url.searchParams.append('amount', amount.toFixed(amount.decimalPlaces()));
+    if (amount !== undefined) {
+        // Convert bigint lamports to decimal without floating-point
+        const amountStr = lamportsToDecimal(amount, SOL_DECIMALS);
+        url.searchParams.append('amount', amountStr);
     }
 
-    
     if (splToken) {
         try {
             // Ensure splToken is properly converted to string
             const tokenAddress = splToken.toString();
-            console.log('Adding SPL token to URL:', tokenAddress);
             url.searchParams.append('spl-token', tokenAddress);
         } catch (error) {
-            console.error('Error processing SPL token:', error, splToken);
             throw new Error(`Invalid SPL token address: ${splToken}`);
         }
     }
@@ -110,7 +126,7 @@ export interface TransactionRequestURLFields {
 export function encodeTransactionRequestURL({ link, label, message }: TransactionRequestURLFields): URL {
     // Remove trailing slashes
     const pathname = String(link).replace(/\/\?/, '?').replace(/\/$/, '');
-    
+
     // Handle absolute and relative URLs
     const url = pathname.startsWith('http') ? new URL(pathname) : new URL(SOLANA_PROTOCOL + pathname);
 

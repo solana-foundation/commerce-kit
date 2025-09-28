@@ -51,7 +51,7 @@ export const Link: typeof NextLink = (({ children, ...props }) => {
   const [images, setImages] = useState<PrefetchImage[]>([]);
   const [preloading, setPreloading] = useState<(() => void)[]>([]);
   const linkRef = useRef<HTMLAnchorElement>(null);
-  const prefetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const prefetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
 
   useEffect(() => {

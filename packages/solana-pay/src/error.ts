@@ -1,4 +1,3 @@
-
 export class CreateTransferError extends Error {
-  name = 'CreateTransferError';
+    name = 'CreateTransferError';
 }

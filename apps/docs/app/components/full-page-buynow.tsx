@@ -28,7 +28,7 @@ export function FullPageBuyNow({ rpcUrl }: FullPageBuyNowProps = {}) {
       },
 
       allowedMints: ["SOL","USDC","USDT","USDC_DEVNET","SOL_DEVNET","USDT_DEVNET"],
-      network: 'mainnet-beta',
+      network: 'mainnet',
       showQR: true,
       enableWalletConnect: true,
 
@@ -71,7 +71,7 @@ export function FullPageBuyNow2() {
       },
 
       allowedMints: ["SOL","USDC","USDT","USDC_DEVNET","SOL_DEVNET","USDT_DEVNET"],
-      network: 'mainnet-beta',
+      network: 'mainnet',
       showQR: true,
       enableWalletConnect: true,
 

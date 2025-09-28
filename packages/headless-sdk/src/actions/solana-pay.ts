@@ -1,5 +1,15 @@
-import { createQR, createQRCanvas, createStyledQRCode, encodeURL, TransferRequestURLFields, createSPLToken, createRecipient } from "@solana-commerce/solana-pay";
-import BigNumber from "bignumber.js";
+import {
+    createStyledQRCode,
+    encodeURL,
+    TransferRequestURLFields,
+    createSPLToken,
+    createRecipient,
+} from '@solana-commerce/solana-pay';
+import { toMinorUnits } from '../utils/validation';
+
+export type ErrorCorrectionLevel = 'L' | 'M' | 'Q' | 'H';
+export type DotStyle = 'dots' | 'rounded' | 'square';
+export type CornerStyle = 'square' | 'rounded' | 'extra-rounded' | 'full-rounded' | 'maximum-rounded';
 
 export interface SolanaPayRequestOptions {
     size?: number;
@@ -7,13 +17,13 @@ export interface SolanaPayRequestOptions {
     color?: string;
     // Advanced QR customization options
     margin?: number;
-    errorCorrectionLevel?: 'L' | 'M' | 'Q' | 'H';
+    errorCorrectionLevel?: ErrorCorrectionLevel;
     logo?: string;
     logoSize?: number;
     logoBackgroundColor?: string;
     logoMargin?: number;
-    dotStyle?: 'dots' | 'rounded' | 'square';
-    cornerStyle?: 'square' | 'rounded' | 'extra-rounded' | 'full-rounded' | 'maximum-rounded';
+    dotStyle?: DotStyle;
+    cornerStyle?: CornerStyle;
 }
 
 export async function createSolanaPayRequest(request: TransferRequestURLFields, options: SolanaPayRequestOptions) {
@@ -37,12 +47,12 @@ export async function createSolanaPayRequest(request: TransferRequestURLFields, 
 
     return {
         url,
-        qr
+        qr,
     };
 }
 
-// Helper function to create a payment request from string inputs
-export async function createPaymentRequest(
+// Helper function to create a payment request with QR code from string inputs
+export async function createQRPaymentRequest(
     recipientAddress: string,
     amount: number,
     tokenAddress?: string,
@@ -50,12 +60,12 @@ export async function createPaymentRequest(
         label?: string;
         message?: string;
         memo?: string;
-    } = {}
+    } = {},
 ) {
     try {
         const request: TransferRequestURLFields = {
             recipient: createRecipient(recipientAddress),
-            amount: new BigNumber(amount),
+            amount: toMinorUnits(amount, 9), // Default to 9 decimals (SOL standard)
         };
 
         // Only add SPL token if provided and not SOL
@@ -78,7 +88,7 @@ export async function createPaymentRequest(
             logoBackgroundColor: options.logoBackgroundColor,
             logoMargin: options.logoMargin,
             dotStyle: options.dotStyle,
-            cornerStyle: options.cornerStyle
+            cornerStyle: options.cornerStyle,
         });
     } catch (error) {
         console.error('Error creating payment request:', error);
