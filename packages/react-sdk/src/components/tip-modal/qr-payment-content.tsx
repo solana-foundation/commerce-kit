@@ -346,21 +346,6 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(
                     </>
                 )}
 
-                {/* Test button for development - remove in production */}
-                {process.env.NODE_ENV === 'development' && paymentStatus.status === 'processing' && (
-                    <div className="ck-dev-test-container">
-                        <button
-                            onClick={handlePaymentSuccess}
-                            className="ck-dev-test-button"
-                            style={{
-                                backgroundColor: theme.secondaryColor,
-                                borderRadius: getBorderRadius(theme.borderRadius),
-                            }}
-                        >
-                            Simulate Payment Success (Dev Only)
-                        </button>
-                    </div>
-                )}
             </div>
         );
     },

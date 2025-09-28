@@ -62,6 +62,8 @@ export async function POST(request: Request): Promise<Response> {
  * Get RPC URL from server environment variables
  */
 function getServerRpcUrl(network: string): string | null {
+    if (typeof process === 'undefined') return null;
+
     const envKey = `SOLANA_RPC_${network.toUpperCase()}`;
     return process.env[envKey] || process.env.SOLANA_RPC_URL || null;
 }

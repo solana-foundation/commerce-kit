@@ -107,7 +107,7 @@ export const PaymentButton = memo<PaymentButtonProps>(function PaymentButton({
     const connectorConfig = useMemo(
         () => ({
             autoConnect: false,
-            debug: process.env.NODE_ENV !== 'production',
+            debug: false,
             storage: typeof window !== 'undefined' ? window.localStorage : undefined,
         }),
         [],
