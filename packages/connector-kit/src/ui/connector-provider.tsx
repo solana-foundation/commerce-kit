@@ -61,13 +61,6 @@ function releaseConnectorClient(): void {
 export function ConnectorProvider({ children, config }: { children: ReactNode; config?: ConnectorConfig }) {
     const client = getOrCreateConnectorClient(config);
 
-    if (process.env.NODE_ENV !== 'production') {
-        console.log('[ConnectorProvider] Using singleton ConnectorClient:', {
-            hasClient: !!client,
-            connected: client?.getConnectorState?.()?.connected,
-        });
-    }
-
     // Cleanup on unmount with reference counting
     useEffect(() => {
         return () => {

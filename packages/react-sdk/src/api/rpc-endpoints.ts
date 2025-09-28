@@ -62,10 +62,12 @@ export async function POST(request: Request): Promise<Response> {
  * Get RPC URL from server environment variables
  */
 function getServerRpcUrl(network: string): string | null {
-    if (typeof process === 'undefined') return null;
-
+    // Check if we're in a Node.js environment
+    const globalProcess = (globalThis as any).process;
+    if (!globalProcess?.env) return null;
+    
     const envKey = `SOLANA_RPC_${network.toUpperCase()}`;
-    return process.env[envKey] || process.env.SOLANA_RPC_URL || null;
+    return globalProcess.env[envKey] || globalProcess.env.SOLANA_RPC_URL || null;
 }
 
 /**

@@ -112,11 +112,6 @@ Object.defineProperty(global, 'crypto', {
     writable: true,
 });
 
-// Mock process.env for Node.js compatibility
-if (typeof process === 'undefined') {
-    global.process = { env: {} } as any;
-}
-
 // Create a shared mock RPC implementation that can be used across all tests
 const createMockRpc = () => ({
     sendRequest: vi.fn().mockImplementation(async (method: string, params?: any) => {
