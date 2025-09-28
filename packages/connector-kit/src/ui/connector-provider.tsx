@@ -1,10 +1,10 @@
 'use client';
 
-import React, { createContext, useContext, useMemo, useRef, useSyncExternalStore } from 'react';
+import { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from 'react';
 import type { ReactNode } from 'react';
 import { ConnectorClient, type ConnectorConfig } from '../lib/connector-client';
 
-export type ConnectorSnapshot = ReturnType<ConnectorClient['getSnapshot']> & {
+export type ConnectorSnapshot = ReturnType<ConnectorClient['getConnectorState']> & {
     select: (walletName: string) => Promise<void>;
     disconnect: () => Promise<void>;
     selectAccount: (address: string) => Promise<void>;
@@ -16,7 +16,7 @@ ConnectorContext.displayName = 'ConnectorContext';
 // Global singleton to persist across component mount/unmount cycles
 let globalConnectorClient: ConnectorClient | null = null;
 let providerRefCount = 0;
-let cleanupTimeoutId: NodeJS.Timeout | null = null;
+let cleanupTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
 function getOrCreateConnectorClient(config?: ConnectorConfig): ConnectorClient {
     // Cancel any pending cleanup
@@ -48,8 +48,8 @@ function releaseConnectorClient(): void {
                 // Disconnect wallet before cleanup
                 globalConnectorClient.disconnect().catch(console.warn);
                 // If the client has a destroy method, call it
-                if (typeof (globalConnectorClient as any).destroy === 'function') {
-                    (globalConnectorClient as any).destroy();
+                if (globalConnectorClient && typeof globalConnectorClient.destroy === 'function') {
+                    globalConnectorClient.destroy();
                 }
                 globalConnectorClient = null;
             }
@@ -61,15 +61,8 @@ function releaseConnectorClient(): void {
 export function ConnectorProvider({ children, config }: { children: ReactNode; config?: ConnectorConfig }) {
     const client = getOrCreateConnectorClient(config);
 
-    if (process.env.NODE_ENV !== 'production') {
-        console.log('[ConnectorProvider] Using singleton ConnectorClient:', {
-            hasClient: !!client,
-            connected: client?.getSnapshot?.()?.connected,
-        });
-    }
-
     // Cleanup on unmount with reference counting
-    React.useEffect(() => {
+    useEffect(() => {
         return () => {
             releaseConnectorClient();
         };
@@ -83,8 +76,8 @@ export function useConnector(): ConnectorSnapshot {
     if (!client) throw new Error('useConnector must be used within ConnectorProvider');
     const state = useSyncExternalStore(
         cb => client.subscribe(cb),
-        () => client.getSnapshot(),
-        () => client.getSnapshot(),
+        () => client.getConnectorState(),
+        () => client.getConnectorState(),
     );
     return useMemo(
         () => ({
@@ -115,8 +108,8 @@ export function forceCleanupConnectorClient(): void {
     if (globalConnectorClient) {
         console.log('[ConnectorProvider] Force cleaning up singleton ConnectorClient');
         globalConnectorClient.disconnect().catch(console.warn);
-        if (typeof (globalConnectorClient as any).destroy === 'function') {
-            (globalConnectorClient as any).destroy();
+        if (globalConnectorClient && typeof globalConnectorClient.destroy === 'function') {
+            globalConnectorClient.destroy();
         }
         globalConnectorClient = null;
     }

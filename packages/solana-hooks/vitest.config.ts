@@ -40,7 +40,7 @@ export default defineConfig({
         exclude: ['node_modules/**', 'dist/**', '.git/**', '**/node_modules/**'],
 
         // Reporter configuration
-        reporters: ['verbose', 'json'],
+        reporters: ['verbose'],
 
         // Retry configuration for flaky network tests
         retry: 1,

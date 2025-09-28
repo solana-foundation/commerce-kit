@@ -1,13 +1,12 @@
 import React from 'react';
 import type { ThemeConfig, MerchantConfig, Currency } from '../../types';
 import { MerchantAddressPill } from '../tip-modal/merchant-address-pill';
-import { TokenIcon } from '../icons';
 import { Spinner } from '../../../../connector-kit/src/ui/spinner';
 import { TransactionSuccess, TransactionError } from '../transaction-states';
 
 interface WalletPaymentContentProps {
     theme: Required<ThemeConfig>;
-    config: { merchant: MerchantConfig; rpcUrl?: string };
+    config: { merchant: MerchantConfig; rpcUrl?: string; debug?: boolean };
     selectedAmount: number;
     selectedCurrency: Currency;
     customAmount: string;
@@ -71,12 +70,15 @@ function isValidIconUrl(iconUrl: string): boolean {
 /**
  * Validates and sanitizes wallet data from untrusted sources
  * @param rawWallets - The raw wallet data from window.__IFRAME_WALLETS__
+ * @param debug - Whether to show debug logs
  * @returns Array of validated and sanitized wallet objects
  */
-function validateAndSanitizeWallets(rawWallets: unknown): IFrameWalletInfo[] {
+function validateAndSanitizeWallets(rawWallets: unknown, debug?: boolean): IFrameWalletInfo[] {
     // First check: ensure it's an array
     if (!Array.isArray(rawWallets)) {
-        console.warn('__IFRAME_WALLETS__ is not an array, ignoring wallet data');
+        if (debug) {
+            console.warn('__IFRAME_WALLETS__ is not an array, ignoring wallet data');
+        }
         return [];
     }
 
@@ -87,7 +89,9 @@ function validateAndSanitizeWallets(rawWallets: unknown): IFrameWalletInfo[] {
 
         // Check if wallet is an object
         if (!wallet || typeof wallet !== 'object') {
-            console.warn(`Wallet at index ${i} is not an object, skipping`);
+            if (debug) {
+                console.warn(`Wallet at index ${i} is not an object, skipping`);
+            }
             continue;
         }
 
@@ -96,7 +100,9 @@ function validateAndSanitizeWallets(rawWallets: unknown): IFrameWalletInfo[] {
 
         // Wallet must have a non-empty name
         if (!name) {
-            console.warn(`Wallet at index ${i} missing or invalid name, skipping`);
+            if (debug) {
+                console.warn(`Wallet at index ${i} missing or invalid name, skipping`);
+            }
             continue;
         }
 
@@ -107,11 +113,15 @@ function validateAndSanitizeWallets(rawWallets: unknown): IFrameWalletInfo[] {
             if (isValidIconUrl(iconUrl)) {
                 icon = iconUrl;
             } else {
-                console.warn(`Wallet "${name}" has invalid/unsafe icon URL, using fallback: ${iconUrl}`);
+                if (debug) {
+                    console.warn(`Wallet "${name}" has invalid/unsafe icon URL, using fallback: ${iconUrl}`);
+                }
                 icon = FALLBACK_WALLET_ICON;
             }
         } else if (wallet.icon !== undefined) {
-            console.warn(`Wallet "${name}" has non-string icon value, using fallback`);
+            if (debug) {
+                console.warn(`Wallet "${name}" has non-string icon value, using fallback`);
+            }
             icon = FALLBACK_WALLET_ICON;
         }
         // If icon is undefined, we'll use the fallback during rendering
@@ -129,7 +139,9 @@ function validateAndSanitizeWallets(rawWallets: unknown): IFrameWalletInfo[] {
         });
     }
 
-    console.log(`Validated ${validatedWallets.length} out of ${rawWallets.length} wallet entries`);
+    if (debug) {
+        console.log(`Validated ${validatedWallets.length} out of ${rawWallets.length} wallet entries`);
+    }
     return validatedWallets;
 }
 
@@ -168,6 +180,8 @@ export const WalletPaymentContent = ({
                 const referrerUrl = new URL(document.referrer);
                 return referrerUrl.origin;
             } catch (e) {
+                // Note: This function doesn't have access to config, so we can't make this debug-conditional
+                // Consider moving this to the component level if debug logging is needed
                 console.warn('Invalid referrer URL:', document.referrer);
             }
         }
@@ -189,8 +203,13 @@ export const WalletPaymentContent = ({
         return null;
     }, []);
 
-    // Validate that an origin is a proper HTTP/HTTPS origin
+    // Validate that an origin is a proper HTTP/HTTPS origin or "null" for srcDoc iframes
     const isValidOrigin = React.useCallback((origin: string) => {
+        // Allow "null" origin for srcDoc iframes
+        if (origin === 'null') {
+            return true;
+        }
+        
         try {
             const url = new URL(origin);
             return url.protocol === 'http:' || url.protocol === 'https:';
@@ -207,10 +226,18 @@ export const WalletPaymentContent = ({
         if (detectedOrigin && isValidOrigin(detectedOrigin)) {
             setParentOrigin(detectedOrigin);
         }
+        
+        // For srcDoc iframes, we might not be able to detect the parent origin directly
+        // In this case, we'll trust the first valid message we receive
+        if (!detectedOrigin || detectedOrigin === 'null') {
+            if (config.debug) {
+                console.log('[iframe-wallet-payment] Running in srcDoc context, will detect parent origin from messages');
+            }
+        }
 
         // Read wallets provided by parent via init message and validate them
         const rawWallets = (window as any).__IFRAME_WALLETS__;
-        const validatedWallets = validateAndSanitizeWallets(rawWallets);
+        const validatedWallets = validateAndSanitizeWallets(rawWallets, config.debug);
         setWallets(validatedWallets);
 
         function onMessage(e: MessageEvent) {
@@ -219,17 +246,32 @@ export const WalletPaymentContent = ({
 
             // Validate message origin
             if (!isValidOrigin(e.origin)) {
-                console.warn(`Rejected message from invalid origin: ${e.origin}`);
+                if (config.debug) {
+                    console.warn(`Rejected message from invalid origin: ${e.origin}`);
+                }
                 return;
             }
 
             // If we don't have a parent origin yet, use this validated origin
             // Otherwise, ensure the message comes from the expected parent
+            // Special handling: if we're in a srcDoc iframe (origin null), be more permissive
+            const isInSrcDoc = window.location.origin === 'null';
+            
             if (!parentOrigin) {
-                setParentOrigin(e.origin);
+                // For srcDoc iframes, accept the first valid HTTP/HTTPS origin we receive
+                if (isInSrcDoc && e.origin !== 'null') {
+                    setParentOrigin(e.origin);
+                } else if (!isInSrcDoc) {
+                    setParentOrigin(e.origin);
+                }
             } else if (parentOrigin !== e.origin) {
-                console.warn(`Rejected message from mismatched origin. Expected: ${parentOrigin}, Got: ${e.origin}`);
-                return;
+                // For srcDoc iframes, be more permissive about origin mismatches
+                if (!isInSrcDoc) {
+                    if (config.debug) {
+                        console.warn(`Rejected message from mismatched origin. Expected: ${parentOrigin}, Got: ${e.origin}`);
+                    }
+                    return;
+                }
             }
 
             if (data.type === 'walletConnectResult') {
@@ -280,7 +322,9 @@ export const WalletPaymentContent = ({
         setError(null);
 
         // Validate that we have a parent origin before proceeding
-        if (!parentOrigin) {
+        // For srcDoc iframes, we might not have parentOrigin detected yet, so be more permissive
+        const isInSrcDoc = window.location.origin === 'null';
+        if (!parentOrigin && !isInSrcDoc) {
             setError(
                 'Unable to connect: Cannot determine parent origin. Please ensure this component is properly embedded.',
             );
@@ -303,6 +347,9 @@ export const WalletPaymentContent = ({
         setConnecting(walletName);
         try {
             // Calculate the payment amount to send to parent
+            // Use '*' for srcDoc iframes since origin detection may fail
+            const targetOrigin = isInSrcDoc ? '*' : (parentOrigin || '*');
+            
             window.parent.postMessage(
                 {
                     type: 'walletConnect',
@@ -310,7 +357,7 @@ export const WalletPaymentContent = ({
                     amount: amountValue,
                     currency: selectedCurrency,
                 },
-                parentOrigin,
+                targetOrigin,
             );
         } catch (e: any) {
             setConnecting(null);
@@ -325,9 +372,7 @@ export const WalletPaymentContent = ({
         return (
             <TransactionError
                 theme={theme}
-                config={config}
-                selectedCurrency={selectedCurrency}
-                displayAmount={displayAmount}
+                error={error || 'Payment failed'}
                 onRetry={() => {
                     setPaymentError(false);
                     setProcessingPayment(null);
@@ -347,7 +392,7 @@ export const WalletPaymentContent = ({
                 config={config}
                 selectedCurrency={selectedCurrency}
                 displayAmount={displayAmount}
-                paymentSignature={paymentSignature}
+                signature={paymentSignature || undefined}
             />
         );
     }

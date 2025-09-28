@@ -112,11 +112,6 @@ Object.defineProperty(global, 'crypto', {
     writable: true,
 });
 
-// Mock process.env for Node.js compatibility
-if (typeof process === 'undefined') {
-    global.process = { env: {} } as any;
-}
-
 // Create a shared mock RPC implementation that can be used across all tests
 const createMockRpc = () => ({
     sendRequest: vi.fn().mockImplementation(async (method: string, params?: any) => {
@@ -169,13 +164,20 @@ const createMockRpc = () => ({
     }),
 });
 
-// Mock RPC Manager to prevent real network calls
+// Mock simplified RPC utilities to prevent real network calls
 vi.mock('../core/rpc-manager', () => ({
+    createRpc: vi.fn(() => createMockRpc()),
+    createWebSocket: vi.fn(() => ({
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
+    })),
+    // Backward compatibility aliases
     getSharedRpc: vi.fn(() => createMockRpc()),
     getSharedWebSocket: vi.fn(() => ({
         subscribe: vi.fn(),
         unsubscribe: vi.fn(),
     })),
+    releaseRpcConnection: vi.fn(), // No-op
 }));
 
 // Mock the ArcClientProvider and useArcClient hook

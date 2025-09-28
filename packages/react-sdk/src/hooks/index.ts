@@ -5,6 +5,7 @@
 
 // Core business logic hooks
 export { useSolanaPay } from './use-solana-pay';
+export { useSolEquivalent } from './use-sol-equivalent';
 export { useTipForm } from './use-tip-form';
 
 export { useAnimationStyles } from './use-animation-styles';

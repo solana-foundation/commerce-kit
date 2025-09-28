@@ -3,12 +3,15 @@ import { createBuyNowRequest } from '../actions/buy-now';
 import { createCartRequest } from '../actions/cart';
 import { createTipRequest } from '../actions/tip';
 import { verifyPayment, waitForConfirmation, createCommercePaymentRequest } from '../actions/payment';
-import type { CommerceClient } from '../client';
+import { formatPaymentAmount, getTokenConfig } from '../utils';
+import type { SolanaClient } from 'gill';
 
 // Mock gill for payment verification
 vi.mock('gill', () => ({
     signature: vi.fn(sig => ({ toString: () => sig })),
     address: vi.fn(addr => ({ toString: () => addr })),
+    isAddress: vi.fn(() => true),
+    LAMPORTS_PER_SOL: 1000000000,
 }));
 
 vi.mock('gill/programs/token', () => ({
@@ -347,16 +350,12 @@ describe('Payment Actions', () => {
     });
 
     describe('verifyPayment', () => {
-        let mockClient: CommerceClient;
+        let mockRpc: SolanaClient['rpc'];
 
         beforeEach(() => {
-            mockClient = {
-                rpc: {
-                    getTransaction: vi.fn(),
-                    getSignatureStatuses: vi.fn(),
-                },
-                sendAndConfirmTransaction: vi.fn(),
-                network: 'mainnet',
+            mockRpc = {
+                getTransaction: vi.fn(),
+                getSignatureStatuses: vi.fn(),
             } as any;
         });
 
@@ -377,22 +376,22 @@ describe('Payment Actions', () => {
                     },
                 };
 
-                mockClient.rpc.getTransaction.mockReturnValue({
+                mockRpc.getTransaction.mockReturnValue({
                     send: vi.fn().mockResolvedValue(mockTransaction),
                 });
 
-                const result = await verifyPayment(mockClient, 'test-signature');
+                const result = await verifyPayment(mockRpc, 'test-signature');
 
                 expect(result.verified).toBe(true);
                 expect(result.signature).toBe('test-signature');
             });
 
             it('should handle transaction not found', async () => {
-                mockClient.rpc.getTransaction.mockReturnValue({
+                mockRpc.getTransaction.mockReturnValue({
                     send: vi.fn().mockResolvedValue(null),
                 });
 
-                const result = await verifyPayment(mockClient, 'non-existent-signature');
+                const result = await verifyPayment(mockRpc, 'non-existent-signature');
 
                 expect(result.verified).toBe(false);
                 expect(result.error).toBe('Transaction not found');
@@ -405,11 +404,11 @@ describe('Payment Actions', () => {
                     meta: {},
                 };
 
-                mockClient.rpc.getTransaction.mockReturnValue({
+                mockRpc.getTransaction.mockReturnValue({
                     send: vi.fn().mockResolvedValue(mockTransaction),
                 });
 
-                const result = await verifyPayment(mockClient, 'unconfirmed-signature');
+                const result = await verifyPayment(mockRpc, 'unconfirmed-signature');
 
                 expect(result.verified).toBe(false);
             });
@@ -432,12 +431,12 @@ describe('Payment Actions', () => {
                     },
                 };
 
-                mockClient.rpc.getTransaction.mockReturnValue({
+                mockRpc.getTransaction.mockReturnValue({
                     send: vi.fn().mockResolvedValue(mockTransaction),
                 });
 
                 const result = await verifyPayment(
-                    mockClient,
+                    mockRpc,
                     'test-signature',
                     1000000000, // Expected 1 SOL
                     '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM',
@@ -462,12 +461,12 @@ describe('Payment Actions', () => {
                     },
                 };
 
-                mockClient.rpc.getTransaction.mockReturnValue({
+                mockRpc.getTransaction.mockReturnValue({
                     send: vi.fn().mockResolvedValue(mockTransaction),
                 });
 
                 const result = await verifyPayment(
-                    mockClient,
+                    mockRpc,
                     'test-signature',
                     1000000000, // Expected 1 SOL
                     '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM',
@@ -497,12 +496,12 @@ describe('Payment Actions', () => {
                     },
                 };
 
-                mockClient.rpc.getTransaction.mockReturnValue({
+                mockRpc.getTransaction.mockReturnValue({
                     send: vi.fn().mockResolvedValue(mockTransaction),
                 });
 
                 const result = await verifyPayment(
-                    mockClient,
+                    mockRpc,
                     'test-signature',
                     1000000, // Expected 1 USDC
                     '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM',
@@ -519,12 +518,12 @@ describe('Payment Actions', () => {
                     meta: { postTokenBalances: [] },
                 };
 
-                mockClient.rpc.getTransaction.mockReturnValue({
+                mockRpc.getTransaction.mockReturnValue({
                     send: vi.fn().mockResolvedValue(mockTransaction),
                 });
 
                 const result = await verifyPayment(
-                    mockClient,
+                    mockRpc,
                     'test-signature',
                     1000000,
                     '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM',
@@ -537,18 +536,18 @@ describe('Payment Actions', () => {
 
         describe('Error Handling', () => {
             it('should handle RPC errors gracefully', async () => {
-                mockClient.rpc.getTransaction.mockReturnValue({
+                mockRpc.getTransaction.mockReturnValue({
                     send: vi.fn().mockRejectedValue(new Error('RPC error')),
                 });
 
-                const result = await verifyPayment(mockClient, 'test-signature');
+                const result = await verifyPayment(mockRpc, 'test-signature');
 
                 expect(result.verified).toBe(false);
                 expect(result.error).toBe('RPC error');
             });
 
             it('should handle invalid signature format', async () => {
-                const result = await verifyPayment(mockClient, 'invalid-signature');
+                const result = await verifyPayment(mockRpc, 'invalid-signature');
 
                 expect(result.verified).toBe(false);
                 expect(result.signature).toBe('invalid-signature');
@@ -557,21 +556,17 @@ describe('Payment Actions', () => {
     });
 
     describe('waitForConfirmation', () => {
-        let mockClient: CommerceClient;
+        let mockRpc: SolanaClient['rpc'];
 
         beforeEach(() => {
-            mockClient = {
-                rpc: {
-                    getSignatureStatuses: vi.fn(),
-                },
-                sendAndConfirmTransaction: vi.fn(),
-                network: 'mainnet',
+            mockRpc = {
+                getSignatureStatuses: vi.fn(),
             } as any;
         });
 
         describe('Confirmation Scenarios', () => {
             it('should return true when transaction is confirmed', async () => {
-                mockClient.rpc.getSignatureStatuses.mockReturnValue({
+                mockRpc.getSignatureStatuses.mockReturnValue({
                     send: vi.fn().mockResolvedValue({
                         value: [
                             {
@@ -581,12 +576,12 @@ describe('Payment Actions', () => {
                     }),
                 });
 
-                const result = await waitForConfirmation(mockClient, 'test-signature', 5000);
+                const result = await waitForConfirmation(mockRpc, 'test-signature', 5000);
                 expect(result).toBe(true);
             });
 
             it('should return true when transaction is finalized', async () => {
-                mockClient.rpc.getSignatureStatuses.mockReturnValue({
+                mockRpc.getSignatureStatuses.mockReturnValue({
                     send: vi.fn().mockResolvedValue({
                         value: [
                             {
@@ -596,12 +591,12 @@ describe('Payment Actions', () => {
                     }),
                 });
 
-                const result = await waitForConfirmation(mockClient, 'test-signature', 5000);
+                const result = await waitForConfirmation(mockRpc, 'test-signature', 5000);
                 expect(result).toBe(true);
             });
 
             it('should timeout when transaction never confirms', async () => {
-                mockClient.rpc.getSignatureStatuses.mockReturnValue({
+                mockRpc.getSignatureStatuses.mockReturnValue({
                     send: vi.fn().mockResolvedValue({
                         value: [
                             {
@@ -611,18 +606,18 @@ describe('Payment Actions', () => {
                     }),
                 });
 
-                const result = await waitForConfirmation(mockClient, 'test-signature', 100); // Short timeout
+                const result = await waitForConfirmation(mockRpc, 'test-signature', 100); // Short timeout
                 expect(result).toBe(false);
             }, 15000);
 
             it('should handle custom timeout', async () => {
-                mockClient.rpc.getSignatureStatuses.mockReturnValue({
+                mockRpc.getSignatureStatuses.mockReturnValue({
                     send: vi.fn().mockResolvedValue({
                         value: [null], // No status
                     }),
                 });
 
-                const result = await waitForConfirmation(mockClient, 'test-signature', 50); // Very short timeout
+                const result = await waitForConfirmation(mockRpc, 'test-signature', 50); // Very short timeout
                 expect(result).toBe(false);
             }, 15000);
         });
@@ -630,7 +625,7 @@ describe('Payment Actions', () => {
         describe('Error Handling', () => {
             it('should continue on RPC errors', async () => {
                 let callCount = 0;
-                mockClient.rpc.getSignatureStatuses.mockReturnValue({
+                mockRpc.getSignatureStatuses.mockReturnValue({
                     send: vi.fn().mockImplementation(() => {
                         callCount++;
                         if (callCount === 1) {
@@ -646,13 +641,13 @@ describe('Payment Actions', () => {
                     }),
                 });
 
-                const result = await waitForConfirmation(mockClient, 'test-signature', 5000);
+                const result = await waitForConfirmation(mockRpc, 'test-signature', 5000);
                 expect(result).toBe(true);
             });
 
             it('should handle invalid signature gracefully', async () => {
                 // Will fail in signature parsing, but should continue
-                const result = await waitForConfirmation(mockClient, 'invalid-sig', 100);
+                const result = await waitForConfirmation(mockRpc, 'invalid-sig', 100);
                 expect(result).toBe(false);
             });
         });
@@ -799,72 +794,29 @@ describe('Payment Actions', () => {
             });
         });
 
-        describe('Helper Methods', () => {
-            it('should provide amount display for SOL', () => {
+        describe('Data Structure', () => {
+            it('should return clean data object without helper methods', () => {
                 const request = {
                     recipient: testRecipient,
                     amount: 1500000000, // 1.5 SOL in lamports
                 };
 
                 const result = createCommercePaymentRequest(request);
-                const display = result.getAmountDisplay();
 
-                expect(display).toBe('1.5 SOL');
+                // Should be a clean data object
+                expect(result.url).toBeDefined();
+                expect(result.recipient).toBe(testRecipient);
+                expect(result.amount).toBe(1500000000);
+                expect(result.currency).toBe('SOL');
+                expect(result.reference).toBeDefined();
+                expect(result.qrCode).toBe(result.url);
+
+                // Should NOT have helper methods
+                expect(typeof result.getAmountDisplay).toBe('undefined');
+                expect(typeof result.getStablecoinConfig).toBe('undefined');
+                expect(typeof result.generateFreshReference).toBe('undefined');
             });
 
-            it('should provide amount display for USDC', () => {
-                const request = {
-                    recipient: testRecipient,
-                    amount: 1500000, // 1.5 USDC in micro-units
-                    currency: 'USDC',
-                };
-
-                const result = createCommercePaymentRequest(request);
-                const display = result.getAmountDisplay();
-
-                expect(display).toBe('1.500000 USDC');
-            });
-
-            it('should provide stablecoin config', () => {
-                const request = {
-                    recipient: testRecipient,
-                    amount: 1.0,
-                    currency: 'USDC',
-                };
-
-                const result = createCommercePaymentRequest(request);
-                const config = result.getStablecoinConfig();
-
-                expect(config).toBeDefined();
-                expect(config?.symbol).toBe('USDC');
-                expect(config?.decimals).toBe(6);
-            });
-
-            it('should return null stablecoin config for SOL', () => {
-                const request = {
-                    recipient: testRecipient,
-                    amount: 1.0,
-                    currency: 'SOL',
-                };
-
-                const result = createCommercePaymentRequest(request);
-                const config = result.getStablecoinConfig();
-
-                expect(config).toBeUndefined();
-            });
-
-            it('should generate fresh reference with timestamp', () => {
-                const request = {
-                    recipient: testRecipient,
-                    amount: 1.0,
-                };
-
-                const result = createCommercePaymentRequest(request);
-                const freshRef = result.generateFreshReference();
-
-                expect(freshRef).toMatch(/^commerce-\d+-[a-z0-9]+$/);
-                expect(freshRef).not.toBe(result.reference);
-            });
         });
 
         describe('QR Code Integration', () => {

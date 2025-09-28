@@ -1,6 +1,6 @@
-import React from 'react';
 import type { ThemeConfig, MerchantConfig, Currency } from '../../types';
-import { TokenIcon, SuccessIcon } from '../icons';
+import { SuccessIcon } from '../icons';
+import { getExplorerLink } from 'gill';
 
 interface TransactionSuccessProps {
     theme: Required<ThemeConfig>;
@@ -15,6 +15,15 @@ interface TransactionSuccessProps {
     onViewTransaction?: (signature: string) => void;
 }
 
+function resolveCluster(rpcUrl?: string): 'devnet' | 'testnet' | 'mainnet-beta' | undefined {
+    if (!rpcUrl) return 'mainnet-beta';
+    const normalized = rpcUrl.trim().toLowerCase();
+    if (normalized.includes('devnet')) return 'devnet';
+    if (normalized.includes('testnet')) return 'testnet';
+    if (normalized.includes('localhost') || normalized.includes('127.')) return undefined;
+    return 'mainnet-beta';
+}
+
 export function TransactionSuccess({
     theme,
     config,
@@ -27,8 +36,12 @@ export function TransactionSuccess({
     onClose,
     onViewTransaction,
 }: TransactionSuccessProps) {
+    const cluster = resolveCluster(config.rpcUrl);
     const explorerUrl = signature
-        ? `https://explorer.solana.com/tx/${signature}${config.rpcUrl?.includes('devnet') ? '?cluster=devnet' : ''}`
+        ? getExplorerLink({
+              transaction: signature,
+              ...(cluster ? { cluster } : {}),
+          })
         : null;
 
     // Format address/signature for display (first 4 + ... + last 4)

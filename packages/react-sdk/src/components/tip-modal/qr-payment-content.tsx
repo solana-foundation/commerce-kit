@@ -1,13 +1,11 @@
-import React, { memo, useEffect, useState, useRef } from 'react';
-import { getBorderRadius, getContainerBorderRadius } from '../../utils';
+import { memo, useEffect, useState, useRef } from 'react';
+import { getBorderRadius } from '../../utils';
 import { type ThemeConfig, type MerchantConfig, type Currency, CurrencyMap } from '../../types';
 import { useSolanaPay } from '../../hooks/use-solana-pay';
 import { useTimer } from '../../hooks/use-timer';
 import { usePaymentStatus } from '../../hooks/use-payment-status';
 import { MerchantAddressPill } from './merchant-address-pill';
-// import { SPLToken } from '@solana-commerce/solana-pay';
-import { createCommerceClient, verifyPayment, waitForConfirmation } from '@solana-commerce/headless-sdk';
-import { address } from 'gill';
+import { address, createSolanaClient } from 'gill';
 import {
     getAssociatedTokenAccountAddress,
     TOKEN_PROGRAM_ADDRESS,
@@ -38,7 +36,7 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(
     }) => {
         const displayAmount = showCustomInput ? customAmount || '0' : selectedAmount.toString();
         const [pollingMessage, setPollingMessage] = useState('Waiting for payment...');
-        const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+        const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
         // Enhanced payment status management
         const paymentStatus = usePaymentStatus();
@@ -90,9 +88,8 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(
                 clearInterval(pollingIntervalRef.current);
             }
 
-            const client = createCommerceClient({
-                network: 'mainnet',
-                rpcUrl: config.rpcUrl,
+            const client = createSolanaClient({
+                urlOrMoniker: config.rpcUrl || 'mainnet',
             });
 
             let pollCount = 0;
@@ -119,23 +116,21 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(
                     const merchantAddress = address(config.merchant.wallet);
                     let addressToCheck = merchantAddress;
 
-                    // For SPL tokens, we need to check the Associated Token Account (Token or Token-2022)
-                    const selectedToken = CurrencyMap[selectedCurrency];
-                    const isSOL = selectedToken === address('So11111111111111111111111111111111111111112');
+                    // For SPL tokens, we need to check the Associated Token Account
+                    const tokenInfo = CurrencyMap[selectedCurrency];
 
-                    if (!isSOL) {
-                        const tokenMintAddress = address(selectedToken);
-                        const ataV1 = await getAssociatedTokenAccountAddress(
-                            tokenMintAddress,
-                            merchantAddress,
-                            TOKEN_PROGRAM_ADDRESS,
-                        ).catch(() => null as any);
-                        const ataV2 = await getAssociatedTokenAccountAddress(
-                            tokenMintAddress,
-                            merchantAddress,
-                            TOKEN_2022_PROGRAM_ADDRESS,
-                        ).catch(() => null as any);
-                        addressToCheck = ataV1 ?? ataV2 ?? merchantAddress;
+                    if (tokenInfo !== 'SOL') {
+                        try {
+                            addressToCheck = await getAssociatedTokenAccountAddress(
+                                tokenInfo.mint,
+                                merchantAddress,
+                                tokenInfo.tokenProgram
+                            );
+                        } catch (error) {
+                            console.warn('Failed to get ATA for', tokenInfo.symbol, ':', error);
+                            // Fallback to merchant address for payment detection
+                            addressToCheck = merchantAddress;
+                        }
                     }
 
                     const signatures = await client.rpc
@@ -351,21 +346,6 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(
                     </>
                 )}
 
-                {/* Test button for development - remove in production */}
-                {process.env.NODE_ENV === 'development' && paymentStatus.status === 'processing' && (
-                    <div className="ck-dev-test-container">
-                        <button
-                            onClick={handlePaymentSuccess}
-                            className="ck-dev-test-button"
-                            style={{
-                                backgroundColor: theme.secondaryColor,
-                                borderRadius: getBorderRadius(theme.borderRadius),
-                            }}
-                        >
-                            Simulate Payment Success (Dev Only)
-                        </button>
-                    </div>
-                )}
             </div>
         );
     },

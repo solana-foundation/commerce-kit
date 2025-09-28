@@ -4,7 +4,7 @@
  */
 
 import { useReducer, useCallback, useMemo } from 'react';
-import type { Currency, PaymentMethod, SolanaCommerceConfig } from '../types';
+import type { Currency, PaymentMethod, SolanaCommerceConfig, TipModalStep } from '../types';
 import { ALL_CURRENCIES } from '../constants/tip-modal';
 import { convertUsdToLamports, getDecimals } from '../utils';
 
@@ -16,7 +16,7 @@ interface TipFormState {
     customAmount: string;
     showCustomInput: boolean;
     isProcessing: boolean;
-    currentStep: 'form' | 'payment';
+    currentStep: TipModalStep;
     currencyDropdownOpen: boolean;
     priceError: string | null;
 }
@@ -29,7 +29,7 @@ type TipFormAction =
     | { type: 'SET_CUSTOM_AMOUNT'; amount: string }
     | { type: 'TOGGLE_CUSTOM_INPUT'; show: boolean }
     | { type: 'SET_PROCESSING'; processing: boolean }
-    | { type: 'SET_STEP'; step: 'form' | 'payment' }
+    | { type: 'SET_STEP'; step: TipModalStep }
     | { type: 'SET_CURRENCY_DROPDOWN'; open: boolean }
     | { type: 'SET_PRICE_ERROR'; error: string | null }
     | { type: 'RESET_TO_FORM' };
@@ -94,7 +94,7 @@ export function useTipForm(config: SolanaCommerceConfig) {
             setCustomAmount: (amount: string) => dispatch({ type: 'SET_CUSTOM_AMOUNT', amount }),
             toggleCustomInput: (show: boolean) => dispatch({ type: 'TOGGLE_CUSTOM_INPUT', show }),
             setProcessing: (processing: boolean) => dispatch({ type: 'SET_PROCESSING', processing }),
-            setStep: (step: 'form' | 'payment') => dispatch({ type: 'SET_STEP', step }),
+            setStep: (step: TipModalStep) => dispatch({ type: 'SET_STEP', step }),
             setCurrencyDropdown: (open: boolean) => dispatch({ type: 'SET_CURRENCY_DROPDOWN', open }),
             setPriceError: (error: string | null) => dispatch({ type: 'SET_PRICE_ERROR', error }),
             resetToForm: () => dispatch({ type: 'RESET_TO_FORM' }),

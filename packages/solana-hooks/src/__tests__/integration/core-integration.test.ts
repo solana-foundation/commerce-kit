@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getClusterInfo } from '../../utils/cluster';
-import { createHttpTransport } from '../../transports/http';
+// Transport functionality now handled by @solana/kit
 
 describe('Core Integration Tests', () => {
     describe('Cluster Configuration', () => {

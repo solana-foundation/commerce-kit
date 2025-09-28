@@ -23,7 +23,11 @@ vi.mock('../../core/arc-client-provider', () => ({
 }));
 
 vi.mock('../../core/rpc-manager', () => ({
-    releaseRpcConnection: vi.fn(),
+    createRpc: vi.fn(),
+    createWebSocket: vi.fn(),
+    getSharedRpc: vi.fn(),
+    getSharedWebSocket: vi.fn(),
+    releaseRpcConnection: vi.fn(), // No-op
 }));
 
 vi.mock('../../core/transaction-builder', () => ({

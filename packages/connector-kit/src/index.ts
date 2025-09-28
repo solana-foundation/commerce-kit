@@ -12,8 +12,6 @@ export { UnifiedProvider, AppProvider, WalletProvider } from './ui/unified-provi
 export type { UnifiedProviderProps } from './ui/unified-provider';
 
 // UI exports
-export { ConnectButton } from './ui/connect-button';
-export type { ConnectButtonProps } from './ui/connect-button';
 export { ConnectorDialog } from './ui/dialog';
 export { WalletList } from './ui/wallet-list';
 export { AccountDropdown } from './ui/account-dropdown';

@@ -1,5 +1,5 @@
 /**
- * @arc/solana - Type Exports
+ * @solana-commerce/solana-hooks - Type Exports
  *
  * Central location for all public types.
  * Internal types should remain in their respective modules.
@@ -7,10 +7,6 @@
 
 // ===== CORE TYPES =====
 export * from '../types'; // Core types from types.ts
-
-// ===== PROVIDER TYPES =====
-export type * from '../core/provider';
-
 // ===== HOOK OPTION TYPES =====
 export interface UseSwapOptions {
     providers?: string[];

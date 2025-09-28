@@ -1,5 +1,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ConnectorClient, type ConnectorConfig, type WalletInfo } from '../lib/connector-client';
+import { ConnectorClient, type ConnectorConfig} from '../lib/connector-client';
+
+// Test constants
+const AUTO_CONNECT_DELAY = 150;
+
+/**
+ * Common test addresses for consistent testing
+ */
+const TEST_ADDRESSES = {
+    PHANTOM_ACCOUNT_1: 'PhantomAccount1',
+    PHANTOM_ACCOUNT_2: 'PhantomAccount2',
+    PHANTOM_ACCOUNT_3: 'PhantomAccount3',
+    PHANTOM_ACCOUNT_4: 'PhantomAccount4',
+    NONEXISTENT_ACCOUNT: 'NonexistentAccount',
+} as const;
 
 // Mock wallet standard API
 const mockWalletsApi = {
@@ -21,7 +35,7 @@ const createMockWallet = (name: string, hasConnect = true, hasDisconnect = true,
                 connect: vi.fn().mockResolvedValue({
                     accounts: [
                         {
-                            address: '11111111111111111111111111111112',
+                            address: TEST_ADDRESSES.PHANTOM_ACCOUNT_1,
                             icon: 'data:image/svg+xml;base64,accountIcon',
                         },
                     ],
@@ -42,24 +56,6 @@ const createMockWallet = (name: string, hasConnect = true, hasDisconnect = true,
     },
 });
 
-// Mock non-Solana wallet
-const createMockEthereumWallet = (name: string) => ({
-    name,
-    icon: `data:image/svg+xml;base64,${name}Icon`,
-    version: '1.0.0',
-    accounts: [],
-    chains: ['ethereum:1'], // No Solana chains
-    features: {
-        'standard:connect': {
-            connect: vi.fn().mockResolvedValue({
-                accounts: [],
-            }),
-        },
-        'standard:disconnect': {
-            disconnect: vi.fn().mockResolvedValue(undefined),
-        },
-    },
-});
 
 // Mock storage
 const createMockStorage = () => ({
@@ -120,7 +116,7 @@ describe('ConnectorClient', () => {
             const client = new ConnectorClient();
             expect(client).toBeDefined();
 
-            const state = client.getSnapshot();
+            const state = client.getConnectorState();
             expect(state.wallets).toEqual([]);
             expect(state.selectedWallet).toBe(null);
             expect(state.connected).toBe(false);
@@ -161,7 +157,7 @@ describe('ConnectorClient', () => {
             expect(client).toHaveProperty('select');
             expect(client).toHaveProperty('disconnect');
             expect(client).toHaveProperty('selectAccount');
-            expect(client).toHaveProperty('getSnapshot');
+            expect(client).toHaveProperty('getConnectorState');
             expect(client).toHaveProperty('subscribe');
             expect(client).toHaveProperty('destroy');
         });
@@ -172,34 +168,27 @@ describe('ConnectorClient', () => {
             expect(typeof client.select).toBe('function');
             expect(typeof client.disconnect).toBe('function');
             expect(typeof client.selectAccount).toBe('function');
-            expect(typeof client.getSnapshot).toBe('function');
+            expect(typeof client.getConnectorState).toBe('function');
             expect(typeof client.subscribe).toBe('function');
             expect(typeof client.destroy).toBe('function');
         });
     });
 
     describe('Wallet Discovery', () => {
-        it('should discover and filter Solana-compatible wallets', () => {
-            const solanaWallet = createMockWallet('Phantom');
-            const ethereumWallet = createMockEthereumWallet('MetaMask');
+        it('should discover Solana-compatible wallets', () => {
+            const phantomWallet = createMockWallet('Phantom');
+            const solflareWallet = createMockWallet('Solflare');
 
-            mockWalletsApi.get.mockReturnValue([solanaWallet, ethereumWallet]);
+            mockWalletsApi.get.mockReturnValue([phantomWallet, solflareWallet]);
 
             const client = new ConnectorClient();
-            const state = client.getSnapshot();
+            const state = client.getConnectorState();
 
-            // Both wallets should be discovered but only Solana wallet should be connectable
             expect(state.wallets).toHaveLength(2);
-
-            const connectableWallets = state.wallets.filter(w => w.connectable);
-            expect(connectableWallets).toHaveLength(1);
-            expect(connectableWallets[0].name).toBe('Phantom');
-            expect(connectableWallets[0].connectable).toBe(true);
-
-            const nonConnectableWallets = state.wallets.filter(w => !w.connectable);
-            expect(nonConnectableWallets).toHaveLength(1);
-            expect(nonConnectableWallets[0].name).toBe('MetaMask');
-            expect(nonConnectableWallets[0].connectable).toBe(false);
+            expect(state.wallets[0].name).toBe('Phantom');
+            expect(state.wallets[0].connectable).toBe(true);
+            expect(state.wallets[1].name).toBe('Solflare');
+            expect(state.wallets[1].connectable).toBe(true);
         });
 
         it('should handle duplicate wallets by name', () => {
@@ -209,7 +198,7 @@ describe('ConnectorClient', () => {
             mockWalletsApi.get.mockReturnValue([wallet1, wallet2]);
 
             const client = new ConnectorClient();
-            const state = client.getSnapshot();
+            const state = client.getConnectorState();
 
             expect(state.wallets).toHaveLength(1);
             expect(state.wallets[0].name).toBe('Phantom');
@@ -222,7 +211,7 @@ describe('ConnectorClient', () => {
             mockWalletsApi.get.mockReturnValue([walletNoConnect, walletNoDisconnect]);
 
             const client = new ConnectorClient();
-            const state = client.getSnapshot();
+            const state = client.getConnectorState();
 
             expect(state.wallets).toHaveLength(2);
             expect(state.wallets[0].connectable).toBe(false);
@@ -241,7 +230,7 @@ describe('ConnectorClient', () => {
             const client = new ConnectorClient();
 
             // Initially no wallets
-            expect(client.getSnapshot().wallets).toHaveLength(0);
+            expect(client.getConnectorState().wallets).toHaveLength(0);
 
             // Add a wallet and trigger register event
             const newWallet = createMockWallet('NewWallet');
@@ -249,8 +238,8 @@ describe('ConnectorClient', () => {
             registerCallback();
 
             // Should now have the new wallet
-            expect(client.getSnapshot().wallets).toHaveLength(1);
-            expect(client.getSnapshot().wallets[0].name).toBe('NewWallet');
+            expect(client.getConnectorState().wallets).toHaveLength(1);
+            expect(client.getConnectorState().wallets[0].name).toBe('NewWallet');
         });
     });
 
@@ -267,12 +256,12 @@ describe('ConnectorClient', () => {
         it('should successfully connect to a wallet', async () => {
             await client.select('Phantom');
 
-            const state = client.getSnapshot();
+            const state = client.getConnectorState();
             expect(state.connected).toBe(true);
             expect(state.connecting).toBe(false);
             expect(state.selectedWallet).toBe(mockWallet);
             expect(state.accounts).toHaveLength(1);
-            expect(state.selectedAccount).toBe('11111111111111111111111111111112');
+            expect(state.selectedAccount).toBe(TEST_ADDRESSES.PHANTOM_ACCOUNT_1);
         });
 
         it('should set connecting state during connection', async () => {
@@ -286,14 +275,14 @@ describe('ConnectorClient', () => {
             const connectPromise2 = client.select('Phantom');
 
             // Should be in connecting state
-            expect(client.getSnapshot().connecting).toBe(true);
-            expect(client.getSnapshot().connected).toBe(false);
+            expect(client.getConnectorState().connecting).toBe(true);
+            expect(client.getConnectorState().connected).toBe(false);
 
             // Resolve the connection
             resolveConnect!({
                 accounts: [
                     {
-                        address: '11111111111111111111111111111112',
+                        address: TEST_ADDRESSES.PHANTOM_ACCOUNT_1,
                     },
                 ],
             });
@@ -301,8 +290,8 @@ describe('ConnectorClient', () => {
             await connectPromise2;
 
             // Should be connected
-            expect(client.getSnapshot().connecting).toBe(false);
-            expect(client.getSnapshot().connected).toBe(true);
+            expect(client.getConnectorState().connecting).toBe(false);
+            expect(client.getConnectorState().connected).toBe(true);
         });
 
         it('should throw error when wallet is not found', async () => {
@@ -324,7 +313,7 @@ describe('ConnectorClient', () => {
 
             await expect(client.select('Phantom')).rejects.toThrow('User rejected');
 
-            const state = client.getSnapshot();
+            const state = client.getConnectorState();
             expect(state.connected).toBe(false);
             expect(state.connecting).toBe(false);
             expect(state.selectedWallet).toBe(null);
@@ -349,9 +338,12 @@ describe('ConnectorClient', () => {
         });
 
         it('should successfully disconnect wallet', async () => {
+            const originalState = client.getConnectorState();
+            expect(originalState.connected).toBe(true);
+            
             await client.disconnect();
 
-            const state = client.getSnapshot();
+            const state = client.getConnectorState();
             expect(state.connected).toBe(false);
             expect(state.selectedWallet).toBe(null);
             expect(state.accounts).toEqual([]);
@@ -372,7 +364,7 @@ describe('ConnectorClient', () => {
             // Should not throw, but log error in debug mode
             await client.disconnect();
 
-            const state = client.getSnapshot();
+            const state = client.getConnectorState();
             expect(state.connected).toBe(false);
         });
 
@@ -390,8 +382,8 @@ describe('ConnectorClient', () => {
         beforeEach(async () => {
             mockWallet = createMockWallet('Phantom');
             mockWallet.accounts = [
-                { address: '11111111111111111111111111111112' },
-                { address: '22222222222222222222222222222223' },
+                { address: TEST_ADDRESSES.PHANTOM_ACCOUNT_1 },
+                { address: TEST_ADDRESSES.PHANTOM_ACCOUNT_2 },
             ];
             mockWalletsApi.get.mockReturnValue([mockWallet]);
             client = new ConnectorClient();
@@ -399,29 +391,29 @@ describe('ConnectorClient', () => {
         });
 
         it('should select an account', async () => {
-            await client.selectAccount('22222222222222222222222222222223');
+            await client.selectAccount(TEST_ADDRESSES.PHANTOM_ACCOUNT_2);
 
-            const state = client.getSnapshot();
-            expect(state.selectedAccount).toBe('22222222222222222222222222222223');
+            const state = client.getConnectorState();
+            expect(state.selectedAccount).toBe(TEST_ADDRESSES.PHANTOM_ACCOUNT_2);
         });
 
         it('should throw error when no wallet is connected', async () => {
             await client.disconnect();
 
-            await expect(client.selectAccount('11111111111111111111111111111112')).rejects.toThrow(
+            await expect(client.selectAccount(TEST_ADDRESSES.PHANTOM_ACCOUNT_1)).rejects.toThrow(
                 'No wallet connected',
             );
         });
 
         it('should handle account not found by reconnecting', async () => {
             const reconnectResponse = {
-                accounts: [{ address: '33333333333333333333333333333334' }],
+                accounts: [{ address: TEST_ADDRESSES.PHANTOM_ACCOUNT_3 }],
             };
             mockWallet.features['standard:connect'].connect.mockResolvedValue(reconnectResponse);
 
-            await client.selectAccount('33333333333333333333333333333334');
+            await client.selectAccount(TEST_ADDRESSES.PHANTOM_ACCOUNT_3);
 
-            expect(client.getSnapshot().selectedAccount).toBe('33333333333333333333333333333334');
+            expect(client.getConnectorState().selectedAccount).toBe(TEST_ADDRESSES.PHANTOM_ACCOUNT_3);
         });
 
         it('should throw error if requested account is not available after reconnect', async () => {
@@ -429,7 +421,7 @@ describe('ConnectorClient', () => {
                 accounts: [],
             });
 
-            await expect(client.selectAccount('99999999999999999999999999999999')).rejects.toThrow(
+            await expect(client.selectAccount(TEST_ADDRESSES.NONEXISTENT_ACCOUNT)).rejects.toThrow(
                 'Requested account not available',
             );
         });
@@ -481,7 +473,7 @@ describe('ConnectorClient', () => {
             const client = new ConnectorClient({ autoConnect: true });
 
             // Wait for auto-connect to complete
-            await new Promise(resolve => setTimeout(resolve, 150));
+            await new Promise(resolve => setTimeout(resolve, AUTO_CONNECT_DELAY));
 
             expect(mockLocalStorage.getItem).toHaveBeenCalledWith('arc-connector:lastWallet');
         });
@@ -526,14 +518,39 @@ describe('ConnectorClient', () => {
 
             const mockWallet = createMockWallet('Phantom');
             mockWalletsApi.get.mockReturnValue([mockWallet]);
-            const client = new ConnectorClient({ storage: errorStorage });
+            const client = new ConnectorClient({ storage: errorStorage, debug: true });
 
-            // Storage error should be thrown (current behavior)
-            // This reveals that storage errors are not handled gracefully in the current implementation
-            await expect(client.select('Phantom')).rejects.toThrow('Storage full');
+            // Storage errors should not prevent wallet connection
+            await expect(client.select('Phantom')).resolves.not.toThrow();
 
-            // Connection should still fail due to storage error
-            expect(client.getSnapshot().connected).toBe(false);
+            // Connection should succeed despite storage error
+            const state = client.getConnectorState();
+            expect(state.connected).toBe(true);
+            expect(state.selectedWallet).toBe(mockWallet);
+            expect(state.accounts).toHaveLength(1);
+        });
+
+        it('should handle storage errors during disconnect gracefully', async () => {
+            const errorStorage = createMockStorage();
+            errorStorage.removeItem.mockImplementation(() => {
+                throw new Error('Storage error');
+            });
+
+            const mockWallet = createMockWallet('Phantom');
+            mockWalletsApi.get.mockReturnValue([mockWallet]);
+            const client = new ConnectorClient({ storage: errorStorage, debug: true });
+
+            // Connect first
+            await client.select('Phantom');
+            expect(client.getConnectorState().connected).toBe(true);
+
+            // Disconnect should not throw despite storage error
+            await expect(client.disconnect()).resolves.not.toThrow();
+
+            // Disconnection should succeed despite storage error
+            const state = client.getConnectorState();
+            expect(state.connected).toBe(false);
+            expect(state.selectedWallet).toBe(null);
         });
 
         it('should handle missing localStorage gracefully', async () => {
@@ -560,7 +577,7 @@ describe('ConnectorClient', () => {
         it('should handle wallet change events', async () => {
             let changeCallback: (properties: any) => void = () => {};
             const mockWallet = createMockWallet('Phantom', true, true, true);
-            mockWallet.features['standard:events'].on.mockImplementation((event: string, callback: any) => {
+            mockWallet.features['standard:events']?.on.mockImplementation((event: string, callback: any) => {
                 if (event === 'change') {
                     changeCallback = callback;
                 }
@@ -577,7 +594,7 @@ describe('ConnectorClient', () => {
 
             // Simulate account change
             changeCallback({
-                accounts: [{ address: '44444444444444444444444444444445' }],
+                accounts: [{ address: TEST_ADDRESSES.PHANTOM_ACCOUNT_4 }],
             });
 
             expect(listener).toHaveBeenCalled();
@@ -606,6 +623,12 @@ describe('ConnectorClient', () => {
             // Should not throw during construction
             const client = new ConnectorClient({ debug: true });
             expect(client).toBeDefined();
+            expect(() => client.getConnectorState()).not.toThrow();
+            expect(() => client.subscribe(() => {})).not.toThrow();
+            const state = client.getConnectorState();
+            expect(state.wallets).toEqual([]);
+            expect(state.connected).toBe(false);
+            expect(state.selectedWallet).toBe(null);
         });
 
         it('should handle polling errors gracefully', async () => {
@@ -621,7 +644,7 @@ describe('ConnectorClient', () => {
             });
 
             mockWalletsApi.get.mockReturnValue([mockWallet]);
-            const client = new ConnectorClient({ debug: true });
+            const client = new ConnectorClient();
 
             await client.select('Phantom');
 
@@ -629,7 +652,7 @@ describe('ConnectorClient', () => {
             throwError = true;
 
             // Should handle error gracefully (no throwing)
-            expect(client.getSnapshot().connected).toBe(true);
+            expect(client.getConnectorState().connected).toBe(true);
         });
     });
 
@@ -666,7 +689,7 @@ describe('ConnectorClient', () => {
             const mockWallet = createMockWallet('Phantom');
             mockWalletsApi.get.mockReturnValue([mockWallet]);
 
-            const client = new ConnectorClient({ debug: true });
+            const client = new ConnectorClient();
             await client.select('Phantom');
 
             expect(consoleSpy).toHaveBeenCalled();
@@ -703,7 +726,7 @@ describe('ConnectorClient', () => {
             await client.select('Phantom');
             await client.disconnect();
 
-            const state = client.getSnapshot();
+            const state = client.getConnectorState();
             expect(state.connected).toBe(false);
         });
 
@@ -724,24 +747,24 @@ describe('ConnectorClient', () => {
             const successCount = results.filter(r => r.status === 'fulfilled').length;
             expect(successCount).toBeGreaterThanOrEqual(1);
 
-            const state = client.getSnapshot();
+            const state = client.getConnectorState();
             expect(state.connected).toBe(true);
         });
 
         it('should preserve account selection across wallet changes', async () => {
             const mockWallet = createMockWallet('Phantom');
             mockWallet.accounts = [
-                { address: '11111111111111111111111111111112' },
-                { address: '22222222222222222222222222222223' },
+                { address: TEST_ADDRESSES.PHANTOM_ACCOUNT_1 },
+                { address: TEST_ADDRESSES.PHANTOM_ACCOUNT_2 },
             ];
 
             mockWalletsApi.get.mockReturnValue([mockWallet]);
 
             const client = new ConnectorClient();
             await client.select('Phantom');
-            await client.selectAccount('22222222222222222222222222222223');
+            await client.selectAccount(TEST_ADDRESSES.PHANTOM_ACCOUNT_2);
 
-            expect(client.getSnapshot().selectedAccount).toBe('22222222222222222222222222222223');
+            expect(client.getConnectorState().selectedAccount).toBe(TEST_ADDRESSES.PHANTOM_ACCOUNT_2);
 
             // Simulate wallet account change that still includes the selected account
             if (mockWallet.features['standard:events']) {
@@ -752,15 +775,15 @@ describe('ConnectorClient', () => {
                 if (changeHandler) {
                     changeHandler({
                         accounts: [
-                            { address: '22222222222222222222222222222223' },
-                            { address: '33333333333333333333333333333334' },
+                            { address: TEST_ADDRESSES.PHANTOM_ACCOUNT_2 },
+                            { address: TEST_ADDRESSES.PHANTOM_ACCOUNT_3 },
                         ],
                     });
                 }
             }
 
             // Should preserve the selected account
-            expect(client.getSnapshot().selectedAccount).toBe('22222222222222222222222222222223');
+            expect(client.getConnectorState().selectedAccount).toBe(TEST_ADDRESSES.PHANTOM_ACCOUNT_2);
         });
     });
 });

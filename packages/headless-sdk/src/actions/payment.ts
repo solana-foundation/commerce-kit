@@ -1,6 +1,6 @@
-import type { CommerceClient } from '../client';
+import type { SolanaClient } from 'gill';
 import { OrderRequest, PaymentVerificationResult } from '../types';
-import { STABLECOINS } from '../types/stablecoin';
+import { STABLECOINS } from '../types/tokens';
 import { signature, type Signature, address } from 'gill';
 import {
     getAssociatedTokenAccountAddress,
@@ -9,7 +9,7 @@ import {
 } from 'gill/programs/token';
 
 export async function verifyPayment(
-    client: CommerceClient,
+    rpc: SolanaClient['rpc'],
     signatureString: string,
     expectedAmount?: number,
     expectedRecipient?: string,
@@ -20,7 +20,7 @@ export async function verifyPayment(
         const txSignature: Signature = signature(signatureString);
 
         // Get transaction details
-        const transaction = await client.rpc
+        const transaction = await rpc
             .getTransaction(txSignature, {
                 encoding: 'jsonParsed',
                 maxSupportedTransactionVersion: 0,
@@ -102,7 +102,7 @@ export async function verifyPayment(
 }
 
 export async function waitForConfirmation(
-    client: CommerceClient,
+    rpc: SolanaClient['rpc'],
     signatureStr: string,
     timeoutMs: number = 30000,
 ): Promise<boolean> {
@@ -111,7 +111,7 @@ export async function waitForConfirmation(
     while (Date.now() - startTime < timeoutMs) {
         try {
             const sig = signature(signatureStr);
-            const statuses = await client.rpc
+            const statuses = await rpc
                 .getSignatureStatuses([sig], {
                     searchTransactionHistory: true,
                 })
@@ -178,16 +178,5 @@ export function createCommercePaymentRequest(request: OrderRequest) {
         label,
         message,
         qrCode: url, // For QR code generation
-        // Helper methods
-        getAmountDisplay: () => {
-            if (currency && STABLECOINS[currency]) {
-                const stablecoin = STABLECOINS[currency];
-                return `${(totalAmount / Math.pow(10, stablecoin.decimals)).toFixed(stablecoin.decimals)} ${stablecoin.symbol}`;
-            }
-            return `${totalAmount / 1000000000} SOL`;
-        },
-        getStablecoinConfig: () => (currency ? STABLECOINS[currency] : null),
-        // Generate a fresh reference with timestamp (client-side only)
-        generateFreshReference: () => `commerce-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     };
 }

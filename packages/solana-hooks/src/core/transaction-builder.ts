@@ -19,6 +19,7 @@ import {
     generateKeyPairSigner,
     sendAndConfirmTransactionFactory,
     address,
+    isSignature,
     type Address,
     type TransactionSigner,
     type Instruction,
@@ -29,6 +30,7 @@ import { getTransferSolInstruction, getCreateAccountInstruction } from '@solana-
 import {
     getTransferInstruction,
     getCreateAssociatedTokenInstruction,
+    getCreateAssociatedTokenIdempotentInstruction,
     getInitializeMintInstruction,
     getMintSize,
     getMintToInstruction,
@@ -44,8 +46,8 @@ import {
     defaultRetryManager,
     createNetworkError,
     createTransactionError,
-    createInsufficientFundsError,
     type ArcErrorContext,
+    type ArcRetryConfig,
 } from './error-handler';
 
 // ===== SHARED RESULT TYPES =====
@@ -113,7 +115,9 @@ export interface TransactionContext {
     rpcUrl: string;
     commitment?: 'processed' | 'confirmed' | 'finalized';
     // Optional: for performance monitoring
-    enableLogging?: boolean;
+    debug?: boolean;
+    // Optional: custom retry configuration for transactions
+    retryConfig?: Partial<ArcRetryConfig>;
 }
 
 // ===== CORE TRANSACTION BUILDER CLASS =====
@@ -162,7 +166,7 @@ export class TransactionBuilder {
 
         return await defaultRetryManager.executeWithRetry(async () => {
             try {
-                if (this.context.enableLogging) {
+                if (this.context.debug) {
                     console.log(`🔄 [Arc Transaction] Building ${description}...`);
                 }
 
@@ -194,7 +198,7 @@ export class TransactionBuilder {
                     tx => appendTransactionMessageInstructions(instructions, tx),
                 );
 
-                if (this.context.enableLogging) {
+                if (this.context.debug) {
                     console.log(`🔨 [Arc Transaction] Message built with ${instructions.length} instructions`);
                 }
 
@@ -217,7 +221,7 @@ export class TransactionBuilder {
                     throw createTransactionError('Failed to sign transaction', context, error as Error);
                 }
 
-                if (this.context.enableLogging) {
+                if (this.context.debug) {
                     const shortSig = `${signature.slice(0, 8)}…`;
                     console.log('📝 [Arc Transaction] Signature:', shortSig);
                     console.log('📡 [Arc Transaction] Sending transaction...');
@@ -266,7 +270,7 @@ export class TransactionBuilder {
                     );
                 }
 
-                if (this.context.enableLogging) {
+                if (this.context.debug) {
                     console.log(`✅ [Arc Transaction] ${description} completed successfully!`);
                 }
 
@@ -282,7 +286,7 @@ export class TransactionBuilder {
 
                 throw createTransactionError(`Unexpected error in ${description}`, context, error as Error);
             }
-        }, context);
+        }, context, this.context.retryConfig);
     }
 
     /**
@@ -294,7 +298,7 @@ export class TransactionBuilder {
                 try {
                     const { value: latestBlockhash } = await this.rpc.getLatestBlockhash().send();
 
-                    if (this.context.enableLogging) {
+                    if (this.context.debug) {
                         console.log('🔗 [Arc Transaction] Latest blockhash:', latestBlockhash.blockhash);
                     }
 
@@ -308,6 +312,7 @@ export class TransactionBuilder {
                 }
             },
             { operation: 'getLatestBlockhash' },
+            this.context.retryConfig,
         );
     }
 
@@ -323,7 +328,7 @@ export class TransactionBuilder {
     async transferSOL(to: string | Address, amount: bigint, signer: TransactionSigner): Promise<SOLTransferResult> {
         const fromAddress = signer.address;
 
-        if (this.context.enableLogging) {
+        if (this.context.debug) {
             console.log('💸 [Arc] Starting SOL transfer...');
             console.log('📤 From:', fromAddress);
             console.log('📥 To:', to);
@@ -368,7 +373,7 @@ export class TransactionBuilder {
         const mintAddress = address(mint);
         const toAddress = address(to);
 
-        if (this.context.enableLogging) {
+        if (this.context.debug) {
             console.log('🪙 [Arc] Starting token transfer...');
             console.log('🏦 Mint:', mint);
             console.log('📤 From:', fromAddress);
@@ -392,25 +397,34 @@ export class TransactionBuilder {
         const instructions: Instruction[] = [];
         let createdAccount = false;
 
-        // Check if recipient token account exists
+        // Create recipient token account if needed (idempotent)
         if (createAccountIfNeeded) {
-            const toAccountInfo = await this.rpc.getAccountInfo(toAta).send();
+            let accountAlreadyExists = false;
+            try {
+                const { value } = await this.rpc.getAccountInfo(toAta).send();
+                accountAlreadyExists = Boolean(value);
+            } catch (error) {
+                if (this.context.debug) {
+                    console.log('⚠️ [Arc] Unable to prefetch recipient ATA state; assuming creation is required.', error);
+                }
+            }
 
-            if (!toAccountInfo.value) {
-                // Create associated token account for recipient
-                const createAtaInstruction = getCreateAssociatedTokenInstruction({
-                    mint: mintAddress,
-                    owner: toAddress,
-                    ata: toAta,
-                    payer: signer,
-                    tokenProgram: TOKEN_PROGRAM_ADDRESS,
-                });
+            const createAtaInstruction = getCreateAssociatedTokenIdempotentInstruction({
+                mint: mintAddress,
+                owner: toAddress,
+                ata: toAta,
+                payer: signer,
+                tokenProgram: TOKEN_PROGRAM_ADDRESS,
+            });
 
-                instructions.push(createAtaInstruction);
-                createdAccount = true;
+            instructions.push(createAtaInstruction);
+            createdAccount = !accountAlreadyExists;
 
-                if (this.context.enableLogging) {
+            if (this.context.debug) {
+                if (createdAccount) {
                     console.log('🏗️ [Arc] Creating recipient token account:', toAta);
+                } else {
+                    console.log('ℹ️ [Arc] Recipient token account already exists, idempotent instruction will no-op:', toAta);
                 }
             }
         }
@@ -455,7 +469,7 @@ export class TransactionBuilder {
             freezeAuthority?: string | Address | null;
         } = {},
     ): Promise<TokenCreationResult> {
-        if (this.context.enableLogging) {
+        if (this.context.debug) {
             console.log('🪙 [Arc] Creating new token...');
             console.log('🔢 Decimals:', decimals);
         }
@@ -465,7 +479,7 @@ export class TransactionBuilder {
         const mintAuthority = address(options.mintAuthority || payer.address);
         const freezeAuthority = options.freezeAuthority ? address(options.freezeAuthority) : null;
 
-        if (this.context.enableLogging) {
+        if (this.context.debug) {
             console.log('🔑 [Arc] New mint address:', mint.address);
             console.log('👤 Mint authority:', mintAuthority);
             console.log('🧊 Freeze authority:', freezeAuthority || 'None');
@@ -474,7 +488,7 @@ export class TransactionBuilder {
         // Get rent exemption amount
         const mintRent = await this.rpc.getMinimumBalanceForRentExemption(BigInt(getMintSize())).send();
 
-        if (this.context.enableLogging) {
+        if (this.context.debug) {
             console.log('💰 [Arc] Mint rent exemption:', Number(mintRent) / 1e9, 'SOL');
         }
 
@@ -527,7 +541,7 @@ export class TransactionBuilder {
         const mintAddress = address(mint);
         const toAddress = address(to);
 
-        if (this.context.enableLogging) {
+        if (this.context.debug) {
             console.log('🏭 [Arc] Minting tokens...');
             console.log('🪙 Mint:', mint);
             console.log('📥 To:', to);
@@ -577,7 +591,7 @@ export class TransactionBuilder {
         const mintAddress = address(mint);
         const ownerAddress = owner.address;
 
-        if (this.context.enableLogging) {
+        if (this.context.debug) {
             console.log('🔥 [Arc] Burning tokens...');
             console.log('🪙 Mint:', mint);
             console.log('👤 Owner:', ownerAddress);
@@ -628,7 +642,7 @@ export class TransactionBuilder {
         const mintAddress = address(mint);
         const ownerAddress = address(owner);
 
-        if (this.context.enableLogging) {
+        if (this.context.debug) {
             console.log('🏦 [Arc] Creating token account...');
             console.log('🪙 Mint:', mint);
             console.log('👤 Owner:', owner);
@@ -641,7 +655,7 @@ export class TransactionBuilder {
             tokenProgram: TOKEN_PROGRAM_ADDRESS,
         });
 
-        if (this.context.enableLogging) {
+        if (this.context.debug) {
             console.log('🏦 [Arc] ATA address:', ata);
         }
 
@@ -670,25 +684,33 @@ export class TransactionBuilder {
      */
     async confirmTransaction(signature: string): Promise<{ confirmed: boolean; signature: string }> {
         try {
-            const result = await defaultRetryManager.executeWithRetry(async () => {
-                const response = await this.rpc.sendRequest('getSignatureStatuses', [[signature]]);
-                const status = response?.value?.[0];
+            if (!isSignature(signature)) {
+                throw new Error('Invalid signature');
+            }
+            
+            const result = await defaultRetryManager.executeWithRetry(
+                async () => {
+                    const response = await this.rpc.getSignatureStatuses([signature]).send();
+                    const status = response?.value?.[0];
 
-                if (!status) {
-                    throw new Error('Transaction not found');
-                }
+                    if (!status) {
+                        throw new Error('Transaction not found');
+                    }
 
-                if (status.confirmationStatus === 'confirmed' || status.confirmationStatus === 'finalized') {
-                    return { confirmed: true, signature };
-                }
+                    if (status.confirmationStatus === 'confirmed' || status.confirmationStatus === 'finalized') {
+                        return { confirmed: true, signature };
+                    }
 
-                if (status.err) {
-                    throw new Error(`Transaction failed: ${JSON.stringify(status.err)}`);
-                }
+                    if (status.err) {
+                        throw new Error(`Transaction failed: ${JSON.stringify(status.err)}`);
+                    }
 
-                // If not confirmed yet, throw to trigger retry
-                throw new Error('Transaction not yet confirmed');
-            });
+                    // If not confirmed yet, throw to trigger retry
+                    throw new Error('Transaction not yet confirmed');
+                },
+                { operation: 'confirmTransaction', signature },
+                this.context.retryConfig,
+            );
 
             return result;
         } catch (error) {
@@ -718,7 +740,6 @@ export class TransactionBuilder {
             throw createTransactionError(
                 `Fee calculation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
                 {
-                    signatureCount,
                     operation: 'calculateFees',
                 },
                 error instanceof Error ? error : undefined,
@@ -746,11 +767,13 @@ export function createTransactionBuilder(context: TransactionContext): Transacti
 export function createTransactionContext(
     rpcUrl: string,
     commitment?: 'processed' | 'confirmed' | 'finalized',
-    enableLogging?: boolean,
+    debug?: boolean,
+    retryConfig?: Partial<ArcRetryConfig>,
 ): TransactionContext {
     return {
         rpcUrl,
-        commitment,
-        enableLogging,
+        commitment: commitment ?? 'confirmed',
+        debug: debug ?? false,
+        retryConfig,
     };
 }

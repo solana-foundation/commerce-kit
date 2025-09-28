@@ -1,9 +1,15 @@
 'use client';
 
-import React, { memo } from 'react';
+import { memo } from 'react';
+
+interface WalletListItem {
+    name: string;
+    icon?: string;
+    installed?: boolean;
+}
 
 export interface WalletListProps {
-    wallets: Array<{ name: string; icon?: string; installed?: boolean }>;
+    wallets: WalletListItem[];
     onSelect: (name: string) => void;
 }
 
@@ -13,6 +19,7 @@ export const WalletList = memo<WalletListProps>(({ wallets, onSelect }) => {
             {wallets?.map(w => (
                 <button
                     key={w.name}
+                    type="button"
                     style={{
                         display: 'flex',
                         alignItems: 'center',

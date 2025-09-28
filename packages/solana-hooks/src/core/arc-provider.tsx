@@ -5,12 +5,11 @@ import type { ReactNode } from 'react';
 import { ArcClientProvider, useArcClient } from './arc-client-provider';
 import { useConnectorClient } from '@solana-commerce/connector-kit';
 import type { ArcWebClientConfig } from './arc-web-client';
-import type { SolanaConfig } from '../config/create-config';
 import type { QueryClient } from '@tanstack/react-query';
 
 export type ArcProviderProps = {
     children: ReactNode;
-    config: ArcWebClientConfig | SolanaConfig;
+    config: ArcWebClientConfig;
     queryClient?: QueryClient;
 };
 
@@ -31,18 +30,6 @@ export function ArcProvider({ children, config, queryClient }: ArcProviderProps)
         throw new Error(
             'ArcProvider: connector is required - provide config.connector or ensure useConnectorClient() supplies one',
         );
-    }
-
-    const providerId = useMemo(() => 'arc-provider-' + Math.random().toString(36).substr(2, 5), []);
-
-    if (process.env.NODE_ENV === 'development') {
-        console.log(`[ArcProvider:${providerId}] Connector selection:`, {
-            hasPassedConnector: !!passedConnector,
-            hasContextConnector: !!contextConnector,
-            usingConnector: connector === passedConnector ? 'passed' : 'context',
-            connectorConnected: connector?.getSnapshot?.()?.connected,
-            connectorSame: passedConnector === contextConnector,
-        });
     }
 
     const merged: ArcWebClientConfig = { ...config, connector } as ArcWebClientConfig;

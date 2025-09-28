@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
     validateCustomerInfo,
     validatePaymentMethod,
@@ -27,6 +27,15 @@ vi.mock('gill', () => ({
         }
         throw new Error('Invalid address');
     }),
+    isAddress: vi.fn(addr => {
+        // Mock validation for known addresses
+        return (
+            addr === '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM' ||
+            addr === 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' ||
+            addr === '11111111111111111111111111111112'
+        );
+    }),
+    LAMPORTS_PER_SOL: 1000000000,
 }));
 
 describe('Utils', () => {

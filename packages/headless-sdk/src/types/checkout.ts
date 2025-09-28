@@ -1,11 +1,15 @@
 import { Customer } from './customer';
+import { PaymentMethod } from './tokens';
+
+export type CheckoutStepId = 'details' | 'payment' | 'confirmation';
+export type Mode = 'buyNow' | 'cart';
 
 export interface CheckoutState {
-    currentStep: 'details' | 'payment' | 'confirmation';
+    currentStep: CheckoutStepId;
     steps: CheckoutStep[];
     isProcessing: boolean;
     isLoading: boolean;
-    paymentMethod: 'SOL' | 'USDC' | 'USDT';
+    paymentMethod: PaymentMethod;
     customerInfo: Customer;
     securityContext: {
         sessionId: string;
@@ -20,7 +24,7 @@ export interface CheckoutState {
 }
 
 export interface CheckoutStep {
-    id: string;
+    id: CheckoutStepId;
     name: string;
     completed: boolean;
     active: boolean;
@@ -36,10 +40,3 @@ export interface SecureCheckoutConfig {
     nonce?: string;
 }
 
-export function getCheckoutSteps(mode: 'buyNow' | 'cart'): CheckoutStep[] {
-    return [
-        { id: 'details', name: 'Details', completed: false, active: true },
-        { id: 'payment', name: 'Payment', completed: false, active: false },
-        { id: 'confirmation', name: 'Confirmation', completed: false, active: false },
-    ];
-}

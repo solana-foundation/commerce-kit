@@ -3,8 +3,7 @@
  * Handles preset amounts and custom input - Now using CSS classes instead of inline styles
  */
 
-import React, { memo, useEffect } from 'react';
-import { getBorderRadius } from '../../utils';
+import { memo, useEffect } from 'react';
 import { useHover } from '../../hooks/use-hover';
 import { useFormField } from '../../hooks/use-form-field';
 import { useThemeStyles } from '../../hooks/use-theme-styles';

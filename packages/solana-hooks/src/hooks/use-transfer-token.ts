@@ -4,7 +4,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useArcClient } from '../core/arc-client-provider';
 import { getSharedRpc, getSharedWebSocket, releaseRpcConnection } from '../core/rpc-manager';
-import type { Transport } from '../transports/types';
 import {
     sendAndConfirmTransactionFactory,
     createTransactionMessage,
@@ -126,11 +125,12 @@ export function useTransferToken(
     initialToInput: string = '',
     initialAmountInput: string = '',
 ): UseTransferTokenReturn {
-    const { wallet, network, config } = useArcClient();
+    const client = useArcClient();
+    const { wallet, network, config } = client;
     const queryClient = useQueryClient();
 
-    // Capture transport at component level to avoid calling useArcClient in async functions
-    const transport = config.transport as Transport;
+    // Get RPC client for account queries
+    const rpc = getSharedRpc(network.rpcUrl);
 
     const [mintInput, setMintInput] = useState(initialMintInput);
     const [toInput, setToInput] = useState(initialToInput);
@@ -172,7 +172,7 @@ export function useTransferToken(
             const submitAndConfirmTransactionRobust = async (
                 signedTransaction: any,
                 signature: string,
-                transport: any,
+                rpcClient: any,
                 sendAndConfirm: any,
             ) => {
                 try {
@@ -182,22 +182,15 @@ export function useTransferToken(
                         skipPreflight: false,
                     });
                 } catch (confirmError: any) {
-                    if (process.env.NODE_ENV !== 'production') {
-                        console.log(
-                            '[useTransferToken] Standard confirmation failed, using robust polling:',
-                            confirmError.message,
-                        );
-                    }
-
                     // If standard confirmation fails, use custom polling
-                    await waitForTransactionConfirmation(signature, transport);
+                    await waitForTransactionConfirmation(signature, rpcClient);
                 }
             };
 
             // Custom confirmation polling that's more resilient to RPC issues
             const waitForTransactionConfirmation = async (
                 signature: string,
-                transport: any,
+                rpcClient: any,
                 maxWaitTime: number = 30000,
             ) => {
                 const startTime = Date.now();
@@ -205,10 +198,7 @@ export function useTransferToken(
 
                 while (Date.now() - startTime < maxWaitTime) {
                     try {
-                        const statusResponse: any = await transport.request({
-                            method: 'getSignatureStatuses',
-                            params: [[signature], { searchTransactionHistory: true }],
-                        });
+                        const statusResponse = await rpcClient.getSignatureStatuses([signature], { searchTransactionHistory: true }).send();
 
                         const status = statusResponse?.value?.[0];
                         if (status) {
@@ -216,9 +206,6 @@ export function useTransferToken(
                                 status.confirmationStatus === 'confirmed' ||
                                 status.confirmationStatus === 'finalized'
                             ) {
-                                if (process.env.NODE_ENV !== 'production') {
-                                    console.log('[useTransferToken] Transaction confirmed via polling');
-                                }
                                 return; // Success
                             }
 
@@ -268,10 +255,7 @@ export function useTransferToken(
 
                         // Check account info on first attempt only to avoid redundant calls
                         if (attempt === 0) {
-                            const fromAccountInfo: any = await transport.request({
-                                method: 'getAccountInfo',
-                                params: [fromTokenAccount, { encoding: 'base64' }],
-                            });
+                            const fromAccountInfo = await rpc.getAccountInfo(fromTokenAccount, { encoding: 'base64' }).send();
 
                             if (!fromAccountInfo.value) {
                                 throw new Error(
@@ -279,10 +263,7 @@ export function useTransferToken(
                                 );
                             }
 
-                            const toAccountInfo: any = await transport.request({
-                                method: 'getAccountInfo',
-                                params: [toTokenAccount, { encoding: 'base64' }],
-                            });
+                            const toAccountInfo = await rpc.getAccountInfo(toTokenAccount, { encoding: 'base64' }).send();
 
                             if (!toAccountInfo.value && !createAccountIfNeeded) {
                                 throw new Error(
@@ -292,19 +273,13 @@ export function useTransferToken(
                         }
 
                         // Get fresh blockhash on each attempt
-                        const { value: latestBlockhash }: any = await transport.request({
-                            method: 'getLatestBlockhash',
-                            params: [],
-                        });
+                        const { value: latestBlockhash } = await rpc.getLatestBlockhash().send();
 
                         const instructions: Instruction[] = [];
 
                         // Check if we need to create account (only on first attempt)
                         if (attempt === 0 && createAccountIfNeeded) {
-                            const toAccountInfo: any = await transport.request({
-                                method: 'getAccountInfo',
-                                params: [toTokenAccount, { encoding: 'base64' }],
-                            });
+                            const toAccountInfo = await rpc.getAccountInfo(toTokenAccount, { encoding: 'base64' }).send();
 
                             if (!toAccountInfo.value) {
                                 const createAccountInstruction = getCreateAssociatedTokenInstruction({
@@ -345,7 +320,7 @@ export function useTransferToken(
                         await submitAndConfirmTransactionRobust(
                             signedTransaction,
                             signature,
-                            transport,
+                            rpc,
                             sendAndConfirmTransaction,
                         );
 
@@ -372,18 +347,6 @@ export function useTransferToken(
                             errorMessage.includes('blockhash') ||
                             errorMessage.includes('last block for which this transaction could have been committed');
 
-                        // Log attempt for debugging
-                        if (process.env.NODE_ENV !== 'production') {
-                            console.log(
-                                `[useTransferToken] Attempt ${attempt + 1}/${maxAttempts} failed:`,
-                                errorMessage,
-                            );
-                            if (isBlockhashExpired) {
-                                console.log(
-                                    '[useTransferToken] Detected blockhash expiration, will retry with fresh blockhash',
-                                );
-                            }
-                        }
 
                         // If this is the last attempt, provide a better error message
                         if (attempt === maxAttempts - 1) {
