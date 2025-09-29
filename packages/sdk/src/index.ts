@@ -1,7 +1,7 @@
 /**
  * @solana-commerce/sdk - Minimal Export
  *
- * Only exports what @react-sdk actually uses.
+ * Only exports what @react actually uses.
  * Reduced from 90KB to ~20KB bundle.
  */
 

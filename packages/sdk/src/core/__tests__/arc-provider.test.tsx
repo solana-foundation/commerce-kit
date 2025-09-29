@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { ArcProvider } from '../arc-provider';
 import { useArcClient } from '../arc-client-provider';
 
-// Mock connector-kit dependency
+// Mock connector dependency
 vi.mock('@solana-commerce/connector', () => ({
     useConnectorClient: vi.fn(() => ({
         connect: vi.fn(),

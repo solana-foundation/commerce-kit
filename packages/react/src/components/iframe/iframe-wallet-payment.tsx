@@ -1,7 +1,7 @@
 import React from 'react';
 import type { ThemeConfig, MerchantConfig, Currency } from '../../types';
 import { MerchantAddressPill } from '../tip-modal/merchant-address-pill';
-import { Spinner } from '../../../../connector-kit/src/ui/spinner';
+import { Spinner } from '../../../../connector/src/ui/spinner';
 import { TransactionSuccess, TransactionError } from '../transaction-states';
 
 interface WalletPaymentContentProps {

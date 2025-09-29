@@ -11,13 +11,13 @@
 
 // ===== MAIN EXPORTS - Most commonly used =====
 
-// Main Payment Component (react-sdk)
+// Main Payment Component (react)
 export { 
     PaymentButton, 
     SolanaCommerceSDK // deprecated alias
 } from '@solana-commerce/react';
 
-// Core React Providers (connector-kit)
+// Core React Providers (connector)
 export { 
     ConnectorProvider, 
     AppProvider, 
@@ -25,10 +25,10 @@ export {
     UnifiedProvider 
 } from '@solana-commerce/connector';
 
-// Solana Hooks Provider (solana-hooks)
+// Solana SDK Provider (sdk)
 export { ArcProvider } from '@solana-commerce/sdk';
 
-// Main Hooks (solana-hooks)
+// Main Hooks (sdk)
 export { 
     useTransferSOL, 
     useTransferToken, 
@@ -39,16 +39,16 @@ export {
 
 // ===== ALL EXPORTS BY PACKAGE =====
 
-// Re-export everything from react-sdk
+// Re-export everything from react
 export * from '@solana-commerce/react';
 
-// Re-export everything from connector-kit  
+// Re-export everything from connector  
 export * from '@solana-commerce/connector';
 
-// Re-export everything from solana-hooks
+// Re-export everything from sdk
 export * from '@solana-commerce/sdk';
 
-// Re-export everything from headless-sdk
+// Re-export everything from headless
 export * from '@solana-commerce/headless';
 
 // Re-export everything from solana-pay
@@ -75,7 +75,7 @@ export {
 
 // ===== TYPE EXPORTS =====
 
-// Main configuration types (react-sdk)
+// Main configuration types (react)
 export type {
     MerchantConfig,
     ThemeConfig,
@@ -86,7 +86,7 @@ export type {
     Product
 } from '@solana-commerce/react';
 
-// Connector types (connector-kit)  
+// Connector types (connector)  
 export type {
     ConnectorState,
     ConnectorConfig,
@@ -97,7 +97,7 @@ export type {
     ConnectorTheme
 } from '@solana-commerce/connector';
 
-// Hook return types (solana-hooks)
+// Hook return types (sdk)
 export type {
     UseTransferSOLReturn,
     UseTransferTokenReturn,

@@ -282,7 +282,7 @@ export class ArcWebClient {
         this.walletUnsubscribers = [];
     }
 
-    // Auto-connect is owned by connector-kit; Arc does not manage persistence
+    // Auto-connect is owned by connector; Arc does not manage persistence
 
     /**
      * Subscribe to state changes.

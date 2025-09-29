@@ -204,9 +204,9 @@ pnpm type-check
 
 ## 🤝 Related Packages
 
-- **[@solana-commerce/react](../react-sdk)** - Complete commerce UI components
-- **[@solana-commerce/headless](../headless-sdk)** - Headless commerce logic
-- **[@solana-commerce/connector](../connector-kit)** - Wallet connection utilities
+- **[@solana-commerce/react](../react)** - Complete commerce UI components
+- **[@solana-commerce/headless](../headless)** - Headless commerce logic
+- **[@solana-commerce/connector](../connector)** - Wallet connection utilities
 - **[@solana-commerce/solana-pay](../solana-pay)** - Solana Pay implementation
 
 ## 📄 License
