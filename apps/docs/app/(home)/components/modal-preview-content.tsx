@@ -4,15 +4,15 @@ import React, { useState, useCallback } from 'react';
 import type { DemoConfig, Mode } from './types';
 // Note: cn utility removed as it's no longer needed
 // Note: OrderItem removed for tip flow MVP
-import { TokenIcon } from '../../../../../packages/react-sdk/src/components/icons';
-import { getButtonBorder, getButtonShadow, getAccessibleTextColor } from '../../../../../packages/react-sdk/src/utils';
-import type { ThemeConfig } from '../../../../../packages/react-sdk/src/types';
+import { TokenIcon } from '../../../../../packages/react/src/components/icons';
+import { getButtonBorder, getButtonShadow, getAccessibleTextColor } from '../../../../../packages/react/src/utils';
+import type { ThemeConfig } from '../../../../../packages/react/src/types';
 import {
   DropdownRoot,
   DropdownTrigger,
   DropdownContent,
   DropdownItem
-} from '../../../../../packages/ui-primitives/src/react';
+} from '@solana-commerce/react';
 
 // Local border radius utilities to match the React SDK
 const BORDER_RADIUS_MAP = {

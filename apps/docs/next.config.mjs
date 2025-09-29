@@ -2,13 +2,12 @@
 const config = {
   reactStrictMode: true,
   transpilePackages: [
-    '@solana-commerce/connector-kit',
-    '@solana-commerce/ui-primitives',
-    '@solana-commerce/react-sdk',
-    '@solana-commerce/headless-sdk'
+    '@solana-commerce/connector',
+    '@solana-commerce/react',
+    '@solana-commerce/headless'
   ],
   experimental: {
-    optimizePackageImports: ['@solana-commerce/connector-kit', '@solana-commerce/headless-sdk', '@solana-commerce/react-sdk', '@solana-commerce/ui-primitives'],
+    optimizePackageImports: ['@solana-commerce/connector', '@solana-commerce/headless', '@solana-commerce/react'],
   },
   // Turbopack configuration
   turbopack: {

@@ -1,0 +1,52 @@
+{
+    "name": "@solana-commerce",
+    "version": "0.1.0",
+    "description": "Comprehensive Solana Commerce SDK - All-in-one package for Solana e-commerce solutions",
+    "main": "./dist/index.js",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "sideEffects": false,
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.js"
+        }
+    },
+    "files": [
+        "dist/**"
+    ],
+    "scripts": {
+        "build": "tsup",
+        "dev": "tsup --watch",
+        "type-check": "tsc --noEmit",
+        "clean": "rm -rf dist"
+    },
+    "dependencies": {
+        "@solana-commerce/connector": "workspace:*",
+        "@solana-commerce/headless": "workspace:*",
+        "@solana-commerce/react": "workspace:*",
+        "@solana-commerce/sdk": "workspace:*",
+        "@solana-commerce/solana-pay": "workspace:*"
+    },
+    "peerDependencies": {
+        "react": ">=18.0.0",
+        "react-dom": ">=18.0.0"
+    },
+    "devDependencies": {
+        "tsup": "^8.0.0",
+        "typescript": "^5.3.0"
+    },
+    "keywords": [
+        "solana",
+        "commerce",
+        "payment",
+        "crypto",
+        "e-commerce",
+        "blockchain",
+        "web3",
+        "react",
+        "sdk"
+    ],
+    "license": "MIT"
+}

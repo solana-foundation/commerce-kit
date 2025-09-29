@@ -1,6 +1,6 @@
 'use client';
 
-import { PaymentButton } from '@solana-commerce/react-sdk';
+import { PaymentButton } from '@solana-commerce/react';
 
 interface FullPageBuyNowProps {
   rpcUrl?: string;

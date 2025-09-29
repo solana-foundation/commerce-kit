@@ -27,7 +27,7 @@ open http://localhost:3000
 ### Simple Integration
 
 ```tsx
-import { PaymentButton } from '@solana-commerce/react-sdk';
+import { PaymentButton } from '@solana-commerce/react';
 
 <PaymentButton
   config={{

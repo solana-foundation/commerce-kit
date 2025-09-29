@@ -19,7 +19,7 @@ export function CodeExample({ selectedMode, checkoutStyle, customizations }: Cod
 // Only modal checkout is available with tip functionality  
 // Switch to Modal checkout to see the tip flow in action`;
     } else if (selectedMode === 'tip') {
-      return `import { PaymentButton } from '@solana-commerce/react-sdk';
+      return `import { PaymentButton } from '@solana-commerce/react';
 
 function App() {
   return (
