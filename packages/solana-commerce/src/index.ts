@@ -32,10 +32,14 @@ export { ArcProvider } from '@solana-commerce/sdk';
 export { 
     useTransferSOL, 
     useTransferToken, 
-    useConnector, 
-    useConnectorClient,
     useArcClient
 } from '@solana-commerce/sdk';
+
+// Connector Hooks (connector)
+export {
+    useConnector,
+    useConnectorClient
+} from '@solana-commerce/connector';
 
 // ===== ALL EXPORTS BY PACKAGE =====
 
@@ -48,11 +52,11 @@ export * from '@solana-commerce/connector';
 // Re-export everything from sdk
 export * from '@solana-commerce/sdk';
 
-// Re-export everything from headless
-export * from '@solana-commerce/headless';
-
-// Re-export everything from solana-pay
+// Re-export everything from solana-pay (including isValidSolanaAddress)
 export * from '@solana-commerce/solana-pay';
+
+// Note: @solana-commerce/headless is available via the HeadlessSDK namespace export below
+// Not re-exported at top level to avoid isValidSolanaAddress conflict with solana-pay
 
 // Note: ui-primitives is now internal to @solana-commerce/react
 

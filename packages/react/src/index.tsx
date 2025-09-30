@@ -14,6 +14,7 @@ export { TabsRoot, TabsList, TabsTab, TabsPanel } from './ui-primitives/tabs-alp
 export { Dialog, DialogTrigger, DialogContent, DialogBackdrop, DialogClose, DialogProvider } from './ui-primitives/dialog-alpha';
 export { DialogPortal } from './ui-primitives/react';
 export { DropdownRoot, DropdownTrigger, DropdownContent, DropdownItem } from './ui-primitives/dropdown-alpha';
+export { Drawer, DrawerTrigger, DrawerContent, DrawerBackdrop, DrawerClose, DrawerHandle, DrawerPortal } from './ui-primitives/drawer-alpha';
 export { Z_INDEX, Z_INDEX_CSS_VARS } from './ui-primitives/constants';
 
 // Re-export types for public API
@@ -55,7 +56,7 @@ export {
 export { POST as rpcEndpointsHandler } from './api/rpc-endpoints';
 
 import React, { useState, useCallback, useMemo, memo, useEffect } from 'react';
-import { ModalShell } from './components/ui/modal-shell';
+import { ResponsiveShell } from './components/ui/responsive-shell';
 import { SecureIframeShell } from './components/ui/secure-iframe-shell';
 import { AppProvider } from '@solana-commerce/connector';
 import { ArcProvider } from '@solana-commerce/sdk';
@@ -249,10 +250,10 @@ export const PaymentButton = memo<PaymentButtonProps>(function PaymentButton({
             );
         }
 
-        // Overlay mode (modal) - always render the same structure for SSR consistency
+        // Overlay mode (modal/drawer) - always render the same structure for SSR consistency
         return (
             <>
-                <ModalShell
+                <ResponsiveShell
                     open={isClient ? isDialogOpen : false} // Always closed on server
                     onOpenChange={isClient ? setIsDialogOpen : () => {}} // No-op on server
                     trigger={
@@ -291,7 +292,7 @@ export const PaymentButton = memo<PaymentButtonProps>(function PaymentButton({
                         // Server-side placeholder for modal content
                         <div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>
                     )}
-                </ModalShell>
+                </ResponsiveShell>
             </>
         );
     }

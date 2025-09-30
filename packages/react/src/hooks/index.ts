@@ -10,6 +10,7 @@ export { useTipForm } from './use-tip-form';
 
 export { useAnimationStyles } from './use-animation-styles';
 export { useCopyToClipboard } from './use-copy-to-clipboard';
+export { useMobileDetection, useMobileDetectionDetailed } from './use-mobile-detection';
 
 // UI utility hooks
 export { useHover } from './use-hover';
