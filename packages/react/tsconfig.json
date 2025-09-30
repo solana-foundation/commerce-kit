@@ -1,0 +1,12 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "jsx": "react-jsx",
+        "paths": {
+            "@solana-commerce/sdk": ["./src/types/solana-hooks.d.ts"]
+        }
+    },
+    "include": ["src"],
+    "exclude": ["node_modules", "dist"]
+}

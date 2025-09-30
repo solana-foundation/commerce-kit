@@ -2,8 +2,8 @@
 
 import React, { type ReactNode, useMemo, useState } from 'react'
 import { QueryClient } from '@tanstack/react-query'
-import { AppProvider } from '@solana-commerce/connector-kit'
-import { ArcProvider } from '@solana-commerce/solana-hooks/react'
+import { AppProvider } from '@solana-commerce/connector'
+import { ArcProvider } from '@solana-commerce/sdk/react'
 // Removed unused createProvider import
 import { FloatingCommerceButton } from './components/floating-commerce-button'
 

@@ -9,14 +9,14 @@ importers:
   .:
     dependencies:
       '@tanstack/react-query':
-        specifier: ^5.87.4
+        specifier: ^5.90.2
         version: 5.90.2(react@19.1.1)
     devDependencies:
       '@solana/prettier-config-solana':
         specifier: 0.0.5
         version: 0.0.5(prettier@3.6.2)
       prettier:
-        specifier: ^3.6
+        specifier: ^3.6.2
         version: 3.6.2
       turbo:
         specifier: latest
@@ -105,24 +105,21 @@ importers:
       '@radix-ui/react-visually-hidden':
         specifier: ^1.1.12
         version: 1.2.3(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@solana-commerce/connector-kit':
+      '@solana-commerce/connector':
         specifier: workspace:*
-        version: link:../../packages/connector-kit
-      '@solana-commerce/headless-sdk':
+        version: link:../../packages/connector
+      '@solana-commerce/headless':
         specifier: workspace:*
-        version: link:../../packages/headless-sdk
-      '@solana-commerce/react-sdk':
+        version: link:../../packages/headless
+      '@solana-commerce/react':
         specifier: workspace:*
-        version: link:../../packages/react-sdk
-      '@solana-commerce/solana-hooks':
+        version: link:../../packages/react
+      '@solana-commerce/sdk':
         specifier: workspace:*
-        version: link:../../packages/solana-hooks
+        version: link:../../packages/sdk
       '@solana-commerce/solana-pay':
         specifier: workspace:*
         version: link:../../packages/solana-pay
-      '@solana-commerce/ui-primitives':
-        specifier: workspace:*
-        version: link:../../packages/ui-primitives
       '@tanstack/react-query':
         specifier: ^5.85.3
         version: 5.90.2(react@19.1.1)
@@ -191,11 +188,8 @@ importers:
         specifier: ^5.8.3
         version: 5.9.2
 
-  packages/connector-kit:
+  packages/connector:
     dependencies:
-      '@solana-commerce/ui-primitives':
-        specifier: workspace:*
-        version: link:../ui-primitives
       '@wallet-standard/app':
         specifier: ^1.0.0
         version: 1.1.0
@@ -234,7 +228,7 @@ importers:
         specifier: ^1.0.0
         version: 1.6.1(@types/node@24.1.0)(happy-dom@12.10.3)(lightningcss@1.30.1)
 
-  packages/headless-sdk:
+  packages/headless:
     dependencies:
       '@solana-commerce/solana-pay':
         specifier: workspace:*
@@ -253,23 +247,20 @@ importers:
         specifier: ^1.0.0
         version: 1.6.1(@types/node@24.1.0)(happy-dom@12.10.3)(lightningcss@1.30.1)
 
-  packages/react-sdk:
+  packages/react:
     dependencies:
-      '@solana-commerce/connector-kit':
+      '@solana-commerce/connector':
         specifier: workspace:*
-        version: link:../connector-kit
-      '@solana-commerce/headless-sdk':
+        version: link:../connector
+      '@solana-commerce/headless':
         specifier: workspace:*
-        version: link:../headless-sdk
-      '@solana-commerce/solana-hooks':
+        version: link:../headless
+      '@solana-commerce/sdk':
         specifier: workspace:*
-        version: link:../solana-hooks
+        version: link:../sdk
       '@solana-commerce/solana-pay':
         specifier: workspace:*
         version: link:../solana-pay
-      '@solana-commerce/ui-primitives':
-        specifier: workspace:*
-        version: link:../ui-primitives
       gill:
         specifier: ^0.10.2
         version: 0.10.3(@solana/sysvars@2.3.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2))(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3)
@@ -314,11 +305,11 @@ importers:
         specifier: ^1.0.0
         version: 1.6.1(@types/node@24.1.0)(happy-dom@12.10.3)(lightningcss@1.30.1)
 
-  packages/solana-hooks:
+  packages/sdk:
     dependencies:
-      '@solana-commerce/connector-kit':
+      '@solana-commerce/connector':
         specifier: workspace:*
-        version: link:../connector-kit
+        version: link:../connector
       '@solana-program/compute-budget':
         specifier: ^0.8.0
         version: 0.8.0(@solana/kit@2.3.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.2)(ws@8.18.3))
@@ -390,6 +381,37 @@ importers:
         specifier: ^1.0.0
         version: 1.6.1(@types/node@24.1.0)(happy-dom@12.10.3)(lightningcss@1.30.1)
 
+  packages/solana-commerce:
+    dependencies:
+      '@solana-commerce/connector':
+        specifier: workspace:*
+        version: link:../connector
+      '@solana-commerce/headless':
+        specifier: workspace:*
+        version: link:../headless
+      '@solana-commerce/react':
+        specifier: workspace:*
+        version: link:../react
+      '@solana-commerce/sdk':
+        specifier: workspace:*
+        version: link:../sdk
+      '@solana-commerce/solana-pay':
+        specifier: workspace:*
+        version: link:../solana-pay
+      react:
+        specifier: '>=18.0.0'
+        version: 19.1.1
+      react-dom:
+        specifier: '>=18.0.0'
+        version: 19.1.1(react@19.1.1)
+    devDependencies:
+      tsup:
+        specifier: ^8.0.0
+        version: 8.5.0(jiti@2.6.0)(postcss@8.5.6)(tsx@4.20.5)(typescript@5.9.2)
+      typescript:
+        specifier: ^5.3.0
+        version: 5.9.2
+
   packages/solana-pay:
     dependencies:
       gill:
@@ -411,28 +433,6 @@ importers:
       vitest:
         specifier: ^1.0.0
         version: 1.6.1(@types/node@24.1.0)(happy-dom@12.10.3)(lightningcss@1.30.1)
-
-  packages/ui-primitives:
-    dependencies:
-      react:
-        specifier: '>=16.8.0'
-        version: 19.1.1
-      react-dom:
-        specifier: '>=16.8.0'
-        version: 19.1.1(react@19.1.1)
-    devDependencies:
-      '@types/react':
-        specifier: ^19.1.9
-        version: 19.1.13
-      '@types/react-dom':
-        specifier: ^19.1.7
-        version: 19.1.9(@types/react@19.1.13)
-      tsup:
-        specifier: ^8.0.0
-        version: 8.5.0(jiti@2.6.0)(postcss@8.5.6)(tsx@4.20.5)(typescript@5.9.2)
-      typescript:
-        specifier: ^5.0.0
-        version: 5.9.2
 
   program:
     dependencies:
@@ -9050,8 +9050,8 @@ snapshots:
       '@typescript-eslint/parser': 8.44.1(eslint@8.57.1)(typescript@5.9.2)
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.9
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.44.1(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1))(eslint@8.57.1)
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.44.1(eslint@8.57.1)(typescript@5.9.2))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.44.1(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@8.57.1)
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.44.1(eslint@8.57.1)(typescript@5.9.2))(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1)
       eslint-plugin-jsx-a11y: 6.10.2(eslint@8.57.1)
       eslint-plugin-react: 7.37.5(eslint@8.57.1)
       eslint-plugin-react-hooks: 5.2.0(eslint@8.57.1)
@@ -9070,7 +9070,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.44.1(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1))(eslint@8.57.1):
+  eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@8.57.1):
     dependencies:
       '@nolyfill/is-core-module': 1.0.39
       debug: 4.4.3(supports-color@8.1.1)
@@ -9081,22 +9081,22 @@ snapshots:
       tinyglobby: 0.2.15
       unrs-resolver: 1.11.1
     optionalDependencies:
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.44.1(eslint@8.57.1)(typescript@5.9.2))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.44.1(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.44.1(eslint@8.57.1)(typescript@5.9.2))(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1)
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.44.1(eslint@8.57.1)(typescript@5.9.2))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.44.1(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1):
+  eslint-module-utils@2.12.1(@typescript-eslint/parser@8.44.1(eslint@8.57.1)(typescript@5.9.2))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
       '@typescript-eslint/parser': 8.44.1(eslint@8.57.1)(typescript@5.9.2)
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.9
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.44.1(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1))(eslint@8.57.1)
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@8.57.1)
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.44.1(eslint@8.57.1)(typescript@5.9.2))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.44.1(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1):
+  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.44.1(eslint@8.57.1)(typescript@5.9.2))(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.1.9
@@ -9107,7 +9107,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.44.1(eslint@8.57.1)(typescript@5.9.2))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.44.1(eslint@8.57.1)(typescript@5.9.2))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
+      eslint-module-utils: 2.12.1(@typescript-eslint/parser@8.44.1(eslint@8.57.1)(typescript@5.9.2))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1)(eslint@8.57.1)
       hasown: 2.0.2
       is-core-module: 2.16.1
       is-glob: 4.0.3

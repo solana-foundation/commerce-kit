@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { SolanaCommerceClient } from './solana-commerce-client';
-import { type CommerceMode } from '@solana-commerce/react-sdk';
+import { type CommerceMode } from '@solana-commerce/react';
 
 import type { Mode, CheckoutStyle, Customizations, DemoConfig } from './types';
 import { IconCursorarrowRays, IconHandPointUpLeftFill, IconInsetFilledCenterRectangle, IconApp, IconShadow } from 'symbols-react';

@@ -1,0 +1,98 @@
+/* Drawer Component Styles for Mobile */
+
+/* Drawer animations are injected inline by drawer/content.tsx */
+/* This file contains additional drawer-specific styling */
+
+/* Drawer handle styling */
+.sc-drawer-handle {
+  width: 40px;
+  height: 4px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+  margin: 12px auto 8px;
+  flex-shrink: 0;
+  cursor: grab;
+  transition: background-color 0.2s ease;
+}
+
+.sc-drawer-handle:active {
+  cursor: grabbing;
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Drawer content wrapper */
+.sc-drawer-content {
+  /* Base styles are in drawer/content.tsx for inline style control */
+  /* Additional utility styles here */
+  touch-action: pan-y; /* Allow vertical scrolling but prevent horizontal */
+}
+
+/* Content area inside drawer */
+.sc-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+/* Modal content adjustments when inside drawer */
+.sc-drawer-content .sc-tip-modal-anim {
+  border-radius: 0; /* Remove modal border radius in drawer context */
+  box-shadow: none; /* Drawer has its own shadow */
+  max-width: 100%; /* Full width in drawer */
+  width: 100%;
+}
+
+/* Adjust header padding for drawer context */
+.sc-drawer-content .sc-header {
+  padding-top: 0; /* Handle provides top spacing */
+}
+
+/* Safe area adjustments for notched devices */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .sc-drawer-content {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Landscape mode adjustments */
+@media (orientation: landscape) and (max-height: 500px) {
+  .sc-drawer-content {
+    max-height: 95vh; /* Slightly taller in landscape */
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+  }
+}
+
+/* Tablet size (portrait) - use modal instead */
+@media (min-width: 768px) {
+  .sc-drawer-content {
+    display: none; /* Don't show drawer on tablet+ */
+  }
+}
+
+/* Backdrop styling for drawer */
+.sc-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  animation: drawer-backdrop-enter 200ms ease-out;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .sc-drawer-content {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  .sc-drawer-backdrop {
+    animation: none !important;
+  }
+  
+  .sc-drawer-handle {
+    transition: none !important;
+  }
+}
