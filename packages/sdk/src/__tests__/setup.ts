@@ -182,7 +182,7 @@ vi.mock('../core/rpc-manager', () => ({
 }));
 
 // Mock the ArcClientProvider and useArcClient hook
-vi.mock('../core/arc-client-provider', () => ({
+vi.mock('../core/commerce-client-provider', () => ({
     ArcClientProvider: ({ children }: { children: React.ReactNode }) => children,
     useArcClient: vi.fn(() => ({
         network: {

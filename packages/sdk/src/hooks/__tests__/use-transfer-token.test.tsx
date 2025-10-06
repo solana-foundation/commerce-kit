@@ -5,7 +5,7 @@ import { useTransferToken, BlockhashExpirationError } from '../use-transfer-toke
 import { TestWrapper, MOCK_ADDRESSES, MOCK_LAMPORTS } from '../../test-utils/mock-providers';
 
 // Mock the dependencies
-vi.mock('../../core/arc-client-provider', () => ({
+vi.mock('../../core/commerce-client-provider', () => ({
     useArcClient: () => ({
         wallet: {
             address: MOCK_ADDRESSES.WALLET_1,
@@ -322,7 +322,7 @@ describe('useTransferToken', () => {
             };
 
             // Mock the useArcClient hook to return our mock transport
-            vi.mocked(vi.importActual('../../core/arc-client-provider')).then(module => {
+            vi.mocked(vi.importActual('../../core/commerce-client-provider')).then(module => {
                 vi.spyOn(module, 'useArcClient').mockReturnValue({
                     wallet: {
                         address: MOCK_ADDRESSES.WALLET_1,

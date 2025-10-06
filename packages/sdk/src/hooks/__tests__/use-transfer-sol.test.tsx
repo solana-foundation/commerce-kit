@@ -5,7 +5,7 @@ import { useTransferSOL } from '../use-transfer-sol';
 import { TestWrapper, createMockSigner, MOCK_ADDRESSES, MOCK_LAMPORTS } from '../../test-utils/mock-providers';
 
 // Mock the core modules
-vi.mock('../../core/arc-client-provider', () => ({
+vi.mock('../../core/commerce-client-provider', () => ({
     useArcClient: () => ({
         wallet: {
             address: MOCK_ADDRESSES.WALLET_1,
