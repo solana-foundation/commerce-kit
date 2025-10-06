@@ -62,12 +62,12 @@ describe('Core Integration Tests', () => {
         it('should provide consistent network configurations', () => {
             const networks = ['devnet', 'mainnet', 'testnet'];
 
-            networks.forEach(network => {
+            for (const network of networks) {
                 const clusterInfo = getClusterInfo(network);
                 expect(clusterInfo.name).toBe(network);
                 expect(clusterInfo.rpcUrl).toContain(network === 'mainnet' ? 'mainnet-beta' : network);
                 expect(clusterInfo.wsUrl).toContain(network === 'mainnet' ? 'mainnet-beta' : network);
-            });
+            }
         });
 
         it('should handle network detection flags correctly', () => {
@@ -123,12 +123,12 @@ describe('Core Integration Tests', () => {
         it('should validate cluster configuration consistency', () => {
             const networks = ['devnet', 'mainnet', 'testnet'];
 
-            networks.forEach(network => {
+            for (const network of networks) {
                 const clusterInfo = getClusterInfo(network);
                 expect(clusterInfo.name).toBe(network);
                 expect(clusterInfo.rpcUrl).toContain(network === 'mainnet' ? 'mainnet-beta' : network);
                 expect(clusterInfo.wsUrl).toContain(network === 'mainnet' ? 'mainnet-beta' : network);
-            });
+            }
         });
 
         it('should maintain consistent boolean flags', () => {

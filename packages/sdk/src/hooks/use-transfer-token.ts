@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useArcClient } from '../core/arc-client-provider';
+import { useArcClient } from '../core/commerce-client-provider';
 import { getSharedRpc, getSharedWebSocket, releaseRpcConnection } from '../core/rpc-manager';
 import {
     sendAndConfirmTransactionFactory,
@@ -121,9 +121,9 @@ export interface UseTransferTokenReturn {
 }
 
 export function useTransferToken(
-    initialMintInput: string = '',
-    initialToInput: string = '',
-    initialAmountInput: string = '',
+    initialMintInput = '',
+    initialToInput = '',
+    initialAmountInput = '',
 ): UseTransferTokenReturn {
     const client = useArcClient();
     const { wallet, network, config } = client;
@@ -191,7 +191,7 @@ export function useTransferToken(
             const waitForTransactionConfirmation = async (
                 signature: string,
                 rpcClient: any,
-                maxWaitTime: number = 30000,
+                maxWaitTime = 30000,
             ) => {
                 const startTime = Date.now();
                 let lastError: any;

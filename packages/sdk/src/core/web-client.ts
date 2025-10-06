@@ -1,10 +1,11 @@
 'use client';
 
-import { type Address } from '@solana/kit';
-import { type SolanaClusterMoniker } from 'gill';
+import type { Address } from '@solana/kit';
+import type { SolanaClusterMoniker } from 'gill';
 import { getClusterInfo, type ClusterInfo } from '../utils/cluster';
 import { WalletStandardKitSigner, type StandardWalletInfo } from '../hooks/use-standard-wallets';
 import type { ConnectorClient, ConnectorState } from '@solana-commerce/connector';
+import type { Wallet } from '@wallet-standard/base';
 
 // Connector is the single source of truth; no Arc-managed persistence
 
@@ -45,12 +46,12 @@ export interface ArcWebClientState {
     // Wallet State
     wallet: {
         wallets: StandardWalletInfo[];
-        selectedWallet: any | null;
+        selectedWallet: Wallet | null;
         connected: boolean;
         connecting: boolean;
         address: Address | null;
-        signer: any | null;
-        accounts?: Array<{ address: Address; icon?: string; raw?: any }>;
+        signer: WalletStandardKitSigner | null;
+        accounts?: Array<{ address: Address; icon?: string; raw?: unknown }>;
         selectedAccount?: Address | null;
         capabilities?: {
             walletSupportsVersioned: boolean;
@@ -134,7 +135,7 @@ export class ArcWebClient {
             if (this.state.config.debug) {
                 console.log('[ArcWebClient] Initializing with connector:', {
                     hasConnector: !!providedConnector,
-                    connectorConnected: (providedConnector as any)?.getConnectorState?.()?.connected,
+                    connectorConnected: (providedConnector as ConnectorClient | undefined)?.getSnapshot?.()?.connected,
                     hasSubscribeMethod: typeof providedConnector?.subscribe === 'function',
                     connectorType: providedConnector?.constructor?.name,
                 });
@@ -161,13 +162,14 @@ export class ArcWebClient {
                 const selectedAccount = s.selectedAccount;
                 const accounts = s.accounts;
 
-                let signer: any = null;
+                let signer: WalletStandardKitSigner | null = null;
                 let address: Address | null = null;
                 if (connected && selectedWallet && selectedAccount) {
-                    const rawAccount = (accounts as Array<{ address: string; raw: any }>).find(
+                    const accountList = accounts as unknown as Array<{ address: string; raw?: unknown }>;
+                    const rawAccount = accountList.find(
                         a => a.address === selectedAccount,
-                    )?.raw;
-                    if (rawAccount) {
+                    )?.raw as { address: string } | undefined;
+                    if (rawAccount && 'address' in rawAccount) {
                         signer = new WalletStandardKitSigner(rawAccount, selectedWallet);
                         address = rawAccount.address as Address;
                     }
@@ -177,7 +179,7 @@ export class ArcWebClient {
                     ...this.state,
                     wallet: {
                         ...this.state.wallet,
-                        wallets: ((s.wallets as Array<any>) || []).map((w: any) => ({
+                        wallets: ((s.wallets as StandardWalletInfo[]) || []).map((w: StandardWalletInfo) => ({
                             wallet: w.wallet,
                             name: w.name as string,
                             icon: (w.icon as string) || '',
@@ -189,13 +191,13 @@ export class ArcWebClient {
                         connecting,
                         address,
                         signer,
-                        accounts: (accounts as Array<any>).map((a: any) => ({
+                        accounts: (accounts as Array<{ address: string; icon?: string; raw?: unknown }>).map((a: { address: string; icon?: string; raw?: unknown }) => ({
                             address: a.address as Address,
                             icon: a.icon as string | undefined,
                             raw: a.raw,
                         })),
                         selectedAccount: selectedAccount as Address | null,
-                        connectors: ((s.wallets as Array<any>) || []).map((w: any) => ({
+                        connectors: ((s.wallets as StandardWalletInfo[]) || []).map((w: StandardWalletInfo) => ({
                             id: w.name as string,
                             name: w.name as string,
                             icon: (w.icon as string) || '',
@@ -219,9 +221,9 @@ export class ArcWebClient {
             if (this.state.config.debug) {
                 console.log('[ArcWebClient] Initial sync and subscribe to connector');
             }
-            syncFromConnector((this.connector as any).getConnectorState());
+            syncFromConnector((this.connector as ConnectorClient).getSnapshot());
 
-            const unsubscribe = this.connector.subscribe((state: any) => {
+            const unsubscribe = this.connector.subscribe((state: ConnectorState) => {
                 if (this.state.config.debug) {
                     console.log('[ArcWebClient] Connector state changed, calling syncFromConnector');
                 }
@@ -316,8 +318,8 @@ export class ArcWebClient {
         this.notify();
         try {
             await this.connector?.select(walletName);
-            const s = this.connector?.getSnapshot() as any;
-            const rawAcc = (s?.accounts as Array<any>)?.find((a: any) => a.address === s?.selectedAccount)?.raw;
+            const s = this.connector?.getSnapshot() as ConnectorState | undefined;
+            const rawAcc = (s?.accounts as Array<{ address: string; raw?: unknown }>)?.find((a: { address: string; raw?: unknown }) => a.address === s?.selectedAccount)?.raw;
             const w = s?.selectedWallet;
             const walletSupportsVersioned = rawAcc && w ? this.detectVersionedSupport(rawAcc, w) : true;
             this.state = { ...this.state, wallet: { ...this.state.wallet, capabilities: { walletSupportsVersioned } } };
@@ -341,8 +343,8 @@ export class ArcWebClient {
 
         try {
             await this.connector?.selectAccount(accountAddress as unknown as string);
-            const s = this.connector?.getSnapshot() as any;
-            const rawAcc = (s?.accounts as Array<any>)?.find((a: any) => a.address === s?.selectedAccount)?.raw;
+            const s = this.connector?.getSnapshot() as ConnectorState | undefined;
+            const rawAcc = (s?.accounts as Array<{ address: string; raw?: unknown }>)?.find((a: { address: string; raw?: unknown }) => a.address === s?.selectedAccount)?.raw;
             const w = s?.selectedWallet;
             if (rawAcc && w) {
                 const walletSupportsVersioned = this.detectVersionedSupport(rawAcc, w);
@@ -371,7 +373,9 @@ export class ArcWebClient {
         if (this.state.config.debug) {
             console.log('[ArcWebClient] notify() called, calling', this.listeners.size, 'listeners');
         }
-        this.listeners.forEach(listener => listener(this.state));
+        for (const listener of this.listeners) {
+            listener(this.state);
+        }
     }
 
     // Removed getStorage() - unused since connector manages persistence
@@ -379,10 +383,10 @@ export class ArcWebClient {
     /**
      * Best-effort detection of versioned (v0) transaction support from Wallet Standard features
      */
-    private detectVersionedSupport(account: any, wallet: any): boolean {
+    private detectVersionedSupport(account: unknown, wallet: Wallet): boolean {
         try {
-            const features = (wallet?.features ?? {}) as Record<string, any>;
-            const accountFeatures = (account?.features ?? {}) as Record<string, any>;
+            const features = (wallet?.features ?? {}) as Record<string, unknown>;
+            const accountFeatures = ((account as { features?: unknown })?.features ?? {}) as Record<string, unknown>;
             const candidates = [
                 accountFeatures['solana:signAndSendTransaction'],
                 accountFeatures['solana:signTransaction'],
@@ -390,8 +394,9 @@ export class ArcWebClient {
                 features['solana:signTransaction'],
             ].filter(Boolean);
 
-            const supports = (v: any): boolean => {
-                const versions = v?.supportedTransactionVersions ?? v?.supportedVersions;
+            const supports = (v: unknown): boolean => {
+                const versionObj = v as { supportedTransactionVersions?: unknown; supportedVersions?: unknown } | null | undefined;
+                const versions = versionObj?.supportedTransactionVersions ?? versionObj?.supportedVersions;
                 if (!versions) return false;
                 if (Array.isArray(versions))
                     return versions.includes(0) || versions.includes('v0') || versions.includes('0');

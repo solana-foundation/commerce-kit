@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { DrawerContext } from './context';
 import type { DrawerRootProps } from './types';
 
@@ -27,3 +27,4 @@ export function DrawerRoot({ open, onOpenChange, children }: DrawerRootProps) {
 
     return <DrawerContext.Provider value={contextValue}>{children}</DrawerContext.Provider>;
 }
+

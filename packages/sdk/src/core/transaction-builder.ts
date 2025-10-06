@@ -142,8 +142,8 @@ export class TransactionBuilder {
         this.rpc = getSharedRpc(context.rpcUrl, context.commitment);
         this.rpcSubscriptions = getSharedWebSocket(context.rpcUrl, context.commitment);
         this.sendAndConfirmTransaction = sendAndConfirmTransactionFactory({
-            rpc: this.rpc as any,
-            rpcSubscriptions: this.rpcSubscriptions as any,
+            rpc: this.rpc as unknown as Parameters<typeof sendAndConfirmTransactionFactory>[0]['rpc'],
+            rpcSubscriptions: this.rpcSubscriptions as unknown as Parameters<typeof sendAndConfirmTransactionFactory>[0]['rpcSubscriptions'],
         });
     }
 
@@ -203,7 +203,7 @@ export class TransactionBuilder {
                 }
 
                 // Sign transaction with error handling
-                let signedTransaction: any;
+                let signedTransaction: Awaited<ReturnType<typeof signTransactionMessageWithSigners>>;
                 let signature: string;
 
                 try {
@@ -229,7 +229,7 @@ export class TransactionBuilder {
 
                 // Send and confirm transaction with enhanced error handling
                 try {
-                    await this.sendAndConfirmTransaction(signedTransaction, {
+                    await this.sendAndConfirmTransaction(signedTransaction as Parameters<typeof this.sendAndConfirmTransaction>[0], {
                         commitment: this.context.commitment || 'confirmed',
                     });
                 } catch (error) {
@@ -367,7 +367,7 @@ export class TransactionBuilder {
         to: string | Address,
         amount: bigint,
         signer: TransactionSigner,
-        createAccountIfNeeded: boolean = true,
+        createAccountIfNeeded = true,
     ): Promise<TokenTransferResult> {
         const fromAddress = signer.address;
         const mintAddress = address(mint);

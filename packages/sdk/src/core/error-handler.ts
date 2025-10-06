@@ -6,7 +6,7 @@
  * transaction errors, and wallet issues with intelligent retry mechanisms.
  */
 
-import { type Address } from '@solana/kit';
+import type { Address } from '@solana/kit';
 
 // ===== ERROR CLASSIFICATION =====
 
@@ -291,7 +291,7 @@ export class ArcRetryManager {
         let lastError: ArcError | undefined;
         let attempt = 0;
 
-        while (attempt < retryConfig.maxAttempts!) {
+        while (attempt < (retryConfig.maxAttempts ?? 0)) {
             try {
                 return await operation();
             } catch (error) {
@@ -304,7 +304,7 @@ export class ArcRetryManager {
                 }
 
                 // Don't retry if we've reached max attempts
-                if (attempt >= retryConfig.maxAttempts!) {
+                if (attempt >= (retryConfig.maxAttempts ?? 0)) {
                     throw lastError;
                 }
 
@@ -322,7 +322,10 @@ export class ArcRetryManager {
             }
         }
 
-        throw lastError!;
+        if (lastError) {
+            throw lastError;
+        }
+        throw new Error('Operation failed with unknown error');
     }
 
     private normalizeError(error: unknown, context: Partial<ArcErrorContext>): ArcError {
@@ -367,13 +370,15 @@ export class ArcRetryManager {
             case ArcRetryStrategy.IMMEDIATE:
                 return 0;
 
-            case ArcRetryStrategy.LINEAR_BACKOFF:
-                let linearDelay = config.baseDelay! * attempt;
+            case ArcRetryStrategy.LINEAR_BACKOFF: {
+                const linearDelay = (config.baseDelay ?? 0) * attempt;
                 break;
+            }
 
-            case ArcRetryStrategy.EXPONENTIAL_BACKOFF:
-                let exponentialDelay = config.baseDelay! * Math.pow(2, attempt - 1);
+            case ArcRetryStrategy.EXPONENTIAL_BACKOFF: {
+                const exponentialDelay = (config.baseDelay ?? 0) * Math.pow(2, attempt - 1);
                 break;
+            }
 
             case ArcRetryStrategy.CUSTOM:
                 if (config.customRetryFn) {
@@ -382,7 +387,7 @@ export class ArcRetryManager {
                 return false;
 
             default:
-                let defaultDelay = config.baseDelay!;
+                const defaultDelay = config.baseDelay!;
         }
 
         // Apply delay calculation

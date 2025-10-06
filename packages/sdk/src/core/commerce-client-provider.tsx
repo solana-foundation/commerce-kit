@@ -10,7 +10,7 @@ import React, {
     type ReactNode,
 } from 'react';
 import { QueryClient, QueryClientProvider, type QueryClient as RQClient } from '@tanstack/react-query';
-import { ArcWebClient, type ArcWebClientConfig } from './arc-web-client';
+import { ArcWebClient, type ArcWebClientConfig } from './web-client';
 import type { Address } from '@solana/kit';
 
 // The context now only holds the client instance.

@@ -25,6 +25,6 @@ export interface UseTransactionOptions {
 export interface SwapState {
     isLoading: boolean;
     error: Error | null;
-    quotes: any[];
-    selectedQuote: any | null;
+    quotes: unknown[];
+    selectedQuote: unknown | null;
 }
