@@ -1,72 +1,160 @@
 # @solana-commerce/react
 
-## Server-Side RPC URL Resolution
+React SDK for Solana commerce applications
 
-For better security and performance, RPC URLs are now resolved server-side:
+<!-- TODO: Add npm version badge when published -->
 
-### 🎯 Benefits
-- **🔒 Security**: Keep RPC API keys out of client bundle
-- **⚡ Performance**: Server-side connection pooling and caching  
-- **🛡️ Rate Limiting**: Centralized rate limit management
-- **🔧 Configuration**: Environment-based RPC selection
+## Installation
 
-### 🚀 Usage
-
-#### Option 1: Environment Variables (Recommended)
 ```bash
-# .env.local
-SOLANA_RPC_MAINNET=https://your-premium-rpc.com
-SOLANA_RPC_DEVNET=https://your-dev-rpc.com
-SOLANA_RPC_URL=https://fallback-rpc.com
+pnpm add @solana-commerce/react
 ```
 
-#### Option 2: Explicit RPC URL
+## Features
+
+<!-- TODO: Add Screenshots of the components -->
+
+- Complete payment UI components
+- PaymentButton with multiple modes (tip, payment, cart)
+- Secure iframe architecture
+- Customizable theming system
+- Server-side RPC URL resolution
+- Transaction state management
+- Wallet integration built-in
+- TypeScript support
+- Native support for USDC and USDT (mainnet and devnet)
+
+## Components
+
+### Core Components
+- **PaymentButton** - Main payment component supporting tip, payment, and cart modes
+- **TransactionSuccess** - Success state UI component
+- **TransactionError** - Error state UI component
+- Many UI Primitives
+
+### Hooks
+- **useSolanaPay** - Solana Pay integration
+- **useSolEquivalent** - Token to SOL conversion
+- **useTipForm** - Tip form state management
+- **usePaymentStatus** - Payment status tracking
+- Several utility hooks for UI state management
+
+## API
+
+### PaymentButton
+
 ```typescript
-<PaymentButton 
+<PaymentButton
   config={{
-    rpcUrl: "https://your-rpc-endpoint.com", // Pre-resolved server-side
-    // ... other config
+    merchant: {
+      name: 'Store Name',
+      wallet: 'merchant-wallet-address'
+    },
+    mode: 'payment' | 'tip' | 'cart',
+    theme?: ThemeConfig,
+    rpcUrl?: string,
+    network?: 'mainnet' | 'devnet' | 'testnet',
+    allowedMints?: string[]
+  }}
+  paymentConfig={{
+    amount?: number,
+    currency?: string,
+    products?: Product[]
+  }}
+  onPaymentStart?: () => void
+  onPayment?: (amount: number, currency: string) => void
+  onPaymentSuccess?: (signature: string) => void
+  onPaymentError?: (error: Error) => void
+  onCancel?: () => void
+/>
+```
+
+### Configuration
+
+**Theme**
+
+```typescript
+theme: {
+  primaryColor?: string;
+  backgroundColor?: string;
+  borderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  fontFamily?: string;
+}
+```
+
+## Examples
+
+### Simple Payment
+
+```typescript
+<PaymentButton
+  config={{
+    merchant: { name: 'Store', wallet: 'address' },
+    mode: 'payment'
+  }}
+  paymentConfig={{
+    amount: 50,
+    currency: 'USDC'
+  }}
+  onPaymentSuccess={(signature) => {
+    console.log('Payment confirmed:', signature);
   }}
 />
 ```
 
-#### Option 3: API Route (Next.js)
-Create `/pages/api/rpc-endpoints.ts` or `/app/api/rpc-endpoints/route.ts`:
+### Tip Widget
 
 ```typescript
-import { POST } from '@solana-commerce/react/api/rpc-endpoints';
-export { POST };
+<PaymentButton
+  config={{
+    merchant: { name: 'Creator', wallet: 'address' },
+    mode: 'tip'
+  }}
+  onPaymentSuccess={(signature) => {
+    console.log('Thanks for the tip!');
+  }}
+/>
 ```
 
-### 🏗️ Architecture
+### Shopping Cart
 
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Server        │    │   PaymentButton  │    │   SecureIframe  │
-│                 │    │                  │    │                 │
-│ ┌─────────────┐ │    │ ┌──────────────┐ │    │ ┌─────────────┐ │
-│ │ ENV vars    │ │───▶│ │ RPC Resolver │ │───▶│ │ ArcProvider │ │
-│ │ • MAINNET   │ │    │ │              │ │    │ │             │ │
-│ │ • DEVNET    │ │    │ └──────────────┘ │    │ └─────────────┘ │
-│ │ • TESTNET   │ │    │                  │    │                 │
-│ └─────────────┘ │    └──────────────────┘    └─────────────────┘
-└─────────────────┘                                               
-```
-
-### 🔄 Migration from Client-Side
-
-**Before (❌ Client-side):**
 ```typescript
-// RPC URL constructed in browser
-const rpcUrl = config.rpcUrl || `https://api.${network}.solana.com`;
+function Cart() {
+  const [items, setItems] = useState([...]);
+
+  return (
+    <PaymentButton
+      config={{
+        merchant: { name: 'Store', wallet: 'address' },
+        mode: 'cart',
+        allowedMints: ['SOL', 'USDC']
+      }}
+      paymentConfig={{
+        products: items
+      }}
+      onPaymentSuccess={(signature) => {
+        setItems([]);
+        alert('Order placed!');
+      }}
+    />
+  );
+}
 ```
 
-**After (✅ Server-side):**
-```typescript
-// RPC URL resolved server-side before client creation
-const resolvedUrl = await fetchRpcUrl({ network, priority: 'reliable' });
+## Development
+
+```bash
+pnpm install            # Install dependencies
+pnpm build              # Build package
+pnpm build:sdk          # Build SDK package
+pnpm build:iframe       # Build iframe package
+pnpm type-check         # Type check
+pnpm dev                # Watch mode
+pnpm test               # Run tests
+pnpm test:watch         # Test watch mode
+pnpm test:coverage      # Coverage report
 ```
 
-### 🧪 Development
+## License
 
-The system gracefully falls back to public endpoints when server resolution fails, making development seamless while providing production benefits.
+MIT
