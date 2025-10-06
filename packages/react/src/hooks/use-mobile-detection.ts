@@ -102,3 +102,4 @@ export function useMobileDetectionDetailed() {
 
     return state;
 }
+

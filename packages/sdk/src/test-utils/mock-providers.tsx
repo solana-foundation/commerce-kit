@@ -1,8 +1,9 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi } from 'vitest';
-import type { ArcWebClientConfig, ArcWebClientState } from '../core/arc-web-client';
-import { ArcClientProvider } from '../core/arc-client-provider';
+import { address } from '@solana/kit';
+import type { ArcWebClientConfig, ArcWebClientState } from '../core/web-client';
+import { ArcClientProvider } from '../core/commerce-client-provider';
 
 // Mock Arc client state
 export const createMockArcState = (overrides: Partial<ArcWebClientState> = {}): ArcWebClientState => ({
@@ -15,16 +16,18 @@ export const createMockArcState = (overrides: Partial<ArcWebClientState> = {}): 
         clusterInfo: {
             name: 'devnet',
             rpcUrl: 'https://api.devnet.solana.com',
-            websocketUrl: 'wss://api.devnet.solana.com',
-            canAirdrop: true,
+            wsUrl: 'wss://api.devnet.solana.com',
+            isMainnet: false,
+            isDevnet: true,
+            isTestnet: false,
         },
     },
     wallet: {
-        address: 'So11111111111111111111111111111111111111112',
+        wallets: [],
+        selectedWallet: null,
+        address: null,
         connected: false,
         connecting: false,
-        disconnecting: false,
-        info: null,
         signer: null,
     },
     config: {
@@ -43,7 +46,6 @@ export const createMockArcClient = (state: Partial<ArcWebClientState> = {}) => (
     // Methods
     connect: vi.fn(),
     disconnect: vi.fn(),
-    setNetwork: vi.fn(),
     updateConfig: vi.fn(),
 
     // State setters (for internal use)
@@ -54,7 +56,7 @@ export const createMockArcClient = (state: Partial<ArcWebClientState> = {}) => (
 
 // Mock wallet signer
 export const createMockSigner = () => ({
-    address: 'So11111111111111111111111111111111111111112',
+    address: address('So11111111111111111111111111111111111111112'),
     signTransaction: vi.fn(),
     signMessage: vi.fn(),
 });
@@ -94,7 +96,7 @@ export function TestWrapper({ children, arcState = {}, queryClient }: TestWrappe
 }
 
 // Create a simple mock provider that bypasses the real ArcClientProvider
-const MockArcClientContext = React.createContext<any>(null);
+const MockArcClientContext = React.createContext<ReturnType<typeof createMockArcClient> | null>(null);
 
 function MockArcClientProvider({
     children,
@@ -108,7 +110,7 @@ function MockArcClientProvider({
 }
 
 // Mock RPC responses
-export const createMockRpcResponse = (result: any) => ({
+export const createMockRpcResponse = (result: unknown) => ({
     jsonrpc: '2.0',
     id: 1,
     result,

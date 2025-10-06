@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useArcClient } from '../core/arc-client-provider';
+import { useArcClient } from '../core/commerce-client-provider';
 import { releaseRpcConnection } from '../core/rpc-manager';
 import { createTransactionBuilder, createTransactionContext } from '../core/transaction-builder';
 import { address, type Address, type TransactionSigner } from '@solana/kit';
@@ -96,7 +96,7 @@ export interface UseTransferSOLReturn {
     transferFromInputs: () => Promise<TransferSOLResult | undefined>;
 }
 
-export function useTransferSOL(initialToInput: string = '', initialAmountInput: string = ''): UseTransferSOLReturn {
+export function useTransferSOL(initialToInput = '', initialAmountInput = ''): UseTransferSOLReturn {
     const { wallet, network, config } = useArcClient();
     const queryClient = useQueryClient();
 
@@ -168,16 +168,12 @@ export function useTransferSOL(initialToInput: string = '', initialAmountInput: 
             throw new Error('Both recipient address and amount are required');
         }
 
-        try {
-            const amountInLamports = convertSOLToLamports(amountInput);
+        const amountInLamports = convertSOLToLamports(amountInput);
 
-            return await mutation.mutateAsync({
-                to: toInput,
-                amount: amountInLamports,
-            });
-        } catch (error) {
-            throw error;
-        }
+        return await mutation.mutateAsync({
+            to: toInput,
+            amount: amountInLamports,
+        });
     }, [toInput, amountInput, mutation.mutateAsync]);
 
     const handleSubmit = useCallback(

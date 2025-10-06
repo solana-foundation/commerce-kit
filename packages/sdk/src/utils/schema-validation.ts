@@ -26,21 +26,21 @@ export function validateAndNormalizeAmount(
     }
 
     if (typeof amount === 'string') {
-        const parsed = parseFloat(amount);
-        if (isNaN(parsed) || parsed < 0) {
+        const parsed = Number.parseFloat(amount);
+        if (Number.isNaN(parsed) || parsed < 0) {
             throw new Error(`Invalid amount: ${amount}`);
         }
         // Convert to smallest units based on decimals
-        const normalizedAmount = BigInt(Math.floor(parsed * Math.pow(10, decimals)));
+        const normalizedAmount = BigInt(Math.floor(parsed * 10 ** decimals));
         return { amount: normalizedAmount, decimals };
     }
 
     if (typeof amount === 'number') {
-        if (isNaN(amount) || amount < 0 || !isFinite(amount)) {
+        if (Number.isNaN(amount) || amount < 0 || !Number.isFinite(amount)) {
             throw new Error(`Invalid amount: ${amount}`);
         }
         // Convert to smallest units based on decimals
-        const normalizedAmount = BigInt(Math.floor(amount * Math.pow(10, decimals)));
+        const normalizedAmount = BigInt(Math.floor(amount * 10 ** decimals));
         return { amount: normalizedAmount, decimals };
     }
 

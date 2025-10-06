@@ -5,7 +5,7 @@ import { useTransferSOL } from '../use-transfer-sol';
 import { TestWrapper, createMockSigner, MOCK_ADDRESSES, MOCK_LAMPORTS } from '../../test-utils/mock-providers';
 
 // Mock the core modules
-vi.mock('../../core/arc-client-provider', () => ({
+vi.mock('../../core/commerce-client-provider', () => ({
     useArcClient: () => ({
         wallet: {
             address: MOCK_ADDRESSES.WALLET_1,
@@ -54,7 +54,7 @@ vi.mock('../../utils/invalidate', () => ({
     })),
 }));
 
-const createWrapper = (props: any = {}) => {
+const createWrapper = (props: Record<string, unknown> = {}) => {
     // Create a fresh QueryClient for each test to ensure proper reset behavior
     const queryClient = new QueryClient({
         defaultOptions: {
@@ -143,7 +143,7 @@ describe('useTransferSOL', () => {
                 amount: MOCK_LAMPORTS.ONE_SOL,
             };
 
-            let transferResult: any;
+            let transferResult: unknown;
 
             await act(async () => {
                 transferResult = await result.current.transferSOL(transferOptions);
@@ -200,7 +200,7 @@ describe('useTransferSOL', () => {
                 result.current.setAmountInput('1.0');
             });
 
-            let transferResult: any;
+            let transferResult: unknown;
 
             await act(async () => {
                 transferResult = await result.current.transferFromInputs();
@@ -260,7 +260,7 @@ describe('useTransferSOL', () => {
                 result.current.setAmountInput('0.5');
             });
 
-            let submitResult: any;
+            let submitResult: unknown;
 
             await act(async () => {
                 submitResult = await result.current.handleSubmit(event);
@@ -276,7 +276,7 @@ describe('useTransferSOL', () => {
                 wrapper: createWrapper(),
             });
 
-            let submitResult: any;
+            let submitResult: unknown;
 
             await act(async () => {
                 submitResult = await result.current.handleSubmit();
@@ -295,7 +295,7 @@ describe('useTransferSOL', () => {
                 result.current.setAmountInput('0.1');
             });
 
-            let submitResult: any;
+            let submitResult: unknown;
 
             await act(async () => {
                 submitResult = await result.current.handleSubmit({});
@@ -344,7 +344,7 @@ describe('useTransferSOL', () => {
             expect(result.current.transferSOL).toBeDefined();
 
             // Start transfer - don't await to catch loading state
-            let transferPromise: Promise<any>;
+            let transferPromise: Promise<unknown>;
 
             act(() => {
                 transferPromise = result.current.transferSOL({

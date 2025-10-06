@@ -23,7 +23,7 @@ const createMockWallet = (name: string, features: string[] = []): Wallet => ({
             disconnect: vi.fn(),
         };
         return acc;
-    }, {} as any),
+    }, {} as Record<string, unknown>),
     chains: ['solana:mainnet', 'solana:devnet'],
 });
 

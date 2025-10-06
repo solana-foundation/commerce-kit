@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import { ArcProvider } from '../arc-provider';
-import { useArcClient } from '../arc-client-provider';
+import { ArcProvider } from '../commerce-provider';
+import { useArcClient } from '../commerce-client-provider';
 
 // Mock connector dependency
 vi.mock('@solana-commerce/connector', () => ({

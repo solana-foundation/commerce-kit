@@ -1,4 +1,3 @@
-import React from 'react';
 import type { DrawerHandleProps } from './types';
 
 export function DrawerHandle({ className, style }: DrawerHandleProps) {
@@ -18,3 +17,4 @@ export function DrawerHandle({ className, style }: DrawerHandleProps) {
         />
     );
 }
+

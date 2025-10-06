@@ -15,16 +15,16 @@ global.WebSocket = vi.fn().mockImplementation(() => ({
     send: vi.fn(),
     close: vi.fn(),
     readyState: WebSocket.OPEN,
-})) as any;
+})) as unknown as typeof WebSocket;
 
 // Mock fetch for RPC calls with proper responses
-global.fetch = vi.fn().mockImplementation(async (url: string, options?: any) => {
+global.fetch = vi.fn().mockImplementation(async (url: string, options?: RequestInit) => {
     // Mock common RPC responses
-    const body = options?.body ? JSON.parse(options.body) : {};
+    const body = options?.body ? JSON.parse(options.body as string) : {};
     const method = body.method || 'unknown';
 
     // Return appropriate mock responses based on method
-    let result: any = null;
+    let result: unknown = null;
 
     switch (method) {
         case 'getLatestBlockhash':
@@ -96,7 +96,7 @@ const mockDigest = vi.fn().mockImplementation(async (algorithm: string, data: Ar
 
 Object.defineProperty(global, 'crypto', {
     value: {
-        getRandomValues: vi.fn((arr: any) => {
+        getRandomValues: vi.fn((arr: Uint8Array) => {
             for (let i = 0; i < arr.length; i++) {
                 arr[i] = Math.floor(Math.random() * 256);
             }
@@ -114,7 +114,7 @@ Object.defineProperty(global, 'crypto', {
 
 // Create a shared mock RPC implementation that can be used across all tests
 const createMockRpc = () => ({
-    sendRequest: vi.fn().mockImplementation(async (method: string, params?: any) => {
+    sendRequest: vi.fn().mockImplementation(async (method: string, params?: unknown[]) => {
         switch (method) {
             case 'getLatestBlockhash':
                 return {
@@ -127,10 +127,10 @@ const createMockRpc = () => ({
                 };
             case 'sendTransaction':
                 return 'mock-signature-12345';
-            case 'getAccountInfo':
+            case 'getAccountInfo': {
                 // Return null for non-existent accounts (for error testing)
                 const address = params?.[0];
-                if (address === 'MISSING_ACCOUNT' || address?.includes('missing')) {
+                if (address === 'MISSING_ACCOUNT' || (typeof address === 'string' && address?.includes('missing'))) {
                     return { value: null };
                 }
                 // Return proper RPC response format with value wrapper
@@ -143,6 +143,7 @@ const createMockRpc = () => ({
                         rentEpoch: 200,
                     },
                 };
+            }
             case 'getSignatureStatuses':
                 return {
                     value: [{ confirmationStatus: 'confirmed', err: null }],
@@ -150,7 +151,7 @@ const createMockRpc = () => ({
             case 'getMultipleAccounts':
                 return {
                     value:
-                        params?.[0]?.map(() => ({
+                        (params?.[0] as unknown[] | undefined)?.map(() => ({
                             data: ['', 'base64'],
                             executable: false,
                             lamports: 1000000000,
@@ -181,7 +182,7 @@ vi.mock('../core/rpc-manager', () => ({
 }));
 
 // Mock the ArcClientProvider and useArcClient hook
-vi.mock('../core/arc-client-provider', () => ({
+vi.mock('../core/commerce-client-provider', () => ({
     ArcClientProvider: ({ children }: { children: React.ReactNode }) => children,
     useArcClient: vi.fn(() => ({
         network: {
@@ -213,7 +214,7 @@ vi.mock('../core/arc-client-provider', () => ({
 
 // Mock Solana address generation to prevent WebCrypto issues
 vi.mock('@solana-program/token', async importOriginal => {
-    const actual = (await importOriginal()) as any;
+    const actual = (await importOriginal()) as Record<string, unknown>;
     return {
         ...actual,
         findAssociatedTokenPda: vi.fn().mockResolvedValue([
@@ -225,7 +226,7 @@ vi.mock('@solana-program/token', async importOriginal => {
 
 // Mock @solana/kit address functions
 vi.mock('@solana/kit', async importOriginal => {
-    const actual = (await importOriginal()) as any;
+    const actual = (await importOriginal()) as Record<string, unknown>;
     return {
         ...actual,
         address: vi.fn((addr: string) => addr),
@@ -239,5 +240,5 @@ vi.mock('@solana/kit', async importOriginal => {
 
 // Export mock utilities
 export const mockLocalStorage = localStorageMock;
-export const mockFetch = global.fetch as any;
-export const mockWebSocket = global.WebSocket as any;
+export const mockFetch = global.fetch;
+export const mockWebSocket = global.WebSocket;

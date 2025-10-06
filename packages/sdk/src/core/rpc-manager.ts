@@ -17,7 +17,7 @@ type SolanaRpcSubscriptions = ReturnType<typeof createSolanaRpcSubscriptions>;
  * @param commitment - Transaction confirmation level
  * @returns RPC client
  */
-export function createRpc(rpcUrl: string, commitment?: 'processed' | 'confirmed' | 'finalized'): SolanaRpc {
+export function createRpc(rpcUrl: string, _commitment?: 'processed' | 'confirmed' | 'finalized'): SolanaRpc {
     return createSolanaRpc(rpcUrl);
 }
 
@@ -30,7 +30,7 @@ export function createRpc(rpcUrl: string, commitment?: 'processed' | 'confirmed'
  */
 export function createWebSocket(
     rpcUrl: string,
-    commitment?: 'processed' | 'confirmed' | 'finalized',
+    _commitment?: 'processed' | 'confirmed' | 'finalized',
 ): SolanaRpcSubscriptions {
     const wsUrl = rpcUrl.replace('https://', 'wss://').replace('http://', 'ws://');
     return createSolanaRpcSubscriptions(wsUrl);
@@ -43,6 +43,6 @@ export const getSharedWebSocket = createWebSocket;
 /**
  * No-op for backward compatibility - connection cleanup not needed with simple approach
  */
-export function releaseRpcConnection(rpcUrl: string, commitment?: 'processed' | 'confirmed' | 'finalized'): void {
+export function releaseRpcConnection(_rpcUrl: string, _commitment?: 'processed' | 'confirmed' | 'finalized'): void {
     // No-op - simple RPC creation doesn't require cleanup
 }

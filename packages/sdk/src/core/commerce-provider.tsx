@@ -2,9 +2,9 @@
 
 import React, { useMemo } from 'react';
 import type { ReactNode } from 'react';
-import { ArcClientProvider, useArcClient } from './arc-client-provider';
+import { ArcClientProvider, useArcClient } from './commerce-client-provider';
 import { useConnectorClient } from '@solana-commerce/connector';
-import type { ArcWebClientConfig } from './arc-web-client';
+import type { ArcWebClientConfig } from './web-client';
 import type { QueryClient } from '@tanstack/react-query';
 
 export type ArcProviderProps = {

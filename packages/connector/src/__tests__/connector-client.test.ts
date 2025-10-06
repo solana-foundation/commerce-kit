@@ -22,6 +22,9 @@ const mockWalletsApi = {
     off: vi.fn(),
 };
 
+// Type for mock wallet
+type MockWallet = ReturnType<typeof createMockWallet>;
+
 // Mock wallet with Solana support
 const createMockWallet = (name: string, hasConnect = true, hasDisconnect = true, hasEvents = false) => ({
     name,
@@ -245,7 +248,7 @@ describe('ConnectorClient', () => {
 
     describe('Wallet Connection', () => {
         let client: ConnectorClient;
-        let mockWallet: any;
+        let mockWallet: MockWallet;
 
         beforeEach(() => {
             mockWallet = createMockWallet('Phantom');
@@ -265,7 +268,7 @@ describe('ConnectorClient', () => {
         });
 
         it('should set connecting state during connection', async () => {
-            let resolveConnect: (value: any) => void;
+            let resolveConnect: ((value: { accounts: Array<{ address: string }> }) => void) | undefined;
             const connectPromise = new Promise(resolve => {
                 resolveConnect = resolve;
             });
@@ -279,7 +282,7 @@ describe('ConnectorClient', () => {
             expect(client.getConnectorState().connected).toBe(false);
 
             // Resolve the connection
-            resolveConnect!({
+            resolveConnect?.({
                 accounts: [
                     {
                         address: TEST_ADDRESSES.PHANTOM_ACCOUNT_1,
@@ -328,7 +331,7 @@ describe('ConnectorClient', () => {
 
     describe('Wallet Disconnection', () => {
         let client: ConnectorClient;
-        let mockWallet: any;
+        let mockWallet: MockWallet;
 
         beforeEach(async () => {
             mockWallet = createMockWallet('Phantom');
@@ -377,7 +380,7 @@ describe('ConnectorClient', () => {
 
     describe('Account Management', () => {
         let client: ConnectorClient;
-        let mockWallet: any;
+        let mockWallet: MockWallet;
 
         beforeEach(async () => {
             mockWallet = createMockWallet('Phantom');
@@ -575,9 +578,9 @@ describe('ConnectorClient', () => {
         });
 
         it('should handle wallet change events', async () => {
-            let changeCallback: (properties: any) => void = () => {};
+            let changeCallback: (properties: { accounts: Array<{ address: string }> }) => void = () => {};
             const mockWallet = createMockWallet('Phantom', true, true, true);
-            mockWallet.features['standard:events']?.on.mockImplementation((event: string, callback: any) => {
+            mockWallet.features['standard:events']?.on.mockImplementation((event: string, callback: (properties: { accounts: Array<{ address: string }> }) => void) => {
                 if (event === 'change') {
                     changeCallback = callback;
                 }
@@ -659,7 +662,7 @@ describe('ConnectorClient', () => {
     describe('Cleanup', () => {
         it('should cleanup resources when destroyed', async () => {
             const mockWallet = createMockWallet('Phantom', true, true, true);
-            let eventUnsubscribe = vi.fn();
+            const eventUnsubscribe = vi.fn();
             mockWallet.features['standard:events'].on.mockReturnValue(eventUnsubscribe);
 
             mockWalletsApi.get.mockReturnValue([mockWallet]);

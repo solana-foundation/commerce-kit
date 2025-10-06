@@ -29,3 +29,4 @@ export function DrawerShell({ open, onOpenChange, trigger, children }: DrawerShe
         </Drawer>
     );
 }
+

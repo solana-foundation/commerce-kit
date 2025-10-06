@@ -5,9 +5,9 @@ import { describe, it, expect } from 'vitest';
 
 /**
  * Extract and test the SOL to lamports conversion logic
- * This is the same function from useTransferSOL but exported for testing
+ * This is the same function from useTransferSOL but copied here for testing
  */
-export function convertSOLToLamports(solAmount: string): bigint {
+function convertSOLToLamports(solAmount: string): bigint {
     // Validation: empty or whitespace
     if (!solAmount || !solAmount.trim()) {
         throw new Error('Amount cannot be empty');

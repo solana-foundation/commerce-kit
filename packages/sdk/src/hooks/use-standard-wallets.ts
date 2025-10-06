@@ -3,6 +3,28 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getWallets } from '@wallet-standard/app';
 import type { Wallet } from '@wallet-standard/base';
+
+// Type for wallet account from wallet-standard
+interface WalletAccount {
+    address: string;
+    publicKey?: Uint8Array;
+    chains?: string[];
+    features?: string[];
+    label?: string;
+    icon?: string;
+}
+
+// Type for wallet features with proper indexing
+interface WalletFeatures {
+    [key: string]: unknown;
+    'standard:connect'?: {
+        connect: () => Promise<{ accounts: WalletAccount[] }>;
+    };
+    'solana:signTransaction'?: {
+        signTransaction: (input: { transaction: Uint8Array; account: WalletAccount; chain?: string; options?: unknown }) => Promise<{ signedTransaction: Uint8Array }>;
+    };
+}
+
 import {
     address,
     type Address,
@@ -16,7 +38,7 @@ export class WalletStandardKitSigner {
     readonly address: Address;
 
     constructor(
-        private walletAccount: any,
+        private walletAccount: WalletAccount,
         private wallet: Wallet,
     ) {
         this.address = address(walletAccount.address);
@@ -24,133 +46,129 @@ export class WalletStandardKitSigner {
 
     async modifyAndSignTransactions<T extends Transaction>(
         transactions: readonly T[],
-        config?: any,
+        config?: unknown,
     ): Promise<readonly T[]> {
-        try {
-            const signTransactionFeature = (this.wallet.features as any)['solana:signTransaction'];
-            if (!signTransactionFeature) {
-                throw new Error(`Wallet ${this.wallet.name} does not support transaction signing`);
-            }
+        const signTransactionFeature = (this.wallet.features as WalletFeatures)['solana:signTransaction'];
+        if (!signTransactionFeature) {
+            throw new Error(`Wallet ${this.wallet.name} does not support transaction signing`);
+        }
 
-            const signedTransactions = [];
+        const signedTransactions = [];
 
-            for (const transaction of transactions) {
-                if (transaction.messageBytes instanceof Uint8Array) {
-                    const signaturesCount = 1;
-                    const totalLength = 1 + signaturesCount * 64 + transaction.messageBytes.length;
-                    const serializedTransaction = new Uint8Array(totalLength);
+        for (const transaction of transactions) {
+            if (transaction.messageBytes instanceof Uint8Array) {
+                const signaturesCount = 1;
+                const totalLength = 1 + signaturesCount * 64 + transaction.messageBytes.length;
+                const serializedTransaction = new Uint8Array(totalLength);
 
-                    let offset = 0;
-                    serializedTransaction[offset] = signaturesCount;
-                    offset += 1;
+                let offset = 0;
+                serializedTransaction[offset] = signaturesCount;
+                offset += 1;
 
-                    for (let i = 0; i < signaturesCount; i++) {
-                        serializedTransaction.fill(0, offset, offset + 64);
-                        offset += 64;
-                    }
+                for (let i = 0; i < signaturesCount; i++) {
+                    serializedTransaction.fill(0, offset, offset + 64);
+                    offset += 64;
+                }
 
-                    serializedTransaction.set(transaction.messageBytes, offset);
+                serializedTransaction.set(transaction.messageBytes, offset);
 
-                    const walletResult = await signTransactionFeature.signTransaction({
-                        account: this.walletAccount,
-                        transaction: serializedTransaction,
-                    });
+                const walletResult = await signTransactionFeature.signTransaction({
+                    account: this.walletAccount,
+                    transaction: serializedTransaction,
+                });
 
-                    let signedTransactionBytes: Uint8Array;
+                let signedTransactionBytes: Uint8Array;
 
-                    if (Array.isArray(walletResult)) {
-                        const firstResult = walletResult[0];
-                        if (firstResult?.signedTransaction instanceof Uint8Array) {
-                            signedTransactionBytes = firstResult.signedTransaction;
-                        } else {
-                            throw new Error('Wallet returned invalid array result format');
-                        }
-                    } else if (walletResult?.signedTransaction instanceof Uint8Array) {
-                        signedTransactionBytes = walletResult.signedTransaction;
-                    } else if (walletResult instanceof Uint8Array) {
-                        signedTransactionBytes = walletResult;
+                if (Array.isArray(walletResult)) {
+                    const firstResult = walletResult[0];
+                    if (firstResult?.signedTransaction instanceof Uint8Array) {
+                        signedTransactionBytes = firstResult.signedTransaction;
                     } else {
-                        throw new Error('Wallet returned unexpected signing result format');
+                        throw new Error('Wallet returned invalid array result format');
                     }
+                } else if (walletResult?.signedTransaction instanceof Uint8Array) {
+                    signedTransactionBytes = walletResult.signedTransaction;
+                } else if (walletResult instanceof Uint8Array) {
+                    signedTransactionBytes = walletResult;
+                } else {
+                    throw new Error('Wallet returned unexpected signing result format');
+                }
 
-                    if (signedTransactionBytes.length > 65) {
-                        // Parse the wire format: [signature_count (short-u16)][signatures][message]
-                        let offset = 0;
+                if (signedTransactionBytes.length > 65) {
+                    // Parse the wire format: [signature_count (short-u16)][signatures][message]
+                    let offset = 0;
 
-                        // Read signature count as short-u16 (variable length 1-3 bytes)
-                        let signatureCount = 0;
-                        let byteCount = 0;
-                        const MAX_VARINT_BYTES = 10; // Safety limit for varint decoding
-                        let parseSuccessful = false;
+                    // Read signature count as short-u16 (variable length 1-3 bytes)
+                    let signatureCount = 0;
+                    let byteCount = 0;
+                    const MAX_VARINT_BYTES = 10; // Safety limit for varint decoding
+                    let parseSuccessful = false;
 
-                        while (++byteCount <= MAX_VARINT_BYTES) {
-                            const byteIndex = byteCount - 1;
+                    while (++byteCount <= MAX_VARINT_BYTES) {
+                        const byteIndex = byteCount - 1;
 
-                            // Bounds check: ensure we don't read beyond array bounds
-                            if (offset + byteIndex >= signedTransactionBytes.length) {
-                                throw new Error(
-                                    'Invalid transaction format: signature count extends beyond transaction bytes',
-                                );
-                            }
-
-                            const currentByte = signedTransactionBytes[offset + byteIndex];
-                            if (currentByte === undefined) {
-                                throw new Error(
-                                    'Invalid transaction format: unexpected undefined byte in signature count',
-                                );
-                            }
-
-                            const nextSevenBits = 0b1111111 & currentByte;
-                            signatureCount |= nextSevenBits << (byteIndex * 7);
-
-                            if ((currentByte & 0b10000000) === 0) {
-                                // No continuation bit, we're done
-                                parseSuccessful = true;
-                                break;
-                            }
-                        }
-
-                        if (!parseSuccessful) {
+                        // Bounds check: ensure we don't read beyond array bounds
+                        if (offset + byteIndex >= signedTransactionBytes.length) {
                             throw new Error(
-                                'Invalid transaction format: signature count varint exceeded maximum length or failed to parse',
+                                'Invalid transaction format: signature count extends beyond transaction bytes',
                             );
                         }
 
-                        // Only advance offset after successful parse
-                        offset += byteCount;
+                        const currentByte = signedTransactionBytes[offset + byteIndex];
+                        if (currentByte === undefined) {
+                            throw new Error(
+                                'Invalid transaction format: unexpected undefined byte in signature count',
+                            );
+                        }
 
-                        // Extract the first signature (64 bytes)
-                        const signature = signedTransactionBytes.slice(offset, offset + 64) as SignatureBytes;
+                        const nextSevenBits = 0b1111111 & currentByte;
+                        signatureCount |= nextSevenBits << (byteIndex * 7);
 
-                        // Extract the message bytes (everything after signatures)
-                        const messageStartOffset = offset + signatureCount * 64;
-                        const newMessageBytes = signedTransactionBytes.slice(messageStartOffset) as Uint8Array;
-
-                        // debug log removed
-
-                        // The wallet may have modified the transaction, so we need to use the new message bytes
-                        const signedTransaction = {
-                            ...transaction,
-                            messageBytes: newMessageBytes as unknown as TransactionMessageBytes,
-                            signatures: {
-                                ...transaction.signatures,
-                                [this.address]: signature,
-                            },
-                        } as T;
-
-                        signedTransactions.push(signedTransaction);
-                    } else {
-                        throw new Error('Wallet returned invalid signed transaction format');
+                        if ((currentByte & 0b10000000) === 0) {
+                            // No continuation bit, we're done
+                            parseSuccessful = true;
+                            break;
+                        }
                     }
-                } else {
-                    throw new Error('Transaction messageBytes must be Uint8Array for wallet signing');
-                }
-            }
 
-            return signedTransactions as readonly T[];
-        } catch (error) {
-            throw error;
+                    if (!parseSuccessful) {
+                        throw new Error(
+                            'Invalid transaction format: signature count varint exceeded maximum length or failed to parse',
+                        );
+                    }
+
+                    // Only advance offset after successful parse
+                    offset += byteCount;
+
+                    // Extract the first signature (64 bytes)
+                    const signature = signedTransactionBytes.slice(offset, offset + 64) as SignatureBytes;
+
+                    // Extract the message bytes (everything after signatures)
+                    const messageStartOffset = offset + signatureCount * 64;
+                    const newMessageBytes = signedTransactionBytes.slice(messageStartOffset) as Uint8Array;
+
+                    // debug log removed
+
+                    // The wallet may have modified the transaction, so we need to use the new message bytes
+                    const signedTransaction = {
+                        ...transaction,
+                        messageBytes: newMessageBytes as unknown as TransactionMessageBytes,
+                        signatures: {
+                            ...transaction.signatures,
+                            [this.address]: signature,
+                        },
+                    } as T;
+
+                    signedTransactions.push(signedTransaction);
+                } else {
+                    throw new Error('Wallet returned invalid signed transaction format');
+                }
+                } else {
+                throw new Error('Transaction messageBytes must be Uint8Array for wallet signing');
+                }
         }
+
+        return signedTransactions as readonly T[];
     }
 }
 
@@ -183,7 +201,7 @@ export function useStandardWallets(options: UseStandardWalletsOptions = {}): Use
     const [wallets, setWallets] = useState<StandardWalletInfo[]>([]);
     const [selectedWallet, setSelectedWallet] = useState<Wallet | null>(null);
     const [connecting, setConnecting] = useState(false);
-    const [connectedAccount, setConnectedAccount] = useState<any>(null);
+    const [connectedAccount, setConnectedAccount] = useState<WalletAccount | null>(null);
     const [signer, setSigner] = useState<TransactionSigner | null>(null);
 
     useEffect(() => {
@@ -195,7 +213,7 @@ export function useStandardWallets(options: UseStandardWalletsOptions = {}): Use
             const uniqueWallets = detectedWallets.reduce((acc, wallet) => {
                 const existing = acc.find(w => w.name === wallet.name);
                 if (!existing) {
-                    acc.push(wallet);
+                acc.push(wallet);
                 }
                 return acc;
             }, [] as Wallet[]);
@@ -203,11 +221,11 @@ export function useStandardWallets(options: UseStandardWalletsOptions = {}): Use
             const solanaCompatibleWallets = uniqueWallets.filter(wallet => {
                 const features = Object.keys(wallet.features);
                 const hasSolanaFeatures = features.some(
-                    feature =>
-                        feature.includes('solana') ||
-                        feature.includes('connect') ||
-                        feature.includes('sign') ||
-                        feature.includes('standard'),
+                feature =>
+                    feature.includes('solana') ||
+                    feature.includes('connect') ||
+                    feature.includes('sign') ||
+                    feature.includes('standard'),
                 );
                 return hasSolanaFeatures;
             });
@@ -243,12 +261,12 @@ export function useStandardWallets(options: UseStandardWalletsOptions = {}): Use
 
             setConnecting(true);
 
-            try {
-                const connectFeature = (wallet.features as any)['standard:connect'];
-                if (!connectFeature) {
-                    throw new Error(`Wallet ${walletName} does not support standard connect`);
-                }
+            const connectFeature = (wallet.features as WalletFeatures)['standard:connect'];
+            if (!connectFeature) {
+                throw new Error(`Wallet ${walletName} does not support standard connect`);
+            }
 
+            try {
                 const result = await connectFeature.connect();
                 const account = result.accounts[0];
                 const addressString = account.address;
@@ -258,8 +276,6 @@ export function useStandardWallets(options: UseStandardWalletsOptions = {}): Use
                 setSelectedWallet(wallet);
                 setConnectedAccount(account);
                 setSigner(kitSigner);
-            } catch (error) {
-                throw error;
             } finally {
                 setConnecting(false);
             }
@@ -268,13 +284,9 @@ export function useStandardWallets(options: UseStandardWalletsOptions = {}): Use
     );
 
     const disconnect = useCallback(async () => {
-        try {
-            setSelectedWallet(null);
-            setConnectedAccount(null);
-            setSigner(null);
-        } catch (error) {
-            throw error;
-        }
+        setSelectedWallet(null);
+        setConnectedAccount(null);
+        setSigner(null);
     }, []);
 
     return {
