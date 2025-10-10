@@ -42,17 +42,14 @@ jobs:
       - name: Install dependencies (root)
         run: pnpm install
 
+      - name: Setup Solana CLI
+        run: |
+          sh -c "$(curl -sSfL https://release.solana.com/v1.18.20/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
       - name: Build Solana program
         working-directory: program
-        run: |
-          # Install Solana CLI if not available
-          if ! command -v solana &> /dev/null; then
-            curl -sSfL https://release.solana.com/v1.18.20/install | sh
-            echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-          fi
-
-          # Build program
-          make build
+        run: make build
 
       - name: Generate TypeScript client
         working-directory: program
@@ -95,7 +92,7 @@ jobs:
 
       - name: Setup Solana CLI
         run: |
-          curl -sSfL https://release.solana.com/v1.18.20/install | sh
+          sh -c "$(curl -sSfL https://release.solana.com/v1.18.20/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
       - name: Cache Rust dependencies
