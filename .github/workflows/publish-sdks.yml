@@ -135,14 +135,13 @@ jobs:
       - name: Build Solana program and generate clients
         run: cd program && make build
 
-
       - name: Build Rust client
         working-directory: program/clients/rust
         run: cargo build --release
 
       - name: Publish to crates.io
         working-directory: program/clients/rust
-        run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}
+        run: cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
   publish-sdk-packages:
     if: ${{ startsWith(github.ref, 'refs/tags/') || github.event.inputs.publish_sdk_packages == 'true' }}
@@ -259,7 +258,7 @@ jobs:
             - **Install:** Add to Cargo.toml: `commerce-program-client = "${{ github.ref_name }}"`
 
             ### SDK Packages (TypeScript)
-            
+
             **Core SDK:**
             - `@solana-commerce/connector` - Wallet connector client
             - `@solana-commerce/sdk` - React hooks and utilities
