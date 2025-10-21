@@ -5,793 +5,767 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshSerialize;
 use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 
 pub const REFUND_PAYMENT_DISCRIMINATOR: u8 = 5;
 
 /// Accounts.
 #[derive(Debug)]
 pub struct RefundPayment {
-      
-              
-          pub payer: solana_pubkey::Pubkey,
-                /// Payment PDA being updated
+    pub payer: solana_pubkey::Pubkey,
+    /// Payment PDA being updated
+    pub payment: solana_pubkey::Pubkey,
 
-    
-              
-          pub payment: solana_pubkey::Pubkey,
-          
-              
-          pub operator_authority: solana_pubkey::Pubkey,
-                /// Refund destination owner
+    pub operator_authority: solana_pubkey::Pubkey,
+    /// Refund destination owner
+    pub buyer: solana_pubkey::Pubkey,
+    /// Merchant PDA
+    pub merchant: solana_pubkey::Pubkey,
+    /// Operator PDA
+    pub operator: solana_pubkey::Pubkey,
+    /// Merchant Operator Config PDA
+    pub merchant_operator_config: solana_pubkey::Pubkey,
 
-    
-              
-          pub buyer: solana_pubkey::Pubkey,
-                /// Merchant PDA
+    pub mint: solana_pubkey::Pubkey,
+    /// Merchant Escrow ATA (Merchant PDA is owner)
+    pub merchant_escrow_ata: solana_pubkey::Pubkey,
 
-    
-              
-          pub merchant: solana_pubkey::Pubkey,
-                /// Operator PDA
+    pub buyer_ata: solana_pubkey::Pubkey,
 
-    
-              
-          pub operator: solana_pubkey::Pubkey,
-                /// Merchant Operator Config PDA
+    pub token_program: solana_pubkey::Pubkey,
 
-    
-              
-          pub merchant_operator_config: solana_pubkey::Pubkey,
-          
-              
-          pub mint: solana_pubkey::Pubkey,
-                /// Merchant Escrow ATA (Merchant PDA is owner)
-
-    
-              
-          pub merchant_escrow_ata: solana_pubkey::Pubkey,
-          
-              
-          pub buyer_ata: solana_pubkey::Pubkey,
-          
-              
-          pub token_program: solana_pubkey::Pubkey,
-          
-              
-          pub system_program: solana_pubkey::Pubkey,
-                /// Event authority PDA
-
-    
-              
-          pub event_authority: solana_pubkey::Pubkey,
-                /// Commerce Program ID
-
-    
-              
-          pub commerce_program: solana_pubkey::Pubkey,
-      }
+    pub system_program: solana_pubkey::Pubkey,
+    /// Event authority PDA
+    pub event_authority: solana_pubkey::Pubkey,
+    /// Commerce Program ID
+    pub commerce_program: solana_pubkey::Pubkey,
+}
 
 impl RefundPayment {
-  pub fn instruction(&self) -> solana_instruction::Instruction {
-    self.instruction_with_remaining_accounts(&[])
-  }
-  #[allow(clippy::arithmetic_side_effects)]
-  #[allow(clippy::vec_init_then_push)]
-  pub fn instruction_with_remaining_accounts(&self, remaining_accounts: &[solana_instruction::AccountMeta]) -> solana_instruction::Instruction {
-    let mut accounts = Vec::with_capacity(14+ remaining_accounts.len());
-                            accounts.push(solana_instruction::AccountMeta::new(
-            self.payer,
-            true
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new(
-            self.payment,
-            false
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.operator_authority,
-            true
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.buyer,
-            false
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.merchant,
-            false
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.operator,
-            false
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.merchant_operator_config,
-            false
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.mint,
-            false
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new(
-            self.merchant_escrow_ata,
-            false
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new(
-            self.buyer_ata,
-            false
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.token_program,
-            false
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.system_program,
-            false
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.event_authority,
-            false
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.commerce_program,
-            false
-          ));
-                      accounts.extend_from_slice(remaining_accounts);
-    let data = borsh::to_vec(&RefundPaymentInstructionData::new()).unwrap();
-    
-    solana_instruction::Instruction {
-      program_id: crate::COMMERCE_PROGRAM_ID,
-      accounts,
-      data,
+    pub fn instruction(&self) -> solana_instruction::Instruction {
+        self.instruction_with_remaining_accounts(&[])
     }
-  }
+    #[allow(clippy::arithmetic_side_effects)]
+    #[allow(clippy::vec_init_then_push)]
+    pub fn instruction_with_remaining_accounts(
+        &self,
+        remaining_accounts: &[solana_instruction::AccountMeta],
+    ) -> solana_instruction::Instruction {
+        let mut accounts = Vec::with_capacity(14 + remaining_accounts.len());
+        accounts.push(solana_instruction::AccountMeta::new(self.payer, true));
+        accounts.push(solana_instruction::AccountMeta::new(self.payment, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.operator_authority,
+            true,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.buyer, false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.merchant,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.operator,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.merchant_operator_config,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.mint, false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new(
+            self.merchant_escrow_ata,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new(self.buyer_ata, false));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.token_program,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.system_program,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.event_authority,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            self.commerce_program,
+            false,
+        ));
+        accounts.extend_from_slice(remaining_accounts);
+        let data = borsh::to_vec(&RefundPaymentInstructionData::new()).unwrap();
+
+        solana_instruction::Instruction {
+            program_id: crate::COMMERCE_PROGRAM_ID,
+            accounts,
+            data,
+        }
+    }
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
- pub struct RefundPaymentInstructionData {
-            discriminator: u8,
-      }
+pub struct RefundPaymentInstructionData {
+    discriminator: u8,
+}
 
 impl RefundPaymentInstructionData {
-  pub fn new() -> Self {
-    Self {
-                        discriminator: 5,
-                  }
-  }
+    pub fn new() -> Self {
+        Self { discriminator: 5 }
+    }
 }
 
 impl Default for RefundPaymentInstructionData {
-  fn default() -> Self {
-    Self::new()
-  }
+    fn default() -> Self {
+        Self::new()
+    }
 }
-
-
 
 /// Instruction builder for `RefundPayment`.
 ///
 /// ### Accounts:
 ///
-                      ///   0. `[writable, signer]` payer
-                ///   1. `[writable]` payment
-                ///   2. `[signer]` operator_authority
-          ///   3. `[]` buyer
-          ///   4. `[]` merchant
-          ///   5. `[]` operator
-          ///   6. `[]` merchant_operator_config
-          ///   7. `[]` mint
-                ///   8. `[writable]` merchant_escrow_ata
-                ///   9. `[writable]` buyer_ata
-                ///   10. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
-                ///   11. `[optional]` system_program (default to `11111111111111111111111111111111`)
-                ///   12. `[optional]` event_authority (default to `3VSJP7faqLk6MbCaNtMYc2Y8S8hMXRsZ5cBcwh1fjMH1`)
-                ///   13. `[optional]` commerce_program (default to `commkU28d52cwo2Ma3Marxz4Qr9REtfJtuUfqnDnbhT`)
+///   0. `[writable, signer]` payer
+///   1. `[writable]` payment
+///   2. `[signer]` operator_authority
+///   3. `[]` buyer
+///   4. `[]` merchant
+///   5. `[]` operator
+///   6. `[]` merchant_operator_config
+///   7. `[]` mint
+///   8. `[writable]` merchant_escrow_ata
+///   9. `[writable]` buyer_ata
+///   10. `[optional]` token_program (default to `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`)
+///   11. `[optional]` system_program (default to `11111111111111111111111111111111`)
+///   12. `[optional]` event_authority (default to `3VSJP7faqLk6MbCaNtMYc2Y8S8hMXRsZ5cBcwh1fjMH1`)
+///   13. `[optional]` commerce_program (default to `commkU28d52cwo2Ma3Marxz4Qr9REtfJtuUfqnDnbhT`)
 #[derive(Clone, Debug, Default)]
 pub struct RefundPaymentBuilder {
-            payer: Option<solana_pubkey::Pubkey>,
-                payment: Option<solana_pubkey::Pubkey>,
-                operator_authority: Option<solana_pubkey::Pubkey>,
-                buyer: Option<solana_pubkey::Pubkey>,
-                merchant: Option<solana_pubkey::Pubkey>,
-                operator: Option<solana_pubkey::Pubkey>,
-                merchant_operator_config: Option<solana_pubkey::Pubkey>,
-                mint: Option<solana_pubkey::Pubkey>,
-                merchant_escrow_ata: Option<solana_pubkey::Pubkey>,
-                buyer_ata: Option<solana_pubkey::Pubkey>,
-                token_program: Option<solana_pubkey::Pubkey>,
-                system_program: Option<solana_pubkey::Pubkey>,
-                event_authority: Option<solana_pubkey::Pubkey>,
-                commerce_program: Option<solana_pubkey::Pubkey>,
-                __remaining_accounts: Vec<solana_instruction::AccountMeta>,
+    payer: Option<solana_pubkey::Pubkey>,
+    payment: Option<solana_pubkey::Pubkey>,
+    operator_authority: Option<solana_pubkey::Pubkey>,
+    buyer: Option<solana_pubkey::Pubkey>,
+    merchant: Option<solana_pubkey::Pubkey>,
+    operator: Option<solana_pubkey::Pubkey>,
+    merchant_operator_config: Option<solana_pubkey::Pubkey>,
+    mint: Option<solana_pubkey::Pubkey>,
+    merchant_escrow_ata: Option<solana_pubkey::Pubkey>,
+    buyer_ata: Option<solana_pubkey::Pubkey>,
+    token_program: Option<solana_pubkey::Pubkey>,
+    system_program: Option<solana_pubkey::Pubkey>,
+    event_authority: Option<solana_pubkey::Pubkey>,
+    commerce_program: Option<solana_pubkey::Pubkey>,
+    __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
 impl RefundPaymentBuilder {
-  pub fn new() -> Self {
-    Self::default()
-  }
-            #[inline(always)]
+    pub fn new() -> Self {
+        Self::default()
+    }
+    #[inline(always)]
     pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
-                        self.payer = Some(payer);
-                    self
+        self.payer = Some(payer);
+        self
     }
-            /// Payment PDA being updated
-#[inline(always)]
+    /// Payment PDA being updated
+    #[inline(always)]
     pub fn payment(&mut self, payment: solana_pubkey::Pubkey) -> &mut Self {
-                        self.payment = Some(payment);
-                    self
+        self.payment = Some(payment);
+        self
     }
-            #[inline(always)]
+    #[inline(always)]
     pub fn operator_authority(&mut self, operator_authority: solana_pubkey::Pubkey) -> &mut Self {
-                        self.operator_authority = Some(operator_authority);
-                    self
+        self.operator_authority = Some(operator_authority);
+        self
     }
-            /// Refund destination owner
-#[inline(always)]
+    /// Refund destination owner
+    #[inline(always)]
     pub fn buyer(&mut self, buyer: solana_pubkey::Pubkey) -> &mut Self {
-                        self.buyer = Some(buyer);
-                    self
+        self.buyer = Some(buyer);
+        self
     }
-            /// Merchant PDA
-#[inline(always)]
+    /// Merchant PDA
+    #[inline(always)]
     pub fn merchant(&mut self, merchant: solana_pubkey::Pubkey) -> &mut Self {
-                        self.merchant = Some(merchant);
-                    self
+        self.merchant = Some(merchant);
+        self
     }
-            /// Operator PDA
-#[inline(always)]
+    /// Operator PDA
+    #[inline(always)]
     pub fn operator(&mut self, operator: solana_pubkey::Pubkey) -> &mut Self {
-                        self.operator = Some(operator);
-                    self
+        self.operator = Some(operator);
+        self
     }
-            /// Merchant Operator Config PDA
-#[inline(always)]
-    pub fn merchant_operator_config(&mut self, merchant_operator_config: solana_pubkey::Pubkey) -> &mut Self {
-                        self.merchant_operator_config = Some(merchant_operator_config);
-                    self
+    /// Merchant Operator Config PDA
+    #[inline(always)]
+    pub fn merchant_operator_config(
+        &mut self,
+        merchant_operator_config: solana_pubkey::Pubkey,
+    ) -> &mut Self {
+        self.merchant_operator_config = Some(merchant_operator_config);
+        self
     }
-            #[inline(always)]
+    #[inline(always)]
     pub fn mint(&mut self, mint: solana_pubkey::Pubkey) -> &mut Self {
-                        self.mint = Some(mint);
-                    self
+        self.mint = Some(mint);
+        self
     }
-            /// Merchant Escrow ATA (Merchant PDA is owner)
-#[inline(always)]
+    /// Merchant Escrow ATA (Merchant PDA is owner)
+    #[inline(always)]
     pub fn merchant_escrow_ata(&mut self, merchant_escrow_ata: solana_pubkey::Pubkey) -> &mut Self {
-                        self.merchant_escrow_ata = Some(merchant_escrow_ata);
-                    self
+        self.merchant_escrow_ata = Some(merchant_escrow_ata);
+        self
     }
-            #[inline(always)]
+    #[inline(always)]
     pub fn buyer_ata(&mut self, buyer_ata: solana_pubkey::Pubkey) -> &mut Self {
-                        self.buyer_ata = Some(buyer_ata);
-                    self
+        self.buyer_ata = Some(buyer_ata);
+        self
     }
-            /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
-#[inline(always)]
+    /// `[optional account, default to 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA']`
+    #[inline(always)]
     pub fn token_program(&mut self, token_program: solana_pubkey::Pubkey) -> &mut Self {
-                        self.token_program = Some(token_program);
-                    self
+        self.token_program = Some(token_program);
+        self
     }
-            /// `[optional account, default to '11111111111111111111111111111111']`
-#[inline(always)]
+    /// `[optional account, default to '11111111111111111111111111111111']`
+    #[inline(always)]
     pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
-                        self.system_program = Some(system_program);
-                    self
+        self.system_program = Some(system_program);
+        self
     }
-            /// `[optional account, default to '3VSJP7faqLk6MbCaNtMYc2Y8S8hMXRsZ5cBcwh1fjMH1']`
-/// Event authority PDA
-#[inline(always)]
+    /// `[optional account, default to '3VSJP7faqLk6MbCaNtMYc2Y8S8hMXRsZ5cBcwh1fjMH1']`
+    /// Event authority PDA
+    #[inline(always)]
     pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
-                        self.event_authority = Some(event_authority);
-                    self
+        self.event_authority = Some(event_authority);
+        self
     }
-            /// `[optional account, default to 'commkU28d52cwo2Ma3Marxz4Qr9REtfJtuUfqnDnbhT']`
-/// Commerce Program ID
-#[inline(always)]
+    /// `[optional account, default to 'commkU28d52cwo2Ma3Marxz4Qr9REtfJtuUfqnDnbhT']`
+    /// Commerce Program ID
+    #[inline(always)]
     pub fn commerce_program(&mut self, commerce_program: solana_pubkey::Pubkey) -> &mut Self {
-                        self.commerce_program = Some(commerce_program);
-                    self
+        self.commerce_program = Some(commerce_program);
+        self
     }
-            /// Add an additional account to the instruction.
-  #[inline(always)]
-  pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
-    self.__remaining_accounts.push(account);
-    self
-  }
-  /// Add additional accounts to the instruction.
-  #[inline(always)]
-  pub fn add_remaining_accounts(&mut self, accounts: &[solana_instruction::AccountMeta]) -> &mut Self {
-    self.__remaining_accounts.extend_from_slice(accounts);
-    self
-  }
-  #[allow(clippy::clone_on_copy)]
-  pub fn instruction(&self) -> solana_instruction::Instruction {
-    let accounts = RefundPayment {
-                              payer: self.payer.expect("payer is not set"),
-                                        payment: self.payment.expect("payment is not set"),
-                                        operator_authority: self.operator_authority.expect("operator_authority is not set"),
-                                        buyer: self.buyer.expect("buyer is not set"),
-                                        merchant: self.merchant.expect("merchant is not set"),
-                                        operator: self.operator.expect("operator is not set"),
-                                        merchant_operator_config: self.merchant_operator_config.expect("merchant_operator_config is not set"),
-                                        mint: self.mint.expect("mint is not set"),
-                                        merchant_escrow_ata: self.merchant_escrow_ata.expect("merchant_escrow_ata is not set"),
-                                        buyer_ata: self.buyer_ata.expect("buyer_ata is not set"),
-                                        token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")),
-                                        system_program: self.system_program.unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
-                                        event_authority: self.event_authority.unwrap_or(solana_pubkey::pubkey!("3VSJP7faqLk6MbCaNtMYc2Y8S8hMXRsZ5cBcwh1fjMH1")),
-                                        commerce_program: self.commerce_program.unwrap_or(solana_pubkey::pubkey!("commkU28d52cwo2Ma3Marxz4Qr9REtfJtuUfqnDnbhT")),
-                      };
-    
-    accounts.instruction_with_remaining_accounts(&self.__remaining_accounts)
-  }
+    /// Add an additional account to the instruction.
+    #[inline(always)]
+    pub fn add_remaining_account(&mut self, account: solana_instruction::AccountMeta) -> &mut Self {
+        self.__remaining_accounts.push(account);
+        self
+    }
+    /// Add additional accounts to the instruction.
+    #[inline(always)]
+    pub fn add_remaining_accounts(
+        &mut self,
+        accounts: &[solana_instruction::AccountMeta],
+    ) -> &mut Self {
+        self.__remaining_accounts.extend_from_slice(accounts);
+        self
+    }
+    #[allow(clippy::clone_on_copy)]
+    pub fn instruction(&self) -> solana_instruction::Instruction {
+        let accounts = RefundPayment {
+            payer: self.payer.expect("payer is not set"),
+            payment: self.payment.expect("payment is not set"),
+            operator_authority: self
+                .operator_authority
+                .expect("operator_authority is not set"),
+            buyer: self.buyer.expect("buyer is not set"),
+            merchant: self.merchant.expect("merchant is not set"),
+            operator: self.operator.expect("operator is not set"),
+            merchant_operator_config: self
+                .merchant_operator_config
+                .expect("merchant_operator_config is not set"),
+            mint: self.mint.expect("mint is not set"),
+            merchant_escrow_ata: self
+                .merchant_escrow_ata
+                .expect("merchant_escrow_ata is not set"),
+            buyer_ata: self.buyer_ata.expect("buyer_ata is not set"),
+            token_program: self.token_program.unwrap_or(solana_pubkey::pubkey!(
+                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+            )),
+            system_program: self
+                .system_program
+                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
+            event_authority: self.event_authority.unwrap_or(solana_pubkey::pubkey!(
+                "3VSJP7faqLk6MbCaNtMYc2Y8S8hMXRsZ5cBcwh1fjMH1"
+            )),
+            commerce_program: self.commerce_program.unwrap_or(solana_pubkey::pubkey!(
+                "commkU28d52cwo2Ma3Marxz4Qr9REtfJtuUfqnDnbhT"
+            )),
+        };
+
+        accounts.instruction_with_remaining_accounts(&self.__remaining_accounts)
+    }
 }
 
-  /// `refund_payment` CPI accounts.
-  pub struct RefundPaymentCpiAccounts<'a, 'b> {
-          
-                    
-              pub payer: &'b solana_account_info::AccountInfo<'a>,
-                        /// Payment PDA being updated
+/// `refund_payment` CPI accounts.
+pub struct RefundPaymentCpiAccounts<'a, 'b> {
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
+    /// Payment PDA being updated
+    pub payment: &'b solana_account_info::AccountInfo<'a>,
 
-      
-                    
-              pub payment: &'b solana_account_info::AccountInfo<'a>,
-                
-                    
-              pub operator_authority: &'b solana_account_info::AccountInfo<'a>,
-                        /// Refund destination owner
+    pub operator_authority: &'b solana_account_info::AccountInfo<'a>,
+    /// Refund destination owner
+    pub buyer: &'b solana_account_info::AccountInfo<'a>,
+    /// Merchant PDA
+    pub merchant: &'b solana_account_info::AccountInfo<'a>,
+    /// Operator PDA
+    pub operator: &'b solana_account_info::AccountInfo<'a>,
+    /// Merchant Operator Config PDA
+    pub merchant_operator_config: &'b solana_account_info::AccountInfo<'a>,
 
-      
-                    
-              pub buyer: &'b solana_account_info::AccountInfo<'a>,
-                        /// Merchant PDA
+    pub mint: &'b solana_account_info::AccountInfo<'a>,
+    /// Merchant Escrow ATA (Merchant PDA is owner)
+    pub merchant_escrow_ata: &'b solana_account_info::AccountInfo<'a>,
 
-      
-                    
-              pub merchant: &'b solana_account_info::AccountInfo<'a>,
-                        /// Operator PDA
+    pub buyer_ata: &'b solana_account_info::AccountInfo<'a>,
 
-      
-                    
-              pub operator: &'b solana_account_info::AccountInfo<'a>,
-                        /// Merchant Operator Config PDA
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-      
-                    
-              pub merchant_operator_config: &'b solana_account_info::AccountInfo<'a>,
-                
-                    
-              pub mint: &'b solana_account_info::AccountInfo<'a>,
-                        /// Merchant Escrow ATA (Merchant PDA is owner)
-
-      
-                    
-              pub merchant_escrow_ata: &'b solana_account_info::AccountInfo<'a>,
-                
-                    
-              pub buyer_ata: &'b solana_account_info::AccountInfo<'a>,
-                
-                    
-              pub token_program: &'b solana_account_info::AccountInfo<'a>,
-                
-                    
-              pub system_program: &'b solana_account_info::AccountInfo<'a>,
-                        /// Event authority PDA
-
-      
-                    
-              pub event_authority: &'b solana_account_info::AccountInfo<'a>,
-                        /// Commerce Program ID
-
-      
-                    
-              pub commerce_program: &'b solana_account_info::AccountInfo<'a>,
-            }
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
+    /// Event authority PDA
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
+    /// Commerce Program ID
+    pub commerce_program: &'b solana_account_info::AccountInfo<'a>,
+}
 
 /// `refund_payment` CPI instruction.
 pub struct RefundPaymentCpi<'a, 'b> {
-  /// The program to invoke.
-  pub __program: &'b solana_account_info::AccountInfo<'a>,
-      
-              
-          pub payer: &'b solana_account_info::AccountInfo<'a>,
-                /// Payment PDA being updated
+    /// The program to invoke.
+    pub __program: &'b solana_account_info::AccountInfo<'a>,
 
-    
-              
-          pub payment: &'b solana_account_info::AccountInfo<'a>,
-          
-              
-          pub operator_authority: &'b solana_account_info::AccountInfo<'a>,
-                /// Refund destination owner
+    pub payer: &'b solana_account_info::AccountInfo<'a>,
+    /// Payment PDA being updated
+    pub payment: &'b solana_account_info::AccountInfo<'a>,
 
-    
-              
-          pub buyer: &'b solana_account_info::AccountInfo<'a>,
-                /// Merchant PDA
+    pub operator_authority: &'b solana_account_info::AccountInfo<'a>,
+    /// Refund destination owner
+    pub buyer: &'b solana_account_info::AccountInfo<'a>,
+    /// Merchant PDA
+    pub merchant: &'b solana_account_info::AccountInfo<'a>,
+    /// Operator PDA
+    pub operator: &'b solana_account_info::AccountInfo<'a>,
+    /// Merchant Operator Config PDA
+    pub merchant_operator_config: &'b solana_account_info::AccountInfo<'a>,
 
-    
-              
-          pub merchant: &'b solana_account_info::AccountInfo<'a>,
-                /// Operator PDA
+    pub mint: &'b solana_account_info::AccountInfo<'a>,
+    /// Merchant Escrow ATA (Merchant PDA is owner)
+    pub merchant_escrow_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    
-              
-          pub operator: &'b solana_account_info::AccountInfo<'a>,
-                /// Merchant Operator Config PDA
+    pub buyer_ata: &'b solana_account_info::AccountInfo<'a>,
 
-    
-              
-          pub merchant_operator_config: &'b solana_account_info::AccountInfo<'a>,
-          
-              
-          pub mint: &'b solana_account_info::AccountInfo<'a>,
-                /// Merchant Escrow ATA (Merchant PDA is owner)
+    pub token_program: &'b solana_account_info::AccountInfo<'a>,
 
-    
-              
-          pub merchant_escrow_ata: &'b solana_account_info::AccountInfo<'a>,
-          
-              
-          pub buyer_ata: &'b solana_account_info::AccountInfo<'a>,
-          
-              
-          pub token_program: &'b solana_account_info::AccountInfo<'a>,
-          
-              
-          pub system_program: &'b solana_account_info::AccountInfo<'a>,
-                /// Event authority PDA
-
-    
-              
-          pub event_authority: &'b solana_account_info::AccountInfo<'a>,
-                /// Commerce Program ID
-
-    
-              
-          pub commerce_program: &'b solana_account_info::AccountInfo<'a>,
-        }
+    pub system_program: &'b solana_account_info::AccountInfo<'a>,
+    /// Event authority PDA
+    pub event_authority: &'b solana_account_info::AccountInfo<'a>,
+    /// Commerce Program ID
+    pub commerce_program: &'b solana_account_info::AccountInfo<'a>,
+}
 
 impl<'a, 'b> RefundPaymentCpi<'a, 'b> {
-  pub fn new(
-    program: &'b solana_account_info::AccountInfo<'a>,
-          accounts: RefundPaymentCpiAccounts<'a, 'b>,
-          ) -> Self {
-    Self {
-      __program: program,
-              payer: accounts.payer,
-              payment: accounts.payment,
-              operator_authority: accounts.operator_authority,
-              buyer: accounts.buyer,
-              merchant: accounts.merchant,
-              operator: accounts.operator,
-              merchant_operator_config: accounts.merchant_operator_config,
-              mint: accounts.mint,
-              merchant_escrow_ata: accounts.merchant_escrow_ata,
-              buyer_ata: accounts.buyer_ata,
-              token_program: accounts.token_program,
-              system_program: accounts.system_program,
-              event_authority: accounts.event_authority,
-              commerce_program: accounts.commerce_program,
-                }
-  }
-  #[inline(always)]
-  pub fn invoke(&self) -> solana_program_error::ProgramResult {
-    self.invoke_signed_with_remaining_accounts(&[], &[])
-  }
-  #[inline(always)]
-  pub fn invoke_with_remaining_accounts(&self, remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)]) -> solana_program_error::ProgramResult {
-    self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
-  }
-  #[inline(always)]
-  pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
-    self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
-  }
-  #[allow(clippy::arithmetic_side_effects)]
-  #[allow(clippy::clone_on_copy)]
-  #[allow(clippy::vec_init_then_push)]
-  pub fn invoke_signed_with_remaining_accounts(
-    &self,
-    signers_seeds: &[&[&[u8]]],
-    remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)]
-  ) -> solana_program_error::ProgramResult {
-    let mut accounts = Vec::with_capacity(14+ remaining_accounts.len());
-                            accounts.push(solana_instruction::AccountMeta::new(
-            *self.payer.key,
-            true
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new(
-            *self.payment.key,
-            false
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.operator_authority.key,
-            true
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.buyer.key,
-            false
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.merchant.key,
-            false
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.operator.key,
-            false
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.merchant_operator_config.key,
-            false
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.mint.key,
-            false
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new(
-            *self.merchant_escrow_ata.key,
-            false
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new(
-            *self.buyer_ata.key,
-            false
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.token_program.key,
-            false
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.system_program.key,
-            false
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.event_authority.key,
-            false
-          ));
-                                          accounts.push(solana_instruction::AccountMeta::new_readonly(
-            *self.commerce_program.key,
-            false
-          ));
-                      remaining_accounts.iter().for_each(|remaining_account| {
-      accounts.push(solana_instruction::AccountMeta {
-          pubkey: *remaining_account.0.key,
-          is_signer: remaining_account.1,
-          is_writable: remaining_account.2,
-      })
-    });
-    let data = borsh::to_vec(&RefundPaymentInstructionData::new()).unwrap();
-    
-    let instruction = solana_instruction::Instruction {
-      program_id: crate::COMMERCE_PROGRAM_ID,
-      accounts,
-      data,
-    };
-    let mut account_infos = Vec::with_capacity(15 + remaining_accounts.len());
-    account_infos.push(self.__program.clone());
-                  account_infos.push(self.payer.clone());
-                        account_infos.push(self.payment.clone());
-                        account_infos.push(self.operator_authority.clone());
-                        account_infos.push(self.buyer.clone());
-                        account_infos.push(self.merchant.clone());
-                        account_infos.push(self.operator.clone());
-                        account_infos.push(self.merchant_operator_config.clone());
-                        account_infos.push(self.mint.clone());
-                        account_infos.push(self.merchant_escrow_ata.clone());
-                        account_infos.push(self.buyer_ata.clone());
-                        account_infos.push(self.token_program.clone());
-                        account_infos.push(self.system_program.clone());
-                        account_infos.push(self.event_authority.clone());
-                        account_infos.push(self.commerce_program.clone());
-              remaining_accounts.iter().for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
-
-    if signers_seeds.is_empty() {
-      solana_cpi::invoke(&instruction, &account_infos)
-    } else {
-      solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
+    pub fn new(
+        program: &'b solana_account_info::AccountInfo<'a>,
+        accounts: RefundPaymentCpiAccounts<'a, 'b>,
+    ) -> Self {
+        Self {
+            __program: program,
+            payer: accounts.payer,
+            payment: accounts.payment,
+            operator_authority: accounts.operator_authority,
+            buyer: accounts.buyer,
+            merchant: accounts.merchant,
+            operator: accounts.operator,
+            merchant_operator_config: accounts.merchant_operator_config,
+            mint: accounts.mint,
+            merchant_escrow_ata: accounts.merchant_escrow_ata,
+            buyer_ata: accounts.buyer_ata,
+            token_program: accounts.token_program,
+            system_program: accounts.system_program,
+            event_authority: accounts.event_authority,
+            commerce_program: accounts.commerce_program,
+        }
     }
-  }
+    #[inline(always)]
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
+        self.invoke_signed_with_remaining_accounts(&[], &[])
+    }
+    #[inline(always)]
+    pub fn invoke_with_remaining_accounts(
+        &self,
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_error::ProgramResult {
+        self.invoke_signed_with_remaining_accounts(&[], remaining_accounts)
+    }
+    #[inline(always)]
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
+        self.invoke_signed_with_remaining_accounts(signers_seeds, &[])
+    }
+    #[allow(clippy::arithmetic_side_effects)]
+    #[allow(clippy::clone_on_copy)]
+    #[allow(clippy::vec_init_then_push)]
+    pub fn invoke_signed_with_remaining_accounts(
+        &self,
+        signers_seeds: &[&[&[u8]]],
+        remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> solana_program_error::ProgramResult {
+        let mut accounts = Vec::with_capacity(14 + remaining_accounts.len());
+        accounts.push(solana_instruction::AccountMeta::new(*self.payer.key, true));
+        accounts.push(solana_instruction::AccountMeta::new(
+            *self.payment.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.operator_authority.key,
+            true,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.buyer.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.merchant.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.operator.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.merchant_operator_config.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.mint.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new(
+            *self.merchant_escrow_ata.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new(
+            *self.buyer_ata.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.token_program.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.system_program.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.event_authority.key,
+            false,
+        ));
+        accounts.push(solana_instruction::AccountMeta::new_readonly(
+            *self.commerce_program.key,
+            false,
+        ));
+        remaining_accounts.iter().for_each(|remaining_account| {
+            accounts.push(solana_instruction::AccountMeta {
+                pubkey: *remaining_account.0.key,
+                is_signer: remaining_account.1,
+                is_writable: remaining_account.2,
+            })
+        });
+        let data = borsh::to_vec(&RefundPaymentInstructionData::new()).unwrap();
+
+        let instruction = solana_instruction::Instruction {
+            program_id: crate::COMMERCE_PROGRAM_ID,
+            accounts,
+            data,
+        };
+        let mut account_infos = Vec::with_capacity(15 + remaining_accounts.len());
+        account_infos.push(self.__program.clone());
+        account_infos.push(self.payer.clone());
+        account_infos.push(self.payment.clone());
+        account_infos.push(self.operator_authority.clone());
+        account_infos.push(self.buyer.clone());
+        account_infos.push(self.merchant.clone());
+        account_infos.push(self.operator.clone());
+        account_infos.push(self.merchant_operator_config.clone());
+        account_infos.push(self.mint.clone());
+        account_infos.push(self.merchant_escrow_ata.clone());
+        account_infos.push(self.buyer_ata.clone());
+        account_infos.push(self.token_program.clone());
+        account_infos.push(self.system_program.clone());
+        account_infos.push(self.event_authority.clone());
+        account_infos.push(self.commerce_program.clone());
+        remaining_accounts
+            .iter()
+            .for_each(|remaining_account| account_infos.push(remaining_account.0.clone()));
+
+        if signers_seeds.is_empty() {
+            solana_cpi::invoke(&instruction, &account_infos)
+        } else {
+            solana_cpi::invoke_signed(&instruction, &account_infos, signers_seeds)
+        }
+    }
 }
 
 /// Instruction builder for `RefundPayment` via CPI.
 ///
 /// ### Accounts:
 ///
-                      ///   0. `[writable, signer]` payer
-                ///   1. `[writable]` payment
-                ///   2. `[signer]` operator_authority
-          ///   3. `[]` buyer
-          ///   4. `[]` merchant
-          ///   5. `[]` operator
-          ///   6. `[]` merchant_operator_config
-          ///   7. `[]` mint
-                ///   8. `[writable]` merchant_escrow_ata
-                ///   9. `[writable]` buyer_ata
-          ///   10. `[]` token_program
-          ///   11. `[]` system_program
-          ///   12. `[]` event_authority
-          ///   13. `[]` commerce_program
+///   0. `[writable, signer]` payer
+///   1. `[writable]` payment
+///   2. `[signer]` operator_authority
+///   3. `[]` buyer
+///   4. `[]` merchant
+///   5. `[]` operator
+///   6. `[]` merchant_operator_config
+///   7. `[]` mint
+///   8. `[writable]` merchant_escrow_ata
+///   9. `[writable]` buyer_ata
+///   10. `[]` token_program
+///   11. `[]` system_program
+///   12. `[]` event_authority
+///   13. `[]` commerce_program
 #[derive(Clone, Debug)]
 pub struct RefundPaymentCpiBuilder<'a, 'b> {
-  instruction: Box<RefundPaymentCpiBuilderInstruction<'a, 'b>>,
+    instruction: Box<RefundPaymentCpiBuilderInstruction<'a, 'b>>,
 }
 
 impl<'a, 'b> RefundPaymentCpiBuilder<'a, 'b> {
-  pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
-    let instruction = Box::new(RefundPaymentCpiBuilderInstruction {
-      __program: program,
-              payer: None,
-              payment: None,
-              operator_authority: None,
-              buyer: None,
-              merchant: None,
-              operator: None,
-              merchant_operator_config: None,
-              mint: None,
-              merchant_escrow_ata: None,
-              buyer_ata: None,
-              token_program: None,
-              system_program: None,
-              event_authority: None,
-              commerce_program: None,
-                                __remaining_accounts: Vec::new(),
-    });
-    Self { instruction }
-  }
-      #[inline(always)]
+    pub fn new(program: &'b solana_account_info::AccountInfo<'a>) -> Self {
+        let instruction = Box::new(RefundPaymentCpiBuilderInstruction {
+            __program: program,
+            payer: None,
+            payment: None,
+            operator_authority: None,
+            buyer: None,
+            merchant: None,
+            operator: None,
+            merchant_operator_config: None,
+            mint: None,
+            merchant_escrow_ata: None,
+            buyer_ata: None,
+            token_program: None,
+            system_program: None,
+            event_authority: None,
+            commerce_program: None,
+            __remaining_accounts: Vec::new(),
+        });
+        Self { instruction }
+    }
+    #[inline(always)]
     pub fn payer(&mut self, payer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-                        self.instruction.payer = Some(payer);
-                    self
+        self.instruction.payer = Some(payer);
+        self
     }
-      /// Payment PDA being updated
-#[inline(always)]
+    /// Payment PDA being updated
+    #[inline(always)]
     pub fn payment(&mut self, payment: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-                        self.instruction.payment = Some(payment);
-                    self
+        self.instruction.payment = Some(payment);
+        self
     }
-      #[inline(always)]
-    pub fn operator_authority(&mut self, operator_authority: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-                        self.instruction.operator_authority = Some(operator_authority);
-                    self
+    #[inline(always)]
+    pub fn operator_authority(
+        &mut self,
+        operator_authority: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.operator_authority = Some(operator_authority);
+        self
     }
-      /// Refund destination owner
-#[inline(always)]
+    /// Refund destination owner
+    #[inline(always)]
     pub fn buyer(&mut self, buyer: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-                        self.instruction.buyer = Some(buyer);
-                    self
+        self.instruction.buyer = Some(buyer);
+        self
     }
-      /// Merchant PDA
-#[inline(always)]
+    /// Merchant PDA
+    #[inline(always)]
     pub fn merchant(&mut self, merchant: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-                        self.instruction.merchant = Some(merchant);
-                    self
+        self.instruction.merchant = Some(merchant);
+        self
     }
-      /// Operator PDA
-#[inline(always)]
+    /// Operator PDA
+    #[inline(always)]
     pub fn operator(&mut self, operator: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-                        self.instruction.operator = Some(operator);
-                    self
+        self.instruction.operator = Some(operator);
+        self
     }
-      /// Merchant Operator Config PDA
-#[inline(always)]
-    pub fn merchant_operator_config(&mut self, merchant_operator_config: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-                        self.instruction.merchant_operator_config = Some(merchant_operator_config);
-                    self
+    /// Merchant Operator Config PDA
+    #[inline(always)]
+    pub fn merchant_operator_config(
+        &mut self,
+        merchant_operator_config: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.merchant_operator_config = Some(merchant_operator_config);
+        self
     }
-      #[inline(always)]
+    #[inline(always)]
     pub fn mint(&mut self, mint: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-                        self.instruction.mint = Some(mint);
-                    self
+        self.instruction.mint = Some(mint);
+        self
     }
-      /// Merchant Escrow ATA (Merchant PDA is owner)
-#[inline(always)]
-    pub fn merchant_escrow_ata(&mut self, merchant_escrow_ata: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-                        self.instruction.merchant_escrow_ata = Some(merchant_escrow_ata);
-                    self
+    /// Merchant Escrow ATA (Merchant PDA is owner)
+    #[inline(always)]
+    pub fn merchant_escrow_ata(
+        &mut self,
+        merchant_escrow_ata: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.merchant_escrow_ata = Some(merchant_escrow_ata);
+        self
     }
-      #[inline(always)]
+    #[inline(always)]
     pub fn buyer_ata(&mut self, buyer_ata: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-                        self.instruction.buyer_ata = Some(buyer_ata);
-                    self
+        self.instruction.buyer_ata = Some(buyer_ata);
+        self
     }
-      #[inline(always)]
-    pub fn token_program(&mut self, token_program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-                        self.instruction.token_program = Some(token_program);
-                    self
+    #[inline(always)]
+    pub fn token_program(
+        &mut self,
+        token_program: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.token_program = Some(token_program);
+        self
     }
-      #[inline(always)]
-    pub fn system_program(&mut self, system_program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-                        self.instruction.system_program = Some(system_program);
-                    self
+    #[inline(always)]
+    pub fn system_program(
+        &mut self,
+        system_program: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.system_program = Some(system_program);
+        self
     }
-      /// Event authority PDA
-#[inline(always)]
-    pub fn event_authority(&mut self, event_authority: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-                        self.instruction.event_authority = Some(event_authority);
-                    self
+    /// Event authority PDA
+    #[inline(always)]
+    pub fn event_authority(
+        &mut self,
+        event_authority: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.event_authority = Some(event_authority);
+        self
     }
-      /// Commerce Program ID
-#[inline(always)]
-    pub fn commerce_program(&mut self, commerce_program: &'b solana_account_info::AccountInfo<'a>) -> &mut Self {
-                        self.instruction.commerce_program = Some(commerce_program);
-                    self
+    /// Commerce Program ID
+    #[inline(always)]
+    pub fn commerce_program(
+        &mut self,
+        commerce_program: &'b solana_account_info::AccountInfo<'a>,
+    ) -> &mut Self {
+        self.instruction.commerce_program = Some(commerce_program);
+        self
     }
-            /// Add an additional account to the instruction.
-  #[inline(always)]
-  pub fn add_remaining_account(&mut self, account: &'b solana_account_info::AccountInfo<'a>, is_writable: bool, is_signer: bool) -> &mut Self {
-    self.instruction.__remaining_accounts.push((account, is_writable, is_signer));
-    self
-  }
-  /// Add additional accounts to the instruction.
-  ///
-  /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
-  /// and a `bool` indicating whether the account is a signer or not.
-  #[inline(always)]
-  pub fn add_remaining_accounts(&mut self, accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)]) -> &mut Self {
-    self.instruction.__remaining_accounts.extend_from_slice(accounts);
-    self
-  }
-  #[inline(always)]
-  pub fn invoke(&self) -> solana_program_error::ProgramResult {
-    self.invoke_signed(&[])
-  }
-  #[allow(clippy::clone_on_copy)]
-  #[allow(clippy::vec_init_then_push)]
-  pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
+    /// Add an additional account to the instruction.
+    #[inline(always)]
+    pub fn add_remaining_account(
+        &mut self,
+        account: &'b solana_account_info::AccountInfo<'a>,
+        is_writable: bool,
+        is_signer: bool,
+    ) -> &mut Self {
+        self.instruction
+            .__remaining_accounts
+            .push((account, is_writable, is_signer));
+        self
+    }
+    /// Add additional accounts to the instruction.
+    ///
+    /// Each account is represented by a tuple of the `AccountInfo`, a `bool` indicating whether the account is writable or not,
+    /// and a `bool` indicating whether the account is a signer or not.
+    #[inline(always)]
+    pub fn add_remaining_accounts(
+        &mut self,
+        accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
+    ) -> &mut Self {
+        self.instruction
+            .__remaining_accounts
+            .extend_from_slice(accounts);
+        self
+    }
+    #[inline(always)]
+    pub fn invoke(&self) -> solana_program_error::ProgramResult {
+        self.invoke_signed(&[])
+    }
+    #[allow(clippy::clone_on_copy)]
+    #[allow(clippy::vec_init_then_push)]
+    pub fn invoke_signed(&self, signers_seeds: &[&[&[u8]]]) -> solana_program_error::ProgramResult {
         let instruction = RefundPaymentCpi {
-        __program: self.instruction.__program,
-                  
-          payer: self.instruction.payer.expect("payer is not set"),
-                  
-          payment: self.instruction.payment.expect("payment is not set"),
-                  
-          operator_authority: self.instruction.operator_authority.expect("operator_authority is not set"),
-                  
-          buyer: self.instruction.buyer.expect("buyer is not set"),
-                  
-          merchant: self.instruction.merchant.expect("merchant is not set"),
-                  
-          operator: self.instruction.operator.expect("operator is not set"),
-                  
-          merchant_operator_config: self.instruction.merchant_operator_config.expect("merchant_operator_config is not set"),
-                  
-          mint: self.instruction.mint.expect("mint is not set"),
-                  
-          merchant_escrow_ata: self.instruction.merchant_escrow_ata.expect("merchant_escrow_ata is not set"),
-                  
-          buyer_ata: self.instruction.buyer_ata.expect("buyer_ata is not set"),
-                  
-          token_program: self.instruction.token_program.expect("token_program is not set"),
-                  
-          system_program: self.instruction.system_program.expect("system_program is not set"),
-                  
-          event_authority: self.instruction.event_authority.expect("event_authority is not set"),
-                  
-          commerce_program: self.instruction.commerce_program.expect("commerce_program is not set"),
-                    };
-    instruction.invoke_signed_with_remaining_accounts(signers_seeds, &self.instruction.__remaining_accounts)
-  }
+            __program: self.instruction.__program,
+
+            payer: self.instruction.payer.expect("payer is not set"),
+
+            payment: self.instruction.payment.expect("payment is not set"),
+
+            operator_authority: self
+                .instruction
+                .operator_authority
+                .expect("operator_authority is not set"),
+
+            buyer: self.instruction.buyer.expect("buyer is not set"),
+
+            merchant: self.instruction.merchant.expect("merchant is not set"),
+
+            operator: self.instruction.operator.expect("operator is not set"),
+
+            merchant_operator_config: self
+                .instruction
+                .merchant_operator_config
+                .expect("merchant_operator_config is not set"),
+
+            mint: self.instruction.mint.expect("mint is not set"),
+
+            merchant_escrow_ata: self
+                .instruction
+                .merchant_escrow_ata
+                .expect("merchant_escrow_ata is not set"),
+
+            buyer_ata: self.instruction.buyer_ata.expect("buyer_ata is not set"),
+
+            token_program: self
+                .instruction
+                .token_program
+                .expect("token_program is not set"),
+
+            system_program: self
+                .instruction
+                .system_program
+                .expect("system_program is not set"),
+
+            event_authority: self
+                .instruction
+                .event_authority
+                .expect("event_authority is not set"),
+
+            commerce_program: self
+                .instruction
+                .commerce_program
+                .expect("commerce_program is not set"),
+        };
+        instruction.invoke_signed_with_remaining_accounts(
+            signers_seeds,
+            &self.instruction.__remaining_accounts,
+        )
+    }
 }
 
 #[derive(Clone, Debug)]
 struct RefundPaymentCpiBuilderInstruction<'a, 'b> {
-  __program: &'b solana_account_info::AccountInfo<'a>,
-            payer: Option<&'b solana_account_info::AccountInfo<'a>>,
-                payment: Option<&'b solana_account_info::AccountInfo<'a>>,
-                operator_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
-                buyer: Option<&'b solana_account_info::AccountInfo<'a>>,
-                merchant: Option<&'b solana_account_info::AccountInfo<'a>>,
-                operator: Option<&'b solana_account_info::AccountInfo<'a>>,
-                merchant_operator_config: Option<&'b solana_account_info::AccountInfo<'a>>,
-                mint: Option<&'b solana_account_info::AccountInfo<'a>>,
-                merchant_escrow_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
-                buyer_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
-                token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
-                system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
-                event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
-                commerce_program: Option<&'b solana_account_info::AccountInfo<'a>>,
-                /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
-  __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
+    __program: &'b solana_account_info::AccountInfo<'a>,
+    payer: Option<&'b solana_account_info::AccountInfo<'a>>,
+    payment: Option<&'b solana_account_info::AccountInfo<'a>>,
+    operator_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    buyer: Option<&'b solana_account_info::AccountInfo<'a>>,
+    merchant: Option<&'b solana_account_info::AccountInfo<'a>>,
+    operator: Option<&'b solana_account_info::AccountInfo<'a>>,
+    merchant_operator_config: Option<&'b solana_account_info::AccountInfo<'a>>,
+    mint: Option<&'b solana_account_info::AccountInfo<'a>>,
+    merchant_escrow_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    buyer_ata: Option<&'b solana_account_info::AccountInfo<'a>>,
+    token_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    system_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    event_authority: Option<&'b solana_account_info::AccountInfo<'a>>,
+    commerce_program: Option<&'b solana_account_info::AccountInfo<'a>>,
+    /// Additional instruction accounts `(AccountInfo, is_writable, is_signer)`.
+    __remaining_accounts: Vec<(&'b solana_account_info::AccountInfo<'a>, bool, bool)>,
 }
-

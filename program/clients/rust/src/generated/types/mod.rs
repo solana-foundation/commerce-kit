@@ -5,23 +5,22 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-  pub(crate) mod r#fee_type;
-  pub(crate) mod r#payment_cleared_event;
-  pub(crate) mod r#payment_created_event;
-  pub(crate) mod r#payment_refunded_event;
-  pub(crate) mod r#policy_data;
-  pub(crate) mod r#policy_type;
-  pub(crate) mod r#refund_policy;
-  pub(crate) mod r#settlement_policy;
-  pub(crate) mod r#status;
+pub(crate) mod r#fee_type;
+pub(crate) mod r#payment_cleared_event;
+pub(crate) mod r#payment_created_event;
+pub(crate) mod r#payment_refunded_event;
+pub(crate) mod r#policy_data;
+pub(crate) mod r#policy_type;
+pub(crate) mod r#refund_policy;
+pub(crate) mod r#settlement_policy;
+pub(crate) mod r#status;
 
-  pub use self::r#fee_type::*;
-  pub use self::r#payment_cleared_event::*;
-  pub use self::r#payment_created_event::*;
-  pub use self::r#payment_refunded_event::*;
-  pub use self::r#policy_data::*;
-  pub use self::r#policy_type::*;
-  pub use self::r#refund_policy::*;
-  pub use self::r#settlement_policy::*;
-  pub use self::r#status::*;
-
+pub use self::r#fee_type::*;
+pub use self::r#payment_cleared_event::*;
+pub use self::r#payment_created_event::*;
+pub use self::r#payment_refunded_event::*;
+pub use self::r#policy_data::*;
+pub use self::r#policy_type::*;
+pub use self::r#refund_policy::*;
+pub use self::r#settlement_policy::*;
+pub use self::r#status::*;

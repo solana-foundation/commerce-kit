@@ -5,13 +5,12 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-  pub(crate) mod r#merchant;
-  pub(crate) mod r#merchant_operator_config;
-  pub(crate) mod r#operator;
-  pub(crate) mod r#payment;
+pub(crate) mod r#merchant;
+pub(crate) mod r#merchant_operator_config;
+pub(crate) mod r#operator;
+pub(crate) mod r#payment;
 
-  pub use self::r#merchant::*;
-  pub use self::r#merchant_operator_config::*;
-  pub use self::r#operator::*;
-  pub use self::r#payment::*;
-
+pub use self::r#merchant::*;
+pub use self::r#merchant_operator_config::*;
+pub use self::r#operator::*;
+pub use self::r#payment::*;

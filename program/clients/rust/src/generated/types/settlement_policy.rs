@@ -5,15 +5,13 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use borsh::BorshSerialize;
 use borsh::BorshDeserialize;
+use borsh::BorshSerialize;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SettlementPolicy {
-pub min_settlement_amount: u64,
-pub settlement_frequency_hours: u32,
-pub auto_settle: bool,
+    pub min_settlement_amount: u64,
+    pub settlement_frequency_hours: u32,
+    pub auto_settle: bool,
 }
-
-
