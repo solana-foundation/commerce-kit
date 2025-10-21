@@ -28,6 +28,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Shank
+        run: cargo install shank-cli
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+          workspaces: ./program
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -39,27 +51,30 @@ jobs:
         with:
           version: 10.14.0
 
-      - name: Install dependencies (root)
-        run: pnpm install
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: cd program && make install
 
       - name: Setup Solana CLI
-        run: |
-          sh -c "$(curl -sSfL https://release.solana.com/v1.18.20/install)"
-          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+        uses: ./.github/actions/setup-solana
 
-      - name: Build Solana program
-        working-directory: program
-        run: make build
+      - name: Build Solana program and generate clients
+        run: cd program && make build
 
-      - name: Generate TypeScript client
-        working-directory: program
-        run: pnpm run generate-clients
+      - name: Install TypeScript dependencies
+        working-directory: program/clients/typescript
+        run: pnpm install --frozen-lockfile
 
       - name: Build TypeScript SDK
         working-directory: program/clients/typescript
-        run: |
-          pnpm install
-          pnpm run build
+        run: pnpm run build
 
       - name: Run TypeScript tests
         working-directory: program/clients/typescript
@@ -80,44 +95,41 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Setup Rust
+      - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
+
+      - name: Install Shank
+        run: cargo install shank-cli
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+          workspaces: ./program
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
           version: 10.14.0
 
-      - name: Setup Solana CLI
-        run: |
-          sh -c "$(curl -sSfL https://release.solana.com/v1.18.20/install)"
-          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-
-      - name: Cache Rust dependencies
+      - name: Setup pnpm cache
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            program/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-
+            ${{ runner.os }}-pnpm-
 
-      - name: Build Solana program
-        working-directory: program
-        run: make build
+      - name: Install dependencies
+        run: cd program && make install
 
-      - name: Generate Rust client
-        working-directory: program
-        run: |
-          # Install required tools
-          if ! command -v codama &> /dev/null; then
-            cargo install --force --locked codama-cli
-          fi
-          pnpm run generate-clients
+      - name: Setup Solana CLI
+        uses: ./.github/actions/setup-solana
+
+      - name: Build Solana program and generate clients
+        run: cd program && make build
 
       - name: Format Rust code
         working-directory: program/clients/rust
