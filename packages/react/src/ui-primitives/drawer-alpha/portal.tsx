@@ -16,4 +16,3 @@ export function DrawerPortal({ children }: DrawerPortalProps) {
 
     return createPortal(children, document.body);
 }
-

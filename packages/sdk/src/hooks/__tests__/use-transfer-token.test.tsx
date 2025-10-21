@@ -62,13 +62,16 @@ vi.mock('../../core/rpc-manager', () => ({
     createRpc: vi.fn(() => ({
         getAccountInfo: vi.fn((address: any) => ({
             send: vi.fn().mockResolvedValue({
-                value: address?.toString().includes('missing') || address === 'MISSING_ACCOUNT' ? null : {
-                    data: ['', 'base64'],
-                    executable: false,
-                    lamports: 1000000000,
-                    owner: '11111111111111111111111111111111',
-                    rentEpoch: 200,
-                },
+                value:
+                    address?.toString().includes('missing') || address === 'MISSING_ACCOUNT'
+                        ? null
+                        : {
+                              data: ['', 'base64'],
+                              executable: false,
+                              lamports: 1000000000,
+                              owner: '11111111111111111111111111111111',
+                              rentEpoch: 200,
+                          },
             }),
         })),
         getLatestBlockhash: vi.fn(() => ({
@@ -116,13 +119,16 @@ vi.mock('../../core/rpc-manager', () => ({
     getSharedRpc: vi.fn(() => ({
         getAccountInfo: vi.fn((address: any) => ({
             send: vi.fn().mockResolvedValue({
-                value: address?.toString().includes('missing') || address === 'MISSING_ACCOUNT' ? null : {
-                    data: ['', 'base64'],
-                    executable: false,
-                    lamports: 1000000000,
-                    owner: '11111111111111111111111111111111',
-                    rentEpoch: 200,
-                },
+                value:
+                    address?.toString().includes('missing') || address === 'MISSING_ACCOUNT'
+                        ? null
+                        : {
+                              data: ['', 'base64'],
+                              executable: false,
+                              lamports: 1000000000,
+                              owner: '11111111111111111111111111111111',
+                              rentEpoch: 200,
+                          },
             }),
         })),
         getLatestBlockhash: vi.fn(() => ({

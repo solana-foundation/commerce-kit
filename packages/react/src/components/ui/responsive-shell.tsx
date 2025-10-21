@@ -34,4 +34,3 @@ export function ResponsiveShell({ open, onOpenChange, trigger, children }: Respo
         </ModalShell>
     );
 }
-

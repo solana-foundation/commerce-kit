@@ -26,24 +26,24 @@ import { createCommercePaymentRequest, createCartRequest } from '@solana-commerc
 
 // Create a payment request
 const payment = createCommercePaymentRequest({
-  recipient: 'merchant-wallet-address',
-  amount: 10000000, // 0.01 SOL in lamports
-  currency: 'SOL',
-  label: 'Store Purchase',
-  message: 'Thank you for your order!'
+    recipient: 'merchant-wallet-address',
+    amount: 10000000, // 0.01 SOL in lamports
+    currency: 'SOL',
+    label: 'Store Purchase',
+    message: 'Thank you for your order!',
 });
 
 // Create a cart checkout
 const cart = createCartRequest(
-  'merchant-wallet-address',
-  [
-    { id: '1', name: 'Product A', price: 5000000 },
-    { id: '2', name: 'Product B', price: 10000000 }
-  ],
-  {
-    currency: 'SOL',
-    label: 'Cart Checkout'
-  }
+    'merchant-wallet-address',
+    [
+        { id: '1', name: 'Product A', price: 5000000 },
+        { id: '2', name: 'Product B', price: 10000000 },
+    ],
+    {
+        currency: 'SOL',
+        label: 'Cart Checkout',
+    },
 );
 ```
 
@@ -75,47 +75,38 @@ const cart = createCartRequest(
 ## Example
 
 ```typescript
-import {
-  createCartRequest,
-  createCommercePaymentRequest,
-  verifyPayment
-} from '@solana-commerce/headless';
+import { createCartRequest, createCommercePaymentRequest, verifyPayment } from '@solana-commerce/headless';
 import { createSolanaClient } from 'gill';
 
 // 1. Create cart
 const cart = createCartRequest(
-  'merchant-wallet',
-  [
-    { id: '1', name: 'Product A', price: 50000000 },
-    { id: '2', name: 'Product B', price: 30000000 }
-  ],
-  { currency: 'USDC', label: 'My Store' }
+    'merchant-wallet',
+    [
+        { id: '1', name: 'Product A', price: 50000000 },
+        { id: '2', name: 'Product B', price: 30000000 },
+    ],
+    { currency: 'USDC', label: 'My Store' },
 );
 
 // 2. Generate payment request
 const payment = createCommercePaymentRequest({
-  recipient: cart.recipient,
-  amount: cart.amount,
-  currency: cart.currency,
-  items: cart.products,
-  label: cart.label,
-  message: cart.message
+    recipient: cart.recipient,
+    amount: cart.amount,
+    currency: cart.currency,
+    items: cart.products,
+    label: cart.label,
+    message: cart.message,
 });
 
 // 3. Display payment.url as QR code or link
 
 // 4. After user pays, verify transaction
 const client = createSolanaClient(/*...*/);
-const verification = await verifyPayment(
-  client.rpc,
-  receivedSignature,
-  payment.amount,
-  payment.recipient
-);
+const verification = await verifyPayment(client.rpc, receivedSignature, payment.amount, payment.recipient);
 
 if (verification.verified) {
-  // Process order
-  console.log('Order confirmed!');
+    // Process order
+    console.log('Order confirmed!');
 }
 ```
 

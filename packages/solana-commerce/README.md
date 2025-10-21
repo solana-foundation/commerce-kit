@@ -87,15 +87,15 @@ function WalletInfo() {
 import { createPayment, calculateTotal } from '@solana-commerce/solana-commerce';
 
 const payment = createPayment({
-  merchant: { wallet: 'address' },
-  amount: 10.00,
-  currency: 'USDC'
+    merchant: { wallet: 'address' },
+    amount: 10.0,
+    currency: 'USDC',
 });
 
 const total = calculateTotal({
-  items: [{ price: 19.99, quantity: 2 }],
-  tax: 0.08,
-  shipping: 5.00
+    items: [{ price: 19.99, quantity: 2 }],
+    tax: 0.08,
+    shipping: 5.0,
 });
 ```
 
@@ -105,9 +105,9 @@ const total = calculateTotal({
 import { createQR, encodeURL } from '@solana-commerce/solana-commerce';
 
 const url = encodeURL({
-  recipient: 'wallet-address',
-  amount: 10,
-  label: 'Store Purchase'
+    recipient: 'wallet-address',
+    amount: 10,
+    label: 'Store Purchase',
 });
 
 const qr = createQR(url);
@@ -116,12 +116,14 @@ const qr = createQR(url);
 ## When to Use This Package
 
 **Use `@solana-commerce` when:**
+
 - Building full-featured commerce applications
 - You need components, hooks, and commerce logic
 - Convenience over granular dependency control
 - Rapid prototyping and development
 
 **Use individual packages when:**
+
 - Building custom UI (→ use `@solana-commerce/headless`)
 - Need only specific functionality (→ use individual packages)
 - Optimizing bundle size for production

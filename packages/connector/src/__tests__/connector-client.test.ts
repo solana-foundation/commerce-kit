@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ConnectorClient, type ConnectorConfig} from '../lib/connector-client';
+import { ConnectorClient, type ConnectorConfig } from '../lib/connector-client';
 
 // Test constants
 const AUTO_CONNECT_DELAY = 150;
@@ -58,7 +58,6 @@ const createMockWallet = (name: string, hasConnect = true, hasDisconnect = true,
         }),
     },
 });
-
 
 // Mock storage
 const createMockStorage = () => ({
@@ -343,7 +342,7 @@ describe('ConnectorClient', () => {
         it('should successfully disconnect wallet', async () => {
             const originalState = client.getConnectorState();
             expect(originalState.connected).toBe(true);
-            
+
             await client.disconnect();
 
             const state = client.getConnectorState();
@@ -403,9 +402,7 @@ describe('ConnectorClient', () => {
         it('should throw error when no wallet is connected', async () => {
             await client.disconnect();
 
-            await expect(client.selectAccount(TEST_ADDRESSES.PHANTOM_ACCOUNT_1)).rejects.toThrow(
-                'No wallet connected',
-            );
+            await expect(client.selectAccount(TEST_ADDRESSES.PHANTOM_ACCOUNT_1)).rejects.toThrow('No wallet connected');
         });
 
         it('should handle account not found by reconnecting', async () => {
@@ -580,12 +577,14 @@ describe('ConnectorClient', () => {
         it('should handle wallet change events', async () => {
             let changeCallback: (properties: { accounts: Array<{ address: string }> }) => void = () => {};
             const mockWallet = createMockWallet('Phantom', true, true, true);
-            mockWallet.features['standard:events']?.on.mockImplementation((event: string, callback: (properties: { accounts: Array<{ address: string }> }) => void) => {
-                if (event === 'change') {
-                    changeCallback = callback;
-                }
-                return () => {};
-            });
+            mockWallet.features['standard:events']?.on.mockImplementation(
+                (event: string, callback: (properties: { accounts: Array<{ address: string }> }) => void) => {
+                    if (event === 'change') {
+                        changeCallback = callback;
+                    }
+                    return () => {};
+                },
+            );
 
             mockWalletsApi.get.mockReturnValue([mockWallet]);
 

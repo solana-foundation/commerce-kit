@@ -816,7 +816,6 @@ describe('Payment Actions', () => {
                 expect(typeof result.getStablecoinConfig).toBe('undefined');
                 expect(typeof result.generateFreshReference).toBe('undefined');
             });
-
         });
 
         describe('QR Code Integration', () => {

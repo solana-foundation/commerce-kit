@@ -21,7 +21,12 @@ interface WalletFeatures {
         connect: () => Promise<{ accounts: WalletAccount[] }>;
     };
     'solana:signTransaction'?: {
-        signTransaction: (input: { transaction: Uint8Array; account: WalletAccount; chain?: string; options?: unknown }) => Promise<{ signedTransaction: Uint8Array }>;
+        signTransaction: (input: {
+            transaction: Uint8Array;
+            account: WalletAccount;
+            chain?: string;
+            options?: unknown;
+        }) => Promise<{ signedTransaction: Uint8Array }>;
     };
 }
 
@@ -116,9 +121,7 @@ export class WalletStandardKitSigner {
 
                         const currentByte = signedTransactionBytes[offset + byteIndex];
                         if (currentByte === undefined) {
-                            throw new Error(
-                                'Invalid transaction format: unexpected undefined byte in signature count',
-                            );
+                            throw new Error('Invalid transaction format: unexpected undefined byte in signature count');
                         }
 
                         const nextSevenBits = 0b1111111 & currentByte;
@@ -163,9 +166,9 @@ export class WalletStandardKitSigner {
                 } else {
                     throw new Error('Wallet returned invalid signed transaction format');
                 }
-                } else {
+            } else {
                 throw new Error('Transaction messageBytes must be Uint8Array for wallet signing');
-                }
+            }
         }
 
         return signedTransactions as readonly T[];
@@ -213,7 +216,7 @@ export function useStandardWallets(options: UseStandardWalletsOptions = {}): Use
             const uniqueWallets = detectedWallets.reduce((acc, wallet) => {
                 const existing = acc.find(w => w.name === wallet.name);
                 if (!existing) {
-                acc.push(wallet);
+                    acc.push(wallet);
                 }
                 return acc;
             }, [] as Wallet[]);
@@ -221,11 +224,11 @@ export function useStandardWallets(options: UseStandardWalletsOptions = {}): Use
             const solanaCompatibleWallets = uniqueWallets.filter(wallet => {
                 const features = Object.keys(wallet.features);
                 const hasSolanaFeatures = features.some(
-                feature =>
-                    feature.includes('solana') ||
-                    feature.includes('connect') ||
-                    feature.includes('sign') ||
-                    feature.includes('standard'),
+                    feature =>
+                        feature.includes('solana') ||
+                        feature.includes('connect') ||
+                        feature.includes('sign') ||
+                        feature.includes('standard'),
                 );
                 return hasSolanaFeatures;
             });

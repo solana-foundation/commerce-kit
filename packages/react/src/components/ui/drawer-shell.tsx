@@ -1,13 +1,7 @@
 'use client';
 
 import React from 'react';
-import {
-    Drawer,
-    DrawerPortal,
-    DrawerBackdrop,
-    DrawerContent,
-    DrawerTrigger,
-} from '../../ui-primitives/drawer-alpha';
+import { Drawer, DrawerPortal, DrawerBackdrop, DrawerContent, DrawerTrigger } from '../../ui-primitives/drawer-alpha';
 
 interface DrawerShellProps {
     open: boolean;
@@ -22,11 +16,8 @@ export function DrawerShell({ open, onOpenChange, trigger, children }: DrawerShe
             {trigger ? <DrawerTrigger asChild>{trigger}</DrawerTrigger> : null}
             <DrawerPortal>
                 <DrawerBackdrop onClick={() => onOpenChange(false)} />
-                <DrawerContent>
-                    {children}
-                </DrawerContent>
+                <DrawerContent>{children}</DrawerContent>
             </DrawerPortal>
         </Drawer>
     );
 }
-

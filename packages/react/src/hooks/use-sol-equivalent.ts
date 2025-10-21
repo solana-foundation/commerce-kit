@@ -25,20 +25,24 @@ export function useSolEquivalent(currency: Currency, amount: number): UseSolEqui
 
     // Create stable async function reference
     const asyncCalculation = useMemo(
-        () => (shouldCalculate 
-            ? async () => {
-                const solAmount = await convertUsdToSol(amount);
-                return `${solAmount.toFixed(4)} SOL`;
-            }
-            : undefined
-        ),
-        [shouldCalculate, amount]
+        () =>
+            shouldCalculate
+                ? async () => {
+                      const solAmount = await convertUsdToSol(amount);
+                      return `${solAmount.toFixed(4)} SOL`;
+                  }
+                : undefined,
+        [shouldCalculate, amount],
     );
 
     // Use the existing useAsync hook for proper async state management
-    const { data: solEquivalent, loading: isLoading, error } = useAsync(
+    const {
+        data: solEquivalent,
+        loading: isLoading,
+        error,
+    } = useAsync(
         asyncCalculation,
-        shouldCalculate // Execute immediately if we should calculate
+        shouldCalculate, // Execute immediately if we should calculate
     );
 
     return {

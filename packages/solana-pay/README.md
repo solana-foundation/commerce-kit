@@ -45,16 +45,15 @@ pnpm add @solana-commerce/solana-pay
 import { encodeURL, createQR } from '@solana-commerce/solana-pay';
 
 const url = encodeURL({
-  recipient: 'wallet-address',
-  amount: 0.1,
-  label: 'Store Purchase',
-  message: 'Thank you!'
-  // splToken: USDC_MINT, (optional)
+    recipient: 'wallet-address',
+    amount: 0.1,
+    label: 'Store Purchase',
+    message: 'Thank you!',
+    // splToken: USDC_MINT, (optional)
 });
 
 const qr = await createQR(url);
 ```
-
 
 ### Styled QR Code
 
@@ -62,12 +61,12 @@ const qr = await createQR(url);
 import { createStyledQRCode } from '@solana-commerce/solana-pay';
 
 const qr = await createStyledQRCode(url, {
-  width: 400,
-  color: { dark: '#9945FF', light: '#FFFFFF' },
-  dotStyle: 'rounded',
-  cornerStyle: 'extra-rounded',
-  logo: 'https://mystore.com/logo.png',
-  logoSize: 80
+    width: 400,
+    color: { dark: '#9945FF', light: '#FFFFFF' },
+    dotStyle: 'rounded',
+    cornerStyle: 'extra-rounded',
+    logo: 'https://mystore.com/logo.png',
+    logoSize: 80,
 });
 ```
 

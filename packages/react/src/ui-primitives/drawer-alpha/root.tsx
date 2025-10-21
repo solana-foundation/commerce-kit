@@ -14,7 +14,7 @@ export function DrawerRoot({ open, onOpenChange, children }: DrawerRootProps) {
             }
             onOpenChange?.(newOpen);
         },
-        [isControlled, onOpenChange]
+        [isControlled, onOpenChange],
     );
 
     const contextValue = useMemo(
@@ -22,9 +22,8 @@ export function DrawerRoot({ open, onOpenChange, children }: DrawerRootProps) {
             isOpen,
             setIsOpen,
         }),
-        [isOpen, setIsOpen]
+        [isOpen, setIsOpen],
     );
 
     return <DrawerContext.Provider value={contextValue}>{children}</DrawerContext.Provider>;
 }
-

@@ -188,17 +188,15 @@ export function useTransferToken(
             };
 
             // Custom confirmation polling that's more resilient to RPC issues
-            const waitForTransactionConfirmation = async (
-                signature: string,
-                rpcClient: any,
-                maxWaitTime = 30000,
-            ) => {
+            const waitForTransactionConfirmation = async (signature: string, rpcClient: any, maxWaitTime = 30000) => {
                 const startTime = Date.now();
                 let lastError: any;
 
                 while (Date.now() - startTime < maxWaitTime) {
                     try {
-                        const statusResponse = await rpcClient.getSignatureStatuses([signature], { searchTransactionHistory: true }).send();
+                        const statusResponse = await rpcClient
+                            .getSignatureStatuses([signature], { searchTransactionHistory: true })
+                            .send();
 
                         const status = statusResponse?.value?.[0];
                         if (status) {
@@ -255,7 +253,9 @@ export function useTransferToken(
 
                         // Check account info on first attempt only to avoid redundant calls
                         if (attempt === 0) {
-                            const fromAccountInfo = await rpc.getAccountInfo(fromTokenAccount, { encoding: 'base64' }).send();
+                            const fromAccountInfo = await rpc
+                                .getAccountInfo(fromTokenAccount, { encoding: 'base64' })
+                                .send();
 
                             if (!fromAccountInfo.value) {
                                 throw new Error(
@@ -263,7 +263,9 @@ export function useTransferToken(
                                 );
                             }
 
-                            const toAccountInfo = await rpc.getAccountInfo(toTokenAccount, { encoding: 'base64' }).send();
+                            const toAccountInfo = await rpc
+                                .getAccountInfo(toTokenAccount, { encoding: 'base64' })
+                                .send();
 
                             if (!toAccountInfo.value && !createAccountIfNeeded) {
                                 throw new Error(
@@ -279,7 +281,9 @@ export function useTransferToken(
 
                         // Check if we need to create account (only on first attempt)
                         if (attempt === 0 && createAccountIfNeeded) {
-                            const toAccountInfo = await rpc.getAccountInfo(toTokenAccount, { encoding: 'base64' }).send();
+                            const toAccountInfo = await rpc
+                                .getAccountInfo(toTokenAccount, { encoding: 'base64' })
+                                .send();
 
                             if (!toAccountInfo.value) {
                                 const createAccountInstruction = getCreateAssociatedTokenInstruction({
@@ -346,7 +350,6 @@ export function useTransferToken(
                             errorMessage.includes('block height') ||
                             errorMessage.includes('blockhash') ||
                             errorMessage.includes('last block for which this transaction could have been committed');
-
 
                         // If this is the last attempt, provide a better error message
                         if (attempt === maxAttempts - 1) {

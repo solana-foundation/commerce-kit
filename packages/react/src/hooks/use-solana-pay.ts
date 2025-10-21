@@ -1,8 +1,4 @@
-import {
-    createSolanaPayRequest,
-    SolanaPayRequestOptions,
-    toMinorUnits,
-} from '@solana-commerce/headless';
+import { createSolanaPayRequest, SolanaPayRequestOptions, toMinorUnits } from '@solana-commerce/headless';
 import { Recipient } from '@solana-commerce/solana-pay';
 import { useMemo } from 'react';
 import { Currency, CurrencyMap } from '../types';
@@ -28,13 +24,13 @@ function validateCurrency(currency: Currency): void {
 export function useSolanaPay(recipient: string, amount: number, currency: Currency, opts?: SolanaPayQROptions) {
     const requestParams = useMemo(() => {
         if (!recipient || !amount || !currency) return null;
-        
+
         // Validate currency before proceeding
         validateCurrency(currency);
-        
+
         // Generate a unique reference for this payment
         const reference = `tip-${Math.floor(Math.random() * 1000000)}`;
-        
+
         // Get token info from enhanced currency map
         const tokenInfo = CurrencyMap[currency];
         const decimals = tokenInfo === 'SOL' ? 9 : tokenInfo.decimals;
@@ -70,27 +66,28 @@ export function useSolanaPay(recipient: string, amount: number, currency: Curren
 
     // ✅ GOOD: Use useAsync hook for proper async state management
     const asyncRequestCreation = useMemo(
-        () => (requestParams 
-            ? async () => {
-                const request = await createSolanaPayRequest(
-                    requestParams.paymentData,
-                    requestParams.qrOptions,
-                );
+        () =>
+            requestParams
+                ? async () => {
+                      const request = await createSolanaPayRequest(requestParams.paymentData, requestParams.qrOptions);
 
-                // Add memo to the returned request
-                return {
-                    ...request,
-                    memo: requestParams.reference,
-                };
-            }
-            : undefined
-        ),
-        [requestParams]
+                      // Add memo to the returned request
+                      return {
+                          ...request,
+                          memo: requestParams.reference,
+                      };
+                  }
+                : undefined,
+        [requestParams],
     );
 
-    const { data: paymentRequest, loading, error } = useAsync(
+    const {
+        data: paymentRequest,
+        loading,
+        error,
+    } = useAsync(
         asyncRequestCreation,
-        !!requestParams // Execute immediately if we have valid params
+        !!requestParams, // Execute immediately if we have valid params
     );
 
     return {

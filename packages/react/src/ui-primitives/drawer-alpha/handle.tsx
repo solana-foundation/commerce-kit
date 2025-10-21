@@ -17,4 +17,3 @@ export function DrawerHandle({ className, style }: DrawerHandleProps) {
         />
     );
 }
-

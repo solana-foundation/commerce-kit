@@ -1,10 +1,5 @@
 import { getWallets } from '@wallet-standard/app';
-import type {
-    Wallet,
-    WalletAccount,
-    IdentifierArray,
-    IdentifierRecord,
-} from '@wallet-standard/base';
+import type { Wallet, WalletAccount, IdentifierArray, IdentifierRecord } from '@wallet-standard/base';
 import type {
     StandardConnectFeature,
     StandardConnectOutput,
@@ -109,7 +104,8 @@ export class ConnectorClient {
                 const hasDisconnect = Boolean(features['standard:disconnect']);
                 const chains = walletEntry.chains as IdentifierArray | undefined;
                 const isSolana =
-                    Array.isArray(chains) && chains.some(chain => typeof chain === 'string' && chain.includes('solana'));
+                    Array.isArray(chains) &&
+                    chains.some(chain => typeof chain === 'string' && chain.includes('solana'));
                 const connectable = Boolean(hasConnect && hasDisconnect && isSolana);
                 return {
                     wallet: walletEntry,
@@ -141,7 +137,7 @@ export class ConnectorClient {
         try {
             const storage = this.getStorage();
             let last: string | null = null;
-            
+
             // Safely get last wallet from storage
             try {
                 last = storage?.getItem(STORAGE_KEY) ?? null;
@@ -151,7 +147,7 @@ export class ConnectorClient {
                 }
                 return;
             }
-            
+
             if (!last) return;
             if (this.state.wallets.some(w => w.name === last)) await this.select(last);
         } catch (e) {
@@ -192,11 +188,13 @@ export class ConnectorClient {
                 for (const account of walletAccounts) {
                     accountMap.set(account.address, account);
                 }
-                const nextAccounts: AccountInfo[] = Array.from(accountMap.values()).map((account): AccountInfo => ({
-                    address: account.address,
-                    icon: account.icon,
-                    raw: account,
-                }));
+                const nextAccounts: AccountInfo[] = Array.from(accountMap.values()).map(
+                    (account): AccountInfo => ({
+                        address: account.address,
+                        icon: account.icon,
+                        raw: account,
+                    }),
+                );
                 const selectedStillExists =
                     this.state.selectedAccount && nextAccounts.some(acc => acc.address === this.state.selectedAccount);
                 const newSelected = selectedStillExists
@@ -265,11 +263,13 @@ export class ConnectorClient {
                 for (const account of [...walletAccounts, ...changeAccounts]) {
                     accountMap.set(account.address, account);
                 }
-                const nextAccounts: AccountInfo[] = Array.from(accountMap.values()).map((account): AccountInfo => ({
-                    address: account.address,
-                    icon: account.icon,
-                    raw: account,
-                }));
+                const nextAccounts: AccountInfo[] = Array.from(accountMap.values()).map(
+                    (account): AccountInfo => ({
+                        address: account.address,
+                        icon: account.icon,
+                        raw: account,
+                    }),
+                );
 
                 // Preserve selection if possible
                 const selectedStillExists =
@@ -310,11 +310,13 @@ export class ConnectorClient {
             for (const account of [...walletAccounts, ...result.accounts]) {
                 accountMap.set(account.address, account);
             }
-            const accounts: AccountInfo[] = Array.from(accountMap.values()).map((account): AccountInfo => ({
-                address: account.address,
-                icon: account.icon,
-                raw: account,
-            }));
+            const accounts: AccountInfo[] = Array.from(accountMap.values()).map(
+                (account): AccountInfo => ({
+                    address: account.address,
+                    icon: account.icon,
+                    raw: account,
+                }),
+            );
             // Prefer a never-before-seen account when reconnecting; otherwise preserve selection
             const previouslySelected = this.state.selectedAccount;
             const previousAddresses = new Set(this.state.accounts.map(a => a.address));
@@ -337,7 +339,7 @@ export class ConnectorClient {
                 accounts,
                 selectedAccount: selected,
             };
-            
+
             // Store wallet preference, but don't fail connection if storage fails
             try {
                 this.getStorage()?.setItem(STORAGE_KEY, walletName);
@@ -383,14 +385,14 @@ export class ConnectorClient {
             }
         }
 
-        this.state = { 
-            ...this.state, 
-            selectedWallet: null, 
-            connected: false, 
-            accounts: [], 
-            selectedAccount: null 
+        this.state = {
+            ...this.state,
+            selectedWallet: null,
+            connected: false,
+            accounts: [],
+            selectedAccount: null,
         };
-        
+
         // Remove wallet preference, but don't fail disconnect if storage fails
         try {
             this.getStorage()?.removeItem(STORAGE_KEY);
@@ -399,7 +401,7 @@ export class ConnectorClient {
                 console.warn('[Connector] Failed to remove wallet preference:', error);
             }
         }
-        
+
         this.notify();
     }
 
@@ -418,7 +420,8 @@ export class ConnectorClient {
                         icon: a.icon,
                         raw: a,
                     }));
-                    target = accounts.find((acc: AccountInfo) => acc.address === address)?.raw ?? res.accounts[0] ?? null;
+                    target =
+                        accounts.find((acc: AccountInfo) => acc.address === address)?.raw ?? res.accounts[0] ?? null;
                     this.state = { ...this.state, accounts };
                 }
             } catch (error) {

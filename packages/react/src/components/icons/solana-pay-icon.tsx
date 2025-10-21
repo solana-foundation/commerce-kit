@@ -6,11 +6,7 @@ interface SolanaPayIconProps {
     'data-testid'?: string;
 }
 
-export const SolanaPayIcon: React.FC<SolanaPayIconProps> = ({ 
-    size = 16, 
-    className, 
-    'data-testid': testId 
-}) => {
+export const SolanaPayIcon: React.FC<SolanaPayIconProps> = ({ size = 16, className, 'data-testid': testId }) => {
     return (
         <svg
             width={size}

@@ -128,10 +128,7 @@ export const MerchantAddressPill = memo<MerchantAddressPillProps>(
                     {/* Icon Container */}
                     <div className="ck-merchant-icon-container">
                         {/* Copy Icon */}
-                        <CopyIcon 
-                            size={16}
-                            className={`ck-merchant-copy-icon ${copied ? 'hidden' : ''}`}
-                        />
+                        <CopyIcon size={16} className={`ck-merchant-copy-icon ${copied ? 'hidden' : ''}`} />
 
                         {/* Check Icon */}
                         <CheckFilledIcon

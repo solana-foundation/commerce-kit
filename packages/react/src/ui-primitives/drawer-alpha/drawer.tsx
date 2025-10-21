@@ -7,4 +7,3 @@ import type { DrawerRootProps } from './types';
 export function Drawer(props: DrawerRootProps) {
     return <DrawerRoot {...props} />;
 }
-

@@ -1,13 +1,7 @@
 'use client';
 
 import React from 'react';
-import {
-    Dialog,
-    DialogPortal,
-    DialogBackdrop,
-    DialogContent,
-    DialogTrigger,
-} from '../../ui-primitives/react';
+import { Dialog, DialogPortal, DialogBackdrop, DialogContent, DialogTrigger } from '../../ui-primitives/react';
 
 interface ModalShellProps {
     open: boolean;

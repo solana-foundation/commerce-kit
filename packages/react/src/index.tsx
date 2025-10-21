@@ -11,10 +11,25 @@ export * from './hooks';
 
 // Re-export UI primitives (merged from ui-primitives package)
 export { TabsRoot, TabsList, TabsTab, TabsPanel } from './ui-primitives/tabs-alpha';
-export { Dialog, DialogTrigger, DialogContent, DialogBackdrop, DialogClose, DialogProvider } from './ui-primitives/dialog-alpha';
+export {
+    Dialog,
+    DialogTrigger,
+    DialogContent,
+    DialogBackdrop,
+    DialogClose,
+    DialogProvider,
+} from './ui-primitives/dialog-alpha';
 export { DialogPortal } from './ui-primitives/react';
 export { DropdownRoot, DropdownTrigger, DropdownContent, DropdownItem } from './ui-primitives/dropdown-alpha';
-export { Drawer, DrawerTrigger, DrawerContent, DrawerBackdrop, DrawerClose, DrawerHandle, DrawerPortal } from './ui-primitives/drawer-alpha';
+export {
+    Drawer,
+    DrawerTrigger,
+    DrawerContent,
+    DrawerBackdrop,
+    DrawerClose,
+    DrawerHandle,
+    DrawerPortal,
+} from './ui-primitives/drawer-alpha';
 export { Z_INDEX, Z_INDEX_CSS_VARS } from './ui-primitives/constants';
 
 // Re-export types for public API
@@ -37,20 +52,10 @@ export type { SolanaClusterMoniker } from 'gill';
 export type { PaymentConfig, Product } from './components/ui/secure-iframe-shell';
 
 // Re-export price fetching utilities for enterprise users
-export { 
-    createSolPriceFetcher,
-    fetchSolPrice,
-    getCachedSolPrice,
-    type SolPriceFetcherOptions
-} from './utils';
+export { createSolPriceFetcher, fetchSolPrice, getCachedSolPrice, type SolPriceFetcherOptions } from './utils';
 
 // Export server-side RPC resolution utilities
-export { 
-    fetchRpcUrl, 
-    resolveRpcEndpoint,
-    type RpcEndpointConfig, 
-    type RpcEndpoint 
-} from './utils/rpc-resolver';
+export { fetchRpcUrl, resolveRpcEndpoint, type RpcEndpointConfig, type RpcEndpoint } from './utils/rpc-resolver';
 
 // Export API route handler
 export { POST as rpcEndpointsHandler } from './api/rpc-endpoints';
@@ -61,13 +66,7 @@ import { SecureIframeShell } from './components/ui/secure-iframe-shell';
 import { AppProvider } from '@solana-commerce/connector';
 import { ArcProvider } from '@solana-commerce/sdk';
 import { isAddress } from 'gill';
-import {
-    useTheme,
-    useTotalAmount,
-    usePaymentUrl,
-    createPaymentError,
-    getBorderRadius,
-} from './utils';
+import { useTheme, useTotalAmount, usePaymentUrl, createPaymentError, getBorderRadius } from './utils';
 import { TriggerButton } from './components/ui';
 import type { PaymentButtonProps } from './types';
 
@@ -191,7 +190,7 @@ export const PaymentButton = memo<PaymentButtonProps>(function PaymentButton({
                 const resolvedUrl = await fetchRpcUrl({
                     network: 'mainnet',
                     endpoint: config.rpcUrl,
-                    priority: 'reliable'
+                    priority: 'reliable',
                 });
                 setResolvedRpcUrl(resolvedUrl);
             } catch (error) {
@@ -216,7 +215,7 @@ export const PaymentButton = memo<PaymentButtonProps>(function PaymentButton({
                 <div style={{ fontFamily: theme.fontFamily, ...style }} className={className}>
                     {isClient ? (
                         <SecureIframeShell
-                            config={{...config, rpcUrl: resolvedRpcUrl}}
+                            config={{ ...config, rpcUrl: resolvedRpcUrl }}
                             theme={theme}
                             onPayment={(amount, currency) => {
                                 try {
@@ -271,7 +270,7 @@ export const PaymentButton = memo<PaymentButtonProps>(function PaymentButton({
                 >
                     {isClient ? (
                         <SecureIframeShell
-                            config={{...config, rpcUrl: resolvedRpcUrl}}
+                            config={{ ...config, rpcUrl: resolvedRpcUrl }}
                             theme={theme}
                             onPayment={(amount, currency) => {
                                 try {

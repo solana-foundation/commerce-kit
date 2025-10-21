@@ -6,11 +6,7 @@ interface BackArrowIconProps {
     'data-testid'?: string;
 }
 
-export const BackArrowIcon: React.FC<BackArrowIconProps> = ({ 
-    size = 16, 
-    className, 
-    'data-testid': testId 
-}) => {
+export const BackArrowIcon: React.FC<BackArrowIconProps> = ({ size = 16, className, 'data-testid': testId }) => {
     return (
         <svg
             width={size}

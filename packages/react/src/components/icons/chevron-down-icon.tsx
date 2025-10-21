@@ -6,11 +6,7 @@ interface ChevronDownIconProps {
     'data-testid'?: string;
 }
 
-export const ChevronDownIcon: React.FC<ChevronDownIconProps> = ({ 
-    size = 12, 
-    className, 
-    'data-testid': testId 
-}) => {
+export const ChevronDownIcon: React.FC<ChevronDownIconProps> = ({ size = 12, className, 'data-testid': testId }) => {
     return (
         <svg
             width={size}

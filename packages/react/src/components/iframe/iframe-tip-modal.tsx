@@ -104,10 +104,11 @@ export const IframeTipModalContent = memo<TipModalContentProps>(({ config, theme
         }
     }, [actions, computed.finalAmount, state.selectedCurrency, state.selectedPaymentMethod, onPayment, handleCancel]);
 
-    const { solEquivalent, isLoading: solEquivalentLoading, error: solEquivalentError } = useSolEquivalent(
-        state.selectedCurrency,
-        computed.finalAmount
-    );
+    const {
+        solEquivalent,
+        isLoading: solEquivalentLoading,
+        error: solEquivalentError,
+    } = useSolEquivalent(state.selectedCurrency, computed.finalAmount);
 
     if (config.debug) {
         console.log('💰 SOL Equivalent Calculation:', {

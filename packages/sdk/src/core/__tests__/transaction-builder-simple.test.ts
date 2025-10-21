@@ -42,7 +42,7 @@ describe('Transaction Builder - Core Functionality', () => {
             expect(typeof builder.transferToken).toBe('function');
             expect(typeof builder.confirmTransaction).toBe('function');
             expect(typeof builder.calculateFees).toBe('function');
-            
+
             // Verify method names for better debugging
             expect(builder.transferSOL.name).toBe('transferSOL');
             expect(builder.transferToken.name).toBe('transferToken');

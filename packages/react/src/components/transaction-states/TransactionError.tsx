@@ -19,12 +19,7 @@ interface TransactionErrorProps {
     onClose?: () => void;
 }
 
-export function TransactionError({
-    theme,
-    error,
-    onRetry,
-    onClose,
-}: TransactionErrorProps) {
+export function TransactionError({ theme, error, onRetry, onClose }: TransactionErrorProps) {
     const errorMessage = error instanceof Error ? error.message : error;
     return (
         <div

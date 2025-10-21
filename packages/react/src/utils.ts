@@ -297,11 +297,11 @@ const PRICE_CACHE_DURATION = 60000; // 1 minute cache
 
 /**
  * Default SOL price fetching implementation using CoinGecko public API.
- * 
+ *
  * This function includes caching and error handling. For production applications
  * with high volume or specific requirements, consider using a custom implementation
  * via PaymentConfig.getSolPrice.
- * 
+ *
  * @returns Promise<number> SOL price in USD
  * @throws Error when unable to fetch price and no cache available
  */
@@ -379,7 +379,7 @@ export const getCachedSolPrice = (): number | null => {
 
 /**
  * Creates a customizable SOL price fetching function with retry logic and custom endpoints.
- * 
+ *
  * @example
  * ```typescript
  * // Custom API endpoint with retry
@@ -389,7 +389,7 @@ export const getCachedSolPrice = (): number | null => {
  *   timeout: 5000,
  *   parser: (data) => data.price.usd
  * });
- * 
+ *
  * const paymentConfig = {
  *   getSolPrice: customPriceFetcher
  * };
@@ -414,7 +414,7 @@ export const createSolPriceFetcher = (options: SolPriceFetcherOptions = {}): (()
         retries = 2,
         timeout = 10000,
         parser = (data: any) => data.solana?.usd,
-        headers = {}
+        headers = {},
     } = options;
 
     return async (): Promise<number> => {
@@ -427,22 +427,22 @@ export const createSolPriceFetcher = (options: SolPriceFetcherOptions = {}): (()
                 const response = await fetch(endpoint, {
                     signal: controller.signal,
                     headers: {
-                        'Accept': 'application/json',
-                        ...headers
-                    }
+                        Accept: 'application/json',
+                        ...headers,
+                    },
                 });
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-                
+
                 const data = await response.json();
                 const price = parser(data);
-                
+
                 if (typeof price !== 'number' || price <= 0 || !isFinite(price)) {
                     throw new Error(`Invalid price data: ${price}`);
                 }
-                
+
                 return price;
             } catch (error) {
                 if (attempt === retries) {

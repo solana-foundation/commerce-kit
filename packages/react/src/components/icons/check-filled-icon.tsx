@@ -7,11 +7,11 @@ interface CheckFilledIconProps {
     'data-testid'?: string;
 }
 
-export const CheckFilledIcon: React.FC<CheckFilledIconProps> = ({ 
-    size = 16, 
-    className, 
+export const CheckFilledIcon: React.FC<CheckFilledIconProps> = ({
+    size = 16,
+    className,
     color = '#22c55e',
-    'data-testid': testId 
+    'data-testid': testId,
 }) => {
     return (
         <svg

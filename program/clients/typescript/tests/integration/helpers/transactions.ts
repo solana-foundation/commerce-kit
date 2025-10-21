@@ -80,10 +80,14 @@ async function sendAndConfirmInstructions({
     // );
     // const estimateCompute = estimateComputeUnitLimitFactory({ rpc: client.rpc });
     const computeUnitLimit = 200_000;
-    const signature = await pipe(
-      await createDefaultTransaction(client, payer, computeUnitLimit),
-      (tx) => appendTransactionMessageInstructions(instructions, tx),
-      (tx) => signAndSendTransaction(client, tx)
+    const tx = await createDefaultTransaction(client, payer, computeUnitLimit);
+    const txWithInstructions = appendTransactionMessageInstructions(
+      instructions, 
+      tx as unknown as CompilableTransactionMessage
+    );
+    const signature = await signAndSendTransaction(
+      client, 
+      txWithInstructions as CompilableTransactionMessage & TransactionMessageWithBlockhashLifetime
     );
     return signature;
   } catch (error) {
@@ -91,7 +95,9 @@ async function sendAndConfirmInstructions({
       console.log("Solana Error:",error.context.__code);
     }
 
-    throw new Error(`Failed to ${description.toLowerCase()}`);
+    // Preserve the original error message if it exists
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to ${description.toLowerCase()}: ${errorMessage}`);
   }
 }
 
@@ -108,7 +114,8 @@ async function setupWallets(client: SolanaClient, wallets: KeyPairSigner<string>
     });
     await Promise.all(airdropPromises);
   } catch (error) {
-    throw new Error(`Failed to setup wallets.`);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to setup wallets: ${errorMessage}`);
   }
 }
 

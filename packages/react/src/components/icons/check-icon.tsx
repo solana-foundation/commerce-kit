@@ -6,12 +6,7 @@ interface CheckIconProps extends React.SVGAttributes<SVGSVGElement> {
     'data-testid'?: string;
 }
 
-export const CheckIcon: React.FC<CheckIconProps> = ({ 
-    size = 16, 
-    className, 
-    'data-testid': testId,
-    ...rest
-}) => {
+export const CheckIcon: React.FC<CheckIconProps> = ({ size = 16, className, 'data-testid': testId, ...rest }) => {
     return (
         <svg
             viewBox="0 0 16 16"

@@ -406,7 +406,7 @@ describe('useSolanaPay', () => {
             // Test USDC_DEVNET
             const { rerender } = renderHook(
                 ({ currency }) => useSolanaPay('9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM', 10, currency),
-                { initialProps: { currency: 'USDC_DEVNET' as const } }
+                { initialProps: { currency: 'USDC_DEVNET' as const } },
             );
 
             await waitFor(() => {
@@ -421,7 +421,7 @@ describe('useSolanaPay', () => {
 
             // Test SOL_DEVNET
             rerender({ currency: 'SOL_DEVNET' as const });
-            
+
             await waitFor(() => {
                 expect(mockCreateSolanaPayRequest).toHaveBeenCalledWith(
                     expect.objectContaining({
@@ -435,11 +435,16 @@ describe('useSolanaPay', () => {
 
         it('should validate all supported currencies without errors', () => {
             const supportedCurrencies: Array<'USDC' | 'SOL' | 'USDT' | 'USDC_DEVNET' | 'SOL_DEVNET' | 'USDT_DEVNET'> = [
-                'USDC', 'SOL', 'USDT', 'USDC_DEVNET', 'SOL_DEVNET', 'USDT_DEVNET'
+                'USDC',
+                'SOL',
+                'USDT',
+                'USDC_DEVNET',
+                'SOL_DEVNET',
+                'USDT_DEVNET',
             ];
-            
+
             mockCreateSolanaPayRequest.mockResolvedValue(mockPaymentRequest);
-            
+
             supportedCurrencies.forEach(currency => {
                 expect(() => {
                     renderHook(() => useSolanaPay('9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM', 10, currency));
@@ -566,10 +571,10 @@ describe('useSolanaPay', () => {
             const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
             expect(() => {
-                renderHook(() => 
-                    useSolanaPay('9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM', 10, 'ZZZ' as any)
-                );
-            }).toThrow('Unsupported currency: ZZZ. Supported currencies are: SOL, SOL_DEVNET, USDC, USDT, USDC_DEVNET, USDT_DEVNET');
+                renderHook(() => useSolanaPay('9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM', 10, 'ZZZ' as any));
+            }).toThrow(
+                'Unsupported currency: ZZZ. Supported currencies are: SOL, SOL_DEVNET, USDC, USDT, USDC_DEVNET, USDT_DEVNET',
+            );
 
             consoleSpy.mockRestore();
         });
@@ -579,8 +584,8 @@ describe('useSolanaPay', () => {
             const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
             expect(() => {
-                renderHook(() => 
-                    useSolanaPay('9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM', 15, 'INVALID_TOKEN' as any)
+                renderHook(() =>
+                    useSolanaPay('9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM', 15, 'INVALID_TOKEN' as any),
                 );
             }).toThrow('Unsupported currency: INVALID_TOKEN');
 

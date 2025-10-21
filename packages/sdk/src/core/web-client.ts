@@ -91,10 +91,10 @@ export class ArcWebClient {
         if (!config.rpcUrl) {
             throw new Error(
                 'ArcWebClient requires a pre-resolved rpcUrl. ' +
-                'Use server-side RPC resolution before creating the client.'
+                    'Use server-side RPC resolution before creating the client.',
             );
         }
-        
+
         const rpcUrl = config.rpcUrl;
         const clusterInfo = getClusterInfo(rpcUrl);
 
@@ -166,9 +166,9 @@ export class ArcWebClient {
                 let address: Address | null = null;
                 if (connected && selectedWallet && selectedAccount) {
                     const accountList = accounts as unknown as Array<{ address: string; raw?: unknown }>;
-                    const rawAccount = accountList.find(
-                        a => a.address === selectedAccount,
-                    )?.raw as { address: string } | undefined;
+                    const rawAccount = accountList.find(a => a.address === selectedAccount)?.raw as
+                        | { address: string }
+                        | undefined;
                     if (rawAccount && 'address' in rawAccount) {
                         signer = new WalletStandardKitSigner(rawAccount, selectedWallet);
                         address = rawAccount.address as Address;
@@ -191,11 +191,13 @@ export class ArcWebClient {
                         connecting,
                         address,
                         signer,
-                        accounts: (accounts as Array<{ address: string; icon?: string; raw?: unknown }>).map((a: { address: string; icon?: string; raw?: unknown }) => ({
-                            address: a.address as Address,
-                            icon: a.icon as string | undefined,
-                            raw: a.raw,
-                        })),
+                        accounts: (accounts as Array<{ address: string; icon?: string; raw?: unknown }>).map(
+                            (a: { address: string; icon?: string; raw?: unknown }) => ({
+                                address: a.address as Address,
+                                icon: a.icon as string | undefined,
+                                raw: a.raw,
+                            }),
+                        ),
                         selectedAccount: selectedAccount as Address | null,
                         connectors: ((s.wallets as StandardWalletInfo[]) || []).map((w: StandardWalletInfo) => ({
                             id: w.name as string,
@@ -245,10 +247,10 @@ export class ArcWebClient {
         if (!next.rpcUrl) {
             throw new Error(
                 'ArcWebClient updateConfig requires a pre-resolved rpcUrl. ' +
-                'Use server-side RPC resolution before updating config.'
+                    'Use server-side RPC resolution before updating config.',
             );
         }
-        
+
         const rpcUrl = next.rpcUrl;
         const clusterInfo = getClusterInfo(rpcUrl);
         const prevRpcUrl = this.state.network.rpcUrl;
@@ -319,7 +321,9 @@ export class ArcWebClient {
         try {
             await this.connector?.select(walletName);
             const s = this.connector?.getSnapshot() as ConnectorState | undefined;
-            const rawAcc = (s?.accounts as Array<{ address: string; raw?: unknown }>)?.find((a: { address: string; raw?: unknown }) => a.address === s?.selectedAccount)?.raw;
+            const rawAcc = (s?.accounts as Array<{ address: string; raw?: unknown }>)?.find(
+                (a: { address: string; raw?: unknown }) => a.address === s?.selectedAccount,
+            )?.raw;
             const w = s?.selectedWallet;
             const walletSupportsVersioned = rawAcc && w ? this.detectVersionedSupport(rawAcc, w) : true;
             this.state = { ...this.state, wallet: { ...this.state.wallet, capabilities: { walletSupportsVersioned } } };
@@ -344,7 +348,9 @@ export class ArcWebClient {
         try {
             await this.connector?.selectAccount(accountAddress as unknown as string);
             const s = this.connector?.getSnapshot() as ConnectorState | undefined;
-            const rawAcc = (s?.accounts as Array<{ address: string; raw?: unknown }>)?.find((a: { address: string; raw?: unknown }) => a.address === s?.selectedAccount)?.raw;
+            const rawAcc = (s?.accounts as Array<{ address: string; raw?: unknown }>)?.find(
+                (a: { address: string; raw?: unknown }) => a.address === s?.selectedAccount,
+            )?.raw;
             const w = s?.selectedWallet;
             if (rawAcc && w) {
                 const walletSupportsVersioned = this.detectVersionedSupport(rawAcc, w);
@@ -395,7 +401,10 @@ export class ArcWebClient {
             ].filter(Boolean);
 
             const supports = (v: unknown): boolean => {
-                const versionObj = v as { supportedTransactionVersions?: unknown; supportedVersions?: unknown } | null | undefined;
+                const versionObj = v as
+                    | { supportedTransactionVersions?: unknown; supportedVersions?: unknown }
+                    | null
+                    | undefined;
                 const versions = versionObj?.supportedTransactionVersions ?? versionObj?.supportedVersions;
                 if (!versions) return false;
                 if (Array.isArray(versions))

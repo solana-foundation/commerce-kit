@@ -58,10 +58,11 @@ function TransferComponent() {
 ## Examples
 
 ### SOL Transfer
+
 ```typescript
 function SendSOL() {
   const { transferSOL, isLoading } = useTransferSOL();
-  
+
   const handleTransfer = async () => {
     try {
       const { signature } = await transferSOL({
@@ -73,7 +74,7 @@ function SendSOL() {
       console.error('Transfer failed:', error);
     }
   };
-  
+
   return (
     <button onClick={handleTransfer} disabled={isLoading}>
       Send 1 SOL
@@ -82,17 +83,17 @@ function SendSOL() {
 }
 ```
 
-
 ## Configuration
 
 ### ArcProvider Setup
+
 ```typescript
 function App() {
   return (
-    <ArcProvider 
+    <ArcProvider
       config={{
         network: 'devnet',
-        rpcUrl: 'https://api.devnet.solana.com', 
+        rpcUrl: 'https://api.devnet.solana.com',
         debug: true
       }}
     >

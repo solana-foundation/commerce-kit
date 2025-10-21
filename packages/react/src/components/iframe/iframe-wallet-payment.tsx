@@ -209,7 +209,7 @@ export const WalletPaymentContent = ({
         if (origin === 'null') {
             return true;
         }
-        
+
         try {
             const url = new URL(origin);
             return url.protocol === 'http:' || url.protocol === 'https:';
@@ -226,12 +226,14 @@ export const WalletPaymentContent = ({
         if (detectedOrigin && isValidOrigin(detectedOrigin)) {
             setParentOrigin(detectedOrigin);
         }
-        
+
         // For srcDoc iframes, we might not be able to detect the parent origin directly
         // In this case, we'll trust the first valid message we receive
         if (!detectedOrigin || detectedOrigin === 'null') {
             if (config.debug) {
-                console.log('[iframe-wallet-payment] Running in srcDoc context, will detect parent origin from messages');
+                console.log(
+                    '[iframe-wallet-payment] Running in srcDoc context, will detect parent origin from messages',
+                );
             }
         }
 
@@ -256,7 +258,7 @@ export const WalletPaymentContent = ({
             // Otherwise, ensure the message comes from the expected parent
             // Special handling: if we're in a srcDoc iframe (origin null), be more permissive
             const isInSrcDoc = window.location.origin === 'null';
-            
+
             if (!parentOrigin) {
                 // For srcDoc iframes, accept the first valid HTTP/HTTPS origin we receive
                 if (isInSrcDoc && e.origin !== 'null') {
@@ -268,7 +270,9 @@ export const WalletPaymentContent = ({
                 // For srcDoc iframes, be more permissive about origin mismatches
                 if (!isInSrcDoc) {
                     if (config.debug) {
-                        console.warn(`Rejected message from mismatched origin. Expected: ${parentOrigin}, Got: ${e.origin}`);
+                        console.warn(
+                            `Rejected message from mismatched origin. Expected: ${parentOrigin}, Got: ${e.origin}`,
+                        );
                     }
                     return;
                 }
@@ -348,8 +352,8 @@ export const WalletPaymentContent = ({
         try {
             // Calculate the payment amount to send to parent
             // Use '*' for srcDoc iframes since origin detection may fail
-            const targetOrigin = isInSrcDoc ? '*' : (parentOrigin || '*');
-            
+            const targetOrigin = isInSrcDoc ? '*' : parentOrigin || '*';
+
             window.parent.postMessage(
                 {
                     type: 'walletConnect',

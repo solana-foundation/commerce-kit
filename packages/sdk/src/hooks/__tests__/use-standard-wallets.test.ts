@@ -9,21 +9,24 @@ const createMockWallet = (name: string, features: string[] = []): Wallet => ({
     icon: `data:image/svg+xml;base64,${name}`,
     version: '1.0.0',
     accounts: [],
-    features: features.reduce((acc, feature) => {
-        acc[feature] = {
-            connect: vi.fn().mockResolvedValue({
-                accounts: [
-                    {
-                        address: '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM',
-                        publicKey: new Uint8Array(32),
-                        chains: ['solana:devnet'],
-                    },
-                ],
-            }),
-            disconnect: vi.fn(),
-        };
-        return acc;
-    }, {} as Record<string, unknown>),
+    features: features.reduce(
+        (acc, feature) => {
+            acc[feature] = {
+                connect: vi.fn().mockResolvedValue({
+                    accounts: [
+                        {
+                            address: '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM',
+                            publicKey: new Uint8Array(32),
+                            chains: ['solana:devnet'],
+                        },
+                    ],
+                }),
+                disconnect: vi.fn(),
+            };
+            return acc;
+        },
+        {} as Record<string, unknown>,
+    ),
     chains: ['solana:mainnet', 'solana:devnet'],
 });
 
@@ -181,8 +184,10 @@ describe('useStandardWallets', () => {
             expect(result.current).not.toBeNull();
             expect(result.current.select).toBeDefined();
 
-            await act(async () => { 
-                await expect(result.current.select('Phantom')).rejects.toThrow('Wallet Phantom does not support standard connect'); 
+            await act(async () => {
+                await expect(result.current.select('Phantom')).rejects.toThrow(
+                    'Wallet Phantom does not support standard connect',
+                );
             });
         });
 
@@ -206,8 +211,8 @@ describe('useStandardWallets', () => {
             expect(result.current).not.toBeNull();
             expect(result.current.select).toBeDefined();
 
-            await act(async () => { 
-                await expect(result.current.select('Phantom')).rejects.toThrow('User rejected connection'); 
+            await act(async () => {
+                await expect(result.current.select('Phantom')).rejects.toThrow('User rejected connection');
             });
 
             // Should reset connecting state on error

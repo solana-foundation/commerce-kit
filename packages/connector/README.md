@@ -92,10 +92,10 @@ Core headless client for wallet management.
 import { ConnectorClient } from '@solana-commerce/connector';
 
 const client = new ConnectorClient({
-  autoConnect: true,                 // Auto-connect to last wallet
-  debug: false,                      // Enable debug logging
-  accountPollingIntervalMs: 1500,    // Account polling interval
-  storage: window.localStorage       // Custom storage (optional)
+    autoConnect: true, // Auto-connect to last wallet
+    debug: false, // Enable debug logging
+    accountPollingIntervalMs: 1500, // Account polling interval
+    storage: window.localStorage, // Custom storage (optional)
 });
 ```
 
@@ -145,7 +145,7 @@ await client.select('Phantom');
 // Check connection
 const { connected, accounts } = client.getConnectorState();
 if (connected) {
-  console.log('Connected to:', accounts[0].address);
+    console.log('Connected to:', accounts[0].address);
 }
 ```
 
@@ -169,7 +169,7 @@ const { accounts } = client.getConnectorState();
 
 // Switch to second account
 if (accounts.length > 1) {
-  await client.selectAccount(accounts[1].address);
+    await client.selectAccount(accounts[1].address);
 }
 ```
 
@@ -178,10 +178,10 @@ if (accounts.length > 1) {
 Subscribe to state changes.
 
 ```typescript
-const unsubscribe = client.subscribe((state) => {
-  console.log('Wallets:', state.wallets.length);
-  console.log('Connected:', state.connected);
-  console.log('Accounts:', state.accounts.length);
+const unsubscribe = client.subscribe(state => {
+    console.log('Wallets:', state.wallets.length);
+    console.log('Connected:', state.connected);
+    console.log('Accounts:', state.accounts.length);
 });
 
 // Later: cleanup

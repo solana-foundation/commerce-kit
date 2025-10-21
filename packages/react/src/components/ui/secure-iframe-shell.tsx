@@ -56,7 +56,7 @@ export interface Product {
 export interface PaymentConfig {
     /** Fixed SOL price override (USD). If not provided, fetches from price oracle */
     solPriceUsd?: number;
-    /** 
+    /**
      * Custom SOL price fetching function. Use this for enterprise applications,
      * private price oracles, or when you need to avoid public API rate limits.
      * If not provided, defaults to CoinGecko public API.
@@ -79,7 +79,6 @@ interface SecureIframeShellProps {
     paymentConfig?: PaymentConfig;
 }
 
-
 /**
  * Secure iframe shell using srcDoc + postMessage (no allow-same-origin).
  * Renders the full modal UI inside the iframe and communicates with parent.
@@ -88,7 +87,7 @@ interface SecureIframeShellProps {
  */
 export function SecureIframeShell({ config, theme, onPayment, onCancel, paymentConfig }: SecureIframeShellProps) {
     const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
-    
+
     // Use RPC URL from parent (already resolved server-side)
     const rpcUrl = config.rpcUrl || 'https://api.mainnet-beta.solana.com';
     const network = 'mainnet';
@@ -244,7 +243,6 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
             return defaultFallback;
         }
     };
-
 
     // Create the HTML document for the iframe with the bundled app
     const srcDoc = useMemo(() => {
@@ -657,12 +655,12 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
             height={height}
             style={{
                 minWidth: '320px',
-                
+
                 // Apply modal styling directly to iframe
                 backgroundColor: theme.backgroundColor || '#ffffff',
                 borderRadius: getModalBorderRadius(theme.borderRadius),
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', // --modal-shadow
-                
+
                 // Keep existing transition and properties
                 border: 'none',
                 transition: 'height 300ms cubic-bezier(0.19, 1, 0.22, 1)',

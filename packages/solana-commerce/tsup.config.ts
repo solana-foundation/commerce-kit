@@ -18,8 +18,6 @@ export default defineConfig({
         '@solana-commerce/sdk',
         '@solana-commerce/solana-pay',
         'react',
-        'react-dom'
+        'react-dom',
     ],
 });
-
-

@@ -143,7 +143,9 @@ export class TransactionBuilder {
         this.rpcSubscriptions = getSharedWebSocket(context.rpcUrl, context.commitment);
         this.sendAndConfirmTransaction = sendAndConfirmTransactionFactory({
             rpc: this.rpc as unknown as Parameters<typeof sendAndConfirmTransactionFactory>[0]['rpc'],
-            rpcSubscriptions: this.rpcSubscriptions as unknown as Parameters<typeof sendAndConfirmTransactionFactory>[0]['rpcSubscriptions'],
+            rpcSubscriptions: this.rpcSubscriptions as unknown as Parameters<
+                typeof sendAndConfirmTransactionFactory
+            >[0]['rpcSubscriptions'],
         });
     }
 
@@ -164,129 +166,139 @@ export class TransactionBuilder {
             rpcUrl: this.context.rpcUrl,
         };
 
-        return await defaultRetryManager.executeWithRetry(async () => {
-            try {
-                if (this.context.debug) {
-                    console.log(`🔄 [Arc Transaction] Building ${description}...`);
-                }
-
-                // Validate inputs
-                if (!instructions || instructions.length === 0) {
-                    throw new ArcError(
-                        'No instructions provided for transaction',
-                        ArcErrorCode.VALIDATION_ERROR,
-                        context,
-                    );
-                }
-
-                if (!signer || !signer.address) {
-                    throw new ArcError(
-                        'Invalid signer provided for transaction',
-                        ArcErrorCode.WALLET_NOT_CONNECTED,
-                        context,
-                    );
-                }
-
-                // Get latest blockhash with error handling
-                const latestBlockhash = await this.getLatestBlockhashWithRetry();
-
-                // Build transaction message with shared pattern
-                const transactionMessage = pipe(
-                    createTransactionMessage({ version: 0 }),
-                    tx => setTransactionMessageFeePayerSigner(signer, tx),
-                    tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
-                    tx => appendTransactionMessageInstructions(instructions, tx),
-                );
-
-                if (this.context.debug) {
-                    console.log(`🔨 [Arc Transaction] Message built with ${instructions.length} instructions`);
-                }
-
-                // Sign transaction with error handling
-                let signedTransaction: Awaited<ReturnType<typeof signTransactionMessageWithSigners>>;
-                let signature: string;
-
+        return await defaultRetryManager.executeWithRetry(
+            async () => {
                 try {
-                    signedTransaction = await signTransactionMessageWithSigners(transactionMessage);
-                    signature = getSignatureFromTransaction(signedTransaction);
-                } catch (error) {
-                    if (error instanceof Error && error.message.includes('User rejected')) {
-                        throw new ArcError(
-                            'Transaction was rejected by user',
-                            ArcErrorCode.USER_REJECTED,
-                            context,
-                            error,
-                        );
+                    if (this.context.debug) {
+                        console.log(`🔄 [Arc Transaction] Building ${description}...`);
                     }
-                    throw createTransactionError('Failed to sign transaction', context, error as Error);
-                }
 
-                if (this.context.debug) {
-                    const shortSig = `${signature.slice(0, 8)}…`;
-                    console.log('📝 [Arc Transaction] Signature:', shortSig);
-                    console.log('📡 [Arc Transaction] Sending transaction...');
-                }
-
-                // Send and confirm transaction with enhanced error handling
-                try {
-                    await this.sendAndConfirmTransaction(signedTransaction as Parameters<typeof this.sendAndConfirmTransaction>[0], {
-                        commitment: this.context.commitment || 'confirmed',
-                    });
-                } catch (error) {
-                    const errorMessage = error instanceof Error ? error.message : String(error);
-
-                    // Classify transaction errors
-                    if (errorMessage.includes('insufficient funds') || errorMessage.includes('Insufficient lamports')) {
+                    // Validate inputs
+                    if (!instructions || instructions.length === 0) {
                         throw new ArcError(
-                            'Insufficient SOL balance for transaction',
-                            ArcErrorCode.INSUFFICIENT_FUNDS,
+                            'No instructions provided for transaction',
+                            ArcErrorCode.VALIDATION_ERROR,
                             context,
-                            error as Error,
                         );
                     }
 
-                    if (errorMessage.includes('blockhash not found') || errorMessage.includes('expired')) {
+                    if (!signer || !signer.address) {
                         throw new ArcError(
-                            'Transaction blockhash expired, please retry',
-                            ArcErrorCode.BLOCKHASH_EXPIRED,
+                            'Invalid signer provided for transaction',
+                            ArcErrorCode.WALLET_NOT_CONNECTED,
                             context,
-                            error as Error,
                         );
                     }
 
-                    if (errorMessage.includes('simulation failed')) {
-                        throw new ArcError(
-                            'Transaction simulation failed',
-                            ArcErrorCode.SIMULATION_FAILED,
-                            context,
-                            error as Error,
-                        );
-                    }
+                    // Get latest blockhash with error handling
+                    const latestBlockhash = await this.getLatestBlockhashWithRetry();
 
-                    throw createTransactionError(
-                        `Transaction failed: ${errorMessage}`,
-                        { ...context, signature },
-                        error as Error,
+                    // Build transaction message with shared pattern
+                    const transactionMessage = pipe(
+                        createTransactionMessage({ version: 0 }),
+                        tx => setTransactionMessageFeePayerSigner(signer, tx),
+                        tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
+                        tx => appendTransactionMessageInstructions(instructions, tx),
                     );
-                }
 
-                if (this.context.debug) {
-                    console.log(`✅ [Arc Transaction] ${description} completed successfully!`);
-                }
+                    if (this.context.debug) {
+                        console.log(`🔨 [Arc Transaction] Message built with ${instructions.length} instructions`);
+                    }
 
-                return {
-                    signature,
-                    // Note: blockTime and slot could be retrieved here if needed
-                };
-            } catch (error) {
-                // Re-throw ArcError as-is, wrap others
-                if (error instanceof ArcError) {
-                    throw error;
-                }
+                    // Sign transaction with error handling
+                    let signedTransaction: Awaited<ReturnType<typeof signTransactionMessageWithSigners>>;
+                    let signature: string;
 
-                throw createTransactionError(`Unexpected error in ${description}`, context, error as Error);
-            }
-        }, context, this.context.retryConfig);
+                    try {
+                        signedTransaction = await signTransactionMessageWithSigners(transactionMessage);
+                        signature = getSignatureFromTransaction(signedTransaction);
+                    } catch (error) {
+                        if (error instanceof Error && error.message.includes('User rejected')) {
+                            throw new ArcError(
+                                'Transaction was rejected by user',
+                                ArcErrorCode.USER_REJECTED,
+                                context,
+                                error,
+                            );
+                        }
+                        throw createTransactionError('Failed to sign transaction', context, error as Error);
+                    }
+
+                    if (this.context.debug) {
+                        const shortSig = `${signature.slice(0, 8)}…`;
+                        console.log('📝 [Arc Transaction] Signature:', shortSig);
+                        console.log('📡 [Arc Transaction] Sending transaction...');
+                    }
+
+                    // Send and confirm transaction with enhanced error handling
+                    try {
+                        await this.sendAndConfirmTransaction(
+                            signedTransaction as Parameters<typeof this.sendAndConfirmTransaction>[0],
+                            {
+                                commitment: this.context.commitment || 'confirmed',
+                            },
+                        );
+                    } catch (error) {
+                        const errorMessage = error instanceof Error ? error.message : String(error);
+
+                        // Classify transaction errors
+                        if (
+                            errorMessage.includes('insufficient funds') ||
+                            errorMessage.includes('Insufficient lamports')
+                        ) {
+                            throw new ArcError(
+                                'Insufficient SOL balance for transaction',
+                                ArcErrorCode.INSUFFICIENT_FUNDS,
+                                context,
+                                error as Error,
+                            );
+                        }
+
+                        if (errorMessage.includes('blockhash not found') || errorMessage.includes('expired')) {
+                            throw new ArcError(
+                                'Transaction blockhash expired, please retry',
+                                ArcErrorCode.BLOCKHASH_EXPIRED,
+                                context,
+                                error as Error,
+                            );
+                        }
+
+                        if (errorMessage.includes('simulation failed')) {
+                            throw new ArcError(
+                                'Transaction simulation failed',
+                                ArcErrorCode.SIMULATION_FAILED,
+                                context,
+                                error as Error,
+                            );
+                        }
+
+                        throw createTransactionError(
+                            `Transaction failed: ${errorMessage}`,
+                            { ...context, signature },
+                            error as Error,
+                        );
+                    }
+
+                    if (this.context.debug) {
+                        console.log(`✅ [Arc Transaction] ${description} completed successfully!`);
+                    }
+
+                    return {
+                        signature,
+                        // Note: blockTime and slot could be retrieved here if needed
+                    };
+                } catch (error) {
+                    // Re-throw ArcError as-is, wrap others
+                    if (error instanceof ArcError) {
+                        throw error;
+                    }
+
+                    throw createTransactionError(`Unexpected error in ${description}`, context, error as Error);
+                }
+            },
+            context,
+            this.context.retryConfig,
+        );
     }
 
     /**
@@ -405,7 +417,10 @@ export class TransactionBuilder {
                 accountAlreadyExists = Boolean(value);
             } catch (error) {
                 if (this.context.debug) {
-                    console.log('⚠️ [Arc] Unable to prefetch recipient ATA state; assuming creation is required.', error);
+                    console.log(
+                        '⚠️ [Arc] Unable to prefetch recipient ATA state; assuming creation is required.',
+                        error,
+                    );
                 }
             }
 
@@ -424,7 +439,10 @@ export class TransactionBuilder {
                 if (createdAccount) {
                     console.log('🏗️ [Arc] Creating recipient token account:', toAta);
                 } else {
-                    console.log('ℹ️ [Arc] Recipient token account already exists, idempotent instruction will no-op:', toAta);
+                    console.log(
+                        'ℹ️ [Arc] Recipient token account already exists, idempotent instruction will no-op:',
+                        toAta,
+                    );
                 }
             }
         }
@@ -687,7 +705,7 @@ export class TransactionBuilder {
             if (!isSignature(signature)) {
                 throw new Error('Invalid signature');
             }
-            
+
             const result = await defaultRetryManager.executeWithRetry(
                 async () => {
                     const response = await this.rpc.getSignatureStatuses([signature]).send();

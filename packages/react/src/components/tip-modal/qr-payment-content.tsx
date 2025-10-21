@@ -124,7 +124,7 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(
                             addressToCheck = await getAssociatedTokenAccountAddress(
                                 tokenInfo.mint,
                                 merchantAddress,
-                                tokenInfo.tokenProgram
+                                tokenInfo.tokenProgram,
                             );
                         } catch (error) {
                             console.warn('Failed to get ATA for', tokenInfo.symbol, ':', error);
@@ -345,7 +345,6 @@ export const QRPaymentContent = memo<QRPaymentContentProps>(
                         <MerchantAddressPill theme={theme} config={config} copiedText="Address Copied!" />
                     </>
                 )}
-
             </div>
         );
     },

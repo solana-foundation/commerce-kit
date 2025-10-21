@@ -1,6 +1,6 @@
 /**
  * Server-side API route for RPC endpoint resolution
- * 
+ *
  * This should be implemented as a Next.js API route or similar server endpoint
  */
 
@@ -8,7 +8,7 @@ import type { RpcEndpointConfig, RpcEndpoint } from '../utils/rpc-resolver';
 
 /**
  * API route handler for RPC endpoint resolution
- * 
+ *
  * Usage: POST /api/rpc-endpoints
  * Body: { network: 'mainnet', priority: 'reliable' }
  * Response: { url: 'https://...', network: 'mainnet', priority: 'reliable' }
@@ -20,13 +20,10 @@ export async function POST(request: Request): Promise<Response> {
             return Response.json({ error: 'Invalid request body' }, { status: 400 });
         }
         const config = body as RpcEndpointConfig;
-        
+
         // Validate input
         if (!config.network || !['mainnet', 'devnet', 'testnet'].includes(config.network)) {
-            return Response.json(
-                { error: 'Invalid network specified' },
-                { status: 400 }
-            );
+            return Response.json({ error: 'Invalid network specified' }, { status: 400 });
         }
 
         // Server-side environment variable resolution
@@ -37,24 +34,20 @@ export async function POST(request: Request): Promise<Response> {
                 network: config.network,
                 priority: config.priority || 'reliable',
                 rateLimitTier: 'pro',
-                source: 'environment'
+                source: 'environment',
             });
         }
 
         // Fallback to public endpoints
         const publicEndpoint = getPublicRpcEndpoint(config.network, config.priority || 'reliable');
-        
+
         return Response.json({
             ...publicEndpoint,
-            source: 'public'
+            source: 'public',
         });
-
     } catch (error) {
         console.error('[API] RPC endpoint resolution failed:', error);
-        return Response.json(
-            { error: 'Failed to resolve RPC endpoint' },
-            { status: 500 }
-        );
+        return Response.json({ error: 'Failed to resolve RPC endpoint' }, { status: 500 });
     }
 }
 
@@ -65,7 +58,7 @@ function getServerRpcUrl(network: string): string | null {
     // Check if we're in a Node.js environment
     const globalProcess = (globalThis as any).process;
     if (!globalProcess?.env) return null;
-    
+
     const envKey = `SOLANA_RPC_${network.toUpperCase()}`;
     return globalProcess.env[envKey] || globalProcess.env.SOLANA_RPC_URL || null;
 }
@@ -82,7 +75,7 @@ function getPublicRpcEndpoint(network: string, priority: string): RpcEndpoint {
         },
         devnet: {
             fast: 'https://api.devnet.solana.com',
-            reliable: 'https://api.devnet.solana.com', 
+            reliable: 'https://api.devnet.solana.com',
             'cost-effective': 'https://api.devnet.solana.com',
         },
         testnet: {

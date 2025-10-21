@@ -10,7 +10,7 @@ const MOBILE_BREAKPOINT = 768;
  */
 function hasTouchSupport(): boolean {
     if (typeof window === 'undefined') return false;
-    
+
     return (
         'ontouchstart' in window ||
         navigator.maxTouchPoints > 0 ||
@@ -21,11 +21,11 @@ function hasTouchSupport(): boolean {
 
 /**
  * Hook to detect if the user is on a mobile device
- * 
+ *
  * Considers both viewport width and touch capability for accurate detection
- * 
+ *
  * @returns boolean indicating if the device is mobile
- * 
+ *
  * @example
  * ```tsx
  * const isMobile = useMobileDetection();
@@ -41,7 +41,7 @@ export function useMobileDetection(): boolean {
         const checkMobile = () => {
             const width = window.innerWidth;
             const hasTouch = hasTouchSupport();
-            
+
             // Mobile if viewport is narrow OR has touch (tablets can be touch + wide)
             // But prioritize narrow viewport as the primary indicator
             setIsMobile(width < MOBILE_BREAKPOINT);
@@ -52,7 +52,7 @@ export function useMobileDetection(): boolean {
 
         // Listen for resize events
         window.addEventListener('resize', checkMobile);
-        
+
         // Also listen for orientation change on mobile devices
         window.addEventListener('orientationchange', checkMobile);
 
@@ -67,7 +67,7 @@ export function useMobileDetection(): boolean {
 
 /**
  * Hook variant that also returns viewport width for more granular control
- * 
+ *
  * @returns { isMobile: boolean, width: number, hasTouch: boolean }
  */
 export function useMobileDetectionDetailed() {
@@ -81,7 +81,7 @@ export function useMobileDetectionDetailed() {
         const checkMobile = () => {
             const width = window.innerWidth;
             const hasTouch = hasTouchSupport();
-            
+
             setState({
                 isMobile: width < MOBILE_BREAKPOINT,
                 width,
@@ -102,4 +102,3 @@ export function useMobileDetectionDetailed() {
 
     return state;
 }
-

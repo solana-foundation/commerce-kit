@@ -16,11 +16,7 @@ export interface UnifiedProviderProps {
     providers?: ProviderDescriptor<Record<string, unknown>>[];
 }
 
-export function UnifiedProvider({
-    children,
-    connectorConfig,
-    providers = [],
-}: UnifiedProviderProps) {
+export function UnifiedProvider({ children, connectorConfig, providers = [] }: UnifiedProviderProps) {
     // Start with connector provider as the base
     let content = <ConnectorProvider config={connectorConfig}>{children}</ConnectorProvider>;
 

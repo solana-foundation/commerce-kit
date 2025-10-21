@@ -86,7 +86,7 @@ export function DrawerContent({
 
         const touch = e.touches[0];
         if (!touch) return;
-        
+
         touchCurrentY.current = touch.clientY;
         const deltaY = touchCurrentY.current - touchStartY.current;
 

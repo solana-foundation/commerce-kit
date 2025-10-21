@@ -8,12 +8,7 @@ import { useDropdown } from '../../hooks/use-dropdown';
 import { useThemeStyles } from '../../hooks/use-theme-styles';
 import { ChevronDownIcon, CheckIcon } from '../icons';
 import { TokenIcon } from '../icons';
-import {
-    DropdownRoot,
-    DropdownTrigger,
-    DropdownContent,
-    DropdownItem,
-} from '../../ui-primitives/dropdown-alpha';
+import { DropdownRoot, DropdownTrigger, DropdownContent, DropdownItem } from '../../ui-primitives/dropdown-alpha';
 import type { ThemeConfig, Currency } from '../../types';
 
 interface CurrencyInfo {

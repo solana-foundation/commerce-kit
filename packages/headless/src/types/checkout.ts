@@ -39,4 +39,3 @@ export interface SecureCheckoutConfig {
     timestamp?: number;
     nonce?: string;
 }
-

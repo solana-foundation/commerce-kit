@@ -1,8 +1,8 @@
 /**
  * Example Next.js API route for RPC endpoint resolution
- * 
+ *
  * Create this file in your Next.js app:
- * - App Router: /app/api/rpc-endpoints/route.ts  
+ * - App Router: /app/api/rpc-endpoints/route.ts
  * - Pages Router: /pages/api/rpc-endpoints.ts
  */
 

@@ -1,6 +1,6 @@
 /**
  * Simple RPC utilities for wallet flow
- * 
+ *
  * Simplified from over-engineered pooling system to basic RPC client creation
  */
 
@@ -12,7 +12,7 @@ type SolanaRpcSubscriptions = ReturnType<typeof createSolanaRpcSubscriptions>;
 
 /**
  * Create RPC connection for wallet operations
- * 
+ *
  * @param rpcUrl - RPC endpoint URL
  * @param commitment - Transaction confirmation level
  * @returns RPC client
@@ -23,7 +23,7 @@ export function createRpc(rpcUrl: string, _commitment?: 'processed' | 'confirmed
 
 /**
  * Create WebSocket connection for wallet operations
- * 
+ *
  * @param rpcUrl - RPC endpoint URL (will be converted to WebSocket URL)
  * @param commitment - Transaction confirmation level
  * @returns WebSocket client

@@ -1,6 +1,6 @@
 /**
  * Server-side RPC URL resolution utilities
- * 
+ *
  * Handles RPC endpoint selection server-side for security and performance
  */
 
@@ -19,7 +19,7 @@ export interface RpcEndpoint {
 
 /**
  * Server-side RPC URL resolver
- * 
+ *
  * @param config - Network and priority configuration
  * @returns Resolved RPC endpoint information
  */
@@ -58,7 +58,7 @@ function getServerRpcUrl(network: string): string | null {
     // Check if we're in a Node.js environment
     const globalProcess = (globalThis as any).process;
     if (!globalProcess?.env) return null;
-    
+
     const envKey = `SOLANA_RPC_${network.toUpperCase()}`;
     return globalProcess.env[envKey] || globalProcess.env.SOLANA_RPC_URL || null;
 }
@@ -75,7 +75,7 @@ function getPublicRpcEndpoint(network: string, priority: string): RpcEndpoint {
         },
         devnet: {
             fast: 'https://api.devnet.solana.com',
-            reliable: 'https://api.devnet.solana.com', 
+            reliable: 'https://api.devnet.solana.com',
             'cost-effective': 'https://api.devnet.solana.com',
         },
         testnet: {
@@ -98,7 +98,7 @@ function getPublicRpcEndpoint(network: string, priority: string): RpcEndpoint {
 
 /**
  * Client-side function to request RPC URL from server
- * 
+ *
  * For iframe use: Parent fetches RPC URL server-side and passes to iframe
  */
 export async function fetchRpcUrl(config: RpcEndpointConfig): Promise<string> {
@@ -111,7 +111,7 @@ export async function fetchRpcUrl(config: RpcEndpointConfig): Promise<string> {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(config),
                 });
-                
+
                 if (response.ok) {
                     const result = await response.json();
                     return result.url;

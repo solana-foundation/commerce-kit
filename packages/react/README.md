@@ -27,12 +27,14 @@ pnpm add @solana-commerce/react
 ## Components
 
 ### Core Components
+
 - **PaymentButton** - Main payment component supporting tip, payment, and cart modes
 - **TransactionSuccess** - Success state UI component
 - **TransactionError** - Error state UI component
 - Many UI Primitives
 
 ### Hooks
+
 - **useSolanaPay** - Solana Pay integration
 - **useSolEquivalent** - Token to SOL conversion
 - **useTipForm** - Tip form state management

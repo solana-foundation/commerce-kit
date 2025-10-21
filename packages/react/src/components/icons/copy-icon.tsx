@@ -6,11 +6,7 @@ interface CopyIconProps {
     'data-testid'?: string;
 }
 
-export const CopyIcon: React.FC<CopyIconProps> = ({ 
-    size = 16, 
-    className, 
-    'data-testid': testId 
-}) => {
+export const CopyIcon: React.FC<CopyIconProps> = ({ size = 16, className, 'data-testid': testId }) => {
     return (
         <svg
             width={size}

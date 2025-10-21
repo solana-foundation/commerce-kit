@@ -6,11 +6,7 @@ interface CloseIconProps {
     'data-testid'?: string;
 }
 
-export const CloseIcon: React.FC<CloseIconProps> = ({ 
-    size = 14, 
-    className, 
-    'data-testid': testId 
-}) => {
+export const CloseIcon: React.FC<CloseIconProps> = ({ size = 14, className, 'data-testid': testId }) => {
     return (
         <svg
             width={size}

@@ -25,7 +25,7 @@ function deriveWebSocketUrl(rpcUrl: string): string {
     if (rpcUrl.startsWith('http://')) {
         return rpcUrl.replace('http://', 'ws://');
     }
-    
+
     // Handle URLs without explicit schemes - check prefix to determine protocol
     if (rpcUrl.startsWith('https')) {
         return `wss://${rpcUrl}`;
@@ -33,7 +33,7 @@ function deriveWebSocketUrl(rpcUrl: string): string {
     if (rpcUrl.startsWith('http')) {
         return `ws://${rpcUrl}`;
     }
-    
+
     // Default to ws:// for other cases (localhost, domains without protocol, etc.)
     return `ws://${rpcUrl}`;
 }
@@ -47,7 +47,7 @@ export function getClusterInfo(network: string): ClusterInfo {
     if (isStandardCluster(network)) {
         const rpcUrl = getPublicSolanaRpcUrl(network);
         const wsUrl = deriveWebSocketUrl(rpcUrl);
-        
+
         return {
             name: network === 'mainnet-beta' ? 'mainnet' : network,
             rpcUrl,
@@ -57,7 +57,7 @@ export function getClusterInfo(network: string): ClusterInfo {
             isTestnet: network === 'testnet',
         };
     }
-    
+
     // Handle custom RPC URLs (treat as mainnet by default)
     const wsUrl = deriveWebSocketUrl(network);
     return {

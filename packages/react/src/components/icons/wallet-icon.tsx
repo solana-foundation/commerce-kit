@@ -6,11 +6,7 @@ interface WalletIconProps {
     'data-testid'?: string;
 }
 
-export const WalletIcon: React.FC<WalletIconProps> = ({ 
-    size = 16, 
-    className, 
-    'data-testid': testId 
-}) => {
+export const WalletIcon: React.FC<WalletIconProps> = ({ size = 16, className, 'data-testid': testId }) => {
     return (
         <svg
             width={size}
