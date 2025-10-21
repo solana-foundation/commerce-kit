@@ -6,12 +6,16 @@ on:
       - "v*"
   workflow_dispatch:
     inputs:
-      publish_typescript:
-        description: "Publish TypeScript SDK to npm"
+      publish_program_client:
+        description: "Publish Program Client (TypeScript) to npm"
         type: boolean
         default: true
       publish_rust:
         description: "Publish Rust SDK to crates.io"
+        type: boolean
+        default: true
+      publish_sdk_packages:
+        description: "Publish SDK packages to npm"
         type: boolean
         default: true
 
@@ -19,8 +23,8 @@ permissions:
   contents: read
 
 jobs:
-  publish-typescript:
-    if: ${{ startsWith(github.ref, 'refs/tags/') || github.event.inputs.publish_typescript == 'true' }}
+  publish-program-client:
+    if: ${{ startsWith(github.ref, 'refs/tags/') || github.event.inputs.publish_program_client == 'true' }}
     runs-on: ubuntu-latest
     environment: npm-publish
 
@@ -151,9 +155,92 @@ jobs:
         working-directory: program/clients/rust
         run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}
 
+  publish-sdk-packages:
+    if: ${{ startsWith(github.ref, 'refs/tags/') || github.event.inputs.publish_sdk_packages == 'true' }}
+    runs-on: ubuntu-latest
+    environment: npm-publish
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.14.0
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install root dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages in dependency order
+        run: |
+          echo "📦 Building SDK packages in dependency order..."
+          pnpm --filter @solana-commerce/connector build
+          pnpm --filter @solana-commerce/solana-pay build
+          pnpm --filter @solana-commerce/headless build
+          pnpm --filter @solana-commerce/sdk build
+          pnpm --filter @solana-commerce/react build
+          pnpm --filter @solana-commerce build
+
+      - name: Publish @solana-commerce/connector
+        working-directory: packages/connector
+        run: pnpm publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        continue-on-error: true
+
+      - name: Publish @solana-commerce/solana-pay
+        working-directory: packages/solana-pay
+        run: pnpm publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        continue-on-error: true
+
+      - name: Publish @solana-commerce/headless
+        working-directory: packages/headless
+        run: pnpm publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        continue-on-error: true
+
+      - name: Publish @solana-commerce/sdk
+        working-directory: packages/sdk
+        run: pnpm publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        continue-on-error: true
+
+      - name: Publish @solana-commerce/react
+        working-directory: packages/react
+        run: pnpm publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        continue-on-error: true
+
+      - name: Publish @solana-commerce (meta-package)
+        working-directory: packages/solana-commerce
+        run: pnpm publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        continue-on-error: true
+
   create-release:
     if: startsWith(github.ref, 'refs/tags/') && always() && !cancelled()
-    needs: [publish-typescript, publish-rust]
+    needs: [publish-program-client, publish-rust, publish-sdk-packages]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -168,29 +255,64 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           body: |
-            ## SDKs Published
+            ## Packages Published
 
-            ### TypeScript SDK
-            - Package: `@solana-commerce/program-client`
-            - Version: ${{ github.ref_name }}
-            - Registry: npm
+            ### Program Client (TypeScript)
+            - **Package:** `@solana-commerce/program-client`
+            - **Version:** ${{ github.ref_name }}
+            - **Registry:** npm
+            - **Install:** `npm install @solana-commerce/program-client@${{ github.ref_name }}`
 
-            ### Rust SDK  
-            - Package: `commerce-program-client`
-            - Version: ${{ github.ref_name }}
-            - Registry: crates.io
+            ### Program Client (Rust)
+            - **Package:** `commerce-program-client`
+            - **Version:** ${{ github.ref_name }}
+            - **Registry:** crates.io
+            - **Install:** Add to Cargo.toml: `commerce-program-client = "${{ github.ref_name }}"`
+
+            ### SDK Packages (TypeScript)
+            
+            **Core SDK:**
+            - `@solana-commerce/connector` - Wallet connector client
+            - `@solana-commerce/sdk` - React hooks and utilities
+            - `@solana-commerce/headless` - Headless SDK
+            - `@solana-commerce/solana-pay` - Solana Pay implementation
+            - `@solana-commerce/react` - React components and hooks
+            - `@solana-commerce` - All-in-one meta-package
 
             ## Installation
 
-            **TypeScript/JavaScript:**
+            **All-in-one package (recommended):**
             ```bash
-            npm install @solana-commerce/program-client@${{ github.ref_name }}
+            npm install @solana-commerce
             ```
 
-            **Rust:**
+            **Individual packages:**
+            ```bash
+            npm install @solana-commerce/react
+            npm install @solana-commerce/sdk
+            npm install @solana-commerce/connector
+            npm install @solana-commerce/headless
+            npm install @solana-commerce/solana-pay
+            ```
+
+            **Program client:**
+            ```bash
+            npm install @solana-commerce/program-client
+            ```
+
+            **Rust client:**
             ```toml
             [dependencies]
             commerce-program-client = "${{ github.ref_name }}"
             ```
+
+            ## NPM Package Links
+            - [@solana-commerce](https://www.npmjs.com/package/@solana-commerce)
+            - [@solana-commerce/react](https://www.npmjs.com/package/@solana-commerce/react)
+            - [@solana-commerce/sdk](https://www.npmjs.com/package/@solana-commerce/sdk)
+            - [@solana-commerce/connector](https://www.npmjs.com/package/@solana-commerce/connector)
+            - [@solana-commerce/headless](https://www.npmjs.com/package/@solana-commerce/headless)
+            - [@solana-commerce/solana-pay](https://www.npmjs.com/package/@solana-commerce/solana-pay)
+            - [@solana-commerce/program-client](https://www.npmjs.com/package/@solana-commerce/program-client)
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
