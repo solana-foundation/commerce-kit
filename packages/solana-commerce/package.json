@@ -1,5 +1,5 @@
 {
-    "name": "@solana-commerce",
+    "name": "@solana-commerce/kit",
     "version": "0.1.0",
     "description": "Comprehensive Solana Commerce SDK - All-in-one package for Solana e-commerce solutions",
     "main": "./dist/index.js",

@@ -194,7 +194,7 @@ jobs:
           pnpm --filter @solana-commerce/headless build
           pnpm --filter @solana-commerce/sdk build
           pnpm --filter @solana-commerce/react build
-          pnpm --filter @solana-commerce build
+          pnpm --filter @solana-commerce/kit build
 
       - name: Publish @solana-commerce/connector
         working-directory: packages/connector
@@ -231,7 +231,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         continue-on-error: true
 
-      - name: Publish @solana-commerce (meta-package)
+      - name: Publish @solana-commerce/kit (meta-package)
         working-directory: packages/solana-commerce
         run: pnpm publish --access public --no-git-checks
         env:
@@ -277,13 +277,13 @@ jobs:
             - `@solana-commerce/headless` - Headless SDK
             - `@solana-commerce/solana-pay` - Solana Pay implementation
             - `@solana-commerce/react` - React components and hooks
-            - `@solana-commerce` - All-in-one meta-package
+            - `@solana-commerce/kit` - All-in-one meta-package
 
             ## Installation
 
             **All-in-one package (recommended):**
             ```bash
-            npm install @solana-commerce
+            npm install @solana-commerce/kit
             ```
 
             **Individual packages:**
@@ -307,7 +307,7 @@ jobs:
             ```
 
             ## NPM Package Links
-            - [@solana-commerce](https://www.npmjs.com/package/@solana-commerce)
+            - [@solana-commerce/kit](https://www.npmjs.com/package/@solana-commerce/kit) - All-in-one package
             - [@solana-commerce/react](https://www.npmjs.com/package/@solana-commerce/react)
             - [@solana-commerce/sdk](https://www.npmjs.com/package/@solana-commerce/sdk)
             - [@solana-commerce/connector](https://www.npmjs.com/package/@solana-commerce/connector)

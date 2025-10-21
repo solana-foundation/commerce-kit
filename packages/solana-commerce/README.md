@@ -1,4 +1,4 @@
-# @solana-commerce/solana-commerce
+# @solana-commerce/kit
 
 Complete Solana Commerce SDK - all packages in one install
 
@@ -7,7 +7,7 @@ Complete Solana Commerce SDK - all packages in one install
 ## Installation
 
 ```bash
-pnpm add @solana-commerce/solana-commerce
+pnpm add @solana-commerce/kit
 ```
 
 ## What's Included
@@ -23,7 +23,7 @@ This meta-package includes all Solana Commerce Kit functionality:
 ## Quick Start
 
 ```typescript
-import { PaymentButton, useWallet, useBalance } from '@solana-commerce/solana-commerce';
+import { PaymentButton, useWallet, useBalance } from '@solana-commerce/kit';
 
 function App() {
   return (
@@ -49,7 +49,7 @@ All exports from individual packages are available through this meta-package:
 ### Components
 
 ```typescript
-import { PaymentButton } from '@solana-commerce/solana-commerce';
+import { PaymentButton } from '@solana-commerce/kit';
 
 <PaymentButton
   config={{
@@ -65,7 +65,7 @@ import { PaymentButton } from '@solana-commerce/solana-commerce';
 ### Hooks
 
 ```typescript
-import { useWallet, useBalance, useTransferSOL } from '@solana-commerce';
+import { useWallet, useBalance, useTransferSOL } from '@solana-commerce/kit';
 
 function WalletInfo() {
   const { wallet, connect } = useWallet();
@@ -84,7 +84,7 @@ function WalletInfo() {
 ### Headless Functions
 
 ```typescript
-import { createPayment, calculateTotal } from '@solana-commerce/solana-commerce';
+import { createPayment, calculateTotal } from '@solana-commerce/kit';
 
 const payment = createPayment({
     merchant: { wallet: 'address' },
@@ -102,7 +102,7 @@ const total = calculateTotal({
 ### Solana Pay
 
 ```typescript
-import { createQR, encodeURL } from '@solana-commerce/solana-commerce';
+import { createQR, encodeURL } from '@solana-commerce/kit';
 
 const url = encodeURL({
     recipient: 'wallet-address',
@@ -115,7 +115,7 @@ const qr = createQR(url);
 
 ## When to Use This Package
 
-**Use `@solana-commerce` when:**
+**Use `@solana-commerce/kit` when:**
 
 - Building full-featured commerce applications
 - You need components, hooks, and commerce logic
