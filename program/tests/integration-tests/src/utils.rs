@@ -220,7 +220,7 @@ impl TestContext {
         all_signers.extend(signers);
 
         let transaction = Transaction::new_signed_with_payer(
-            &[instruction.clone()],
+            std::slice::from_ref(&instruction),
             Some(&self.payer.pubkey()),
             &all_signers,
             self.svm.latest_blockhash(),
