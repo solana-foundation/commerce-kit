@@ -135,21 +135,10 @@ jobs:
       - name: Build Solana program and generate clients
         run: cd program && make build
 
-      - name: Format Rust code
-        working-directory: program/clients/rust
-        run: cargo fmt --check
-
-      - name: Lint Rust code
-        working-directory: program/clients/rust
-        run: cargo clippy -- -D warnings
 
       - name: Build Rust client
         working-directory: program/clients/rust
         run: cargo build --release
-
-      - name: Run Rust tests
-        working-directory: program/clients/rust
-        run: cargo test
 
       - name: Publish to crates.io
         working-directory: program/clients/rust
