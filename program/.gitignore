@@ -8,8 +8,9 @@ dist/
 /tests/integration-tests/deps
 
 # Codama generated clients
-/clients/rust/src/generated/*
-/clients/typescript/src/generated/*
+# We'll check in the generated clients to make publishing to crates.io easier
+#/clients/rust/src/generated/*
+#/clients/typescript/src/generated/*
 
 # Local test validator
 *test-ledger*
