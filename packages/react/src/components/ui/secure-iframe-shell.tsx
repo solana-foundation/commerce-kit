@@ -167,41 +167,44 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
 
     // Get ArcClient for wallet state
     const arcClient = useArcClient();
-    
+
     // Store latest wallet state in ref for async access
     const walletStateRef = useRef(arcClient.wallet);
     useEffect(() => {
         walletStateRef.current = arcClient.wallet;
     }, [arcClient.wallet]);
-    
+
     // Helper to wait for wallet signer to be available
-    const waitForSigner = useCallback(async (timeoutMs = 3000): Promise<void> => {
-        // Check if already available
-        if (walletStateRef.current.signer) return;
-        
-        if (config.debug) {
-            console.log('[SecureIframeShell] Waiting for signer to sync...');
-        }
-        
-        // Wait for signer via polling ref
-        const startTime = Date.now();
-        while (Date.now() - startTime < timeoutMs) {
-            if (walletStateRef.current.signer) {
-                if (config.debug) {
-                    console.log('[SecureIframeShell] Signer available after', Date.now() - startTime, 'ms');
-                }
-                return;
+    const waitForSigner = useCallback(
+        async (timeoutMs = 3000): Promise<void> => {
+            // Check if already available
+            if (walletStateRef.current.signer) return;
+
+            if (config.debug) {
+                console.log('[SecureIframeShell] Waiting for signer to sync...');
             }
-            await new Promise(resolve => setTimeout(resolve, 50));
-        }
-        
-        console.error('[executePayment] Signer not available. Wallet state:', {
-            connected: walletStateRef.current.connected,
-            address: walletStateRef.current.address,
-            hasSigner: !!walletStateRef.current.signer,
-        });
-        throw new Error('Timeout waiting for wallet signer');
-    }, [config.debug]);
+
+            // Wait for signer via polling ref
+            const startTime = Date.now();
+            while (Date.now() - startTime < timeoutMs) {
+                if (walletStateRef.current.signer) {
+                    if (config.debug) {
+                        console.log('[SecureIframeShell] Signer available after', Date.now() - startTime, 'ms');
+                    }
+                    return;
+                }
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+
+            console.error('[executePayment] Signer not available. Wallet state:', {
+                connected: walletStateRef.current.connected,
+                address: walletStateRef.current.address,
+                hasSigner: !!walletStateRef.current.signer,
+            });
+            throw new Error('Timeout waiting for wallet signer');
+        },
+        [config.debug],
+    );
 
     // State to track current payment attempt
     const [currentPayment, setCurrentPayment] = useState<{
@@ -304,7 +307,7 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
             }
 
             const state = (connectorClient as any).getConnectorState();
-            
+
             if (!state.selectedWallet || !state.selectedAccount) {
                 throw new Error('No wallet connected');
             }
@@ -436,7 +439,6 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
     };
 
     useEffect(() => {
-
         async function waitForWallets(client: ConnectorClient, timeoutMs = 1500): Promise<void> {
             const start = Date.now();
             while (Date.now() - start < timeoutMs) {
@@ -505,7 +507,7 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
 
         async function onMessage(e: MessageEvent) {
             const data = e.data as any;
-            
+
             if (!data || typeof data !== 'object') {
                 return;
             }
@@ -558,16 +560,16 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
 
                         // Ensure wallet list is ready (Wallet Standard can be async to populate)
                         await waitForWallets(connectorClient);
-                        
+
                         const snap = (connectorClient as any).getConnectorState();
                         const target = (snap.wallets || []).find((w: any) => w.name === data.walletName);
-                        
+
                         if (!target) {
                             throw new Error('Wallet not found');
                         }
-                        
+
                         await connectorClient.select(data.walletName);
-                        
+
                         const result = (connectorClient as any).getConnectorState();
                         const accounts = (result.accounts || []).map((a: any) => ({
                             address: a.address,
@@ -613,9 +615,9 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
                     break;
             }
         }
-        
+
         window.addEventListener('message', onMessage);
-        
+
         return () => {
             window.removeEventListener('message', onMessage);
         };

@@ -147,7 +147,7 @@ export class ArcWebClient {
                         selectedAccount: s.selectedAccount,
                     });
                 }
-                
+
                 const selectedWallet = s.selectedWallet;
                 const connected = s.connected;
                 const connecting = s.connecting;
@@ -159,10 +159,8 @@ export class ArcWebClient {
                 if (connected && selectedWallet && selectedAccount) {
                     const accountList = accounts as unknown as Array<{ address: string; raw?: unknown }>;
                     const accountWithRaw = accountList.find(a => a.address === selectedAccount);
-                    const rawAccount = accountWithRaw?.raw as
-                        | { address: string }
-                        | undefined;
-                    
+                    const rawAccount = accountWithRaw?.raw as { address: string } | undefined;
+
                     if (rawAccount && 'address' in rawAccount) {
                         signer = new WalletStandardKitSigner(rawAccount, selectedWallet);
                         address = rawAccount.address as Address;

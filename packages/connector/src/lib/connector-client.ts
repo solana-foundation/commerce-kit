@@ -280,7 +280,6 @@ export class ConnectorClient {
 
                 this.state = { ...this.state, accounts: nextAccounts, selectedAccount: newSelected };
                 this.notify();
-
             });
         } catch (error) {
             if (this.config.debug) {

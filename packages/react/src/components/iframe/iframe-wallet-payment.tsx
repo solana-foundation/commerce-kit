@@ -366,12 +366,12 @@ export const WalletPaymentContent = ({
                     message,
                     targetOrigin,
                     isInSrcDoc,
-                    parentOrigin
+                    parentOrigin,
                 });
             }
 
             window.parent.postMessage(message, targetOrigin);
-            
+
             if (config.debug) {
                 console.log('[IframeWalletPayment] walletConnect message sent successfully');
             }

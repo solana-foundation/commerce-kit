@@ -202,11 +202,14 @@ export const PaymentButton = memo<PaymentButtonProps>(function PaymentButton({
     }, [config.rpcUrl]);
 
     // Single AppProvider + ArcProvider for the entire component
-    const arcConfig = useMemo(() => ({
-        network,
-        rpcUrl: resolvedRpcUrl,
-        debug: config.debug
-    }), [network, resolvedRpcUrl, config.debug]);
+    const arcConfig = useMemo(
+        () => ({
+            network,
+            rpcUrl: resolvedRpcUrl,
+            debug: config.debug,
+        }),
+        [network, resolvedRpcUrl, config.debug],
+    );
 
     return (
         <AppProvider connectorConfig={connectorConfig}>

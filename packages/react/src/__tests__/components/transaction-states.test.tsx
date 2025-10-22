@@ -190,7 +190,6 @@ describe('Transaction State Components', () => {
             expect(onViewTransaction).toHaveBeenCalledWith(defaultSuccessProps.signature);
         });
 
-
         it('should handle different currencies correctly', () => {
             const { rerender } = render(<TransactionSuccess {...defaultSuccessProps} currency="SOL" amount={0.5} />);
 
