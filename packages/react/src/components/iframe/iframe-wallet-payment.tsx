@@ -354,15 +354,27 @@ export const WalletPaymentContent = ({
             // Use '*' for srcDoc iframes since origin detection may fail
             const targetOrigin = isInSrcDoc ? '*' : parentOrigin || '*';
 
-            window.parent.postMessage(
-                {
-                    type: 'walletConnect',
-                    walletName,
-                    amount: amountValue,
-                    currency: selectedCurrency,
-                },
-                targetOrigin,
-            );
+            const message = {
+                type: 'walletConnect',
+                walletName,
+                amount: amountValue,
+                currency: selectedCurrency,
+            };
+
+            if (config.debug) {
+                console.log('[IframeWalletPayment] Sending walletConnect message to parent:', {
+                    message,
+                    targetOrigin,
+                    isInSrcDoc,
+                    parentOrigin,
+                });
+            }
+
+            window.parent.postMessage(message, targetOrigin);
+
+            if (config.debug) {
+                console.log('[IframeWalletPayment] walletConnect message sent successfully');
+            }
         } catch (e: any) {
             setConnecting(null);
             setError(e?.message || 'Failed to request wallet connect');

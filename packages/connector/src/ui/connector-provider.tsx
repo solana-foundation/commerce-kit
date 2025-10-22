@@ -26,25 +26,21 @@ function getOrCreateConnectorClient(config?: ConnectorConfig): ConnectorClient {
     }
 
     if (!globalConnectorClient) {
-        console.log('[ConnectorProvider] Creating singleton ConnectorClient');
         globalConnectorClient = new ConnectorClient(config);
     }
 
     providerRefCount++;
-    console.log('[ConnectorProvider] Provider mounted, ref count:', providerRefCount);
 
     return globalConnectorClient;
 }
 
 function releaseConnectorClient(): void {
     providerRefCount--;
-    console.log('[ConnectorProvider] Provider unmounted, ref count:', providerRefCount);
 
     if (providerRefCount <= 0) {
         // Delay cleanup to handle rapid mount/unmount cycles
         cleanupTimeoutId = setTimeout(() => {
             if (providerRefCount <= 0 && globalConnectorClient) {
-                console.log('[ConnectorProvider] Cleaning up singleton ConnectorClient');
                 // Disconnect wallet before cleanup
                 globalConnectorClient.disconnect().catch(console.warn);
                 // If the client has a destroy method, call it

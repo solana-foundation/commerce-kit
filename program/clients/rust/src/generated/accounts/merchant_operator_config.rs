@@ -5,93 +5,85 @@
 //! <https://github.com/codama-idl/codama>
 //!
 
-use crate::generated::types::FeeType;
-use borsh::BorshDeserialize;
-use borsh::BorshSerialize;
 use solana_pubkey::Pubkey;
+use crate::generated::types::FeeType;
+use borsh::BorshSerialize;
+use borsh::BorshDeserialize;
+
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MerchantOperatorConfig {
-    pub discriminator: u8,
-    pub version: u32,
-    pub bump: u8,
-    #[cfg_attr(
-        feature = "serde",
-        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
-    )]
-    pub merchant: Pubkey,
-    #[cfg_attr(
-        feature = "serde",
-        serde(with = "serde_with::As::<serde_with::DisplayFromStr>")
-    )]
-    pub operator: Pubkey,
-    pub operator_fee: u64,
-    pub fee_type: FeeType,
-    pub current_order_id: u32,
-    pub days_to_close: u16,
-    pub num_policies: u32,
-    pub num_accepted_currencies: u32,
+pub discriminator: u8,
+pub version: u32,
+pub bump: u8,
+#[cfg_attr(feature = "serde", serde(with = "serde_with::As::<serde_with::DisplayFromStr>"))]
+pub merchant: Pubkey,
+#[cfg_attr(feature = "serde", serde(with = "serde_with::As::<serde_with::DisplayFromStr>"))]
+pub operator: Pubkey,
+pub operator_fee: u64,
+pub fee_type: FeeType,
+pub current_order_id: u32,
+pub days_to_close: u16,
+pub num_policies: u32,
+pub num_accepted_currencies: u32,
 }
 
-impl MerchantOperatorConfig {
-    pub const LEN: usize = 93;
 
-    #[inline(always)]
-    pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {
-        let mut data = data;
-        Self::deserialize(&mut data)
-    }
+
+
+impl MerchantOperatorConfig {
+      pub const LEN: usize = 93;
+  
+  
+  
+  #[inline(always)]
+  pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {
+    let mut data = data;
+    Self::deserialize(&mut data)
+  }
 }
 
 impl<'a> TryFrom<&solana_account_info::AccountInfo<'a>> for MerchantOperatorConfig {
-    type Error = std::io::Error;
+  type Error = std::io::Error;
 
-    fn try_from(account_info: &solana_account_info::AccountInfo<'a>) -> Result<Self, Self::Error> {
-        let mut data: &[u8] = &(*account_info.data).borrow();
-        Self::deserialize(&mut data)
-    }
+  fn try_from(account_info: &solana_account_info::AccountInfo<'a>) -> Result<Self, Self::Error> {
+      let mut data: &[u8] = &(*account_info.data).borrow();
+      Self::deserialize(&mut data)
+  }
 }
 
 #[cfg(feature = "fetch")]
 pub fn fetch_merchant_operator_config(
-    rpc: &solana_client::rpc_client::RpcClient,
-    address: &solana_pubkey::Pubkey,
+  rpc: &solana_client::rpc_client::RpcClient,
+  address: &solana_pubkey::Pubkey,
 ) -> Result<crate::shared::DecodedAccount<MerchantOperatorConfig>, std::io::Error> {
-    let accounts = fetch_all_merchant_operator_config(rpc, &[*address])?;
-    Ok(accounts[0].clone())
+  let accounts = fetch_all_merchant_operator_config(rpc, &[*address])?;
+  Ok(accounts[0].clone())
 }
 
 #[cfg(feature = "fetch")]
 pub fn fetch_all_merchant_operator_config(
-    rpc: &solana_client::rpc_client::RpcClient,
-    addresses: &[solana_pubkey::Pubkey],
+  rpc: &solana_client::rpc_client::RpcClient,
+  addresses: &[solana_pubkey::Pubkey],
 ) -> Result<Vec<crate::shared::DecodedAccount<MerchantOperatorConfig>>, std::io::Error> {
-    let accounts = rpc
-        .get_multiple_accounts(addresses)
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
-    let mut decoded_accounts: Vec<crate::shared::DecodedAccount<MerchantOperatorConfig>> =
-        Vec::new();
+    let accounts = rpc.get_multiple_accounts(addresses)
+      .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
+    let mut decoded_accounts: Vec<crate::shared::DecodedAccount<MerchantOperatorConfig>> = Vec::new();
     for i in 0..addresses.len() {
-        let address = addresses[i];
-        let account = accounts[i].as_ref().ok_or(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            format!("Account not found: {}", address),
-        ))?;
-        let data = MerchantOperatorConfig::from_bytes(&account.data)?;
-        decoded_accounts.push(crate::shared::DecodedAccount {
-            address,
-            account: account.clone(),
-            data,
-        });
+      let address = addresses[i];
+      let account = accounts[i].as_ref()
+        .ok_or(std::io::Error::new(std::io::ErrorKind::Other, format!("Account not found: {}", address)))?;
+      let data = MerchantOperatorConfig::from_bytes(&account.data)?;
+      decoded_accounts.push(crate::shared::DecodedAccount { address, account: account.clone(), data });
     }
     Ok(decoded_accounts)
 }
 
 #[cfg(feature = "fetch")]
 pub fn fetch_maybe_merchant_operator_config(
-    rpc: &solana_client::rpc_client::RpcClient,
-    address: &solana_pubkey::Pubkey,
+  rpc: &solana_client::rpc_client::RpcClient,
+  address: &solana_pubkey::Pubkey,
 ) -> Result<crate::shared::MaybeAccount<MerchantOperatorConfig>, std::io::Error> {
     let accounts = fetch_all_maybe_merchant_operator_config(rpc, &[*address])?;
     Ok(accounts[0].clone())
@@ -99,52 +91,47 @@ pub fn fetch_maybe_merchant_operator_config(
 
 #[cfg(feature = "fetch")]
 pub fn fetch_all_maybe_merchant_operator_config(
-    rpc: &solana_client::rpc_client::RpcClient,
-    addresses: &[solana_pubkey::Pubkey],
+  rpc: &solana_client::rpc_client::RpcClient,
+  addresses: &[solana_pubkey::Pubkey],
 ) -> Result<Vec<crate::shared::MaybeAccount<MerchantOperatorConfig>>, std::io::Error> {
-    let accounts = rpc
-        .get_multiple_accounts(addresses)
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
+    let accounts = rpc.get_multiple_accounts(addresses)
+      .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
     let mut decoded_accounts: Vec<crate::shared::MaybeAccount<MerchantOperatorConfig>> = Vec::new();
     for i in 0..addresses.len() {
-        let address = addresses[i];
-        if let Some(account) = accounts[i].as_ref() {
-            let data = MerchantOperatorConfig::from_bytes(&account.data)?;
-            decoded_accounts.push(crate::shared::MaybeAccount::Exists(
-                crate::shared::DecodedAccount {
-                    address,
-                    account: account.clone(),
-                    data,
-                },
-            ));
-        } else {
-            decoded_accounts.push(crate::shared::MaybeAccount::NotFound(address));
-        }
+      let address = addresses[i];
+      if let Some(account) = accounts[i].as_ref() {
+        let data = MerchantOperatorConfig::from_bytes(&account.data)?;
+        decoded_accounts.push(crate::shared::MaybeAccount::Exists(crate::shared::DecodedAccount { address, account: account.clone(), data }));
+      } else {
+        decoded_accounts.push(crate::shared::MaybeAccount::NotFound(address));
+      }
     }
-    Ok(decoded_accounts)
+  Ok(decoded_accounts)
 }
 
-#[cfg(feature = "anchor")]
-impl anchor_lang::AccountDeserialize for MerchantOperatorConfig {
-    fn try_deserialize_unchecked(buf: &mut &[u8]) -> anchor_lang::Result<Self> {
+  #[cfg(feature = "anchor")]
+  impl anchor_lang::AccountDeserialize for MerchantOperatorConfig {
+      fn try_deserialize_unchecked(buf: &mut &[u8]) -> anchor_lang::Result<Self> {
         Ok(Self::deserialize(buf)?)
-    }
-}
+      }
+  }
 
-#[cfg(feature = "anchor")]
-impl anchor_lang::AccountSerialize for MerchantOperatorConfig {}
+  #[cfg(feature = "anchor")]
+  impl anchor_lang::AccountSerialize for MerchantOperatorConfig {}
 
-#[cfg(feature = "anchor")]
-impl anchor_lang::Owner for MerchantOperatorConfig {
-    fn owner() -> Pubkey {
+  #[cfg(feature = "anchor")]
+  impl anchor_lang::Owner for MerchantOperatorConfig {
+      fn owner() -> Pubkey {
         crate::COMMERCE_PROGRAM_ID
-    }
-}
+      }
+  }
 
-#[cfg(feature = "anchor-idl-build")]
-impl anchor_lang::IdlBuild for MerchantOperatorConfig {}
+  #[cfg(feature = "anchor-idl-build")]
+  impl anchor_lang::IdlBuild for MerchantOperatorConfig {}
 
-#[cfg(feature = "anchor-idl-build")]
-impl anchor_lang::Discriminator for MerchantOperatorConfig {
+  
+  #[cfg(feature = "anchor-idl-build")]
+  impl anchor_lang::Discriminator for MerchantOperatorConfig {
     const DISCRIMINATOR: &[u8] = &[0; 8];
-}
+  }
+

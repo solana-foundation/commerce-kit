@@ -1,6 +1,6 @@
 {
     "name": "@solana-commerce/react",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "React SDK for Commerce platform",
     "main": "dist/index.js",
     "module": "dist/index.mjs",

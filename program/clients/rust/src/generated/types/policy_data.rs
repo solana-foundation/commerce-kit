@@ -7,12 +7,14 @@
 
 use crate::generated::types::RefundPolicy;
 use crate::generated::types::SettlementPolicy;
-use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
+use borsh::BorshDeserialize;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum PolicyData {
-    Refund(RefundPolicy),
-    Settlement(SettlementPolicy),
+Refund(RefundPolicy),
+Settlement(SettlementPolicy),
 }
+
+
