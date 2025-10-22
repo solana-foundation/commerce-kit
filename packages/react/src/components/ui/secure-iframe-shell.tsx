@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ConnectorClient, useConnectorClient } from '@solana-commerce/connector';
 import { useTransferSOL, useTransferToken, useArcClient, address } from '@solana-commerce/sdk';
 import type { SolanaCommerceConfig, ThemeConfig } from '../../types';
@@ -165,17 +165,43 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
     const { transferSOL, isLoading: transferSOLLoading, error: transferSOLError } = useTransferSOL();
     const { transferToken, isLoading: transferTokenLoading, error: transferTokenError } = useTransferToken();
 
-    // Debug: Check ArcClient state - now using the fixed ArcProvider
+    // Get ArcClient for wallet state
     const arcClient = useArcClient();
-    if (config.debug) {
-        console.log('[SecureIframeShell] ArcClient wallet state:', {
-            connected: arcClient.wallet.connected,
-            address: arcClient.wallet.address,
-            hasSigner: !!arcClient.wallet.signer,
-            selectedAccount: arcClient.wallet.selectedAccount,
-            accountsCount: arcClient.wallet.accounts?.length,
+    
+    // Store latest wallet state in ref for async access
+    const walletStateRef = useRef(arcClient.wallet);
+    useEffect(() => {
+        walletStateRef.current = arcClient.wallet;
+    }, [arcClient.wallet]);
+    
+    // Helper to wait for wallet signer to be available
+    const waitForSigner = useCallback(async (timeoutMs = 3000): Promise<void> => {
+        // Check if already available
+        if (walletStateRef.current.signer) return;
+        
+        if (config.debug) {
+            console.log('[SecureIframeShell] Waiting for signer to sync...');
+        }
+        
+        // Wait for signer via polling ref
+        const startTime = Date.now();
+        while (Date.now() - startTime < timeoutMs) {
+            if (walletStateRef.current.signer) {
+                if (config.debug) {
+                    console.log('[SecureIframeShell] Signer available after', Date.now() - startTime, 'ms');
+                }
+                return;
+            }
+            await new Promise(resolve => setTimeout(resolve, 50));
+        }
+        
+        console.error('[executePayment] Signer not available. Wallet state:', {
+            connected: walletStateRef.current.connected,
+            address: walletStateRef.current.address,
+            hasSigner: !!walletStateRef.current.signer,
         });
-    }
+        throw new Error('Timeout waiting for wallet signer');
+    }, [config.debug]);
 
     // State to track current payment attempt
     const [currentPayment, setCurrentPayment] = useState<{
@@ -268,10 +294,6 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
     // Function to execute the actual payment after wallet connection
     const executePayment = async (paymentInfo: { amount: number; currency: string; walletName: string }) => {
         try {
-            if (config.debug) {
-                console.log('[SecureIframeShell] Executing payment:', paymentInfo);
-            }
-
             // Validate merchant address
             if (!config.merchant?.wallet) {
                 throw new Error('Merchant address not configured');
@@ -282,9 +304,13 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
             }
 
             const state = (connectorClient as any).getConnectorState();
+            
             if (!state.selectedWallet || !state.selectedAccount) {
                 throw new Error('No wallet connected');
             }
+
+            // Wait for signer to be available (syncs from connector subscription)
+            await waitForSigner();
 
             // Get the connected wallet account
             if (config.debug) {
@@ -319,15 +345,6 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
                 const solPriceUsd = await getSolPrice();
                 const solAmountFloat = amount / solPriceUsd;
                 const lamports = BigInt(Math.floor(solAmountFloat * 1_000_000_000)); // Convert to lamports
-
-                if (config.debug) {
-                    console.log('[Payment] SOL conversion:', {
-                        usdAmount: amount,
-                        solPrice: solPriceUsd,
-                        solAmount: solAmountFloat,
-                        lamports: lamports.toString(),
-                    });
-                }
 
                 result = await transferSOL({
                     to: config.merchant.wallet,
@@ -385,11 +402,11 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
                 '*',
             );
 
-            // Also call the parent payment callback
+            // Call the parent payment callback
             onPayment(paymentInfo.amount, paymentInfo.currency);
         } catch (error: any) {
             if (config.debug) {
-                console.error('[SecureIframeShell] Payment failed:', error);
+                console.error('[executePayment] Payment failed:', error);
             }
 
             let errorMessage = 'Payment failed';
@@ -419,6 +436,7 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
     };
 
     useEffect(() => {
+
         async function waitForWallets(client: ConnectorClient, timeoutMs = 1500): Promise<void> {
             const start = Date.now();
             while (Date.now() - start < timeoutMs) {
@@ -487,10 +505,15 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
 
         async function onMessage(e: MessageEvent) {
             const data = e.data as any;
-            if (!data || typeof data !== 'object') return;
+            
+            if (!data || typeof data !== 'object') {
+                return;
+            }
 
             // Validate the message is from our iframe
-            if (iframeRef.current && e.source !== iframeRef.current.contentWindow) return;
+            if (iframeRef.current && e.source !== iframeRef.current.contentWindow) {
+                return;
+            }
 
             switch (data.type) {
                 case 'ready':
@@ -535,40 +558,30 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
 
                         // Ensure wallet list is ready (Wallet Standard can be async to populate)
                         await waitForWallets(connectorClient);
+                        
                         const snap = (connectorClient as any).getConnectorState();
                         const target = (snap.wallets || []).find((w: any) => w.name === data.walletName);
-                        if (!target) throw new Error('Wallet not found');
-                        if (config.debug) {
-                            console.log('[SecureIframeShell] Selecting wallet for iframe:', data.walletName);
+                        
+                        if (!target) {
+                            throw new Error('Wallet not found');
                         }
-                        const res = await connectorClient.select(data.walletName);
+                        
+                        await connectorClient.select(data.walletName);
+                        
                         const result = (connectorClient as any).getConnectorState();
                         const accounts = (result.accounts || []).map((a: any) => ({
                             address: a.address,
                             icon: a.icon,
                         }));
-                        if (config.debug) {
-                            console.log(
-                                '[SecureIframeShell] Iframe connect success, accounts:',
-                                accounts.map((a: any) => a.address),
-                            );
-                        }
 
-                        // Wait for React components to be fully initialized using deterministic polling
+                        // Wait for React components to be fully initialized
                         try {
                             await waitForReactComponentsReady(connectorClient);
                         } catch (readinessError: any) {
-                            if (config.debug) {
-                                console.warn(
-                                    '[SecureIframeShell] React components readiness check failed:',
-                                    readinessError,
-                                );
-                            }
-                            // Continue with payment execution as a fallback (similar to original setTimeout behavior)
-                            // The payment execution itself will validate readiness and may fail if not actually ready
+                            // Continue - payment execution will validate readiness
                         }
 
-                        // Now execute the payment with the connected wallet
+                        // Execute the payment with the connected wallet
                         await executePayment(paymentInfo);
 
                         iframeRef.current?.contentWindow?.postMessage(
@@ -577,7 +590,8 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
                         );
                     } catch (err: any) {
                         if (config.debug) {
-                            console.warn('[SecureIframeShell] walletConnect failed:', err);
+                            console.error('[SecureIframeShell] walletConnect failed:', err);
+                            console.error('[SecureIframeShell] Error stack:', err.stack);
                         }
                         iframeRef.current?.contentWindow?.postMessage(
                             {
@@ -592,10 +606,16 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
                     }
                     break;
                 }
-                // Additional event types can be handled here
+                default:
+                    if (config.debug) {
+                        console.log('[SecureIframeShell] Unhandled message type:', data.type);
+                    }
+                    break;
             }
         }
+        
         window.addEventListener('message', onMessage);
+        
         return () => {
             window.removeEventListener('message', onMessage);
         };

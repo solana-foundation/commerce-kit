@@ -10,7 +10,7 @@ export function FullPageBuyNow({ rpcUrl }: FullPageBuyNowProps = {}) {
   return (
     <PaymentButton
     config={{
-      rpcUrl,
+      rpcUrl: rpcUrl || process.env.NEXT_PUBLIC_SOLANA_RPC_URL,
       mode: 'buyNow',
       position: 'inline',
       merchant: {

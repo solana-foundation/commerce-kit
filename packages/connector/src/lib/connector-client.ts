@@ -281,9 +281,6 @@ export class ConnectorClient {
                 this.state = { ...this.state, accounts: nextAccounts, selectedAccount: newSelected };
                 this.notify();
 
-                if (this.config.debug) {
-                    console.log('[Connector] Wallet accounts changed:', nextAccounts.length, 'accounts');
-                }
             });
         } catch (error) {
             if (this.config.debug) {
@@ -323,14 +320,6 @@ export class ConnectorClient {
             const firstNew = accounts.find(a => !previousAddresses.has(a.address));
             const selected = firstNew?.address ?? previouslySelected ?? accounts[0]?.address ?? null;
 
-            if (this.config.debug) {
-                console.log(`[Connector] Connected to ${walletName} with ${accounts.length} accounts`);
-                console.log(
-                    '[Connector] Accounts:',
-                    accounts.map((a: AccountInfo) => a.address),
-                );
-                console.log('[Connector] Selected account:', selected);
-            }
             this.state = {
                 ...this.state,
                 selectedWallet: w.wallet,
@@ -374,9 +363,6 @@ export class ConnectorClient {
             if (disconnectFeature) {
                 try {
                     await (disconnectFeature as StandardDisconnectFeature['standard:disconnect']).disconnect();
-                    if (this.config.debug) {
-                        console.log('[Connector] Called wallet disconnect feature');
-                    }
                 } catch (error) {
                     if (this.config.debug) {
                         console.warn('[Connector] Wallet disconnect failed:', error);
@@ -451,8 +437,5 @@ export class ConnectorClient {
         this.unsubscribers = [];
         // Clear external store listeners
         this.listeners.clear();
-        if (this.config.debug) {
-            console.log('[Connector] destroyed');
-        }
     }
 }

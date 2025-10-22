@@ -102,15 +102,6 @@ export function TransactionSuccess({
                         </svg>
                     </a>
                 )}
-
-                <button
-                    type="button"
-                    onClick={onClose}
-                    className="ck-transaction-close-button"
-                    style={{ color: theme.textColor }}
-                >
-                    Close
-                </button>
             </div>
         </div>
     );

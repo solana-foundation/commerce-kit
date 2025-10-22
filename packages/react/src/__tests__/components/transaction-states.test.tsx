@@ -190,21 +190,6 @@ describe('Transaction State Components', () => {
             expect(onViewTransaction).toHaveBeenCalledWith(defaultSuccessProps.signature);
         });
 
-        it('should render close button', () => {
-            render(<TransactionSuccess {...defaultSuccessProps} />);
-
-            expect(screen.getByText('Close')).toBeInTheDocument();
-        });
-
-        it('should call onClose when close button is clicked', () => {
-            const onClose = vi.fn();
-            render(<TransactionSuccess {...defaultSuccessProps} onClose={onClose} />);
-
-            const closeButton = screen.getByText('Close');
-            fireEvent.click(closeButton);
-
-            expect(onClose).toHaveBeenCalledTimes(1);
-        });
 
         it('should handle different currencies correctly', () => {
             const { rerender } = render(<TransactionSuccess {...defaultSuccessProps} currency="SOL" amount={0.5} />);

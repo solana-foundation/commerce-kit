@@ -132,14 +132,6 @@ export class ArcWebClient {
         try {
             // Prefer externally provided connector (from app-level provider) when available
             const providedConnector = this.state.config.connector;
-            if (this.state.config.debug) {
-                console.log('[ArcWebClient] Initializing with connector:', {
-                    hasConnector: !!providedConnector,
-                    connectorConnected: (providedConnector as ConnectorClient | undefined)?.getSnapshot?.()?.connected,
-                    hasSubscribeMethod: typeof providedConnector?.subscribe === 'function',
-                    connectorType: providedConnector?.constructor?.name,
-                });
-            }
             if (!providedConnector) {
                 throw new Error(
                     'ArcProvider requires @solana-commerce/connector AppProvider. Wrap your app with AppProvider and ensure connector is passed to Arc.',
@@ -149,13 +141,13 @@ export class ArcWebClient {
 
             const syncFromConnector = (s: ConnectorState) => {
                 if (this.state.config.debug) {
-                    console.log('[ArcWebClient] Syncing from connector state:', {
+                    console.log('[ArcWebClient] Syncing from connector:', {
                         connected: s.connected,
                         selectedWallet: s.selectedWallet?.name,
                         selectedAccount: s.selectedAccount,
-                        accountsCount: s.accounts?.length,
                     });
                 }
+                
                 const selectedWallet = s.selectedWallet;
                 const connected = s.connected;
                 const connecting = s.connecting;
@@ -166,12 +158,19 @@ export class ArcWebClient {
                 let address: Address | null = null;
                 if (connected && selectedWallet && selectedAccount) {
                     const accountList = accounts as unknown as Array<{ address: string; raw?: unknown }>;
-                    const rawAccount = accountList.find(a => a.address === selectedAccount)?.raw as
+                    const accountWithRaw = accountList.find(a => a.address === selectedAccount);
+                    const rawAccount = accountWithRaw?.raw as
                         | { address: string }
                         | undefined;
+                    
                     if (rawAccount && 'address' in rawAccount) {
                         signer = new WalletStandardKitSigner(rawAccount, selectedWallet);
                         address = rawAccount.address as Address;
+                        if (this.state.config.debug) {
+                            console.log('[ArcWebClient] Created signer for:', rawAccount.address);
+                        }
+                    } else if (this.state.config.debug) {
+                        console.warn('[ArcWebClient] Could not create signer - missing raw account');
                     }
                 }
 
@@ -210,35 +209,26 @@ export class ArcWebClient {
                         })),
                     },
                 };
-                if (this.state.config.debug) {
-                    console.log('[ArcWebClient] State updated, notifying listeners:', {
-                        connected: this.state.wallet.connected,
-                        listenersCount: this.listeners.size,
-                    });
-                }
                 this.notify();
             };
 
             // Initial sync and subscribe
             if (this.state.config.debug) {
-                console.log('[ArcWebClient] Initial sync and subscribe to connector');
+                console.log('[ArcWebClient] Initializing wallet sync');
             }
-            syncFromConnector((this.connector as ConnectorClient).getSnapshot());
+            const initialSnapshot = (this.connector as any).getConnectorState();
+            syncFromConnector(initialSnapshot);
 
             const unsubscribe = this.connector.subscribe((state: ConnectorState) => {
                 if (this.state.config.debug) {
-                    console.log('[ArcWebClient] Connector state changed, calling syncFromConnector');
+                    console.log('[ArcWebClient] Connector state changed');
                 }
                 syncFromConnector(state);
             });
             this.walletUnsubscribers.push(unsubscribe);
-            if (this.state.config.debug) {
-                console.log('[ArcWebClient] Subscribed to connector changes');
-            }
         } catch (error) {
-            if (this.state.config.debug) {
-                console.warn('Failed to initialize connector:', error);
-            }
+            // Log critical initialization errors
+            console.error('[ArcWebClient] Failed to initialize connector:', error);
         }
     }
 
@@ -320,7 +310,7 @@ export class ArcWebClient {
         this.notify();
         try {
             await this.connector?.select(walletName);
-            const s = this.connector?.getSnapshot() as ConnectorState | undefined;
+            const s = (this.connector as any)?.getConnectorState() as ConnectorState | undefined;
             const rawAcc = (s?.accounts as Array<{ address: string; raw?: unknown }>)?.find(
                 (a: { address: string; raw?: unknown }) => a.address === s?.selectedAccount,
             )?.raw;
@@ -347,7 +337,7 @@ export class ArcWebClient {
 
         try {
             await this.connector?.selectAccount(accountAddress as unknown as string);
-            const s = this.connector?.getSnapshot() as ConnectorState | undefined;
+            const s = (this.connector as any)?.getConnectorState() as ConnectorState | undefined;
             const rawAcc = (s?.accounts as Array<{ address: string; raw?: unknown }>)?.find(
                 (a: { address: string; raw?: unknown }) => a.address === s?.selectedAccount,
             )?.raw;
