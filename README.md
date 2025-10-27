@@ -22,7 +22,7 @@ Built on modern Solana libraries (@solana/kit, Wallet Standard) with a focus on 
 
 | Package | Description | Docs |
 |---------|-------------|------|
-| [@solana-commerce/solana-commerce](./) | All-in-one SDK with complete functionality |  |
+| [@solana-commerce/kit](./) | All-in-one SDK with complete functionality |  |
 | [@solana-commerce/react](./packages/react) | React components for payments, tips, and checkout | [README](./packages/react/README.md) |
 | [@solana-commerce/sdk](./packages/sdk) | Core React hooks for Solana development | [README](./packages/sdk/README.md) |
 | [@solana-commerce/headless](./packages/headless) | Framework-agnostic commerce logic | [README](./packages/headless/README.md) |
@@ -31,7 +31,7 @@ Built on modern Solana libraries (@solana/kit, Wallet Standard) with a focus on 
 
 ## Package Overview
 
-### @solana-commerce/solana-commerce
+### @solana-commerce/kit
 Meta-package that re-exports all functionality. Install this for complete access to the entire toolkit.
 
 ### @solana-commerce/react
@@ -74,7 +74,7 @@ Complete Solana Pay protocol implementation:
 ## Architecture
 
 ```
-commerce-kit/   # @solana-commerce/solana-commerce - all packages in one install
+commerce-kit/   # @solana-commerce/kit - all packages in one install
 |---packages/
 │   ├── @solana-commerce/connector
 │   ├── @solana-commerce/headless
@@ -84,7 +84,7 @@ commerce-kit/   # @solana-commerce/solana-commerce - all packages in one install
 ```
 
 **Choosing a Package:**
-- Need everything? → `@solana-commerce/solana-commerce`
+- Need everything? → `@solana-commerce/kit`
 - Wallet connection? → `@solana-commerce/connector`
 - Custom UI or non-React framework? → `@solana-commerce/headless`
 - Building React app with UI? → `@solana-commerce/react`
