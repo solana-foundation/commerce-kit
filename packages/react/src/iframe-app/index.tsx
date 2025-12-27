@@ -7,7 +7,7 @@ import type { SolanaCommerceConfig, ThemeConfig } from '../types';
 import { IframeTipModalContent } from '../components/iframe/iframe-tip-modal';
 import { PaymentModalContent } from '../components/ui/payment-modal-content';
 import '../styles/index.css';
-import { getBorderRadius, getModalBorderRadius, getButtonShadow, getButtonBorder } from '../utils';
+import { getBorderRadius, getButtonBorder, getButtonShadow, getModalBorderRadius } from '../utils';
 
 // Global types for the iframe window
 declare global {
@@ -33,6 +33,7 @@ interface InitMessage {
     totalAmount?: number;
     paymentUrl?: string;
     wallets?: Array<{ name: string; icon?: string; installed: boolean; connectable?: boolean }>;
+    paymentConfig?: import('../components/ui/secure-iframe-shell').PaymentConfig;
 }
 
 interface OutgoingMessage {
@@ -78,11 +79,13 @@ function IframeApp({
     theme,
     totalAmount,
     paymentUrl,
+    paymentConfig,
 }: {
     config: SolanaCommerceConfig;
     theme: Required<ThemeConfig>;
     totalAmount?: number;
     paymentUrl?: string;
+    paymentConfig?: import('../components/ui/secure-iframe-shell').PaymentConfig;
 }) {
     // Handlers that communicate with parent
     const handlePayment = React.useCallback((amount: number, currency: string) => {
@@ -118,8 +121,9 @@ function IframeApp({
             theme={theme}
             totalAmount={totalAmount || 0}
             paymentUrl={paymentUrl || ''}
-            onPayment={() => handlePayment(totalAmount || 0, config.allowedMints?.[0] || 'SOL')}
+            onPayment={handlePayment}
             onCancel={handleCancel}
+            paymentConfig={paymentConfig}
         />
     );
 }
@@ -191,6 +195,7 @@ function init() {
                         theme={message.theme}
                         totalAmount={message.totalAmount}
                         paymentUrl={message.paymentUrl}
+                        paymentConfig={message.paymentConfig}
                     />,
                 );
             } catch (error) {

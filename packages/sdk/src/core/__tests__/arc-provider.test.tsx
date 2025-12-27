@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import { ArcProvider } from '../commerce-provider';
+import { render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useArcClient } from '../commerce-client-provider';
+import { ArcProvider } from '../commerce-provider';
 
 // Mock connector dependency
 vi.mock('@solana-commerce/connector', () => ({
@@ -11,7 +11,18 @@ vi.mock('@solana-commerce/connector', () => ({
         getAccount: vi.fn(),
         connected: false,
         connecting: false,
-        getSnapshot: vi.fn(() => ({ connected: false })),
+        getSnapshot: vi.fn(() => ({
+            connected: false,
+            connecting: false,
+            wallets: [],
+            selectedWallet: null,
+            accounts: [],
+            selectedAccount: null,
+        })),
+        subscribe: vi.fn(() => vi.fn()),
+        select: vi.fn(),
+        selectAccount: vi.fn(),
+        destroy: vi.fn(),
     })),
 }));
 
@@ -90,7 +101,18 @@ const createMockConnector = () => ({
     getAccount: vi.fn(),
     connected: false,
     connecting: false,
-    getSnapshot: vi.fn(() => ({ connected: false })),
+    getSnapshot: vi.fn(() => ({
+        connected: false,
+        connecting: false,
+        wallets: [],
+        selectedWallet: null,
+        accounts: [],
+        selectedAccount: null,
+    })),
+    subscribe: vi.fn(() => vi.fn()),
+    select: vi.fn(),
+    selectAccount: vi.fn(),
+    destroy: vi.fn(),
 });
 
 describe('ArcProvider', () => {

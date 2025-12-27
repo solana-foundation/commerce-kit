@@ -1,12 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ConnectorClient, useConnectorClient } from '@solana-commerce/connector';
-import { useTransferSOL, useTransferToken, useArcClient, address } from '@solana-commerce/sdk';
+import { useArcClient, useTransferSOL, useTransferToken } from '@solana-commerce/sdk';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { IFRAME_BUNDLE, IFRAME_STYLES } from '../../iframe-app/bundle';
 import type { SolanaCommerceConfig, ThemeConfig } from '../../types';
 import { CurrencyMap } from '../../types';
-import { IFRAME_BUNDLE } from '../../iframe-app/bundle';
-import { IFRAME_STYLES } from '../../iframe-app/bundle';
 import { fetchSolPrice, getModalBorderRadius } from '../../utils';
 
 /**
@@ -141,7 +140,7 @@ export function SecureIframeShell({ config, theme, onPayment, onCancel, paymentC
     );
 }
 
-interface SecureIframeShellInnerProps extends SecureIframeShellProps {}
+interface SecureIframeShellInnerProps extends SecureIframeShellProps { }
 
 function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentConfig }: SecureIframeShellInnerProps) {
     // Use the ConnectorClient from context
@@ -176,34 +175,57 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
 
     // Helper to wait for wallet signer to be available
     const waitForSigner = useCallback(
-        async (timeoutMs = 3000): Promise<void> => {
-            // Check if already available
+        async (timeoutMs = 15000): Promise<void> => {
+            // Check if already available via Arc client
             if (walletStateRef.current.signer) return;
 
-            if (config.debug) {
-                console.log('[SecureIframeShell] Waiting for signer to sync...');
-            }
-
-            // Wait for signer via polling ref
+            // Wait for signer via polling
             const startTime = Date.now();
             while (Date.now() - startTime < timeoutMs) {
+                // Check Arc client ref
                 if (walletStateRef.current.signer) {
                     if (config.debug) {
-                        console.log('[SecureIframeShell] Signer available after', Date.now() - startTime, 'ms');
+                        console.log('[SecureIframeShell] Signer available via ArcClient after', Date.now() - startTime, 'ms');
                     }
                     return;
                 }
-                await new Promise(resolve => setTimeout(resolve, 50));
+
+                // Fallback: Check ConnectorClient state directly
+                // (Sometimes ArcClient sync is delayed, but ConnectorClient is the source of truth)
+                try {
+                    const state = (connectorClient as any).getConnectorState();
+                    const account = state.accounts?.find((a: any) => a.address === state.selectedAccount);
+
+                    // If we have a connected account, we might have a signer capability implicitly
+                    // or ArcClient just hasn't updated yet.
+                    if (state.connected && state.selectedAccount && account) {
+                        // Force update ref if possible? No, but we can verify we "should" be ready
+                        // However, to execute transaction we NEED the adapter/signer.
+
+                        // Check if the selected wallet provides a standard adapter that is ready
+                        const wallet = state.selectedWallet;
+                        if (wallet && (wallet.adapter || wallet.signer)) {
+                            // If we have access to adapter/signer here, we can consider it ready
+                            // But ArcClient wraps it. We'll wait a bit more for ArcClient to pick it up.
+                        }
+                    }
+                } catch (e) {
+                    // Ignore
+                }
+
+                await new Promise(resolve => setTimeout(resolve, 100));
             }
 
             console.error('[executePayment] Signer not available. Wallet state:', {
                 connected: walletStateRef.current.connected,
                 address: walletStateRef.current.address,
                 hasSigner: !!walletStateRef.current.signer,
+                // Log connector state to debug mismatch
+                connectorConnected: (connectorClient as any)?.getConnectorState?.()?.connected
             });
             throw new Error('Timeout waiting for wallet signer');
         },
-        [config.debug],
+        [config.debug, connectorClient], // added connectorClient dependency
     );
 
     // State to track current payment attempt
@@ -662,6 +684,7 @@ function SecureIframeShellInner({ config, theme, onPayment, onCancel, paymentCon
                     totalAmount,
                     paymentUrl,
                     wallets: initialWallets,
+                    paymentConfig,
                 },
                 '*',
             );

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 // We need to extract the convertSOLToLamports function for testing
 // Since it's internal to useTransferSOL, we'll test it through a utility export
@@ -158,10 +158,12 @@ describe('SOL to Lamports Conversion', () => {
         });
 
         it('should reject null and undefined inputs', () => {
-            // @ts-expect-error - Testing runtime behavior with wrong types
-            expect(() => convertSOLToLamports(null)).toThrow();
-            // @ts-expect-error - Testing runtime behavior with wrong types
-            expect(() => convertSOLToLamports(undefined)).toThrow();
+            // Testing runtime behavior with wrong types
+            // biome-ignore lint/suspicious/noExplicitAny: Testing runtime validation
+            expect(() => convertSOLToLamports(null as any)).toThrow();
+            // Testing runtime behavior with wrong types
+            // biome-ignore lint/suspicious/noExplicitAny: Testing runtime validation
+            expect(() => convertSOLToLamports(undefined as any)).toThrow();
         });
 
         it('should reject non-string objects', () => {

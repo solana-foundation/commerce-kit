@@ -1,6 +1,8 @@
 'use client';
 
-import React, {
+import type { Address } from '@solana/kit';
+import { QueryClient, QueryClientProvider, type QueryClient as RQClient } from '@tanstack/react-query';
+import {
     createContext,
     useContext,
     useEffect,
@@ -9,9 +11,7 @@ import React, {
     useSyncExternalStore,
     type ReactNode,
 } from 'react';
-import { QueryClient, QueryClientProvider, type QueryClient as RQClient } from '@tanstack/react-query';
 import { ArcWebClient, type ArcWebClientConfig } from './web-client';
-import type { Address } from '@solana/kit';
 
 // The context now only holds the client instance.
 const ArcClientContext = createContext<ArcWebClient | null>(null);
@@ -34,10 +34,17 @@ export interface ArcClientProviderProps {
  * This is the root of the new, performant provider architecture.
  */
 export function ArcClientProvider({ children, config, queryClient }: ArcClientProviderProps) {
+    // biome-ignore lint/correctness/useExhaustiveDependencies: Logging only on mount
+    useEffect(() => {
+        if (config.debug) console.log('[ArcClientProvider] Mounted');
+        return () => { if (config.debug) console.log('[ArcClientProvider] Unmounted'); };
+    }, []);
+
     const qc = useMemo(() => queryClient ?? new QueryClient(), [queryClient]);
     const clientRef = useRef<ArcWebClient | null>(null);
 
     if (clientRef.current == null) {
+        if (config.debug) console.log('[ArcClientProvider] Creating new ArcWebClient');
         clientRef.current = new ArcWebClient(config);
     }
 
@@ -47,8 +54,11 @@ export function ArcClientProvider({ children, config, queryClient }: ArcClientPr
     }, [config]);
 
     // Cleanup wallet listeners on unmount
+    // Cleanup wallet listeners on unmount
+    // biome-ignore lint/correctness/useExhaustiveDependencies: Cleanup only on unmount
     useEffect(() => {
         return () => {
+            if (config.debug) console.log('[ArcClientProvider] Destroying client');
             clientRef.current?.destroy?.();
         };
     }, []);

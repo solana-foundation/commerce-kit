@@ -1,11 +1,11 @@
 'use client';
 
-import type { Address } from '@solana/kit';
-import type { SolanaClusterMoniker } from 'gill';
-import { getClusterInfo, type ClusterInfo } from '../utils/cluster';
-import { WalletStandardKitSigner, type StandardWalletInfo } from '../hooks/use-standard-wallets';
 import type { ConnectorClient, ConnectorState } from '@solana-commerce/connector';
+import type { Address } from '@solana/kit';
 import type { Wallet } from '@wallet-standard/base';
+import type { SolanaClusterMoniker } from 'gill';
+import { WalletStandardKitSigner, type StandardWalletInfo } from '../hooks/use-standard-wallets';
+import { getClusterInfo, type ClusterInfo } from '../utils/cluster';
 
 // Connector is the single source of truth; no Arc-managed persistence
 
@@ -81,12 +81,16 @@ type Listener = (state: ArcWebClientState) => void;
  * layer that subscribes to state changes.
  */
 export class ArcWebClient {
+    private readonly id = Math.random().toString(36).slice(2, 7); // Debug ID
     private listeners: Set<Listener> = new Set();
     private state: ArcWebClientState;
     private walletUnsubscribers: Array<() => void> = [];
     private connector: ConnectorClient | null = null;
 
     constructor(config: ArcWebClientConfig) {
+        if (config.debug) {
+            console.log(`[ArcWebClient:${this.id}] Created instance`);
+        }
         // Expect pre-resolved RPC URL from server-side resolution
         if (!config.rpcUrl) {
             throw new Error(
@@ -141,7 +145,7 @@ export class ArcWebClient {
 
             const syncFromConnector = (s: ConnectorState) => {
                 if (this.state.config.debug) {
-                    console.log('[ArcWebClient] Syncing from connector:', {
+                    console.log(`[ArcWebClient:${this.id}] Syncing from connector:`, {
                         connected: s.connected,
                         selectedWallet: s.selectedWallet?.name,
                         selectedAccount: s.selectedAccount,
@@ -214,12 +218,13 @@ export class ArcWebClient {
             if (this.state.config.debug) {
                 console.log('[ArcWebClient] Initializing wallet sync');
             }
+            // biome-ignore lint/suspicious/noExplicitAny: Connector internal access
             const initialSnapshot = (this.connector as any).getConnectorState();
             syncFromConnector(initialSnapshot);
 
             const unsubscribe = this.connector.subscribe((state: ConnectorState) => {
                 if (this.state.config.debug) {
-                    console.log('[ArcWebClient] Connector state changed');
+                    console.log(`[ArcWebClient:${this.id}] Connector state changed`);
                 }
                 syncFromConnector(state);
             });
@@ -243,6 +248,11 @@ export class ArcWebClient {
         const clusterInfo = getClusterInfo(rpcUrl);
         const prevRpcUrl = this.state.network.rpcUrl;
 
+        // Check for connector change
+        const prevConnector = this.connector;
+        const nextConnector = next.connector;
+        const connectorChanged = nextConnector && nextConnector !== prevConnector;
+
         this.state = {
             ...this.state,
             network: {
@@ -255,6 +265,26 @@ export class ArcWebClient {
             },
             config: next,
         };
+
+        // Handle connector update
+        if (connectorChanged) {
+            if (this.state.config.debug) {
+                console.log(`[ArcWebClient:${this.id}] Connector changed in config, resubscribing`);
+            }
+            // Unsubscribe from old connector
+            for (const unsub of this.walletUnsubscribers) {
+                try {
+                    unsub();
+                } catch (e) {
+                    console.error('[ArcWebClient] Error unsubscribing from old connector:', e);
+                }
+            }
+            this.walletUnsubscribers = [];
+
+            // Re-initialize with new connector
+            this.connector = nextConnector;
+            this.initializeWallets();
+        }
 
         // If RPC URL changed, we may want to reset ephemeral wallet state if needed
         if (prevRpcUrl !== rpcUrl) {
@@ -308,6 +338,7 @@ export class ArcWebClient {
         this.notify();
         try {
             await this.connector?.select(walletName);
+            // biome-ignore lint/suspicious/noExplicitAny: Connector internal access
             const s = (this.connector as any)?.getConnectorState() as ConnectorState | undefined;
             const rawAcc = (s?.accounts as Array<{ address: string; raw?: unknown }>)?.find(
                 (a: { address: string; raw?: unknown }) => a.address === s?.selectedAccount,
@@ -335,6 +366,7 @@ export class ArcWebClient {
 
         try {
             await this.connector?.selectAccount(accountAddress as unknown as string);
+            // biome-ignore lint/suspicious/noExplicitAny: Connector internal access
             const s = (this.connector as any)?.getConnectorState() as ConnectorState | undefined;
             const rawAcc = (s?.accounts as Array<{ address: string; raw?: unknown }>)?.find(
                 (a: { address: string; raw?: unknown }) => a.address === s?.selectedAccount,
@@ -365,7 +397,7 @@ export class ArcWebClient {
 
     private notify(): void {
         if (this.state.config.debug) {
-            console.log('[ArcWebClient] notify() called, calling', this.listeners.size, 'listeners');
+            console.log(`[ArcWebClient:${this.id}] notify() called, calling`, this.listeners.size, 'listeners');
         }
         for (const listener of this.listeners) {
             listener(this.state);

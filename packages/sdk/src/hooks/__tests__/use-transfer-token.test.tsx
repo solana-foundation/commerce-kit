@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
 import { QueryClient } from '@tanstack/react-query';
-import { useTransferToken, BlockhashExpirationError } from '../use-transfer-token';
-import { TestWrapper, MOCK_ADDRESSES, MOCK_LAMPORTS } from '../../test-utils/mock-providers';
+import { act, renderHook } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { MOCK_ADDRESSES, TestWrapper } from '../../test-utils/mock-providers';
+import { useTransferToken } from '../use-transfer-token';
 
 // Mock the dependencies
 vi.mock('../../core/commerce-client-provider', () => ({
@@ -24,7 +24,7 @@ vi.mock('../../core/commerce-client-provider', () => ({
             transport: {
                 request: vi.fn().mockImplementation(async ({ method, params }) => {
                     switch (method) {
-                        case 'getAccountInfo':
+                        case 'getAccountInfo': {
                             // Return null for specific error test scenarios
                             const address = params?.[0];
                             if (address?.includes('missing') || address === 'MISSING_ACCOUNT') {
@@ -39,6 +39,7 @@ vi.mock('../../core/commerce-client-provider', () => ({
                                     rentEpoch: 200,
                                 },
                             };
+                        }
                         case 'getLatestBlockhash':
                             return {
                                 value: {
@@ -60,18 +61,19 @@ vi.mock('../../core/commerce-client-provider', () => ({
 vi.mock('../../core/rpc-manager', () => ({
     // New simplified functions
     createRpc: vi.fn(() => ({
+        // biome-ignore lint/suspicious/noExplicitAny: Mock type
         getAccountInfo: vi.fn((address: any) => ({
             send: vi.fn().mockResolvedValue({
                 value:
                     address?.toString().includes('missing') || address === 'MISSING_ACCOUNT'
                         ? null
                         : {
-                              data: ['', 'base64'],
-                              executable: false,
-                              lamports: 1000000000,
-                              owner: '11111111111111111111111111111111',
-                              rentEpoch: 200,
-                          },
+                            data: ['', 'base64'],
+                            executable: false,
+                            lamports: 1000000000,
+                            owner: '11111111111111111111111111111111',
+                            rentEpoch: 200,
+                        },
             }),
         })),
         getLatestBlockhash: vi.fn(() => ({
@@ -84,7 +86,7 @@ vi.mock('../../core/rpc-manager', () => ({
         })),
         request: vi.fn().mockImplementation(async ({ method, params }) => {
             switch (method) {
-                case 'getAccountInfo':
+                case 'getAccountInfo': {
                     // Return null for specific error test scenarios
                     const address = params?.[0];
                     if (address?.includes('missing') || address === 'MISSING_ACCOUNT') {
@@ -99,6 +101,7 @@ vi.mock('../../core/rpc-manager', () => ({
                             rentEpoch: 200,
                         },
                     };
+                }
                 case 'getLatestBlockhash':
                     return {
                         value: {
@@ -117,18 +120,19 @@ vi.mock('../../core/rpc-manager', () => ({
     })),
     // Backward compatibility aliases
     getSharedRpc: vi.fn(() => ({
+        // biome-ignore lint/suspicious/noExplicitAny: Mock type
         getAccountInfo: vi.fn((address: any) => ({
             send: vi.fn().mockResolvedValue({
                 value:
                     address?.toString().includes('missing') || address === 'MISSING_ACCOUNT'
                         ? null
                         : {
-                              data: ['', 'base64'],
-                              executable: false,
-                              lamports: 1000000000,
-                              owner: '11111111111111111111111111111111',
-                              rentEpoch: 200,
-                          },
+                            data: ['', 'base64'],
+                            executable: false,
+                            lamports: 1000000000,
+                            owner: '11111111111111111111111111111111',
+                            rentEpoch: 200,
+                        },
             }),
         })),
         getLatestBlockhash: vi.fn(() => ({
@@ -141,7 +145,7 @@ vi.mock('../../core/rpc-manager', () => ({
         })),
         request: vi.fn().mockImplementation(async ({ method, params }) => {
             switch (method) {
-                case 'getAccountInfo':
+                case 'getAccountInfo': {
                     // Return null for specific error test scenarios
                     const address = params?.[0];
                     if (address?.includes('missing') || address === 'MISSING_ACCOUNT') {
@@ -156,6 +160,7 @@ vi.mock('../../core/rpc-manager', () => ({
                             rentEpoch: 200,
                         },
                     };
+                }
                 case 'getLatestBlockhash':
                     return {
                         value: {
@@ -328,7 +333,8 @@ describe('useTransferToken', () => {
             };
 
             // Mock the useArcClient hook to return our mock transport
-            vi.mocked(vi.importActual('../../core/commerce-client-provider')).then(module => {
+            // biome-ignore lint/suspicious/noExplicitAny: Mock type mismatch
+            vi.mocked(vi.importActual('../../core/commerce-client-provider')).then((module: any) => {
                 vi.spyOn(module, 'useArcClient').mockReturnValue({
                     wallet: {
                         address: MOCK_ADDRESSES.WALLET_1,
@@ -359,6 +365,7 @@ describe('useTransferToken', () => {
                 amount: BigInt(1000000), // 1 USDC (6 decimals)
             };
 
+            // biome-ignore lint/suspicious/noExplicitAny: Test result type
             let transferResult: any;
 
             await act(async () => {
@@ -410,6 +417,7 @@ describe('useTransferToken', () => {
                 createAccountIfNeeded: false,
             };
 
+            // biome-ignore lint/suspicious/noExplicitAny: Test result type
             let transferResult: any;
 
             await act(async () => {

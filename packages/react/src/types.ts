@@ -5,7 +5,7 @@
 
 import { SPLToken } from '@solana-commerce/solana-pay';
 import { address, SolanaClusterMoniker } from 'gill';
-import { TOKEN_PROGRAM_ADDRESS, TOKEN_2022_PROGRAM_ADDRESS } from 'gill/programs/token';
+import { TOKEN_PROGRAM_ADDRESS } from 'gill/programs/token';
 import type React from 'react';
 
 // Core enums and types
@@ -102,8 +102,10 @@ export interface PaymentModalContentProps {
     readonly theme: Required<ThemeConfig>;
     readonly totalAmount: number;
     readonly paymentUrl: string;
-    readonly onPayment: () => void;
+    readonly onPayment: (amount: number, currency: string) => void;
     readonly onCancel: () => void;
+    /** Optional payment configuration for products and price overrides */
+    readonly paymentConfig?: import('./components/ui/secure-iframe-shell').PaymentConfig;
 }
 
 export interface TipModalContentProps {

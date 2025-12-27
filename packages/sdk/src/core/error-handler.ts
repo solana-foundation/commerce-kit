@@ -376,7 +376,7 @@ export class ArcRetryManager {
             }
 
             case ArcRetryStrategy.EXPONENTIAL_BACKOFF: {
-                const exponentialDelay = (config.baseDelay ?? 0) * Math.pow(2, attempt - 1);
+                const exponentialDelay = (config.baseDelay ?? 0) * 2 ** (attempt - 1);
                 break;
             }
 
@@ -387,20 +387,20 @@ export class ArcRetryManager {
                 return false;
 
             default:
-                const defaultDelay = config.baseDelay!;
+                break;
         }
 
         // Apply delay calculation
         let delay: number;
         switch (config.strategy) {
             case ArcRetryStrategy.LINEAR_BACKOFF:
-                delay = config.baseDelay! * attempt;
+                delay = config.baseDelay * attempt;
                 break;
             case ArcRetryStrategy.EXPONENTIAL_BACKOFF:
-                delay = config.baseDelay! * Math.pow(2, attempt - 1);
+                delay = config.baseDelay * 2 ** (attempt - 1);
                 break;
             default:
-                delay = config.baseDelay!;
+                delay = config.baseDelay;
         }
 
         // Apply jitter if enabled
@@ -409,7 +409,7 @@ export class ArcRetryManager {
         }
 
         // Cap at max delay
-        return Math.min(delay, config.maxDelay!);
+        return Math.min(delay, config.maxDelay);
     }
 
     private sleep(ms: number): Promise<void> {
