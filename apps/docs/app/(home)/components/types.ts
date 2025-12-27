@@ -1,77 +1,76 @@
 // Note: OrderItem removed as we're focusing on tip flow MVP
 
 export interface QRCustomizations {
-  size: number;
-  margin: number;
-  dotStyle: 'dots' | 'rounded' | 'square';
-  cornerStyle: 'square' | 'rounded' | 'extra-rounded' | 'full-rounded' | 'maximum-rounded';
-  errorCorrectionLevel: 'L' | 'M' | 'Q' | 'H';
-  logo?: string;
-  logoSize?: number;
-  logoBackgroundColor?: string;
-  logoMargin?: number;
+    size: number;
+    margin: number;
+    dotStyle: 'dots' | 'rounded' | 'square';
+    cornerStyle: 'square' | 'rounded' | 'extra-rounded' | 'full-rounded' | 'maximum-rounded';
+    errorCorrectionLevel: 'L' | 'M' | 'Q' | 'H';
+    logo?: string;
+    logoSize?: number;
+    logoBackgroundColor?: string;
+    logoMargin?: number;
 }
 
 export interface Customizations {
-  primaryColor: string;
-  secondaryColor: string;
-  backgroundColor: string;
-  textColor: string;
-  borderRadius: string;
-  buttonVariant: 'default' | 'icon-only';
-  showQR: boolean;
-  showProductDetails: boolean;
-  showMerchantInfo: boolean;
-  allowCustomAmount: boolean;
-  position: string;
-  supportedCurrencies: string[];
-  merchantName: string;
-  merchantDescription: string;
-  walletAddress: string;
-  imageUrl: string;
-  productName: string;
-  productDescription: string;
-  productPrice: string;
-  buttonShadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  buttonBorder?: 'none' | 'black-10' | 'white-10';
-  qrCustomizations?: QRCustomizations;
-}
-
-export type Mode = 'tip' | 'qrCustomization';
-export type CheckoutStyle = 'modal' | 'page';
-
-export interface ColorPreset {
-  name: string;
-  value: string;
-}
-
-export interface Option {
-  name: string;
-  value: string;
-}
-
-export interface DemoConfig {
-  mode: Mode;
-  merchant: {
-    name: string;
-    wallet: string;
-    description: string;
-  };
-  theme: {
     primaryColor: string;
     secondaryColor: string;
     backgroundColor: string;
     textColor: string;
-    borderRadius: 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
-    fontFamily?: string;
+    borderRadius: string;
+    buttonVariant: 'default' | 'icon-only';
+    showQR: boolean;
+    showProductDetails: boolean;
+    showMerchantInfo: boolean;
+    allowCustomAmount: boolean;
+    position: string;
+    supportedCurrencies: string[];
+    merchantName: string;
+    merchantDescription: string;
+    walletAddress: string;
+    imageUrl: string;
+    productName: string;
+    productDescription: string;
+    productPrice: string;
     buttonShadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-    buttonBorder?: 'none' | 'black-10';
-  };
-  showQR: boolean;
-  showProductDetails: boolean;
-  showMerchantInfo: boolean;
-  position: 'overlay' | 'inline';
-  allowedMints: string[];
-  // Note: products removed for tip flow MVP
+    buttonBorder?: 'none' | 'black-10' | 'white-10';
+    qrCustomizations?: QRCustomizations;
 }
 
+export type Mode = 'tip' | 'qrCustomization' | 'buyNow' | 'cart';
+export type CheckoutStyle = 'modal' | 'page';
+
+export interface ColorPreset {
+    name: string;
+    value: string;
+}
+
+export interface Option {
+    name: string;
+    value: string;
+}
+
+export interface DemoConfig {
+    mode: Mode;
+    merchant: {
+        name: string;
+        wallet: string;
+        description: string;
+    };
+    theme: {
+        primaryColor: string;
+        secondaryColor: string;
+        backgroundColor: string;
+        textColor: string;
+        borderRadius: 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
+        fontFamily?: string;
+        buttonShadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+        buttonBorder?: 'none' | 'black-10';
+    };
+    showQR: boolean;
+    showProductDetails: boolean;
+    showMerchantInfo: boolean;
+    position: 'overlay' | 'inline';
+    allowedMints: string[];
+    // Note: products removed for tip flow MVP
+}

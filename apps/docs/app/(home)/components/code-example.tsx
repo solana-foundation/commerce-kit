@@ -2,8 +2,8 @@
 
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
-import type { Mode, CheckoutStyle, Customizations } from './types';
 import { CopyButton } from '../../../components/ui/copy-button';
+import type { CheckoutStyle, Customizations, Mode } from './types';
 
 interface CodeExampleProps {
   selectedMode: Mode;
@@ -12,7 +12,7 @@ interface CodeExampleProps {
 }
 
 export function CodeExample({ selectedMode, checkoutStyle, customizations }: CodeExampleProps) {
-  
+
   const getCodeExample = () => {
     if (checkoutStyle === 'page') {
       return `// Page-level cart components removed for tip flow MVP
@@ -56,9 +56,90 @@ function App() {
     />
   );
 }`;
+    } else if (selectedMode === 'buyNow') {
+      return `import { PaymentButton } from '@solana-commerce/react';
+
+function App() {
+  return (
+    <PaymentButton
+      config={{
+        mode: 'buyNow',
+        merchant: {
+          name: '${customizations.merchantName}',
+          wallet: '${customizations.walletAddress}',${customizations.merchantDescription ? `
+          description: '${customizations.merchantDescription}',` : ''}
+        },
+        theme: {
+          primaryColor: '${customizations.primaryColor}',
+          secondaryColor: '${customizations.secondaryColor}',
+          backgroundColor: '${customizations.backgroundColor}',
+          textColor: '${customizations.textColor}',
+          borderRadius: '${customizations.borderRadius}',${customizations.buttonShadow ? `
+          buttonShadow: '${customizations.buttonShadow}',` : ''}${customizations.buttonBorder ? `
+          buttonBorder: '${customizations.buttonBorder}',` : ''}
+        },
+        allowedMints: ${JSON.stringify(customizations.supportedCurrencies)},${customizations.showQR ? '' : `
+        showQR: false,`}
+        position: '${customizations.position}',
+      }}
+      paymentConfig={{
+        products: [
+          {
+            id: 'product-1',
+            name: '${customizations.productName || 'Digital Product'}',
+            description: '${customizations.productDescription || 'Instant delivery'}',
+            price: ${customizations.productPrice || 0.1},
+            quantity: 1
+          }
+        ]
+      }}
+      onPaymentSuccess={(signature) => {
+        console.log('Order successful:', signature);
+      }}
+    />
+  );
+}`;
+    } else if (selectedMode === 'cart') {
+      return `import { PaymentButton } from '@solana-commerce/react';
+
+function App() {
+  return (
+    <PaymentButton
+      config={{
+        mode: 'cart',
+        merchant: {
+          name: '${customizations.merchantName}',
+          wallet: '${customizations.walletAddress}',
+        },
+        theme: {
+          primaryColor: '${customizations.primaryColor}',
+          secondaryColor: '${customizations.secondaryColor}',
+        },
+      }}
+      paymentConfig={{
+        products: [
+          {
+            id: 'item-1',
+            name: 'Premium T-Shirt',
+            price: 25.00,
+            quantity: 2
+          },
+          {
+            id: 'item-2',
+            name: 'Digital Gift Card',
+            price: 50.00,
+            quantity: 1
+          }
+        ]
+      }}
+      onPaymentSuccess={(signature) => {
+        console.log('Cart checkout successful:', signature);
+      }}
+    />
+  );
+}`;
     } else {
-      return `// Cart modes removed for tip flow MVP
-// Only tip mode is available in this version`;
+      return `// Select a mode to see code example`;
     }
 
     // Note: Simplified for tip flow MVP

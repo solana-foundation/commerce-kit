@@ -1,9 +1,9 @@
 'use client';
 
-import { TabsRoot, TabsList, TabsTab } from '@solana-commerce/react';
-import type { Mode } from './types';
+import { TabsList, TabsRoot, TabsTab } from '@solana-commerce/react';
 import Image from 'next/image';
 import logoCommerceKit from '../assets/logo-commercekit.png';
+import type { Mode } from './types';
 
 interface UnifiedTabBarProps {
   selectedMode: Mode;
@@ -13,12 +13,12 @@ interface UnifiedTabBarProps {
   checkoutStyle: 'modal' | 'page';
 }
 
-export function UnifiedTabBar({ 
-  selectedMode, 
-  onModeChange, 
-  activeTab, 
-  onTabChange, 
-  checkoutStyle 
+export function UnifiedTabBar({
+  selectedMode,
+  onModeChange,
+  activeTab,
+  onTabChange,
+  checkoutStyle
 }: UnifiedTabBarProps) {
   return (
     <div className="sticky top-0 bg-white z-40 border-b border-gray-200">
@@ -33,65 +33,57 @@ export function UnifiedTabBar({
               height={100}
               className="w-12 h-12"
             />
-          <TabsRoot
-            value={selectedMode}
-            onValueChange={(value) => {
-              if (value === 'tip') onModeChange('tip');
-              if (value === 'qrCustomization') onModeChange('qrCustomization');
-            }}
-          >
-            <TabsList className="flex bg-zinc-100/50 h-12">
-              <TabsTab 
-                value="tip"
-                className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300 data-[state=active]:border-zinc-900 data-[state=active]:text-zinc-900 text-zinc-400 transition-colors text-center cursor-pointer"
-              >
-                Tip Link
-              </TabsTab>
-              <TabsTab 
-                value="qrCustomization"
-                className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300 data-[state=active]:border-zinc-900 data-[state=active]:text-zinc-900 text-zinc-400 transition-colors text-center cursor-pointer"
-              >
-                QR Customization
-              </TabsTab>
-              <TabsTab 
-                value="buyNow"
-                disabled
-                className="hidden px-4 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-300 cursor-not-allowed opacity-70 select-none"
-              >
-                <span className="inline-flex items-center gap-2">
-                  <span>Single Item</span>
-                  <span className="rounded-full bg-zinc-200 text-zinc-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span>
-                </span>
-              </TabsTab>
-              <TabsTab 
-                value="cart"
-                disabled
-                className="hidden px-4 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-300 cursor-not-allowed opacity-70 select-none"
-              >
-                <span className="inline-flex items-center gap-2">
-                  <span>Multiple Items</span>
-                  <span className="rounded-full bg-zinc-200 text-zinc-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span>
-                </span>
-              </TabsTab>
-            </TabsList>
-          </TabsRoot>
+            <TabsRoot
+              value={selectedMode}
+              onValueChange={(value) => {
+                if (value === 'tip') onModeChange('tip');
+                if (value === 'qrCustomization') onModeChange('qrCustomization');
+              }}
+            >
+              <TabsList className="flex bg-zinc-100/50 h-12">
+                <TabsTab
+                  value="tip"
+                  className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300 data-[state=active]:border-zinc-900 data-[state=active]:text-zinc-900 text-zinc-400 transition-colors text-center cursor-pointer"
+                >
+                  Tip Link
+                </TabsTab>
+                <TabsTab
+                  value="qrCustomization"
+                  className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300 data-[state=active]:border-zinc-900 data-[state=active]:text-zinc-900 text-zinc-400 transition-colors text-center cursor-pointer"
+                >
+                  QR Customization
+                </TabsTab>
+                <TabsTab
+                  value="buyNow"
+                  className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300 data-[state=active]:border-zinc-900 data-[state=active]:text-zinc-900 text-zinc-400 transition-colors text-center cursor-pointer"
+                >
+                  Single Item
+                </TabsTab>
+                <TabsTab
+                  value="cart"
+                  className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300 data-[state=active]:border-zinc-900 data-[state=active]:text-zinc-900 text-zinc-400 transition-colors text-center cursor-pointer"
+                >
+                  Multiple Items
+                </TabsTab>
+              </TabsList>
+            </TabsRoot>
           </div>
         </div>
-        
+
         {/* Demo/Code View Tabs */}
         <div className="col-span-8">
-          <TabsRoot 
-            value={activeTab} 
+          <TabsRoot
+            value={activeTab}
             onValueChange={(value) => onTabChange(value as 'demo' | 'code')}
           >
             <TabsList className="flex bg-zinc-100/50 h-12">
-              <TabsTab 
+              <TabsTab
                 value="demo"
                 className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300 data-[state=active]:border-zinc-900 data-[state=active]:text-zinc-900 text-zinc-400 transition-colors cursor-pointer"
               >
                 {checkoutStyle === 'modal' ? 'Modal' : 'Page'}
               </TabsTab>
-              <TabsTab 
+              <TabsTab
                 value="code"
                 className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300 data-[state=active]:border-zinc-900 data-[state=active]:text-zinc-900 text-zinc-400 transition-colors cursor-pointer"
               >
