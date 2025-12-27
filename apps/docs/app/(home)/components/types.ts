@@ -72,5 +72,12 @@ export interface DemoConfig {
     showMerchantInfo: boolean;
     position: 'overlay' | 'inline';
     allowedMints: string[];
-    // Note: products removed for tip flow MVP
+    products?: Array<{
+        id: string;
+        name: string;
+        description?: string;
+        price: number;
+        quantity: number;
+        image?: string;
+    }>;
 }
