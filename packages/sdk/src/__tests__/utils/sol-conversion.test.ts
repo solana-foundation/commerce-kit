@@ -158,10 +158,8 @@ describe('SOL to Lamports Conversion', () => {
         });
 
         it('should reject null and undefined inputs', () => {
-            // Testing runtime behavior with wrong types
             // biome-ignore lint/suspicious/noExplicitAny: Testing runtime validation
             expect(() => convertSOLToLamports(null as any)).toThrow();
-            // Testing runtime behavior with wrong types
             // biome-ignore lint/suspicious/noExplicitAny: Testing runtime validation
             expect(() => convertSOLToLamports(undefined as any)).toThrow();
         });
