@@ -7,7 +7,9 @@
  */
 
 // For App Router (Next.js 13+)
-export { POST } from '@solana-commerce/react/api/rpc-endpoints';
+import { rpcEndpointsHandler } from '../server';
+
+export const POST = rpcEndpointsHandler;
 
 // For Pages Router (Next.js 12 and below)
 /*

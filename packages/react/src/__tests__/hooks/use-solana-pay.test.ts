@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
-import { useSolanaPay } from '../../hooks/use-solana-pay';
 import { toMinorUnits } from '@solana-commerce/headless/src/utils/validation';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useSolanaPay } from '../../hooks/use-solana-pay';
 
 // Mock the headless SDK
 vi.mock('@solana-commerce/headless', () => ({
@@ -50,9 +50,10 @@ import { createSolanaPayRequest } from '@solana-commerce/headless';
 const mockCreateSolanaPayRequest = vi.mocked(createSolanaPayRequest);
 
 const mockPaymentRequest = {
-    qrCode: 'data:image/png;base64,mock-qr-code',
-    url: 'solana:9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM?amount=1.5&spl-token=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-    reference: 'mock-reference',
+    qr: 'data:image/png;base64,mock-qr-code',
+    url: new URL(
+        'solana:9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM?amount=1.5&spl-token=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+    ),
 };
 
 describe('useSolanaPay', () => {
@@ -87,9 +88,10 @@ describe('useSolanaPay', () => {
 
     describe('useSolanaPay hook', () => {
         const mockPaymentRequest = {
-            url: 'solana:9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM?amount=1.5&spl-token=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-            qrCode: 'data:image/png;base64,mock-qr-code',
-            reference: 'mock-reference',
+            url: new URL(
+                'solana:9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM?amount=1.5&spl-token=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+            ),
+            qr: 'data:image/png;base64,mock-qr-code',
         };
 
         it('should initialize with loading state', () => {
@@ -127,6 +129,7 @@ describe('useSolanaPay', () => {
                     memo: expect.stringMatching(/^tip-\d+$/),
                     label: 'commerceKit',
                     message: undefined,
+                    decimals: 6,
                 },
                 {
                     size: 256,
@@ -257,7 +260,7 @@ describe('useSolanaPay', () => {
                     initialProps: {
                         recipient: '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM',
                         amount: 10,
-                        currency: 'USDC' as const,
+                        currency: 'USDC' as any,
                     },
                 },
             );
@@ -406,7 +409,7 @@ describe('useSolanaPay', () => {
             // Test USDC_DEVNET
             const { rerender } = renderHook(
                 ({ currency }) => useSolanaPay('9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM', 10, currency),
-                { initialProps: { currency: 'USDC_DEVNET' as const } },
+                { initialProps: { currency: 'USDC_DEVNET' as any } },
             );
 
             await waitFor(() => {
@@ -600,7 +603,7 @@ describe('useSolanaPay', () => {
                 resolveRequest = resolve;
             });
 
-            mockCreateSolanaPayRequest.mockReturnValue(pendingPromise);
+            mockCreateSolanaPayRequest.mockReturnValue(pendingPromise as any);
 
             const { result } = renderHook(() =>
                 useSolanaPay('9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM', 10, 'USDC'),

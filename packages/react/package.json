@@ -16,6 +16,11 @@
             "import": "./dist/components/index.mjs",
             "require": "./dist/components/index.js"
         },
+        "./server": {
+            "types": "./dist/server.d.ts",
+            "import": "./dist/server.mjs",
+            "require": "./dist/server.js"
+        },
         "./hooks": {
             "types": "./dist/hooks/index.d.ts",
             "import": "./dist/hooks/index.mjs",
@@ -24,10 +29,10 @@
     },
     "scripts": {
         "build": "pnpm run build:iframe && pnpm run generate:iframe-bundle && pnpm run build:sdk",
-        "build:sdk": "tsup src/index.tsx --format cjs,esm --dts --splitting --external react --external react-dom",
+        "build:sdk": "tsup src/index.tsx src/server.ts --format cjs,esm --dts --splitting --external react --external react-dom",
         "build:iframe": "tsup --config tsup.iframe.config.ts",
         "generate:iframe-bundle": "tsx scripts/generate-iframe-bundle.ts",
-        "dev": "tsup src/index.tsx --format cjs,esm --dts --splitting --watch --external react --external react-dom",
+        "dev": "tsup src/index.tsx src/server.ts --format cjs,esm --dts --splitting --watch --external react --external react-dom",
         "type-check": "tsc --noEmit",
         "test": "vitest run",
         "test:watch": "vitest",

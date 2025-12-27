@@ -42,7 +42,7 @@ export { createSolPriceFetcher, fetchSolPrice, getCachedSolPrice, type SolPriceF
 export { fetchRpcUrl, resolveRpcEndpoint, type RpcEndpoint, type RpcEndpointConfig } from './utils/rpc-resolver';
 
 // Export API route handler
-export { POST as rpcEndpointsHandler } from './api/rpc-endpoints';
+
 
 import { AppProvider } from '@solana-commerce/connector';
 import { ArcProvider } from '@solana-commerce/sdk';
