@@ -123,10 +123,15 @@ export function InteractiveDemo() {
   };
 
   // Ensure layout switches based on mode selection
+  // Ensure layout switches based on mode selection
   const handleModeChange = (mode: Mode) => {
     setSelectedMode(mode);
-    if (mode === 'tip') setCheckoutStyle('modal');
-    else setCheckoutStyle('page');
+    // Use modal style (Button Preview) for tip, buyNow, and cart
+    if (mode === 'qrCustomization') {
+      // QR mode handles its own layout
+    } else {
+      setCheckoutStyle('modal');
+    }
   };
 
   return (

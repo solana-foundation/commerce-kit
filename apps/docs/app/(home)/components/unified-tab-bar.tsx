@@ -38,6 +38,8 @@ export function UnifiedTabBar({
               onValueChange={(value) => {
                 if (value === 'tip') onModeChange('tip');
                 if (value === 'qrCustomization') onModeChange('qrCustomization');
+                if (value === 'buyNow') onModeChange('buyNow');
+                if (value === 'cart') onModeChange('cart');
               }}
             >
               <TabsList className="flex bg-zinc-100/50 h-12">
@@ -57,13 +59,13 @@ export function UnifiedTabBar({
                   value="buyNow"
                   className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300 data-[state=active]:border-zinc-900 data-[state=active]:text-zinc-900 text-zinc-400 transition-colors text-center cursor-pointer"
                 >
-                  Single Item
+                  Buy Now
                 </TabsTab>
                 <TabsTab
                   value="cart"
                   className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-gray-300 data-[state=active]:border-zinc-900 data-[state=active]:text-zinc-900 text-zinc-400 transition-colors text-center cursor-pointer"
                 >
-                  Multiple Items
+                  Cart
                 </TabsTab>
               </TabsList>
             </TabsRoot>
