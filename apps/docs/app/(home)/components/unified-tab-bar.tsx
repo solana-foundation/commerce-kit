@@ -54,22 +54,12 @@ export function UnifiedTabBar({
                 QR Customization
               </TabsTab>
               <TabsTab 
-                value="buyNow"
-                disabled
-                className="hidden px-4 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-300 cursor-not-allowed opacity-70 select-none"
-              >
-                <span className="inline-flex items-center gap-2">
-                  <span>Single Item</span>
-                  <span className="rounded-full bg-zinc-200 text-zinc-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span>
-                </span>
-              </TabsTab>
-              <TabsTab 
                 value="cart"
                 disabled
                 className="hidden px-4 py-2 text-sm font-medium border-b-2 border-transparent text-zinc-300 cursor-not-allowed opacity-70 select-none"
               >
                 <span className="inline-flex items-center gap-2">
-                  <span>Multiple Items</span>
+                  <span>Cart</span>
                   <span className="rounded-full bg-zinc-200 text-zinc-600 px-2 py-0.5 text-[10px] uppercase tracking-wide">Coming soon</span>
                 </span>
               </TabsTab>

@@ -68,10 +68,6 @@ const cart = createCartRequest(
 
 - **`createTipRequest(recipient, amount, options?)`** - Create a tip/donation request
 
-### Buy Now Functions
-
-- **`createBuyNowRequest(recipient, product, options?)`** - Create a single product purchase request
-
 ## Example
 
 ```typescript

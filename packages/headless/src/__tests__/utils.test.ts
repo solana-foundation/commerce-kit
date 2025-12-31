@@ -230,14 +230,9 @@ describe('Utils', () => {
         });
 
         describe('Non-Cart Mode', () => {
-            it('should return first product price for single purchase', () => {
-                const total = calculateTotal(mockProducts, 'buy-now');
-                expect(total).toBe(100); // First product only
-            });
-
             it('should return first product price for tip mode', () => {
                 const total = calculateTotal(mockProducts, 'tip');
-                expect(total).toBe(100);
+                expect(total).toBe(100); // First product only
             });
 
             it('should handle single product', () => {

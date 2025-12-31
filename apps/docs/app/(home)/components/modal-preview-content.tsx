@@ -707,7 +707,7 @@ export function ModalPreviewContent({ config, selectedMode }: ModalPreviewConten
     );
   }
 
-  // Buy Now/Cart Modal for non-tip modes
+  // Cart Modal for non-tip modes
   return (
     <div 
       style={{
@@ -740,7 +740,7 @@ export function ModalPreviewContent({ config, selectedMode }: ModalPreviewConten
           className="m-0 text-sm"
           style={{ color: `${theme.textColor}80` }}
         >
-          Complete your purchase
+          Review your cart
         </p>
       </div>
 

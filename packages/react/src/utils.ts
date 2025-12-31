@@ -212,7 +212,7 @@ export const useTotalAmount = (
             return 0;
         }
 
-        // Calculate total from products for cart and buyNow modes
+        // Calculate total from products for cart mode
         if (paymentConfig?.products && paymentConfig.products.length > 0) {
             return paymentConfig.products.reduce((total, product) => {
                 // Defensively handle missing or invalid prices/quantities
@@ -275,8 +275,6 @@ export const getButtonText = (mode: CommerceMode): string => {
     switch (mode) {
         case 'tip':
             return 'Tip';
-        case 'buyNow':
-            return 'Buy Now';
         case 'cart':
             return 'Checkout';
         default:

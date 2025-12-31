@@ -9,7 +9,7 @@ import { TOKEN_PROGRAM_ADDRESS, TOKEN_2022_PROGRAM_ADDRESS } from 'gill/programs
 import type React from 'react';
 
 // Core enums and types
-export type CommerceMode = 'cart' | 'tip' | 'buyNow';
+export type CommerceMode = 'cart' | 'tip';
 export type Position = 'inline' | 'overlay';
 export type BorderRadius = 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
 // Use SolanaClusterMoniker from gill instead of custom Network type

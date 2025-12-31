@@ -10,7 +10,7 @@ import { IFRAME_STYLES } from '../../iframe-app/bundle';
 import { fetchSolPrice, getModalBorderRadius } from '../../utils';
 
 /**
- * Product configuration for cart and buyNow modes
+ * Product configuration for cart mode
  */
 export interface Product {
     /** Product identifier */
@@ -66,7 +66,7 @@ export interface PaymentConfig {
     tokenDecimals?: { [currency: string]: number };
     /** Fallback SOL price if API fails and no cache available */
     fallbackSolPriceUsd?: number;
-    /** Products array for cart and buyNow modes */
+    /** Products array for cart mode */
     products?: Product[];
 }
 
@@ -701,7 +701,7 @@ function inferTotalAmount(config: SolanaCommerceConfig, paymentConfig?: PaymentC
         return 0;
     }
 
-    // Calculate total from products for cart and buyNow modes
+    // Calculate total from products for cart mode
     if (paymentConfig?.products && paymentConfig.products.length > 0) {
         return paymentConfig.products.reduce((total, product) => {
             // Defensively handle missing or invalid prices/quantities

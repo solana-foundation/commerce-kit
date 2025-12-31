@@ -2,7 +2,7 @@ import { Customer } from './customer';
 import { PaymentMethod } from './tokens';
 
 export type CheckoutStepId = 'details' | 'payment' | 'confirmation';
-export type Mode = 'buyNow' | 'cart';
+export type Mode = 'cart';
 
 export interface CheckoutState {
     currentStep: CheckoutStepId;

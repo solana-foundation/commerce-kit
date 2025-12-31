@@ -1,6 +1,6 @@
 export interface Order {
     type: 'digital' | 'physical';
-    mode: 'buyNow' | 'cart' | 'subscription' | 'tip';
+    mode: 'cart' | 'subscription' | 'tip';
     status: 'pending' | 'processing' | 'completed' | 'failed';
     items: OrderItem[];
     total: number;
