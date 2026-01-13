@@ -1,12 +1,11 @@
 'use client';
 
-import React from 'react';
-import { SolanaCommerceClient } from './solana-commerce-client';
 import { type CommerceMode } from '@solana-commerce/react';
+import { SolanaCommerceClient } from './solana-commerce-client';
 
-import type { Mode, CheckoutStyle, Customizations, DemoConfig } from './types';
-import { IconCursorarrowRays, IconHandPointUpLeftFill, IconInsetFilledCenterRectangle, IconApp, IconShadow } from 'symbols-react';
+import { IconApp, IconCursorarrowRays, IconHandPointUpLeftFill, IconInsetFilledCenterRectangle, IconShadow } from 'symbols-react';
 import { Switch } from '../../../components/ui/switch';
+import type { CheckoutStyle, Customizations, DemoConfig, Mode } from './types';
 // selectors are inlined as mini selects below for compactness
 
 // Modal preview components
@@ -24,23 +23,23 @@ interface DemoPreviewProps {
 }
 
 // Modal Preview Component - wrapper that positions the modal content properly
-function ModalPreview({ config, selectedMode }: { 
-  config: DemoConfig; 
-  selectedMode: Mode; 
+function ModalPreview({ config, selectedMode }: {
+  config: DemoConfig;
+  selectedMode: Mode;
 }) {
   return (
-    <div 
-    style={{
-      backgroundImage: `repeating-linear-gradient(
+    <div
+      style={{
+        backgroundImage: `repeating-linear-gradient(
         45deg,
         transparent,
         transparent 10px,
         rgba(46, 77, 97, 0.08) 10px,
         rgba(46, 77, 97, 0.08) 11px
       )`
-    }}
-    className="relative h-full w-full flex items-center justify-center p-4">
-      <ModalPreviewContent 
+      }}
+      className="relative h-full w-full flex items-center justify-center p-4">
+      <ModalPreviewContent
         config={config}
         selectedMode={selectedMode}
       />
@@ -48,10 +47,10 @@ function ModalPreview({ config, selectedMode }: {
   );
 }
 
-export function DemoPreview({ 
-  selectedMode, 
-  checkoutStyle, 
-  customizations, 
+export function DemoPreview({
+  selectedMode,
+  checkoutStyle,
+  customizations,
   config,
   onCheckoutStyleChange,
   onCustomizationChange
@@ -63,7 +62,7 @@ export function DemoPreview({
       {selectedMode === 'qrCustomization' ? (
         // QR Customization Mode - Show QR preview instead of commerce flow
         <div className="h-full p-6">
-          <QRCustomizationPreview 
+          <QRCustomizationPreview
             theme={{
               primaryColor: customizations.primaryColor,
               secondaryColor: customizations.secondaryColor,
@@ -83,22 +82,23 @@ export function DemoPreview({
               <IconCursorarrowRays className="w-3 h-3 fill-gray-500" />
               <span className="text-xs font-mono">Button Preview</span>
             </div>
-            <div 
-            style={{
-              backgroundImage: `repeating-linear-gradient(
+            <div
+              style={{
+                backgroundImage: `repeating-linear-gradient(
                 45deg,
                 transparent,
                 transparent 10px,
                 rgba(46, 77, 97, 0.08) 10px,
                 rgba(46, 77, 97, 0.08) 11px
               )`
-            }}
-            className="flex flex-col items-center justify-center border border-gray-200  rounded-lg bg-zinc-100 p-6 py-12 text-center relative">
+              }}
+              className="flex flex-col items-center justify-center border border-gray-200  rounded-lg bg-zinc-100 p-6 py-12 text-center relative">
               <SolanaCommerceClient
                 config={{
                   ...config,
                   mode: config.mode === 'qrCustomization' ? 'tip' : config.mode as CommerceMode
                 }}
+                paymentConfig={config.products ? { products: config.products } : undefined}
                 variant={customizations.buttonVariant}
                 onPayment={(amount: number, currency: string) => {
                   console.log('Demo payment:', { amount, currency });
@@ -129,7 +129,7 @@ export function DemoPreview({
                 <div className="flex items-center gap-2 h-7 px-2 rounded-md border border-gray-200 bg-white">
                   <IconShadow className="w-3.5 h-3.5 opacity-60" />
                   <div className="flex items-center gap-1">
-                    {(['none','sm','md','lg','xl'] as const).map(level => {
+                    {(['none', 'sm', 'md', 'lg', 'xl'] as const).map(level => {
                       const active = (customizations.buttonShadow ?? 'md') === level;
                       const label = level === 'xl' ? 'XL' : level === 'none' ? 'N' : level.toUpperCase();
                       return (
@@ -165,7 +165,7 @@ export function DemoPreview({
               </div>
             </div>
           </div>
-          
+
           {/* Modal Preview Section */}
           <div className="h-full">
             <div className="h-[750px] overflow-hidden relative rounded-lg border border-gray-200 bg-zinc-100">
@@ -174,9 +174,9 @@ export function DemoPreview({
                 <IconInsetFilledCenterRectangle className="w-3 h-3 fill-gray-400" />
                 <span className="text-xs font-mono">Modal Preview</span>
               </div>
-              <ModalPreview 
-                config={config} 
-                selectedMode={selectedMode}               />
+              <ModalPreview
+                config={config}
+                selectedMode={selectedMode} />
             </div>
           </div>
         </div>
@@ -205,7 +205,7 @@ export function DemoPreview({
                   <div className="text-2xl mb-4">🎯</div>
                   <h3 className="text-lg font-semibold text-gray-700 mb-2">Tip Flow MVP</h3>
                   <p className="text-gray-600 text-sm max-w-md">
-                    Cart and product features have been removed to focus on the tip flow as the MVP. 
+                    Cart and product features have been removed to focus on the tip flow as the MVP.
                     Click the button above to test the tip modal!
                   </p>
                 </div>

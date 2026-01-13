@@ -1,24 +1,24 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import type { DemoConfig, Mode } from './types';
 // Note: cn utility removed as it's no longer needed
 // Note: OrderItem removed for tip flow MVP
-import { TokenIcon } from '../../../../../packages/react/src/components/icons';
-import { getButtonBorder, getButtonShadow, getAccessibleTextColor } from '../../../../../packages/react/src/utils';
-import type { ThemeConfig } from '../../../../../packages/react/src/types';
 import {
-  DropdownRoot,
-  DropdownTrigger,
   DropdownContent,
-  DropdownItem
+  DropdownItem,
+  DropdownRoot,
+  DropdownTrigger
 } from '@solana-commerce/react';
+import { TokenIcon } from '../../../../../packages/react/src/components/icons';
+import type { ThemeConfig } from '../../../../../packages/react/src/types';
+import { getAccessibleTextColor, getButtonBorder, getButtonShadow } from '../../../../../packages/react/src/utils';
 
 // Local border radius utilities to match the React SDK
 const BORDER_RADIUS_MAP = {
   none: '0',
   sm: '0.5rem',
-  md: '0.75rem', 
+  md: '0.75rem',
   lg: '1rem',
   xl: '1.2rem',
   full: '1.5rem' // Cap at reasonable radius instead of fully rounded
@@ -31,10 +31,10 @@ const MODAL_BORDER_RADIUS_MAP = {
 
 type BorderRadius = keyof typeof BORDER_RADIUS_MAP;
 
-const getBorderRadius = (radius?: BorderRadius): string => 
+const getBorderRadius = (radius?: BorderRadius): string =>
   BORDER_RADIUS_MAP[radius ?? 'md'];
 
-const getModalBorderRadius = (radius?: BorderRadius): string => 
+const getModalBorderRadius = (radius?: BorderRadius): string =>
   MODAL_BORDER_RADIUS_MAP[radius ?? 'md'];
 
 
@@ -99,22 +99,22 @@ export function ModalPreviewContent({ config, selectedMode }: ModalPreviewConten
     { value: 'SOL' as Currency, label: 'Solana', symbol: 'SOL' },
     { value: 'USDT' as Currency, label: 'Tether USD', symbol: 'USDT' }
   ];
-  
-  const currencies = allCurrencies.filter(currency => 
+
+  const currencies = allCurrencies.filter(currency =>
     config.allowedMints.includes(currency.value)
   );
 
   const walletIcon = (
     <svg width="21" height="16" viewBox="0 0 21 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M13.5 9.55556H13.5078M3 2.55556V13.4444C3 14.3036 3.69645 15 4.55556 15H15.4444C16.3036 15 17 14.3036 17 13.4444V5.66667C17 4.80756 16.3036 4.11111 15.4444 4.11111L4.55556 4.11111C3.69645 4.11111 3 3.41466 3 2.55556ZM3 2.55556C3 1.69645 3.69645 1 4.55556 1H13.8889M13.8889 9.55556C13.8889 9.77033 13.7148 9.94444 13.5 9.94444C13.2852 9.94444 13.1111 9.77033 13.1111 9.55556C13.1111 9.34078 13.2852 9.16667 13.5 9.16667C13.7148 9.16667 13.8889 9.34078 13.8889 9.55556Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M13.5 9.55556H13.5078M3 2.55556V13.4444C3 14.3036 3.69645 15 4.55556 15H15.4444C16.3036 15 17 14.3036 17 13.4444V5.66667C17 4.80756 16.3036 4.11111 15.4444 4.11111L4.55556 4.11111C3.69645 4.11111 3 3.41466 3 2.55556ZM3 2.55556C3 1.69645 3.69645 1 4.55556 1H13.8889M13.8889 9.55556C13.8889 9.77033 13.7148 9.94444 13.5 9.94444C13.2852 9.94444 13.1111 9.77033 13.1111 9.55556C13.1111 9.34078 13.2852 9.16667 13.5 9.16667C13.7148 9.16667 13.8889 9.34078 13.8889 9.55556Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 
   const solanaPayIcon = (
     <svg width="21" height="16" viewBox="0 0 21 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M3.98967 11.7879C4.10222 11.6755 4.25481 11.6123 4.41392 11.6123H19.0941C19.3615 11.6123 19.4954 11.9357 19.3062 12.1247L16.4054 15.0232C16.2929 15.1356 16.1403 15.1988 15.9812 15.1988H1.30102C1.03359 15.1988 0.899716 14.8754 1.08889 14.6864L3.98967 11.7879Z" fill="currentColor"/>
-      <path d="M3.98937 0.959506C4.10191 0.847047 4.25451 0.783875 4.41361 0.783875H19.0938C19.3612 0.783875 19.4951 1.10726 19.3059 1.29628L16.4051 4.19475C16.2926 4.30721 16.14 4.37038 15.9809 4.37038H1.30071C1.03329 4.37038 0.899411 4.047 1.08859 3.85797L3.98937 0.959506Z" fill="currentColor"/>
-      <path d="M16.4054 6.33924C16.2929 6.22675 16.1403 6.16362 15.9812 6.16362H1.30102C1.03359 6.16362 0.899717 6.48697 1.08889 6.676L3.98967 9.57445C4.10222 9.68694 4.25481 9.75012 4.41392 9.75012H19.0941C19.3615 9.75012 19.4954 9.42673 19.3062 9.23769L16.4054 6.33924Z" fill="currentColor"/>
+      <path d="M3.98967 11.7879C4.10222 11.6755 4.25481 11.6123 4.41392 11.6123H19.0941C19.3615 11.6123 19.4954 11.9357 19.3062 12.1247L16.4054 15.0232C16.2929 15.1356 16.1403 15.1988 15.9812 15.1988H1.30102C1.03359 15.1988 0.899716 14.8754 1.08889 14.6864L3.98967 11.7879Z" fill="currentColor" />
+      <path d="M3.98937 0.959506C4.10191 0.847047 4.25451 0.783875 4.41361 0.783875H19.0938C19.3612 0.783875 19.4951 1.10726 19.3059 1.29628L16.4051 4.19475C16.2926 4.30721 16.14 4.37038 15.9809 4.37038H1.30071C1.03329 4.37038 0.899411 4.047 1.08859 3.85797L3.98937 0.959506Z" fill="currentColor" />
+      <path d="M16.4054 6.33924C16.2929 6.22675 16.1403 6.16362 15.9812 6.16362H1.30102C1.03359 6.16362 0.899717 6.48697 1.08889 6.676L3.98967 9.57445C4.10222 9.68694 4.25481 9.75012 4.41392 9.75012H19.0941C19.3615 9.75012 19.4954 9.42673 19.3062 9.23769L16.4054 6.33924Z" fill="currentColor" />
     </svg>
   );
 
@@ -125,7 +125,7 @@ export function ModalPreviewContent({ config, selectedMode }: ModalPreviewConten
 
   if (selectedMode === 'tip') {
     return (
-      <div 
+      <div
         style={{
           maxWidth: '560px',
           width: '100%',
@@ -176,7 +176,7 @@ export function ModalPreviewContent({ config, selectedMode }: ModalPreviewConten
                 }}
               >
                 <svg width="16" height="17" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M15 8.5H1M1 8.5L8 15.5M1 8.5L8 1.5" stroke="currentColor" strokeOpacity="0.72" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M15 8.5H1M1 8.5L8 15.5M1 8.5L8 1.5" stroke="currentColor" strokeOpacity="0.72" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
             ) : null}
@@ -252,7 +252,7 @@ export function ModalPreviewContent({ config, selectedMode }: ModalPreviewConten
             }}
           >
             <svg width="14" height="15" viewBox="0 0 14 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M13.7071 2.20711C14.0976 1.81658 14.0976 1.18342 13.7071 0.792893C13.3166 0.402369 12.6834 0.402369 12.2929 0.792893L7 6.08579L1.70711 0.792893C1.31658 0.402369 0.683417 0.402369 0.292893 0.792893C-0.0976311 1.18342 -0.0976311 1.81658 0.292893 2.20711L5.58579 7.5L0.292893 12.7929C-0.0976311 13.1834 -0.0976311 13.8166 0.292893 14.2071C0.683417 14.5976 1.31658 14.5976 1.70711 14.2071L7 8.91421L12.2929 14.2071C12.6834 14.5976 13.3166 14.5976 13.7071 14.2071C14.0976 13.8166 14.0976 13.1834 13.7071 12.7929L8.41421 7.5L13.7071 2.20711Z" fill="currentColor" fillOpacity="0.72"/>
+              <path d="M13.7071 2.20711C14.0976 1.81658 14.0976 1.18342 13.7071 0.792893C13.3166 0.402369 12.6834 0.402369 12.2929 0.792893L7 6.08579L1.70711 0.792893C1.31658 0.402369 0.683417 0.402369 0.292893 0.792893C-0.0976311 1.18342 -0.0976311 1.81658 0.292893 2.20711L5.58579 7.5L0.292893 12.7929C-0.0976311 13.1834 -0.0976311 13.8166 0.292893 14.2071C0.683417 14.5976 1.31658 14.5976 1.70711 14.2071L7 8.91421L12.2929 14.2071C12.6834 14.5976 13.3166 14.5976 13.7071 14.2071C14.0976 13.8166 14.0976 13.1834 13.7071 12.7929L8.41421 7.5L13.7071 2.20711Z" fill="currentColor" fillOpacity="0.72" />
             </svg>
           </button>
         </div>
@@ -275,9 +275,9 @@ export function ModalPreviewContent({ config, selectedMode }: ModalPreviewConten
               }}>
                 Select stablecoin
               </label>
-              
-              <DropdownRoot 
-                open={currencyDropdownOpen} 
+
+              <DropdownRoot
+                open={currencyDropdownOpen}
                 onOpenChange={setCurrencyDropdownOpen}
               >
                 <DropdownTrigger asChild>
@@ -306,29 +306,29 @@ export function ModalPreviewContent({ config, selectedMode }: ModalPreviewConten
                       <span style={{ marginRight: '4px', fontWeight: '600', fontSize: '16px' }}>
                         {currencies.find(c => c.value === selectedCurrency)?.symbol || selectedCurrency}
                       </span>
-                    </div>  
-                    <svg 
-                      width="12" 
-                      height="12" 
-                      viewBox="0 0 24 25" 
+                    </div>
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 25"
                       fill="none"
-                      style={{ 
+                      style={{
                         transform: currencyDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
                         transition: 'transform 200ms ease-in-out'
                       }}
                     >
-                      <path 
-                        d="M6 9.5L12 15.5L18 9.5" 
-                        stroke="black" 
-                        strokeOpacity="0.72" 
-                        strokeWidth="2" 
-                        strokeLinecap="round" 
+                      <path
+                        d="M6 9.5L12 15.5L18 9.5"
+                        stroke="black"
+                        strokeOpacity="0.72"
+                        strokeWidth="2"
+                        strokeLinecap="round"
                         strokeLinejoin="round"
                       />
                     </svg>
                   </div>
                 </DropdownTrigger>
-                
+
                 <DropdownContent align="start">
                   <div style={{
                     backgroundColor: '#FFFFFF',
@@ -338,37 +338,37 @@ export function ModalPreviewContent({ config, selectedMode }: ModalPreviewConten
                     padding: '8px',
                     minWidth: '200px'
                   }}>
-                  {currencies.map(currency => (
-                    <DropdownItem
-                      key={currency.value}
-                      onSelect={() => setSelectedCurrency(currency.value as Currency)}
-                    >
-                      <div style={{
-                        fontSize: '0.875rem',
-                        fontWeight: '400',
-                        color: theme.textColor,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        backgroundColor: 'transparent',
-                        width: '100%'
-                      }}>
-                        <TokenIcon symbol={currency.value} size={16} />
-                        <span>{currency.symbol}</span>
-                        {selectedCurrency === currency.value && (
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ marginLeft: 'auto' }}>
-                            <path 
-                              d="M13.5 4.5L6 12L2.5 8.5" 
-                              stroke={theme.primaryColor} 
-                              strokeWidth="2" 
-                              strokeLinecap="round" 
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        )}
-                      </div>
-                    </DropdownItem>
-                  ))}
+                    {currencies.map(currency => (
+                      <DropdownItem
+                        key={currency.value}
+                        onSelect={() => setSelectedCurrency(currency.value as Currency)}
+                      >
+                        <div style={{
+                          fontSize: '0.875rem',
+                          fontWeight: '400',
+                          color: theme.textColor,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          backgroundColor: 'transparent',
+                          width: '100%'
+                        }}>
+                          <TokenIcon symbol={currency.value} size={16} />
+                          <span>{currency.symbol}</span>
+                          {selectedCurrency === currency.value && (
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ marginLeft: 'auto' }}>
+                              <path
+                                d="M13.5 4.5L6 12L2.5 8.5"
+                                stroke={theme.primaryColor}
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                      </DropdownItem>
+                    ))}
                   </div>
                 </DropdownContent>
               </DropdownRoot>
@@ -376,7 +376,7 @@ export function ModalPreviewContent({ config, selectedMode }: ModalPreviewConten
 
             {/* Amount Selection */}
             <div className="mb-6 text-left">
-              <label 
+              <label
                 className="block text-xs font-normal mb-3"
                 style={{ color: `${theme.textColor}70` }}
               >
@@ -416,8 +416,8 @@ export function ModalPreviewContent({ config, selectedMode }: ModalPreviewConten
                       cursor: 'pointer',
                       transition: 'all 0.2s, transform 0.1s ease',
                       transform: 'scale(1)',
-                      boxShadow: selectedAmount === amount && !showCustomInput 
-                        ? `0 0 0 2px ${theme.primaryColor}60` 
+                      boxShadow: selectedAmount === amount && !showCustomInput
+                        ? `0 0 0 2px ${theme.primaryColor}60`
                         : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                       display: 'flex',
                       alignItems: 'center',
@@ -451,8 +451,8 @@ export function ModalPreviewContent({ config, selectedMode }: ModalPreviewConten
                     cursor: 'pointer',
                     transition: 'all 0.2s, transform 0.1s ease',
                     transform: 'scale(1)',
-                    boxShadow: showCustomInput 
-                      ? `0 0 0 2px ${theme.primaryColor}60` 
+                    boxShadow: showCustomInput
+                      ? `0 0 0 2px ${theme.primaryColor}60`
                       : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                     display: 'flex',
                     alignItems: 'center',
@@ -488,9 +488,9 @@ export function ModalPreviewContent({ config, selectedMode }: ModalPreviewConten
             </div>
 
             {/* Payment Method */}
-            <div style={{ 
-              marginBottom: '1.5rem', 
-              textAlign: 'left',        
+            <div style={{
+              marginBottom: '1.5rem',
+              textAlign: 'left',
               borderBottom: `1px solid ${theme.backgroundColor === '#ffffff' ? '#f3f4f6' : `${theme.textColor}10`}`,
               paddingBottom: '1.5rem'
             }}>
@@ -542,8 +542,8 @@ export function ModalPreviewContent({ config, selectedMode }: ModalPreviewConten
                       gap: '0.5rem',
                       marginBottom: '0.25rem'
                     }}>
-                      <span style={{ 
-                        display: 'flex', 
+                      <span style={{
+                        display: 'flex',
                         alignItems: 'center',
                         color: selectedPaymentMethod === method.value ? 'rgba(0, 0, 0, 0.8)' : theme.textColor
                       }}>
@@ -575,16 +575,16 @@ export function ModalPreviewContent({ config, selectedMode }: ModalPreviewConten
               style={{
                 width: '100%',
                 padding: '1rem',
-                backgroundColor: isProcessing || (showCustomInput && customAmount <= 0) 
-                  ? '#9ca3af' 
-                  : isActionButtonHovered 
-                    ? theme.secondaryColor 
+                backgroundColor: isProcessing || (showCustomInput && customAmount <= 0)
+                  ? '#9ca3af'
+                  : isActionButtonHovered
+                    ? theme.secondaryColor
                     : theme.primaryColor,
                 color: isProcessing || (showCustomInput && !customAmount)
-                  ? 'white' 
+                  ? 'white'
                   : getAccessibleTextColor(isActionButtonHovered ? theme.secondaryColor : theme.primaryColor),
-                border: isProcessing || (showCustomInput && !customAmount) 
-                  ? '1.5px solid transparent' 
+                border: isProcessing || (showCustomInput && !customAmount)
+                  ? '1.5px solid transparent'
                   : (() => {
                     const border = getButtonBorder(theme as Required<ThemeConfig>);
                     return border === 'none' ? '1.5px solid transparent' : border;
@@ -620,16 +620,16 @@ export function ModalPreviewContent({ config, selectedMode }: ModalPreviewConten
               onMouseUp={(e) => {
                 e.currentTarget.style.transform = 'scale(1)';
               }}
-              onFocus={(e) => { 
+              onFocus={(e) => {
                 if (!isProcessing && !(showCustomInput && !customAmount)) {
                   setIsActionButtonHovered(true);
-                  e.currentTarget.style.boxShadow = `${getButtonShadow(theme.buttonShadow || 'none')}, 0 0 0 4px rgba(202, 202, 202, 0.45)`; 
+                  e.currentTarget.style.boxShadow = `${getButtonShadow(theme.buttonShadow || 'none')}, 0 0 0 4px rgba(202, 202, 202, 0.45)`;
                 }
               }}
-              onBlur={(e) => { 
+              onBlur={(e) => {
                 setIsActionButtonHovered(false);
                 if (!isProcessing && !(showCustomInput && !customAmount)) {
-                  e.currentTarget.style.boxShadow = getButtonShadow(theme.buttonShadow || 'none'); 
+                  e.currentTarget.style.boxShadow = getButtonShadow(theme.buttonShadow || 'none');
                 }
               }}
             >
@@ -660,20 +660,20 @@ export function ModalPreviewContent({ config, selectedMode }: ModalPreviewConten
               <div className="text-5xl mb-4">
                 {selectedPaymentMethod === 'qr' ? '📱' : '👛'}
               </div>
-              <h3 
+              <h3
                 className="m-0 text-xl font-semibold mb-2"
                 style={{ color: theme.textColor }}
               >
                 {selectedPaymentMethod === 'qr' ? 'QR Code Payment' : 'Wallet Payment'}
               </h3>
-              <p 
+              <p
                 className="m-0 text-sm"
                 style={{ color: `${theme.textColor}70` }}
               >
                 Payment preview for ${showCustomInput ? customAmount : selectedAmount} {selectedCurrency}
               </p>
             </div>
-            
+
             <button
               onClick={() => {
                 console.log('Preview payment completed');
@@ -709,7 +709,7 @@ export function ModalPreviewContent({ config, selectedMode }: ModalPreviewConten
 
   // Buy Now/Cart Modal for non-tip modes
   return (
-    <div 
+    <div
       style={{
         padding: '2rem',
         borderRadius: getModalBorderRadius(theme.borderRadius),
@@ -730,13 +730,13 @@ export function ModalPreviewContent({ config, selectedMode }: ModalPreviewConten
         >
           🛒
         </div>
-        <h2 
+        <h2
           className="mt-0 mb-2 text-2xl font-bold"
           style={{ color: theme.textColor }}
         >
           {config.merchant.name}
         </h2>
-        <p 
+        <p
           className="m-0 text-sm"
           style={{ color: `${theme.textColor}80` }}
         >
@@ -744,27 +744,45 @@ export function ModalPreviewContent({ config, selectedMode }: ModalPreviewConten
         </p>
       </div>
 
-      {/* Note: Products section removed for tip flow MVP */}
-      <div className="mb-6 p-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 text-center">
-        <div className="text-sm text-gray-600">
-          🎯 <strong>Tip Flow MVP</strong><br/>
-          Products removed - focus on tip functionality
-        </div>
+      {/* Products List */}
+      <div className="mb-6 space-y-3 max-h-[200px] overflow-y-auto">
+        {config.products?.map((product) => (
+          <div key={product.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-3">
+              {product.image && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={product.image} alt={product.name} className="w-10 h-10 rounded-md object-cover" />
+              )}
+              <div className="text-left">
+                <div className="font-medium text-sm text-gray-900">{product.name}</div>
+                {product.description && (
+                  <div className="text-xs text-gray-500 truncate max-w-[150px]">{product.description}</div>
+                )}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="font-medium text-sm text-gray-900">
+                {product.price} {selectedCurrency}
+              </div>
+              <div className="text-xs text-gray-500">x{product.quantity}</div>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Total */}
       <div className="border-t border-gray-200 pt-4 mb-6 flex justify-between items-center">
-        <span 
+        <span
           className="font-bold text-lg"
           style={{ color: theme.textColor }}
         >
           Total
         </span>
-        <span 
+        <span
           className="font-bold text-lg"
           style={{ color: theme.primaryColor }}
         >
-          $5.00 {selectedCurrency}
+          {config.products?.reduce((acc, p) => acc + (p.price * p.quantity), 0).toFixed(2) || '0.00'} {selectedCurrency}
         </span>
       </div>
 
@@ -796,7 +814,7 @@ export function ModalPreviewContent({ config, selectedMode }: ModalPreviewConten
         >
           Pay Now
         </button>
-        <button 
+        <button
           onClick={() => console.log('Preview cancel')}
           style={{
             padding: '0.75rem 1.5rem',

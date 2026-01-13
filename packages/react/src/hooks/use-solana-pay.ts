@@ -1,6 +1,6 @@
 import { createSolanaPayRequest, SolanaPayRequestOptions, toMinorUnits } from '@solana-commerce/headless';
 import { Recipient } from '@solana-commerce/solana-pay';
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { Currency, CurrencyMap } from '../types';
 import { useAsync } from './use-async';
 
@@ -22,14 +22,29 @@ function validateCurrency(currency: Currency): void {
 }
 
 export function useSolanaPay(recipient: string, amount: number, currency: Currency, opts?: SolanaPayQROptions) {
+    // Use a ref to store the reference so it remains stable across re-renders
+    // unless critical parameters change.
+    const referenceRef = useRef<string | null>(null);
+    const paramsRef = useRef<{ r: string; a: number; c: string } | null>(null);
+
     const requestParams = useMemo(() => {
         if (!recipient || !amount || !currency) return null;
 
-        // Validate currency before proceeding
         validateCurrency(currency);
 
-        // Generate a unique reference for this payment
-        const reference = `tip-${Math.floor(Math.random() * 1000000)}`;
+        // check if we need a new reference
+        const paramsChanged =
+            !paramsRef.current ||
+            paramsRef.current.r !== recipient ||
+            paramsRef.current.a !== amount ||
+            paramsRef.current.c !== currency;
+
+        if (paramsChanged || !referenceRef.current) {
+            referenceRef.current = `tip-${Math.floor(Math.random() * 1000000)}`;
+            paramsRef.current = { r: recipient, a: amount, c: currency };
+        }
+
+        const reference = referenceRef.current!;
 
         // Get token info from enhanced currency map
         const tokenInfo = CurrencyMap[currency];
@@ -45,6 +60,7 @@ export function useSolanaPay(recipient: string, amount: number, currency: Curren
                 memo: reference,
                 label: opts?.label ?? 'commerceKit',
                 message: opts?.message,
+                decimals, // Pass decimals for proper URL encoding
             },
             qrOptions: {
                 size: opts?.size ?? 256,

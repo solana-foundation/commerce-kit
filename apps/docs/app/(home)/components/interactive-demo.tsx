@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 
-import { UnifiedTabBar } from './unified-tab-bar';
+import { CodeExample } from './code-example';
 import { CustomizationPanel } from './customization-panel';
 import { DemoPreview } from './demo-preview';
-import { CodeExample } from './code-example';
-import type { Mode, CheckoutStyle, Customizations } from './types';
+import type { CheckoutStyle, Customizations, Mode } from './types';
+import { UnifiedTabBar } from './unified-tab-bar';
 // Note: OrderItem removed for tip flow MVP
 
 export function InteractiveDemo() {
@@ -14,7 +14,7 @@ export function InteractiveDemo() {
   const [checkoutStyle, setCheckoutStyle] = useState<CheckoutStyle>('modal');
   const [isSwapped, setIsSwapped] = useState(false);
   const [activeTab, setActiveTab] = useState<'demo' | 'code'>('demo');
-  
+
   // Customization state
   const [customizations, setCustomizations] = useState<Customizations>({
     primaryColor: '#9945FF',
@@ -52,7 +52,7 @@ export function InteractiveDemo() {
     // Apply swap logic to colors
     const effectivePrimaryColor = isSwapped ? customizations.secondaryColor : customizations.primaryColor;
     const effectiveSecondaryColor = isSwapped ? customizations.primaryColor : customizations.secondaryColor;
-    
+
     const baseConfig = {
       merchant: merchantConfig,
       theme: {
@@ -78,24 +78,42 @@ export function InteractiveDemo() {
           ...baseConfig,
           showProductDetails: false
         };
-      // Note: buyNow and cart modes removed for tip flow MVP
       case 'qrCustomization':
         return {
           mode: 'qrCustomization' as const,
           ...baseConfig,
-          // Note: No products needed for QR customization
+        };
+      case 'buyNow':
+        return {
+          mode: 'buyNow' as const,
+          ...baseConfig,
+          products: [{
+            id: 'demo-product-1',
+            name: customizations.productName || 'Demo Product',
+            description: customizations.productDescription || 'Instant delivery',
+            price: Number(customizations.productPrice) || 0.1,
+            quantity: 1
+          }]
+        };
+      case 'cart':
+        return {
+          mode: 'cart' as const,
+          ...baseConfig,
+          products: [
+            { id: '1', name: 'Premium Item', price: 1.5, quantity: 1 },
+            { id: '2', name: 'Digital Add-on', price: 0.5, quantity: 2 }
+          ]
         };
       default:
         return {
           mode: 'tip' as const,
           ...baseConfig,
-          // Note: Products removed for tip flow MVP
         };
     }
   };
 
   const updateCustomization = <K extends keyof typeof customizations>(
-    key: K, 
+    key: K,
     value: typeof customizations[K]
   ) => {
     setCustomizations(prev => ({
@@ -105,10 +123,15 @@ export function InteractiveDemo() {
   };
 
   // Ensure layout switches based on mode selection
+  // Ensure layout switches based on mode selection
   const handleModeChange = (mode: Mode) => {
     setSelectedMode(mode);
-    if (mode === 'tip') setCheckoutStyle('modal');
-    else setCheckoutStyle('page');
+    // Use modal style (Button Preview) for tip, buyNow, and cart
+    if (mode === 'qrCustomization') {
+      // QR mode handles its own layout
+    } else {
+      setCheckoutStyle('modal');
+    }
   };
 
   return (
@@ -122,7 +145,7 @@ export function InteractiveDemo() {
           onTabChange={setActiveTab}
           checkoutStyle={checkoutStyle}
         />
-        
+
         <div className="grid grid-cols-1 sm:grid-cols-12 divide-x divide-gray-200 h-[calc(100vh-48px)]">
           {/* Left Column - Scrollable Customization Panel */}
           <div className="col-span-4 overflow-y-auto py-4">
@@ -137,7 +160,7 @@ export function InteractiveDemo() {
               config={getConfigForMode()}
             />
           </div>
-          
+
           {/* Right Column - Fixed Content */}
           <div className="col-span-8 overflow-hidden">
             {activeTab === 'demo' ? (
@@ -165,4 +188,4 @@ export function InteractiveDemo() {
       </div>
     </section>
   );
-} 
+}

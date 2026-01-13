@@ -1,29 +1,29 @@
 'use client';
 
+import {
+    TOKEN_PROGRAM_ADDRESS,
+    findAssociatedTokenPda,
+    getCreateAssociatedTokenInstruction,
+    getTransferInstruction,
+} from '@solana-program/token';
+import {
+    address,
+    appendTransactionMessageInstructions,
+    createTransactionMessage,
+    getSignatureFromTransaction,
+    pipe,
+    sendAndConfirmTransactionFactory,
+    setTransactionMessageFeePayerSigner,
+    setTransactionMessageLifetimeUsingBlockhash,
+    signTransactionMessageWithSigners,
+    type Address,
+    type Instruction,
+    type TransactionSigner,
+} from '@solana/kit';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useArcClient } from '../core/commerce-client-provider';
 import { getSharedRpc, getSharedWebSocket, releaseRpcConnection } from '../core/rpc-manager';
-import {
-    sendAndConfirmTransactionFactory,
-    createTransactionMessage,
-    pipe,
-    setTransactionMessageFeePayerSigner,
-    setTransactionMessageLifetimeUsingBlockhash,
-    appendTransactionMessageInstructions,
-    signTransactionMessageWithSigners,
-    getSignatureFromTransaction,
-    address,
-    type Address,
-    type TransactionSigner,
-    type Instruction,
-} from '@solana/kit';
-import {
-    TOKEN_PROGRAM_ADDRESS,
-    findAssociatedTokenPda,
-    getTransferInstruction,
-    getCreateAssociatedTokenInstruction,
-} from '@solana-program/token';
 import { createInvalidator } from '../utils/invalidate';
 import { validateAndNormalizeAmount } from '../utils/schema-validation';
 
@@ -170,9 +170,12 @@ export function useTransferToken(
 
             // Robust transaction submission and confirmation
             const submitAndConfirmTransactionRobust = async (
+                // biome-ignore lint/suspicious/noExplicitAny: Complex implementation types
                 signedTransaction: any,
                 signature: string,
+                // biome-ignore lint/suspicious/noExplicitAny: RPC client type complex
                 rpcClient: any,
+                // biome-ignore lint/suspicious/noExplicitAny: Function type complex
                 sendAndConfirm: any,
             ) => {
                 try {
@@ -181,15 +184,21 @@ export function useTransferToken(
                         commitment: 'confirmed',
                         skipPreflight: false,
                     });
-                } catch (confirmError: any) {
+                } catch (confirmError) {
                     // If standard confirmation fails, use custom polling
                     await waitForTransactionConfirmation(signature, rpcClient);
                 }
             };
 
             // Custom confirmation polling that's more resilient to RPC issues
-            const waitForTransactionConfirmation = async (signature: string, rpcClient: any, maxWaitTime = 30000) => {
+            const waitForTransactionConfirmation = async (
+                signature: string,
+                // biome-ignore lint/suspicious/noExplicitAny: RPC client type
+                rpcClient: any,
+                maxWaitTime = 30000,
+            ) => {
                 const startTime = Date.now();
+                // biome-ignore lint/suspicious/noExplicitAny: Error tracking
                 let lastError: any;
 
                 while (Date.now() - startTime < maxWaitTime) {
@@ -214,10 +223,11 @@ export function useTransferToken(
 
                         // Wait before polling again
                         await new Promise(resolve => setTimeout(resolve, 1000));
-                    } catch (error: any) {
+                    } catch (error) {
                         lastError = error;
                         // Continue polling unless it's a clear transaction error
-                        if (error.message?.includes('Transaction failed:')) {
+                        const errorMessage = error instanceof Error ? error.message : String(error);
+                        if (errorMessage.includes('Transaction failed:')) {
                             throw error;
                         }
                         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -233,6 +243,7 @@ export function useTransferToken(
                 retryConfig: TransferRetryConfig = {},
             ): Promise<TransferTokenResult> => {
                 const { maxAttempts = 3, baseDelay = 1000, backoffMultiplier = 1 } = retryConfig;
+                // biome-ignore lint/suspicious/noExplicitAny: Error tracking
                 let lastError: any;
 
                 for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -306,7 +317,9 @@ export function useTransferToken(
 
                         const rpcSubscriptions = getSharedWebSocket(network.rpcUrl);
                         const sendAndConfirmTransaction = sendAndConfirmTransactionFactory({
+                            // biome-ignore lint/suspicious/noExplicitAny: RPC client type mismatch
                             rpc: rpc as any,
+                            // biome-ignore lint/suspicious/noExplicitAny: RPC subscription type mismatch
                             rpcSubscriptions: rpcSubscriptions as any,
                         });
 
@@ -341,9 +354,9 @@ export function useTransferToken(
                         };
 
                         return result;
-                    } catch (error: any) {
+                    } catch (error) {
                         lastError = error;
-                        const errorMessage = error?.message || String(error);
+                        const errorMessage = error instanceof Error ? error.message : String(error);
 
                         // Check if this is a blockhash expiration error
                         const isBlockhashExpired =
@@ -355,8 +368,7 @@ export function useTransferToken(
                         if (attempt === maxAttempts - 1) {
                             if (isBlockhashExpired) {
                                 throw new BlockhashExpirationError(
-                                    `Transaction failed after ${maxAttempts} attempts due to blockhash expiration. ` +
-                                        `This can happen during network congestion. Please try again.`,
+                                    `Transaction failed after ${maxAttempts} attempts due to blockhash expiration. This can happen during network congestion. Please try again.`,
                                     error,
                                 );
                             }
@@ -369,7 +381,7 @@ export function useTransferToken(
                         }
 
                         // Wait with configurable delay and backoff before retrying
-                        const delay = baseDelay * Math.pow(backoffMultiplier, attempt);
+                        const delay = baseDelay * backoffMultiplier ** attempt;
                         await new Promise(resolve => setTimeout(resolve, delay));
                     }
                 }

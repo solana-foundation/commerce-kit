@@ -10,39 +10,23 @@ export * from './components';
 export * from './hooks';
 
 // Re-export UI primitives (merged from ui-primitives package)
-export { TabsRoot, TabsList, TabsTab, TabsPanel } from './ui-primitives/tabs-alpha';
-export {
-    Dialog,
-    DialogTrigger,
-    DialogContent,
-    DialogBackdrop,
-    DialogClose,
-    DialogProvider,
-} from './ui-primitives/dialog-alpha';
-export { DialogPortal } from './ui-primitives/react';
-export { DropdownRoot, DropdownTrigger, DropdownContent, DropdownItem } from './ui-primitives/dropdown-alpha';
-export {
-    Drawer,
-    DrawerTrigger,
-    DrawerContent,
-    DrawerBackdrop,
-    DrawerClose,
-    DrawerHandle,
-    DrawerPortal,
-} from './ui-primitives/drawer-alpha';
 export { Z_INDEX, Z_INDEX_CSS_VARS } from './ui-primitives/constants';
+export {
+    Dialog, DialogBackdrop,
+    DialogClose, DialogContent, DialogProvider, DialogTrigger
+} from './ui-primitives/dialog-alpha';
+export {
+    Drawer, DrawerBackdrop,
+    DrawerClose, DrawerContent, DrawerHandle,
+    DrawerPortal, DrawerTrigger
+} from './ui-primitives/drawer-alpha';
+export { DropdownContent, DropdownItem, DropdownRoot, DropdownTrigger } from './ui-primitives/dropdown-alpha';
+export { DialogPortal } from './ui-primitives/react';
+export { TabsList, TabsPanel, TabsRoot, TabsTab } from './ui-primitives/tabs-alpha';
 
 // Re-export types for public API
 export type {
-    MerchantConfig,
-    ThemeConfig,
-    SolanaCommerceConfig,
-    PaymentCallbacks,
-    PaymentButtonProps,
-    CommerceMode,
-    Position,
-    BorderRadius,
-    Network,
+    BorderRadius, CommerceMode, MerchantConfig, Network, PaymentButtonProps, PaymentCallbacks, Position, SolanaCommerceConfig, ThemeConfig
 } from './types';
 
 // Re-export SolanaClusterMoniker from gill for convenience
@@ -55,20 +39,20 @@ export type { PaymentConfig, Product } from './components/ui/secure-iframe-shell
 export { createSolPriceFetcher, fetchSolPrice, getCachedSolPrice, type SolPriceFetcherOptions } from './utils';
 
 // Export server-side RPC resolution utilities
-export { fetchRpcUrl, resolveRpcEndpoint, type RpcEndpointConfig, type RpcEndpoint } from './utils/rpc-resolver';
+export { fetchRpcUrl, resolveRpcEndpoint, type RpcEndpoint, type RpcEndpointConfig } from './utils/rpc-resolver';
 
 // Export API route handler
-export { POST as rpcEndpointsHandler } from './api/rpc-endpoints';
 
-import React, { useState, useCallback, useMemo, memo, useEffect } from 'react';
-import { ResponsiveShell } from './components/ui/responsive-shell';
-import { SecureIframeShell } from './components/ui/secure-iframe-shell';
+
 import { AppProvider } from '@solana-commerce/connector';
 import { ArcProvider } from '@solana-commerce/sdk';
 import { isAddress } from 'gill';
-import { useTheme, useTotalAmount, usePaymentUrl, createPaymentError, getBorderRadius } from './utils';
+import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { TriggerButton } from './components/ui';
+import { ResponsiveShell } from './components/ui/responsive-shell';
+import { SecureIframeShell } from './components/ui/secure-iframe-shell';
 import type { PaymentButtonProps } from './types';
+import { createPaymentError, getBorderRadius, usePaymentUrl, useTheme, useTotalAmount } from './utils';
 
 /**
  * Main Solana Commerce SDK Component
@@ -120,6 +104,53 @@ export const PaymentButton = memo<PaymentButtonProps>(function PaymentButton({
         [],
     );
 
+    // Determine network and RPC for the global ArcProvider
+    const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+    // Force mainnet for testing with real USDC - change back to devnet logic later if needed
+    // Force mainnet for testing with real USDC - change back to devnet logic later if needed
+    // Default to mainnet
+    const rpcUrl = config.rpcUrl || 'https://api.mainnet-beta.solana.com';
+    const network = 'mainnet';
+
+    // Server-side RPC URL resolution
+    const [resolvedRpcUrl, setResolvedRpcUrl] = useState<string>(rpcUrl);
+
+    useEffect(() => {
+        if (config.rpcUrl !== undefined) {
+            setResolvedRpcUrl(config.rpcUrl);
+            if (config.rpcUrl) {
+                return;
+            }
+        }
+
+        async function resolveRpc() {
+            try {
+                const { fetchRpcUrl } = await import('./utils/rpc-resolver');
+                const resolvedUrl = await fetchRpcUrl({
+                    network: 'mainnet',
+                    endpoint: config.rpcUrl,
+                    priority: 'reliable',
+                });
+                console.info(`Using RPC URL: ${resolvedUrl}`)
+                setResolvedRpcUrl(resolvedUrl);
+            } catch (error) {
+                console.warn('[PaymentButton] RPC resolution failed, using fallback:', error);
+            }
+        }
+
+        resolveRpc();
+    }, [config.rpcUrl]);
+
+    // Single AppProvider + ArcProvider for the entire component
+    const arcConfig = useMemo(
+        () => ({
+            network,
+            rpcUrl: resolvedRpcUrl,
+            debug: true, // Force debug for troubleshooting
+        }),
+        [network, resolvedRpcUrl, config.debug],
+    );
+
     // Validation checks AFTER all hooks to prevent React hooks rule violations
     const isValidWallet = isAddress(config.merchant.wallet);
     const isValidPricing = config.mode === 'tip' || totalAmount > 0;
@@ -166,50 +197,6 @@ export const PaymentButton = memo<PaymentButtonProps>(function PaymentButton({
             </div>
         );
     }
-
-    // Determine network and RPC for the global ArcProvider
-    const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
-    // Force mainnet for testing with real USDC - change back to devnet logic later if needed
-    const rpcUrl = config.rpcUrl || 'https://api.mainnet-beta.solana.com';
-    const network = 'mainnet';
-
-    // Server-side RPC URL resolution
-    const [resolvedRpcUrl, setResolvedRpcUrl] = useState<string>(rpcUrl);
-
-    useEffect(() => {
-        if (config.rpcUrl !== undefined) {
-            setResolvedRpcUrl(config.rpcUrl);
-            if (config.rpcUrl) {
-                return;
-            }
-        }
-
-        async function resolveRpc() {
-            try {
-                const { fetchRpcUrl } = await import('./utils/rpc-resolver');
-                const resolvedUrl = await fetchRpcUrl({
-                    network: 'mainnet',
-                    endpoint: config.rpcUrl,
-                    priority: 'reliable',
-                });
-                setResolvedRpcUrl(resolvedUrl);
-            } catch (error) {
-                console.warn('[PaymentButton] RPC resolution failed, using fallback:', error);
-            }
-        }
-
-        resolveRpc();
-    }, [config.rpcUrl]);
-
-    // Single AppProvider + ArcProvider for the entire component
-    const arcConfig = useMemo(
-        () => ({
-            network,
-            rpcUrl: resolvedRpcUrl,
-            debug: config.debug,
-        }),
-        [network, resolvedRpcUrl, config.debug],
-    );
 
     return (
         <AppProvider connectorConfig={connectorConfig}>
@@ -263,7 +250,7 @@ export const PaymentButton = memo<PaymentButtonProps>(function PaymentButton({
             <>
                 <ResponsiveShell
                     open={isClient ? isDialogOpen : false} // Always closed on server
-                    onOpenChange={isClient ? setIsDialogOpen : () => {}} // No-op on server
+                    onOpenChange={isClient ? setIsDialogOpen : () => { }} // No-op on server
                     trigger={
                         (children as React.ReactNode) || (
                             <TriggerButton

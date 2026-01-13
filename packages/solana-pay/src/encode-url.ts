@@ -1,4 +1,4 @@
-import { SOLANA_PROTOCOL, HTTPS_PROTOCOL, SOL_DECIMALS } from './constants';
+import { HTTPS_PROTOCOL, SOL_DECIMALS, SOLANA_PROTOCOL } from './constants';
 import type { Amount, Label, Link, Memo, Message, Recipient, References, SPLToken } from './types';
 
 /**
@@ -19,6 +19,8 @@ export interface TransferRequestURLFields {
     message?: Message;
     /** `memo` in the [Solana Pay spec](https://github.com/solana-labs/solana-pay/blob/master/SPEC.md#memo). */
     memo?: Memo;
+    /** Number of decimals for the amount. Defaults to SOL_DECIMALS (9) for native SOL, but should be set to token decimals for SPL tokens. */
+    decimals?: number;
 }
 
 /**
@@ -64,13 +66,14 @@ export function encodeTransferRequestURL({
     label,
     message,
     memo,
+    decimals,
 }: TransferRequestURLFields): URL {
     const pathname = recipient.toString();
     const url = new URL(SOLANA_PROTOCOL + pathname);
 
     if (amount !== undefined) {
-        // Convert bigint lamports to decimal without floating-point
-        const amountStr = lamportsToDecimal(amount, SOL_DECIMALS);
+        // Convert bigint to decimal using the correct decimals (defaults to SOL_DECIMALS)
+        const amountStr = lamportsToDecimal(amount, decimals ?? SOL_DECIMALS);
         url.searchParams.append('amount', amountStr);
     }
 

@@ -1,11 +1,11 @@
 'use client';
 
+import type { Address, TransactionSigner } from '@solana/kit';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useArcClient } from '../core/commerce-client-provider';
 import { releaseRpcConnection } from '../core/rpc-manager';
 import { createTransactionBuilder, createTransactionContext } from '../core/transaction-builder';
-import { address, type Address, type TransactionSigner } from '@solana/kit';
 import { createInvalidator } from '../utils/invalidate';
 
 /**

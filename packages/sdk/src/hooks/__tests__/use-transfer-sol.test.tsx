@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
 import { QueryClient } from '@tanstack/react-query';
+import { act, renderHook } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createMockSigner, MOCK_ADDRESSES, MOCK_LAMPORTS, TestWrapper } from '../../test-utils/mock-providers';
 import { useTransferSOL } from '../use-transfer-sol';
-import { TestWrapper, createMockSigner, MOCK_ADDRESSES, MOCK_LAMPORTS } from '../../test-utils/mock-providers';
 
 // Mock the core modules
 vi.mock('../../core/commerce-client-provider', () => ({
@@ -58,8 +58,8 @@ const createWrapper = (props: Record<string, unknown> = {}) => {
     // Create a fresh QueryClient for each test to ensure proper reset behavior
     const queryClient = new QueryClient({
         defaultOptions: {
-            queries: { retry: false, cacheTime: 0 },
-            mutations: { retry: false, cacheTime: 0 },
+            queries: { retry: false, gcTime: 0 },
+            mutations: { retry: false, gcTime: 0 },
         },
     });
 
@@ -207,7 +207,8 @@ describe('useTransferSOL', () => {
             });
 
             expect(transferResult).toBeDefined();
-            expect(transferResult.amount).toBe(MOCK_LAMPORTS.ONE_SOL);
+            // biome-ignore lint/suspicious/noExplicitAny: Accessing mock result properties
+            expect((transferResult as any).amount).toBe(MOCK_LAMPORTS.ONE_SOL);
         });
 
         it('should throw error when inputs are missing', async () => {
@@ -268,7 +269,8 @@ describe('useTransferSOL', () => {
 
             expect(preventDefault).toHaveBeenCalled();
             expect(submitResult).toBeDefined();
-            expect(submitResult.amount).toBe(MOCK_LAMPORTS.HALF_SOL);
+            // biome-ignore lint/suspicious/noExplicitAny: Accessing mock result properties
+            expect((submitResult as any).amount).toBe(MOCK_LAMPORTS.HALF_SOL);
         });
 
         it('should return undefined when inputs are missing', async () => {
@@ -302,7 +304,8 @@ describe('useTransferSOL', () => {
             });
 
             expect(submitResult).toBeDefined();
-            expect(submitResult.amount).toBe(MOCK_LAMPORTS.POINT_ONE_SOL);
+            // biome-ignore lint/suspicious/noExplicitAny: Accessing mock result properties
+            expect((submitResult as any).amount).toBe(MOCK_LAMPORTS.POINT_ONE_SOL);
         });
     });
 

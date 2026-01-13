@@ -1,19 +1,19 @@
 'use client'
 
-import React, { type ReactNode, useMemo, useState } from 'react'
-import { QueryClient } from '@tanstack/react-query'
 import { AppProvider } from '@solana-commerce/connector'
 import { ArcProvider } from '@solana-commerce/sdk/react'
+import { QueryClient } from '@tanstack/react-query'
+import { type ReactNode, useMemo, useState } from 'react'
 // Removed unused createProvider import
 import { FloatingCommerceButton } from './components/floating-commerce-button'
 
 export function ClientRootProvider({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
-    defaultOptions: { 
-      queries: { 
-        staleTime: 5 * 60 * 1000, 
-        retry: 3 
-      } 
+    defaultOptions: {
+      queries: {
+        staleTime: 5 * 60 * 1000,
+        retry: 3
+      }
     }
   }))
 
@@ -32,11 +32,11 @@ export function ClientRootProvider({ children }: { children: ReactNode }) {
 
 
   return (
-    <AppProvider 
-      connectorConfig={{ 
-        autoConnect: false, 
-        debug: process.env.NODE_ENV !== 'production' 
-      }} 
+    <AppProvider
+      connectorConfig={{
+        autoConnect: false,
+        debug: process.env.NODE_ENV !== 'production'
+      }}
     >
       <ArcProvider config={arcConfig} queryClient={queryClient}>
         <>
